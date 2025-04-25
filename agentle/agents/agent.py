@@ -207,6 +207,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 messages=context.messages,
                 response_schema=ResponseMiddleware[T_Schema],
                 generation_config=self.config.generationConfig,
+                tools=[
+                    Tool.from_callable(tool) if callable(tool) else tool
+                    for tool in self.tools
+                ],
             )
 
             state.task_completed = generation.parsed.task_info.completed

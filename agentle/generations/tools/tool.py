@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
-from typing import Literal
+from typing import Any, Literal
 
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
 
-class Tool[T_Output = object](BaseModel):
+class Tool[T_Output = Any](BaseModel):
     type: Literal["tool"] = Field(default="tool")
     name: str
     description: str | None = Field(default=None)
