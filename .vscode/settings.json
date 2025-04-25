@@ -52,7 +52,7 @@
     "python.analysis.indexing": true,
     "python.analysis.packageIndexDepths": [
         {
-            "name": "gat",
+            "name": "agentle",
             "depth": 10
         }
     ],

@@ -16,6 +16,9 @@ from agentle.generations.pricing.price_retrievable import PriceRetrievable
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
+from agentle.generations.providers.google._adapters.agentle_tool_to_google_tool_adapter import (
+    AgentleToolToGoogleToolAdapter,
+)
 from agentle.generations.providers.google._adapters.generate_generate_content_response_to_generation_adapter import (
     GenerateGenerateContentResponseToGenerationAdapter,
 )
@@ -127,6 +130,9 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             top_p=_generation_config.top_p,
             top_k=_generation_config.top_k,
             candidate_count=_generation_config.n,
+            tools=[AgentleToolToGoogleToolAdapter().adapt(tool) for tool in tools]
+            if tools
+            else None,
             max_output_tokens=_generation_config.max_output_tokens,
             response_schema=response_schema if bool(response_schema) else None,
             response_mime_type="application/json" if bool(response_schema) else None,
