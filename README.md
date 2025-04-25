@@ -1,1 +1,1 @@
-![Hat Emoji](https://s3.amazonaws.com/pix.iemoji.com/images/emoji/apple/ios-12/256/top-hat.png)
+![Hat Emoji](https://em-content.zobj.net/source/apple/271/top-hat_1f3a9.png)
