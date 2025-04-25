@@ -1,32 +1,32 @@
 # type: ignore
+import dataclasses
+import datetime
+import decimal
 import inspect
 import json
-import datetime
-import dataclasses
-import uuid
-import decimal
 import re
+import types
+import uuid
+import warnings
 from enum import Enum
 from typing import (
     Any,
-    get_type_hints,
-    get_origin,
-    get_args,
-    Union,
-    Type,
-    ForwardRef,
-    Literal,
-    Pattern,
-    TypeVar,
-    Generic,
-    cast,
-    List,
     Dict,
-    Tuple,
+    ForwardRef,
+    Generic,
+    List,
+    Literal,
     Optional,
+    Pattern,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
 )
-import types
-import warnings
 
 from agentle.generations.json.unsuported_type_error import UnsupportedTypeError
 
@@ -244,19 +244,19 @@ class JsonSchemaBuilder:
                                     field_name
                                 ].annotation
                                 # Extrair propriedades básicas (mais complexo para cada tipo)
-                                if field_type == str:
+                                if field_type is str:
                                     corrected_schema["properties"][field_name] = {
                                         "type": "string"
                                     }
-                                elif field_type == int:
+                                elif field_type is int:
                                     corrected_schema["properties"][field_name] = {
                                         "type": "integer"
                                     }
-                                elif field_type == bool:
+                                elif field_type is bool:
                                     corrected_schema["properties"][field_name] = {
                                         "type": "boolean"
                                     }
-                                elif get_origin(field_type) == list:
+                                elif get_origin(field_type) is list:
                                     item_type = get_args(field_type)[0]
                                     if (
                                         item_type.__name__ == def_name
