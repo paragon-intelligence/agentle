@@ -46,7 +46,7 @@ SIMPLE_TYPES = (
 )
 
 
-class SchemaBuilder:
+class JsonSchemaBuilder:
     """
     Builds JSON Schema draft 7 representations from Python types.
 

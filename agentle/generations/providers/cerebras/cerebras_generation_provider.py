@@ -3,24 +3,28 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, cast, override
 
 import httpx
+from rsb.adapters.adapter import Adapter
 
-from agentle.generations.json.schema_builder import SchemaBuilder
-from agentle.generations.models.messages.assistant_message import AssistantMessage
-from agentle.generations.models.messages.developer_message import DeveloperMessage
+# idk why mypy is not recognising this as a module
+from agentle.generations.json.json_schema_builder import (  # type: ignore[attr-defined]
+    JsonSchemaBuilder,
+)
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.models.messages.assistant_message import AssistantMessage
+from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.pricing.price_retrievable import PriceRetrievable
-from agentle.generations.providers.cerebras._adapters.completion_to_generation_adapter import (
-    CerebrasCompletionToGenerationAdapter,
-)
-from agentle.generations.providers.cerebras._adapters.cortex_message_to_cerebras_message_adapter import (
-    CortexMessageToCerebrasMessageAdapter,
-)
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
-from rsb.adapters.adapter import Adapter
+from agentle.generations.providers.cerebras._adapters.agentle_message_to_cerebras_message_adapter import (
+    AgentleMessageToCerebrasMessageAdapter,
+)
+from agentle.generations.providers.cerebras._adapters.completion_to_generation_adapter import (
+    CerebrasCompletionToGenerationAdapter,
+)
+from agentle.generations.tools.tool import Tool
 
 if TYPE_CHECKING:
     from cerebras.cloud.sdk.types.chat.completion_create_params import (
@@ -79,7 +83,7 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         self._strict_response_validation = _strict_response_validation
         self.warm_tcp_connection = warm_tcp_connection
         self.message_adapter = (
-            message_adapter or CortexMessageToCerebrasMessageAdapter()
+            message_adapter or AgentleMessageToCerebrasMessageAdapter()
         )
 
     @property
@@ -95,6 +99,7 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
+        tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         from cerebras.cloud.sdk import AsyncCerebras
         from cerebras.cloud.sdk.types.chat.chat_completion import ChatCompletionResponse
@@ -123,12 +128,12 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
                     "json_schema": {
                         "name": "json_schema",
                         "strict": True,
-                        "schema": SchemaBuilder(response_schema).build(
+                        "schema": JsonSchemaBuilder(response_schema).build(
                             dereference=True
                         ),
                     },
                 }
-                if response_schema
+                if bool(response_schema)
                 else None,
                 stream=False,
             ),

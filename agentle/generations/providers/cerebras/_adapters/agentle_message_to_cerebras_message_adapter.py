@@ -10,7 +10,7 @@ from agentle.generations.models.messages.user_message import UserMessage
 from rsb.adapters.adapter import Adapter
 
 
-class CortexMessageToCerebrasMessageAdapter(
+class AgentleMessageToCerebrasMessageAdapter(
     Adapter[
         AssistantMessage | DeveloperMessage | UserMessage,
         MessageSystemMessageRequestTyped

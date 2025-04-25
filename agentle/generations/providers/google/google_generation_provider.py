@@ -4,10 +4,12 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, override
 
-from agentle.generations.models.messages.assistant_message import AssistantMessage
-from agentle.generations.models.messages.developer_message import DeveloperMessage
+from rsb.adapters.adapter import Adapter
+
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.models.messages.assistant_message import AssistantMessage
+from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.pricing.price_retrievable import PriceRetrievable
@@ -20,10 +22,10 @@ from agentle.generations.providers.google._adapters.generate_generate_content_re
 from agentle.generations.providers.google._adapters.message_to_google_content_adapter import (
     MessageToGoogleContentAdapter,
 )
+from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
-from rsb.adapters.adapter import Adapter
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -85,6 +87,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
+        tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         from google import genai
         from google.genai import types
