@@ -1,0 +1,24 @@
+[project]
+name = "agentle"
+version = "v0.0.1"
+description = "..."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["mcp[cli]>=1.6.0", "rock-solid-base>=0.0.12"]
+
+[[project.authors]]
+name = "Arthur Brenno"
+email = "64020210+arthurbrenno@users.noreply.github.com"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.directories]
+packages = ["agentle"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["agentle"]
+
+[dependency-groups]
+dev = ["cerebras-cloud-sdk>=1.29.0", "google-genai>=1.11.0", "ipykernel>=6.29.5", "langfuse>=2.60.3", "openai>=1.75.0", "openai-agents>=0.0.11", "pydantic>=2.11.3", "pydantic-ai>=0.1.3", "python-dotenv>=1.1.0", "r2r>=3.5.14"]

@@ -1,0 +1,23 @@
+name: Pypi
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+      - uses: astral-sh/setup-uv@v3
+      - run: uv build
+      - run: uv publish --token ${{secrets.UV_PUBLISH_TOKEN}}

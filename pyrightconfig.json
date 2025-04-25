@@ -1,0 +1,57 @@
+{
+    "typeCheckingMode": "strict",
+    // Disabled error types as requested
+    "reportMissingTypeStubs": false,
+    "reportUnknownMemberType": false,
+    // Enable use of library code for types
+    "useLibraryCodeForTypes": true,
+    // Core type checking options
+    "reportGeneralTypeIssues": true,
+    "reportOptionalMemberAccess": true,
+    "reportOptionalCall": true,
+    "reportOptionalIterable": true,
+    "reportOptionalSubscript": true,
+    "reportOptionalOperand": true,
+    "reportPrivateImportUsage": true,
+    "reportPrivateUsage": true,
+    "reportConstantRedefinition": true,
+    "reportIncompatibleMethodOverride": true,
+    "reportIncompatibleVariableOverride": true,
+    "reportOverlappingOverload": true,
+    "reportUninitializedInstanceVariable": true,
+    "reportInvalidStringEscapeSequence": true,
+    "reportUnknownParameterType": true,
+    "reportFunctionMemberAccess": true,
+    // Code quality checks
+    "reportImportCycles": true,
+    "reportImplicitStringConcatenation": true,
+    "reportUndefinedVariable": true,
+    "reportUnboundVariable": true,
+    "reportInvalidTypeVarUse": true,
+    "reportCallInDefaultInitializer": true,
+    "reportUnnecessaryIsInstance": true,
+    "reportUnnecessaryCast": true,
+    "reportUnnecessaryComparison": true,
+    "reportUnnecessaryContains": true,
+    "reportAssertAlwaysTrue": true,
+    "reportSelfClsParameterName": true,
+    "reportUnknownVariableType": false,
+    // Project configuration
+    "pythonVersion": "3.13",
+    "include": [
+        "gat",
+        "tests"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        "**/.git",
+        "**/venv",
+        "**/.venv",
+        "**/build",
+        "**/dist"
+    ],
+    // Virtual environment settings
+    "venvPath": ".",
+    "venv": ".venv",
+}

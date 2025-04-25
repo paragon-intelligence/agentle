@@ -1,0 +1,60 @@
+{
+    "python.analysis.autoImportCompletions": true,
+    "python.defaultInterpreterPath": ".venv/bin/python3.13",
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.profiles.linux": {
+        "zsh": {
+            "path": "/bin/zsh",
+            "icon": "terminal-bash"
+        },
+        "bash": {
+            "path": "/bin/bash",
+            "icon": "terminal-bash"
+        }
+    },
+    // Improved terminal appearance
+    "terminal.integrated.fontFamily": "MesloLGS NF, 'Cascadia Code', 'DejaVu Sans Mono', Consolas, 'Courier New', monospace",
+    "terminal.integrated.fontSize": 14,
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.cursorStyle": "line",
+    "terminal.integrated.copyOnSelection": true,
+    "terminal.integrated.lineHeight": 1.2,
+    "terminal.integrated.letterSpacing": 0.5,
+    "terminal.integrated.fontWeight": "500",
+    // Set a nice colored theme for the terminal
+    "workbench.colorCustomizations": {
+        "terminal.background": "#1E1E1E",
+        "terminal.foreground": "#D4D4D4",
+        "terminal.ansiBlack": "#1E1E1E",
+        "terminal.ansiBlue": "#569CD6",
+        "terminal.ansiBrightBlack": "#3A3D41",
+        "terminal.ansiBrightBlue": "#9CDCFE",
+        "terminal.ansiBrightCyan": "#4EC9B0",
+        "terminal.ansiBrightGreen": "#B5CEA8",
+        "terminal.ansiBrightMagenta": "#C586C0",
+        "terminal.ansiBrightRed": "#F44747",
+        "terminal.ansiBrightWhite": "#E9E9E9",
+        "terminal.ansiBrightYellow": "#CE9178",
+        "terminal.ansiCyan": "#4EC9B0",
+        "terminal.ansiGreen": "#608B4E",
+        "terminal.ansiMagenta": "#C586C0",
+        "terminal.ansiRed": "#D16969",
+        "terminal.ansiWhite": "#D4D4D4",
+        "terminal.ansiYellow": "#D7BA7D"
+    },
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.indexing": true,
+    "python.analysis.packageIndexDepths": [
+        {
+            "name": "gat",
+            "depth": 10
+        }
+    ],
+    "python.linting.enabled": true
+}
