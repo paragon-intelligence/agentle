@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Sequence
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 from uuid import UUID
 
 from rsb.coroutines.run_sync import run_sync
@@ -25,7 +25,7 @@ from agentle.agents.models.run_state import RunState
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
-from agentle.generations.models.message_parts.tool_declaration import ToolDeclaration
+from agentle.generations.tools.tool import Tool
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
@@ -35,7 +35,7 @@ from agentle.generations.providers.base.generation_provider import (
 )
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
-type WithoutStructuredOutput = str
+type WithoutStructuredOutput = None
 
 type AgentInput = (
     str
@@ -44,8 +44,8 @@ type AgentInput = (
     | UserMessage
     | TextPart
     | FilePart
-    | ToolDeclaration
-    | Sequence[TextPart | FilePart | ToolDeclaration]
+    | Tool[Any]
+    | Sequence[TextPart | FilePart | Tool[Any]]
     | Callable[[], str]
 )
 
@@ -143,9 +143,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     The MCP servers to use for the agent.
     """
 
-    tools: Sequence[Callable[..., object] | ToolDeclaration] = Field(
-        default_factory=list
-    )
+    tools: Sequence[Tool | Callable[..., object]] = Field(default_factory=list)
     """
     The tools to use for the agent.
     """
@@ -265,7 +263,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
         elif isinstance(input, Context):
             return input
-        elif callable(input):
+        elif callable(input) and not isinstance(input, Tool):
             return Context(
                 messages=[
                     DeveloperMessage(parts=[TextPart(text=instructions)]),
@@ -280,14 +278,15 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         elif (
             isinstance(input, TextPart)
             or isinstance(input, FilePart)
-            or isinstance(input, ToolDeclaration)
+            or isinstance(input, Tool)
         ):
             # Tratar parte única
+            input_parts = [input]
             return Context(
                 messages=[
                     DeveloperMessage(parts=[TextPart(text=instructions)]),
-                    UserMessage(parts=[input]),
-                ]
+                    UserMessage(parts=input_parts),
+                ],
             )
         else:
             # Verificar se é uma sequência de mensagens ou partes
@@ -302,7 +301,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         UserMessage(
                             parts=list(
                                 cast(
-                                    Sequence[TextPart | FilePart | ToolDeclaration],
+                                    Sequence[TextPart | FilePart | Tool],
                                     input,
                                 )
                             )

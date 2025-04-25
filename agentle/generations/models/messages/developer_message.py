@@ -6,10 +6,10 @@ from rsb.models.field import Field
 
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
-from agentle.generations.models.message_parts.tool_declaration import ToolDeclaration
+from agentle.generations.tools.tool import Tool
 
 
 @valueobject
 class DeveloperMessage(BaseModel):
-    parts: Sequence[TextPart | FilePart | ToolDeclaration]
+    parts: Sequence[TextPart | FilePart | Tool]
     role: Literal["developer"] = Field(default="developer")

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from agentle.generations.models.messages.message import Message
-from agentle.generations.models.message_parts.tool_declaration import ToolDeclaration
+from agentle.generations.tools.tool import Tool
 from agentle.generations.providers.google._adapters.part_to_google_part_adapter import (
     PartToGooglePartAdapter,
 )
@@ -39,7 +39,7 @@ class MessageToGoogleContentAdapter(Adapter[Message, "Content"]):
                 part_adapter.adapt(part)
                 for part in _f.parts
                 if not isinstance(  # Impossible that an AI declares a tool
-                    part, ToolDeclaration
+                    part, Tool
                 )
             ],
             role=role,

@@ -6,16 +6,16 @@ from rsb.containers.maybe import Maybe
 from rsb.contracts.maybe_protocol import MaybeProtocol
 from rsb.coroutines.run_sync import run_sync
 
-from agentle.generations.models.messages.developer_message import DeveloperMessage
-from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
-from agentle.generations.models.messages.message import Message
+from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.part import Part
 from agentle.generations.models.message_parts.text import TextPart
-from agentle.generations.models.message_parts.tool_declaration import ToolDeclaration
-from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.models.message_parts.tool_execution import ToolExecution
+from agentle.generations.models.messages.developer_message import DeveloperMessage
+from agentle.generations.models.messages.message import Message
+from agentle.generations.models.messages.user_message import UserMessage
+from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
@@ -45,6 +45,7 @@ class GenerationProvider(abc.ABC):
         developer_prompt: str | Prompt,
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
+        tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         return run_sync(
             self.create_generation_by_prompt_async,
@@ -54,6 +55,7 @@ class GenerationProvider(abc.ABC):
             developer_prompt=developer_prompt,
             response_schema=response_schema,
             generation_config=generation_config,
+            tools=tools,
         )
 
     async def create_generation_by_prompt_async[T = WithoutStructuredOutput](
@@ -64,6 +66,7 @@ class GenerationProvider(abc.ABC):
         developer_prompt: str | Prompt,
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
+        tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         user_message_parts: Sequence[Part]
         match prompt:
@@ -73,7 +76,7 @@ class GenerationProvider(abc.ABC):
                 user_message_parts = cast(
                     Sequence[Part], [TextPart(text=prompt.content)]
                 )
-            case TextPart() | FilePart() | ToolDeclaration() | ToolExecution():
+            case TextPart() | FilePart() | Tool() | ToolExecution():
                 user_message_parts = cast(Sequence[Part], [prompt])
             case _:
                 user_message_parts = prompt
@@ -95,6 +98,7 @@ class GenerationProvider(abc.ABC):
             messages=[developer_message, user_message],
             response_schema=response_schema,
             generation_config=generation_config,
+            tools=tools,
         )
 
     def create_generation[T = WithoutStructuredOutput](
@@ -104,6 +108,7 @@ class GenerationProvider(abc.ABC):
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
+        tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         return run_sync(
             self.create_generation_async,
@@ -122,4 +127,5 @@ class GenerationProvider(abc.ABC):
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
+        tools: Sequence[Tool] | None = None,
     ) -> Generation[T]: ...

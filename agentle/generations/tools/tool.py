@@ -1,30 +1,39 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 import inspect
+from collections.abc import Callable
 from typing import Literal
+
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
 
-class ToolDeclaration(BaseModel):
-    type: Literal["tool_declaration"] = Field(default="tool_declaration")
+class Tool[T_Output = object](BaseModel):
+    type: Literal["tool"] = Field(default="tool")
     name: str
-    description: str | None = None
+    description: str | None = Field(default=None)
     parameters: dict[str, object]
-    callable_ref: Callable[..., object] | None = None
-    needs_human_confirmation: bool = False
+    callable_ref: Callable[..., T_Output] | None = Field(default=None)
+    needs_human_confirmation: bool = Field(default=False)
 
     @property
     def text(self) -> str:
         return f"Tool: {self.name}\nDescription: {self.description}\nParameters: {self.parameters}"
 
+    def call(self, **kwargs: object) -> T_Output:
+        if self.callable_ref is None:
+            raise ValueError(
+                'Tool is not callable because the "callable_ref" instance variable is not set'
+            )
+
+        return self.callable_ref(**kwargs)
+
     @classmethod
     def from_callable(
         cls,
-        _callable: Callable[..., object],
+        _callable: Callable[..., T_Output],
         /,
-    ) -> ToolDeclaration:
+    ) -> Tool[T_Output]:
         name = getattr(_callable, "__name__", "anonymous_function")
         description = _callable.__doc__ or "No description available"
 
