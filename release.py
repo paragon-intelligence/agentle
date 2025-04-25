@@ -71,7 +71,7 @@ def display_ascii_art():
     from pyfiglet import Figlet
 
     f = Figlet(font="big")
-    ascii_art = f.renderText("GAT")
+    ascii_art = f.renderText("Agentle")
     console.print(Text(ascii_art, style="bold magenta"), justify="center")
 
 

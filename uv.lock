@@ -3,6 +3,49 @@ revision = 1
 requires-python = ">=3.13"
 
 [[package]]
+name = "agentle"
+version = "0.0.1"
+source = { editable = "." }
+dependencies = [
+    { name = "mcp", extra = ["cli"] },
+    { name = "rock-solid-base" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "cerebras-cloud-sdk" },
+    { name = "google-genai" },
+    { name = "ipykernel" },
+    { name = "langfuse" },
+    { name = "openai" },
+    { name = "openai-agents" },
+    { name = "pydantic" },
+    { name = "pydantic-ai" },
+    { name = "python-dotenv" },
+    { name = "r2r" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "mcp", extras = ["cli"], specifier = ">=1.6.0" },
+    { name = "rock-solid-base", specifier = ">=0.0.12" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "cerebras-cloud-sdk", specifier = ">=1.29.0" },
+    { name = "google-genai", specifier = ">=1.11.0" },
+    { name = "ipykernel", specifier = ">=6.29.5" },
+    { name = "langfuse", specifier = ">=2.60.3" },
+    { name = "openai", specifier = ">=1.75.0" },
+    { name = "openai-agents", specifier = ">=0.0.11" },
+    { name = "pydantic", specifier = ">=2.11.3" },
+    { name = "pydantic-ai", specifier = ">=0.1.3" },
+    { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "r2r", specifier = ">=3.5.14" },
+]
+
+[[package]]
 name = "aiofiles"
 version = "24.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -375,49 +418,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/45/d8/8425e6ba5fcec61a1d16e41b1b71d2bf9344f1fe48012c2b48b9620feae5/fsspec-2025.3.2.tar.gz", hash = "sha256:e52c77ef398680bbd6a98c0e628fbc469491282981209907bbc8aea76a04fdc6", size = 299281 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/44/4b/e0cfc1a6f17e990f3e64b7d941ddc4acdc7b19d6edd51abf495f32b1a9e4/fsspec-2025.3.2-py3-none-any.whl", hash = "sha256:2daf8dc3d1dfa65b6aa37748d112773a7a08416f6c70d96b264c96476ecaf711", size = 194435 },
-]
-
-[[package]]
-name = "global-agent-toolkit"
-version = "0.0.15"
-source = { editable = "." }
-dependencies = [
-    { name = "mcp", extra = ["cli"] },
-    { name = "rock-solid-base" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "cerebras-cloud-sdk" },
-    { name = "google-genai" },
-    { name = "ipykernel" },
-    { name = "langfuse" },
-    { name = "openai" },
-    { name = "openai-agents" },
-    { name = "pydantic" },
-    { name = "pydantic-ai" },
-    { name = "python-dotenv" },
-    { name = "r2r" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "mcp", extras = ["cli"], specifier = ">=1.6.0" },
-    { name = "rock-solid-base", specifier = ">=0.0.12" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "cerebras-cloud-sdk", specifier = ">=1.29.0" },
-    { name = "google-genai", specifier = ">=1.11.0" },
-    { name = "ipykernel", specifier = ">=6.29.5" },
-    { name = "langfuse", specifier = ">=2.60.3" },
-    { name = "openai", specifier = ">=1.75.0" },
-    { name = "openai-agents", specifier = ">=0.0.11" },
-    { name = "pydantic", specifier = ">=2.11.3" },
-    { name = "pydantic-ai", specifier = ">=0.1.3" },
-    { name = "python-dotenv", specifier = ">=1.1.0" },
-    { name = "r2r", specifier = ">=3.5.14" },
 ]
 
 [[package]]
