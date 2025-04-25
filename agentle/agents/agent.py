@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Sequence
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 from uuid import UUID
 
 from rsb.coroutines.run_sync import run_sync
@@ -16,11 +16,10 @@ from agentle.agents.context import Context
 from agentle.agents.models.agent_skill import AgentSkill
 from agentle.agents.models.authentication import Authentication
 from agentle.agents.models.capabilities import Capabilities
+from agentle.agents.models.middleware.response_middleware import ResponseMiddleware
 
 # from gat.agents.models.middleware.response_middleware import ResponseMiddleware
 from agentle.agents.models.run_state import RunState
-from agentle.agents.pipelines.agent_pipeline import AgenticPipeline
-from agentle.agents.squads.agent_squad import AgentSquad
 
 # from gat.agents.tools.agent_tool import AgentTool
 from agentle.generations.models.generation.generation import Generation
@@ -36,7 +35,7 @@ from agentle.generations.providers.base.generation_provider import (
 )
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
-type WithoutStructuredOutput = None
+type WithoutStructuredOutput = str
 
 type AgentInput = (
     str
@@ -116,7 +115,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     supports across all skills. This can be overridden per-skill.
     """
 
-    skills: Sequence[AgentSkill]
+    skills: Sequence[AgentSkill] = Field(default_factory=list)
     """
     Skills are a unit of capability that an agent can perform.
     """
@@ -194,7 +193,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         # usar ResponseMiddleware[T_Schema] como response_schema. vai ajudar a saber se o agente terminou ou não de resolver o problema
         # enviado pelo usuario.
 
-        state = RunState[str](
+        state = RunState[T_Schema](
             task_completed=False,
             iteration=0,
             tool_calls_amount=0,
@@ -204,6 +203,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         while not state.task_completed and state.iteration < self.config.maxIterations:
             state.iteration += 1
+
+            generation = await self.generation_provider.create_generation_async(
+                model=self.model,
+                messages=context.messages,
+                response_schema=ResponseMiddleware[T_Schema],
+                generation_config=self.config.generationConfig,
+            )
+
+            state.task_completed = generation.parsed.task_info.completed
+
             # TODO(arthur): Implement the agent logic here.
             # Gerar uma resposta ate a tarefa ser classificada como concluida pelo agente.
 
@@ -263,10 +272,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     UserMessage(parts=[TextPart(text=input())]),
                 ]
             )
-        elif isinstance(input, UserMessage) or (
-            isinstance(input, AssistantMessage | DeveloperMessage | UserMessage)
-            and not isinstance(input, DeveloperMessage)
-        ):
+        elif isinstance(input, UserMessage):
             # Tratar mensagem do usuário
             return Context(
                 messages=[DeveloperMessage(parts=[TextPart(text=instructions)]), input]
@@ -288,11 +294,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             if isinstance(input[0], AssistantMessage | DeveloperMessage | UserMessage):
                 # Sequência de mensagens
                 return Context(messages=list(cast(Sequence[Message], input)))
-            elif (
-                isinstance(input[0], TextPart)
-                or isinstance(input[0], FilePart)
-                or isinstance(input[0], ToolDeclaration)
-            ):
+            elif isinstance(input[0], TextPart) or isinstance(input[0], FilePart):
                 # Sequência de partes
                 return Context(
                     messages=[
@@ -310,7 +312,3 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         # Retorno padrão para evitar erro de tipo
         return Context(messages=[DeveloperMessage(parts=[TextPart(text=instructions)])])
-
-    def __add__(self, other: Agent[Any]) -> AgentSquad: ...
-
-    def __or__(self, other: Agent) -> AgenticPipeline: ...

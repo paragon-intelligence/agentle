@@ -45,7 +45,7 @@ class GenerationProvider(abc.ABC):
         developer_prompt: str | Prompt,
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
-    ):
+    ) -> Generation[T]:
         return run_sync(
             self.create_generation_by_prompt_async,
             timeout=generation_config.timeout if generation_config else None,
@@ -64,7 +64,7 @@ class GenerationProvider(abc.ABC):
         developer_prompt: str | Prompt,
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
-    ):
+    ) -> Generation[T]:
         user_message_parts: Sequence[Part]
         match prompt:
             case str():
@@ -86,7 +86,9 @@ class GenerationProvider(abc.ABC):
                 developer_message_parts = [TextPart(text=developer_prompt.content)]
 
         user_message = UserMessage(parts=user_message_parts)
-        developer_message = DeveloperMessage(parts=developer_message_parts)
+        developer_message = DeveloperMessage(
+            parts=cast(Sequence[TextPart], developer_message_parts)
+        )
 
         return await self.create_generation_async(
             model=model,
