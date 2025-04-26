@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any
 
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
@@ -12,7 +13,9 @@ class RunState[T_Schema = str](BaseModel):
     task_completed: bool = Field(...)
     iteration: int
     tool_calls_amount: int
-    called_tools: set[ToolExecutionSuggestion]
+    called_tools: dict[ToolExecutionSuggestion, Any] = Field(
+        description="A dictionary of tool execution suggestions and their results (tool calls)"
+    )
     last_response: T_Schema | str | None = None
 
     @classmethod
@@ -21,7 +24,7 @@ class RunState[T_Schema = str](BaseModel):
             task_completed=False,
             iteration=0,
             tool_calls_amount=0,
-            called_tools={*()},
+            called_tools={},
             last_response=None,
         )
 
@@ -29,7 +32,7 @@ class RunState[T_Schema = str](BaseModel):
         self,
         task_completed: bool,
         last_response: T_Schema | str,
-        called_tools: set[ToolExecutionSuggestion],
+        called_tools: dict[ToolExecutionSuggestion, Any],
         tool_calls_amount: int,
         iteration: int,
     ) -> None:

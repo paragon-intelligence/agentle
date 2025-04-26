@@ -40,6 +40,7 @@ from agentle.generations.tools.tool import Tool
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
 type WithoutStructuredOutput = None
+type _ToolName = str
 
 type AgentInput = (
     str
@@ -245,10 +246,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
             generations.append(cast(Generation[T_Schema], generation_copy))
 
-            # remove the state. calls and use only the state.update method
-            called_tools: set[ToolExecutionSuggestion] = {*()}
+            called_tools: dict[ToolExecutionSuggestion, Any] = {}
+            available_tools: dict[_ToolName, Tool[Any]] = {
+                tool.name: tool for tool in filtered_tools
+            }
             for tool_execution_suggestion in generation.tool_calls:
-                called_tools.add(tool_execution_suggestion)
+                called_tools[tool_execution_suggestion] = available_tools[
+                    tool_execution_suggestion.tool_name
+                ].call(**tool_execution_suggestion.args)
 
             state.update(
                 task_completed=parsed.task_completed,
