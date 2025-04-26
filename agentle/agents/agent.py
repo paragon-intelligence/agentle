@@ -277,11 +277,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 iteration=state.iteration + 1,
             )
 
-        # TODO(arthur): Implement the agent logic here
-
-        return AgentOutput[T_Schema](
-            generation=Generation[T_Schema].mock(), final_context=context
-        )
+        return AgentOutput[T_Schema](generations=generations, final_context=context)
 
     def to_http_router(
         self, path: str, type: Literal["fastapi"] = "fastapi"
