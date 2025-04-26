@@ -197,7 +197,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         state = RunState[T_Schema].init_state()
 
         # Populate the generations list with the generations with only the response middleware wrapped response attribute as a parsed attribute
-        generations: list[Generation[T_Schema | None]] = []
+        generations: list[Generation[T_Schema]] = []
 
         filtered_tools: list[Tool[Any]] = [
             Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
@@ -243,7 +243,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 ]
             )
 
-            generations.append(generation_copy)
+            generations.append(cast(Generation[T_Schema], generation_copy))
 
             # remove the state. calls and use only the state.update method
             called_tools: set[ToolExecutionSuggestion] = {*()}
