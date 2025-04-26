@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.models.middleware.response_middleware import ResponseMiddleware
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
 )
@@ -12,12 +13,22 @@ class RunState[T_Schema = str](BaseModel):
     iteration: int
     tool_calls_amount: int
     called_tools: set[ToolExecutionSuggestion]
-    last_response: ResponseMiddleware[T_Schema] | ResponseMiddleware[str] | None = None
+    last_response: T_Schema | str | None = None
+
+    @classmethod
+    def init_state(cls) -> RunState[T_Schema]:
+        return cls(
+            task_completed=False,
+            iteration=0,
+            tool_calls_amount=0,
+            called_tools={*()},
+            last_response=None,
+        )
 
     def update(
         self,
         task_completed: bool,
-        last_response: ResponseMiddleware[T_Schema] | ResponseMiddleware[str],
+        last_response: T_Schema | str,
         called_tools: set[ToolExecutionSuggestion],
         tool_calls_amount: int,
         iteration: int,

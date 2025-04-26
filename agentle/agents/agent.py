@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Sequence
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast, get_type_hints
 from uuid import UUID
 
 from rsb.coroutines.run_sync import run_sync
@@ -194,39 +194,48 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             input, instructions=final_instructions
         )
 
-        # usar ResponseMiddleware[T_Schema] como response_schema. vai ajudar a saber se o agente terminou ou não de resolver o problema
-        # enviado pelo usuario.
+        state = RunState[T_Schema].init_state()
 
-        state = RunState[T_Schema](
-            task_completed=False,
-            iteration=0,
-            tool_calls_amount=0,
-            called_tools={*()},
-            last_response=None,
-        )
+        # Populate the generations list with the generations with only the response middleware wrapped response attribute as a parsed attribute
+        generations: list[Generation[T_Schema]] = []
+
+        filtered_tools: list[Tool[Any]] = [
+            Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
+        ]
 
         while not state.task_completed and state.iteration < self.config.maxIterations:
-            # Escolha o schema correto com base em T_Schema
-            response_schema_type = (
+            response_schema_type: (
+                type[ResponseMiddleware[T_Schema]] | type[ResponseMiddleware[str]]
+            ) = (
                 ResponseMiddleware[str]
                 if self.response_schema is None
                 else ResponseMiddleware[T_Schema]
             )
+
+            called_tools_names: set[str] = {
+                tool_execution_suggestion.tool_name
+                for tool_execution_suggestion in state.called_tools
+            }
+
+            filtered_tools = [
+                tool for tool in filtered_tools if tool.name not in called_tools_names
+            ]
 
             generation = await self.generation_provider.create_generation_async(
                 model=self.model,
                 messages=context.messages,
                 response_schema=response_schema_type,
                 generation_config=self.config.generationConfig,
-                tools=[
-                    Tool.from_callable(tool) if callable(tool) else tool
-                    for tool in self.tools
-                ],
+                tools=filtered_tools,
             )
 
-            parsed: ResponseMiddleware[T_Schema] | ResponseMiddleware[str] = cast(  # type: ignore[reportUnnecessaryCast]
+            parsed = cast(  # type: ignore[reportUnnecessaryCast]
                 ResponseMiddleware[T_Schema] | ResponseMiddleware[str],
                 generation.parsed,
+            )
+
+            generation_copy = generation.clone(
+                
             )
 
             # remove the state. calls and use only the state.update method
@@ -236,14 +245,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
             state.update(
                 task_completed=parsed.task_completed,
-                last_response=parsed,
+                last_response=parsed.response,
                 called_tools=called_tools,
                 tool_calls_amount=generation.tool_calls_amount,
                 iteration=state.iteration + 1,
             )
-
-            # TODO(arthur): Implement the agent logic here.
-            # Gerar uma resposta ate a tarefa ser classificada como concluida pelo agente.
 
         # TODO(arthur): Implement the agent logic here
 

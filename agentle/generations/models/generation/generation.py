@@ -4,7 +4,8 @@ import logging
 import uuid
 from collections.abc import Sequence
 from datetime import datetime, timedelta
-from typing import Literal
+from typing import Literal, overload
+import copy
 
 from pydantic import BaseModel
 from rsb.decorators.entities import entity
@@ -13,6 +14,9 @@ from agentle.generations.models.generation.choice import Choice
 from agentle.generations.models.generation.usage import Usage
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
+)
+from agentle.generations.models.messages.generated_assistant_message import (
+    GeneratedAssistantMessage,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,6 +55,137 @@ class Generation[T](BaseModel):
             )
 
         return self.get_tool_calls(0)
+
+    @overload
+    def clone[T_Schema](
+        self,
+        *,
+        new_response_schema: type[T_Schema],
+        new_parseds: Sequence[T_Schema],
+        new_elapsed_time: timedelta | None = None,
+        new_id: uuid.UUID | None = None,
+        new_object: Literal["chat.generation"] | None = None,
+        new_created: datetime | None = None,
+        new_model: str | None = None,
+        new_choices: None = None,
+        new_usage: Usage | None = None,
+    ) -> Generation[T_Schema]: ...
+
+    @overload
+    def clone[T_Schema](
+        self,
+        *,
+        new_response_schema: None = None,
+        new_parseds: None = None,
+        new_elapsed_time: timedelta | None = None,
+        new_id: uuid.UUID | None = None,
+        new_object: Literal["chat.generation"] | None = None,
+        new_created: datetime | None = None,
+        new_model: str | None = None,
+        new_choices: Sequence[Choice[T_Schema]],
+        new_usage: Usage | None = None,
+    ) -> Generation[T_Schema]: ...
+
+    @overload
+    def clone(
+        self,
+        *,
+        # Nenhum destes é fornecido para este overload
+        new_response_schema: None = None,
+        new_parseds: None = None,
+        new_choices: None = None,
+        # Apenas estes podem ser fornecidos
+        new_elapsed_time: timedelta | None = None,
+        new_id: uuid.UUID | None = None,
+        new_object: Literal["chat.generation"] | None = None,
+        new_created: datetime | None = None,
+        new_model: str | None = None,
+        new_usage: Usage | None = None,
+    ) -> Generation[T]: ...  # Retorna o mesmo tipo T
+
+    def clone[T_Schema](  # type: ignore[override]
+        self,
+        *,
+        new_response_schema: type[T_Schema] | None = None,
+        new_parseds: Sequence[T_Schema] | None = None,
+        new_elapsed_time: timedelta | None = None,
+        new_id: uuid.UUID | None = None,
+        new_object: Literal["chat.generation"] | None = None,
+        new_created: datetime | None = None,
+        new_model: str | None = None,
+        new_choices: Sequence[Choice[T_Schema]] | None = None,
+        new_usage: Usage | None = None,
+    ) -> Generation[T_Schema] | Generation[T]:  # Adjusted return type hint for clarity
+        # Validate against ambiguous parameter usage
+        if new_choices and (new_response_schema or new_parseds):
+            raise ValueError(
+                "Cannot provide 'new_choices' together with 'new_response_schema' or 'new_parseds'."
+            )
+
+        # Scenario 1: Clone with new schema and parsed data
+        if new_response_schema and new_parseds:
+            # Validate length consistency
+            if len(new_parseds) != len(self.choices):
+                raise ValueError(
+                    f"The number of 'new_parseds' ({len(new_parseds)}) does not match the number of existing 'choices' ({len(self.choices)})."
+                )
+
+            _new_choices_scenario1: list[Choice[T_Schema]] = [
+                Choice(
+                    message=GeneratedAssistantMessage(
+                        # Use deepcopy for parts to ensure independence
+                        parts=copy.deepcopy(choice.message.parts),
+                        parsed=new_parseds[choice.index],
+                    ),
+                    index=choice.index,
+                )
+                for choice in self.choices
+            ]
+
+            return Generation[T_Schema](
+                elapsed_time=new_elapsed_time or self.elapsed_time,
+                id=new_id or self.id,
+                object=new_object or self.object,
+                created=new_created or self.created,
+                model=new_model or self.model,
+                choices=_new_choices_scenario1,
+                usage=(new_usage or self.usage).model_copy(),
+            )
+
+        # Scenario 2: Clone with entirely new choices provided
+        if new_choices:
+            return Generation[T_Schema](
+                elapsed_time=new_elapsed_time or self.elapsed_time,
+                id=new_id or self.id,
+                object=new_object or self.object,
+                created=new_created or self.created,
+                model=new_model or self.model,
+                choices=new_choices,
+                usage=(new_usage or self.usage).model_copy(),
+            )
+
+        # Scenario 3: Simple clone (same type T), potentially updating metadata
+        if not new_response_schema and not new_parseds and not new_choices:
+            # Deep copy existing choices to ensure independence
+            _new_choices_scenario3: list[Choice[T]] = [
+                copy.deepcopy(choice) for choice in self.choices
+            ]
+            # Cast is needed because the method signature expects T_Schema, but in this branch,
+            # we know we are returning Generation[T]. Overloads handle the public API typing.
+            return Generation[T](  # type: ignore[return-value]
+                elapsed_time=new_elapsed_time or self.elapsed_time,
+                id=new_id or self.id,
+                object=new_object or self.object,
+                created=new_created or self.created,
+                model=new_model or self.model,
+                choices=_new_choices_scenario3,  # type: ignore[arg-type]
+                usage=(new_usage or self.usage).model_copy(),
+            )
+
+        # Should be unreachable if overloads cover all valid cases and validation works
+        raise ValueError(
+            "Invalid combination of parameters for clone method. Use one of the defined overloads."
+        )
 
     @property
     def tool_calls_amount(self) -> int:
