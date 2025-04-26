@@ -1,9 +1,12 @@
 from __future__ import annotations
+
+from collections.abc import MutableSequence
 from typing import Any
 
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
+from agentle.generations.models.generation.usage import Usage
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
 )
@@ -17,6 +20,7 @@ class RunState[T_Schema = str](BaseModel):
         description="A dictionary of tool execution suggestions and their results (tool calls)"
     )
     last_response: T_Schema | str | None = None
+    token_usages: MutableSequence[Usage] = Field(default_factory=list)
 
     @classmethod
     def init_state(cls) -> RunState[T_Schema]:
@@ -26,6 +30,7 @@ class RunState[T_Schema = str](BaseModel):
             tool_calls_amount=0,
             called_tools={},
             last_response=None,
+            token_usages=[],
         )
 
     def update(
@@ -35,9 +40,11 @@ class RunState[T_Schema = str](BaseModel):
         called_tools: dict[ToolExecutionSuggestion, Any],
         tool_calls_amount: int,
         iteration: int,
+        token_usage: Usage,
     ) -> None:
         self.task_completed = task_completed
         self.last_response = last_response
         self.called_tools = called_tools
         self.tool_calls_amount = tool_calls_amount
         self.iteration = iteration
+        self.token_usages.append(token_usage)

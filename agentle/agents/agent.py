@@ -12,18 +12,19 @@ from rsb.models.field import Field
 from rsb.models.mimetype import MimeType
 
 from agentle.agents.agent_config import AgentConfig
-from agentle.agents.agent_output import AgentOutput
 from agentle.agents.context import Context
 from agentle.agents.models.agent_skill import AgentSkill
+from agentle.agents.models.agent_usage_statistics import AgentUsageStatistics
 from agentle.agents.models.authentication import Authentication
 from agentle.agents.models.capabilities import Capabilities
 from agentle.agents.models.middleware.response_middleware import ResponseMiddleware
 
 # from gat.agents.models.middleware.response_middleware import ResponseMiddleware
 from agentle.agents.models.run_state import RunState
+from agentle.agents.output.agent_run_output import AgentRunOutput
 
 # from gat.agents.tools.agent_tool import AgentTool
-from agentle.generations.models.generation.generation import Generation
+from agentle.generations.models.generation.usage import Usage
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
@@ -182,23 +183,20 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         input: AgentInput,
         task_id: UUID | None = None,
         timeout: float | None = None,
-    ) -> AgentOutput[T_Schema]:
+    ) -> AgentRunOutput[T_Schema]:
         return run_sync(self.run_async, timeout=timeout, input=input, task_id=task_id)
 
     async def run_async(
         self,
         input: AgentInput,
         task_id: UUID | None = None,
-    ) -> AgentOutput[T_Schema]:
+    ) -> AgentRunOutput[T_Schema]:
         final_instructions: str = self._convert_instructions_to_str(self.instructions)
         context: Context = self._convert_input_to_context(
             input, instructions=final_instructions
         )
 
         state = RunState[T_Schema].init_state()
-
-        # Populate the generations list with the generations with only the response middleware wrapped response attribute as a parsed attribute
-        generations: list[Generation[T_Schema]] = []
 
         filtered_tools: list[Tool[Any]] = [
             Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
@@ -249,17 +247,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 generation.parsed,
             )
 
-            generation_copy: Generation[T_Schema | None] = generation.clone(
-                new_parseds=[
-                    parsed.response
-                    if self.response_schema is not None
-                    and not isinstance(parsed.response, str)
-                    else None
-                ]
-            )
-
-            generations.append(cast(Generation[T_Schema], generation_copy))
-
             called_tools: dict[ToolExecutionSuggestion, Any] = {}
             available_tools: dict[_ToolName, Tool[Any]] = {
                 tool.name: tool for tool in filtered_tools
@@ -275,9 +262,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 called_tools=called_tools,
                 tool_calls_amount=generation.tool_calls_amount,
                 iteration=state.iteration + 1,
+                token_usage=generation.usage,
             )
 
-        return AgentOutput[T_Schema](generations=generations, final_context=context)
+        return AgentRunOutput[T_Schema](
+            artifacts=[],
+            usage=AgentUsageStatistics(
+                token_usage=sum(state.token_usages, Usage.zero())
+            ),
+            final_context=context,
+        )
 
     def to_http_router(
         self, path: str, type: Literal["fastapi"] = "fastapi"

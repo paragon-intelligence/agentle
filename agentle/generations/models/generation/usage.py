@@ -21,3 +21,15 @@ class Usage(BaseModel):
             prompt_tokens=self.prompt_tokens + other.prompt_tokens,
             completion_tokens=self.completion_tokens + other.completion_tokens,
         )
+
+    def __radd__(self, other: int) -> Usage:
+        if other == 0:
+            return self
+        return Usage(
+            prompt_tokens=self.prompt_tokens + other,
+            completion_tokens=self.completion_tokens,
+        )
+
+    @staticmethod
+    def zero() -> Usage:
+        return Usage(prompt_tokens=0, completion_tokens=0)
