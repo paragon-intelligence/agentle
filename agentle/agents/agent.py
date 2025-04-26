@@ -9,6 +9,7 @@ from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
+from rsb.models.mimetype import MimeType
 
 from agentle.agents.agent_config import AgentConfig
 from agentle.agents.agent_output import AgentOutput
@@ -25,7 +26,9 @@ from agentle.agents.models.run_state import RunState
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
-from agentle.generations.tools.tool import Tool
+from agentle.generations.models.message_parts.tool_execution_suggestion import (
+    ToolExecutionSuggestion,
+)
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
@@ -33,6 +36,7 @@ from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
+from agentle.generations.tools.tool import Tool
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
 type WithoutStructuredOutput = None
@@ -73,7 +77,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     A URL to the address the agent is hosted at.
     """
 
-    generation_provider: GenerationProvider
+    generation_provider: GenerationProvider = Field(...)
     """
     The service provider of the agent
     """
@@ -101,13 +105,15 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     Intended to match OpenAPI authentication structure.
     """
 
-    defaultInputModes: Sequence[str] = Field(default_factory=lambda: ["text/plain"])
+    defaultInputModes: Sequence[MimeType] = Field(
+        default_factory=lambda: ["text/plain"]
+    )
     """
     The set of interaction modes that the agent
     supports across all skills. This can be overridden per-skill.
     """
 
-    defaultOutputModes: Sequence[str] = Field(
+    defaultOutputModes: Sequence[MimeType] = Field(
         default_factory=lambda: ["text/plain", "application/json"]
     )
     """
@@ -143,7 +149,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     The MCP servers to use for the agent.
     """
 
-    tools: Sequence[Tool | Callable[..., object]] = Field(default_factory=list)
+    tools: Sequence[Tool[Any] | Callable[..., object]] = Field(default_factory=list)
     """
     The tools to use for the agent.
     """
@@ -200,12 +206,17 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         )
 
         while not state.task_completed and state.iteration < self.config.maxIterations:
-            state.iteration += 1
+            # Escolha o schema correto com base em T_Schema
+            response_schema_type = (
+                ResponseMiddleware[str]
+                if self.response_schema is None
+                else ResponseMiddleware[T_Schema]
+            )
 
             generation = await self.generation_provider.create_generation_async(
                 model=self.model,
                 messages=context.messages,
-                response_schema=ResponseMiddleware[T_Schema],
+                response_schema=response_schema_type,
                 generation_config=self.config.generationConfig,
                 tools=[
                     Tool.from_callable(tool) if callable(tool) else tool
@@ -213,7 +224,23 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 ],
             )
 
-            state.task_completed = generation.parsed.task_info.completed
+            parsed: ResponseMiddleware[T_Schema] | ResponseMiddleware[str] = cast(  # type: ignore[reportUnnecessaryCast]
+                ResponseMiddleware[T_Schema] | ResponseMiddleware[str],
+                generation.parsed,
+            )
+
+            # remove the state. calls and use only the state.update method
+            called_tools: set[ToolExecutionSuggestion] = {*()}
+            for tool_execution_suggestion in generation.tool_calls:
+                called_tools.add(tool_execution_suggestion)
+
+            state.update(
+                task_completed=parsed.task_completed,
+                last_response=parsed,
+                called_tools=called_tools,
+                tool_calls_amount=generation.tool_calls_amount,
+                iteration=state.iteration + 1,
+            )
 
             # TODO(arthur): Implement the agent logic here.
             # Gerar uma resposta ate a tarefa ser classificada como concluida pelo agente.
@@ -230,6 +257,43 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         match type:
             case "fastapi":
                 return self._to_fastapi_router(path=path)
+
+    def clone(
+        self,
+        *,
+        new_name: str | None = None,
+        new_instructions: str | None = None,
+        new_tools: Sequence[Tool | Callable[..., object]] | None = None,
+        new_config: AgentConfig | None = None,
+        new_model: str | None = None,
+        new_version: str | None = None,
+        new_documentation_url: str | None = None,
+        new_capabilities: Capabilities | None = None,
+        new_authentication: Authentication | None = None,
+        new_default_input_modes: Sequence[str] | None = None,
+        new_default_output_modes: Sequence[str] | None = None,
+        new_skills: Sequence[AgentSkill] | None = None,
+        new_mcp_servers: Sequence[MCPServerProtocol] | None = None,
+        new_generation_provider: GenerationProvider | None = None,
+        new_url: str | None = None,
+    ) -> Agent[T_Schema]:
+        return Agent[T_Schema](
+            name=new_name or self.name,
+            instructions=new_instructions or self.instructions,
+            tools=new_tools or self.tools,
+            config=new_config or self.config,
+            model=new_model or self.model,
+            version=new_version or self.version,
+            documentationUrl=new_documentation_url or self.documentationUrl,
+            capabilities=new_capabilities or self.capabilities,
+            authentication=new_authentication or self.authentication,
+            defaultInputModes=new_default_input_modes or self.defaultInputModes,
+            defaultOutputModes=new_default_output_modes or self.defaultOutputModes,
+            skills=new_skills or self.skills,
+            mcp_servers=new_mcp_servers or self.mcp_servers,
+            generation_provider=new_generation_provider or self.generation_provider,
+            url=new_url or self.url,
+        )
 
     def _to_fastapi_router(self, path: str) -> APIRouter:
         from fastapi import APIRouter

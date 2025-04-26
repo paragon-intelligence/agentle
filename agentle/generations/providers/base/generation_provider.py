@@ -11,7 +11,9 @@ from agentle.generations.models.generation.generation_config import GenerationCo
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.part import Part
 from agentle.generations.models.message_parts.text import TextPart
-from agentle.generations.models.message_parts.tool_execution import ToolExecution
+from agentle.generations.models.message_parts.tool_execution_suggestion import (
+    ToolExecutionSuggestion,
+)
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
 from agentle.generations.models.messages.user_message import UserMessage
@@ -76,7 +78,7 @@ class GenerationProvider(abc.ABC):
                 user_message_parts = cast(
                     Sequence[Part], [TextPart(text=prompt.content)]
                 )
-            case TextPart() | FilePart() | Tool() | ToolExecution():
+            case TextPart() | FilePart() | Tool() | ToolExecutionSuggestion():
                 user_message_parts = cast(Sequence[Part], [prompt])
             case _:
                 user_message_parts = prompt

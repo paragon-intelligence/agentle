@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 import uuid
 from logging import Logger
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 from agentle.generations.models.generation.choice import Choice
 from agentle.generations.models.generation.generation import Generation
@@ -53,7 +53,7 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
     def adapt(self, _f: GenerateContentResponse) -> Generation[T]:
         from google.genai import types
 
-        parsed: T | None = _f.parsed  # type: ignore[reportAssignmentType]
+        parsed: T | None = cast(T | None, _f.parsed)
         candidates: list[types.Candidate] | None = _f.candidates
 
         if candidates is None:
@@ -69,6 +69,7 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
                 self._logger.warning(
                     "WARNING: No usage metadata returned by Google. Assuming 0"
                 )
+
                 usage = Usage(prompt_tokens=0, completion_tokens=0)
             case _:
                 prompt_token_count = (
@@ -76,11 +77,13 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
                     if _f.usage_metadata.prompt_token_count
                     else self._warn_and_default(field_name="prompt_token_count")
                 )
+
                 candidates_token_count = (
                     _f.usage_metadata.candidates_token_count
                     if _f.usage_metadata.candidates_token_count
                     else self._warn_and_default(field_name="candidates_token_count")
                 )
+
                 usage = Usage(
                     prompt_tokens=prompt_token_count,
                     completion_tokens=candidates_token_count,

@@ -7,5 +7,14 @@ type StringOutput = str
 
 
 class ResponseMiddleware[T_Schema = StringOutput](BaseModel):
+    task: str = Field(description="The identified task that the agent must complete. ")
     response: T_Schema
-    task_info: TaskInfo = Field(description="Information about the task")
+    task_info: TaskInfo = Field(
+        description="Information about the task. "
+        + "A task is the unit of work that the agent is performing, like answering a question or "
+        + "completing a task."
+    )
+
+    @property
+    def task_completed(self) -> bool:
+        return self.task_info.completed

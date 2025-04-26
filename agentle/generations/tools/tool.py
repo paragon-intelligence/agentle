@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
+from rsb.models.config_dict import ConfigDict
 
 
 class Tool[T_Output = Any](BaseModel):
@@ -15,6 +16,8 @@ class Tool[T_Output = Any](BaseModel):
     parameters: dict[str, object]
     callable_ref: Callable[..., T_Output] | None = Field(default=None)
     needs_human_confirmation: bool = Field(default=False)
+
+    config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
     @property
     def text(self) -> str:

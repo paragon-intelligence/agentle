@@ -25,6 +25,9 @@ from agentle.generations.providers.google._adapters.generate_generate_content_re
 from agentle.generations.providers.google._adapters.message_to_google_content_adapter import (
     MessageToGoogleContentAdapter,
 )
+from agentle.generations.providers.google.function_calling_config import (
+    FunctionCallingConfig,
+)
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
@@ -38,6 +41,7 @@ if TYPE_CHECKING:
     )
     from google.genai.types import Content
 
+
 type WithoutStructuredOutput = None
 
 
@@ -50,6 +54,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
     debug_config: DebugConfig | None
     http_options: HttpOptions | None
     message_adapter: Adapter[AssistantMessage | UserMessage | DeveloperMessage, Content]
+    function_calling_config: FunctionCallingConfig
 
     def __init__(
         self,
@@ -124,18 +129,38 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         if isinstance(first_message, DeveloperMessage):
             system_instruction = self.message_adapter.adapt(first_message)
 
+        message_tools = [
+            part
+            for message in messages
+            for part in message.parts
+            if isinstance(part, Tool)
+        ]
+
+        final_tools = (
+            list(tools or []) + message_tools if tools or message_tools else None
+        )
+
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             temperature=_generation_config.temperature,
             top_p=_generation_config.top_p,
             top_k=_generation_config.top_k,
             candidate_count=_generation_config.n,
-            tools=[AgentleToolToGoogleToolAdapter().adapt(tool) for tool in tools]
-            if tools
+            tools=[AgentleToolToGoogleToolAdapter().adapt(tool) for tool in final_tools]
+            if final_tools
             else None,
             max_output_tokens=_generation_config.max_output_tokens,
             response_schema=response_schema if bool(response_schema) else None,
             response_mime_type="application/json" if bool(response_schema) else None,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                disable=self.function_calling_config.get("disable", True),
+                maximum_remote_calls=self.function_calling_config.get(
+                    "maximum_remote_calls", 10
+                ),
+                ignore_call_history=self.function_calling_config.get(
+                    "ignore_call_history", False
+                ),
+            ),
         )
 
         generate_content_response = await client.aio.models.generate_content(

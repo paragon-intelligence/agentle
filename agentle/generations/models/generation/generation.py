@@ -1,14 +1,21 @@
 from __future__ import annotations
+
+import logging
 import uuid
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 from typing import Literal
 
 from pydantic import BaseModel
+from rsb.decorators.entities import entity
 
 from agentle.generations.models.generation.choice import Choice
 from agentle.generations.models.generation.usage import Usage
-from rsb.decorators.entities import entity
+from agentle.generations.models.message_parts.tool_execution_suggestion import (
+    ToolExecutionSuggestion,
+)
+
+logger = logging.getLogger(__name__)
 
 
 @entity
@@ -32,6 +39,25 @@ class Generation[T](BaseModel):
             )
 
         return self.get_parsed(0)
+
+    @property
+    def tool_calls(self) -> Sequence[ToolExecutionSuggestion]:
+        if len(self.choices) > 1:
+            logger.warning(
+                "Choices list is > 1. Coudn't determine the tool calls. "
+                + "Please, use the get_tool_calls method, instead, "
+                + "passing the choice number you want to get the tool calls."
+                + "Returning the first choice tool calls."
+            )
+
+        return self.get_tool_calls(0)
+
+    @property
+    def tool_calls_amount(self) -> int:
+        return len(self.tool_calls)
+
+    def get_tool_calls(self, choice: int = 0) -> Sequence[ToolExecutionSuggestion]:
+        return self.choices[choice].message.tool_calls
 
     @classmethod
     def mock(cls) -> Generation[T]:
