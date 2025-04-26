@@ -222,6 +222,20 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 tool for tool in filtered_tools if tool.name not in called_tools_names
             ]
 
+            called_tools_prompt: list[str] = [
+                "The following are the tool calls made by the agent:"
+            ]
+            for tool_execution_suggestion, result in state.called_tools.items():
+                called_tools_prompt.append(
+                    f"""
+                <tool_execution>
+                    <tool_name>{tool_execution_suggestion.tool_name}</tool_name>
+                    <args>{tool_execution_suggestion.args}</args>
+                    <result>{result}</result>
+                </tool_execution>
+                """
+                )
+
             generation = await self.generation_provider.create_generation_async(
                 model=self.model,
                 messages=context.messages,
