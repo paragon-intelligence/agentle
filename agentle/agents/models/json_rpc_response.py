@@ -6,8 +6,7 @@ from rsb.models.field import Field
 from agentle.agents.models.json_rpc_error import JSONRPCError
 
 
-class JSONRPCResponse(BaseModel):
+class JSONRPCResponse[R_Result = dict[str, Any]](BaseModel):
     id: str
-    result: dict[str, Any] | None = Field(default=None)
+    result: R_Result | None = Field(default=None)
     error: JSONRPCError | None = Field(default=None)
-

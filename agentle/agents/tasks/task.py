@@ -35,7 +35,7 @@ class Task(BaseModel):
     history of messages exchanged between the task and the client
     """
 
-    artifacts: Sequence[Artifact] | None = Field(default=None)
+    artifacts: Sequence[Artifact[Any]] | None = Field(default=None)
     """
     collection of artifacts created by the agent
     """
