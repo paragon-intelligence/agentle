@@ -60,7 +60,6 @@ class Generation[T](BaseModel):
     def clone[T_Schema](
         self,
         *,
-        new_response_schema: type[T_Schema],
         new_parseds: Sequence[T_Schema],
         new_elapsed_time: timedelta | None = None,
         new_id: uuid.UUID | None = None,
@@ -75,7 +74,6 @@ class Generation[T](BaseModel):
     def clone[T_Schema](
         self,
         *,
-        new_response_schema: None = None,
         new_parseds: None = None,
         new_elapsed_time: timedelta | None = None,
         new_id: uuid.UUID | None = None,
@@ -91,7 +89,6 @@ class Generation[T](BaseModel):
         self,
         *,
         # Nenhum destes é fornecido para este overload
-        new_response_schema: None = None,
         new_parseds: None = None,
         new_choices: None = None,
         # Apenas estes podem ser fornecidos
@@ -106,7 +103,6 @@ class Generation[T](BaseModel):
     def clone[T_Schema](  # type: ignore[override]
         self,
         *,
-        new_response_schema: type[T_Schema] | None = None,
         new_parseds: Sequence[T_Schema] | None = None,
         new_elapsed_time: timedelta | None = None,
         new_id: uuid.UUID | None = None,
@@ -117,13 +113,13 @@ class Generation[T](BaseModel):
         new_usage: Usage | None = None,
     ) -> Generation[T_Schema] | Generation[T]:  # Adjusted return type hint for clarity
         # Validate against ambiguous parameter usage
-        if new_choices and (new_response_schema or new_parseds):
+        if new_choices and new_parseds:
             raise ValueError(
-                "Cannot provide 'new_choices' together with 'new_response_schema' or 'new_parseds'."
+                "Cannot provide 'new_choices' together with 'new_parseds'."
             )
 
-        # Scenario 1: Clone with new schema and parsed data
-        if new_response_schema and new_parseds:
+        # Scenario 1: Clone with new parsed data
+        if new_parseds:
             # Validate length consistency
             if len(new_parseds) != len(self.choices):
                 raise ValueError(
@@ -165,7 +161,7 @@ class Generation[T](BaseModel):
             )
 
         # Scenario 3: Simple clone (same type T), potentially updating metadata
-        if not new_response_schema and not new_parseds and not new_choices:
+        if not new_parseds and not new_choices:
             # Deep copy existing choices to ensure independence
             _new_choices_scenario3: list[Choice[T]] = [
                 copy.deepcopy(choice) for choice in self.choices

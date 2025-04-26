@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Sequence
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Literal, cast, get_type_hints
+from typing import TYPE_CHECKING, Any, Literal, cast
 from uuid import UUID
 
 from rsb.coroutines.run_sync import run_sync
@@ -197,7 +197,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         state = RunState[T_Schema].init_state()
 
         # Populate the generations list with the generations with only the response middleware wrapped response attribute as a parsed attribute
-        generations: list[Generation[T_Schema]] = []
+        generations: list[Generation[T_Schema | None]] = []
 
         filtered_tools: list[Tool[Any]] = [
             Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
@@ -234,9 +234,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 generation.parsed,
             )
 
-            generation_copy = generation.clone(
-                
+            generation_copy: Generation[T_Schema | None] = generation.clone(
+                new_parseds=[
+                    parsed.response
+                    if self.response_schema is not None
+                    and not isinstance(parsed.response, str)
+                    else None
+                ]
             )
+
+            generations.append(generation_copy)
 
             # remove the state. calls and use only the state.update method
             called_tools: set[ToolExecutionSuggestion] = {*()}
