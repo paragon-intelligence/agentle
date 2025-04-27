@@ -14,7 +14,9 @@ class Tool[T_Output = Any](BaseModel):
     name: str
     description: str | None = Field(default=None)
     parameters: dict[str, object]
-    _callable_ref: Callable[..., T_Output] | None = Field(default=None)
+    callable_ref: Callable[..., T_Output] | None = Field(
+        default=None, json_schema_extra={"exclude": True}
+    )
     needs_human_confirmation: bool = Field(default=False)
 
     model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
@@ -24,12 +26,12 @@ class Tool[T_Output = Any](BaseModel):
         return f"Tool: {self.name}\nDescription: {self.description}\nParameters: {self.parameters}"
 
     def call(self, **kwargs: object) -> T_Output:
-        if self._callable_ref is None:
+        if self.callable_ref is None:
             raise ValueError(
-                'Tool is not callable because the "_callable_ref" instance variable is not set'
+                'Tool is not callable because the "callable_ref" instance variable is not set'
             )
 
-        return self._callable_ref(**kwargs)
+        return self.callable_ref(**kwargs)
 
     @classmethod
     def from_callable(
@@ -77,6 +79,6 @@ class Tool[T_Output = Any](BaseModel):
         return cls(
             name=name,
             description=description,
-            _callable_ref=_callable,
+            callable_ref=_callable,
             parameters=parameters,
         )
