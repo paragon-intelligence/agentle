@@ -71,6 +71,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             AssistantMessage | UserMessage | DeveloperMessage, Content
         ]
         | None = None,
+        function_calling_config: FunctionCallingConfig | None = None,
     ) -> None:
         super().__init__(tracing_client=tracing_client)
         self.use_vertex_ai = use_vertex_ai
@@ -81,6 +82,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         self.debug_config = debug_config
         self.http_options = http_options
         self.message_adapter = message_adapter or MessageToGoogleContentAdapter()
+        self.function_calling_config = function_calling_config or {}
 
     @property
     @override
