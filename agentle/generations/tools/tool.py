@@ -14,7 +14,7 @@ class Tool[T_Output = Any](BaseModel):
     name: str
     description: str | None = Field(default=None)
     parameters: dict[str, object]
-    callable_ref: Callable[..., T_Output] | None = Field(default=None, exclude=True)
+    callable_ref: Callable[..., T_Output] | None = Field(default=None)
     needs_human_confirmation: bool = Field(default=False)
 
     model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
