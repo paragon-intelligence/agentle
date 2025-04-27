@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.0.1
+## v0.0.2
 
-- first version. everything is broken. just commited to publish in pypi
+- 
