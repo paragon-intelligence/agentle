@@ -7,6 +7,7 @@ from typing import Any, Literal
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
+from rsb.models.private_attr import PrivateAttr
 
 
 class Tool[T_Output = Any](BaseModel):
@@ -14,9 +15,7 @@ class Tool[T_Output = Any](BaseModel):
     name: str
     description: str | None = Field(default=None)
     parameters: dict[str, object]
-    callable_ref: Callable[..., T_Output] | None = Field(
-        default=None, json_schema_extra={"exclude": True}
-    )
+    _callable_ref: Callable[..., T_Output] | None = PrivateAttr(default=None)
     needs_human_confirmation: bool = Field(default=False)
 
     model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
@@ -26,12 +25,12 @@ class Tool[T_Output = Any](BaseModel):
         return f"Tool: {self.name}\nDescription: {self.description}\nParameters: {self.parameters}"
 
     def call(self, **kwargs: object) -> T_Output:
-        if self.callable_ref is None:
+        if self._callable_ref is None:
             raise ValueError(
-                'Tool is not callable because the "callable_ref" instance variable is not set'
+                'Tool is not callable because the "_callable_ref" instance variable is not set'
             )
 
-        return self.callable_ref(**kwargs)
+        return self._callable_ref(**kwargs)
 
     @classmethod
     def from_callable(
@@ -76,9 +75,13 @@ class Tool[T_Output = Any](BaseModel):
 
             parameters[param_name] = param_info
 
-        return cls(
+        instance = cls(
             name=name,
             description=description,
-            callable_ref=_callable,
             parameters=parameters,
         )
+
+        # Definir o atributo privado após a criação da instância
+        instance._callable_ref = _callable
+
+        return instance
