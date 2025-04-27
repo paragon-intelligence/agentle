@@ -12,6 +12,7 @@ from rsb.models.field import Field
 from rsb.models.mimetype import MimeType
 
 from agentle.agents.agent_config import AgentConfig
+from agentle.agents.agent_run_output import AgentRunOutput
 from agentle.agents.context import Context
 from agentle.agents.models.agent_skill import AgentSkill
 from agentle.agents.models.agent_usage_statistics import AgentUsageStatistics
@@ -21,9 +22,9 @@ from agentle.agents.models.middleware.response_middleware import ResponseMiddlew
 
 # from gat.agents.models.middleware.response_middleware import ResponseMiddleware
 from agentle.agents.models.run_state import RunState
-from agentle.agents.output.agent_run_output import AgentRunOutput
 
 # from gat.agents.tools.agent_tool import AgentTool
+from agentle.agents.tasks.task_state import TaskState
 from agentle.generations.models.generation.usage import Usage
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
@@ -202,15 +203,15 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
         ]
 
-        while not state.task_completed and state.iteration < self.config.maxIterations:
-            response_schema_type: (
-                type[ResponseMiddleware[T_Schema]] | type[ResponseMiddleware[str]]
-            ) = (
-                ResponseMiddleware[str]
-                if self.response_schema is None
-                else ResponseMiddleware[T_Schema]
+        while (
+            not (
+                state.task_status == TaskState.COMPLETED
+                or state.task_status == TaskState.FAILED
+                or state.task_status == TaskState.CANCELED
+                or state.task_status == TaskState.INPUT_REQUIRED
             )
-
+            and state.iteration < self.config.maxIterations
+        ):
             called_tools_names: set[str] = {
                 tool_execution_suggestion.tool_name
                 for tool_execution_suggestion in state.called_tools
@@ -234,39 +235,45 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 """
                 )
 
-            generation = await self.generation_provider.create_generation_async(
-                model=self.model,
-                messages=context.messages,
-                response_schema=response_schema_type,
-                generation_config=self.config.generationConfig,
-                tools=filtered_tools,
-            )
-
-            parsed = cast(  # type: ignore[reportUnnecessaryCast]
-                ResponseMiddleware[T_Schema] | ResponseMiddleware[str],
-                generation.parsed,
+            tool_call_generation = (
+                await self.generation_provider.create_generation_async(
+                    model=self.model,
+                    messages=context.messages,
+                    generation_config=self.config.generationConfig,
+                    tools=filtered_tools,
+                )
             )
 
             called_tools: dict[ToolExecutionSuggestion, Any] = {}
             available_tools: dict[_ToolName, Tool[Any]] = {
                 tool.name: tool for tool in filtered_tools
             }
-            for tool_execution_suggestion in generation.tool_calls:
+            for tool_execution_suggestion in tool_call_generation.tool_calls:
                 called_tools[tool_execution_suggestion] = available_tools[
                     tool_execution_suggestion.tool_name
                 ].call(**tool_execution_suggestion.args)
 
             state.update(
-                task_completed=parsed.task_completed,
-                last_response=parsed.response,
+                last_response=tool_call_generation.text,
                 called_tools=called_tools,
-                tool_calls_amount=generation.tool_calls_amount,
+                tool_calls_amount=tool_call_generation.tool_calls_amount,
                 iteration=state.iteration + 1,
-                token_usage=generation.usage,
+                token_usage=tool_call_generation.usage,
+                task_status=TaskState.WORKING,
+            )
+
+            response_schema_type: (
+                type[ResponseMiddleware[T_Schema]] | type[ResponseMiddleware[str]]
+            ) = (
+                ResponseMiddleware[str]
+                if self.response_schema is None
+                else ResponseMiddleware[T_Schema]
             )
 
         return AgentRunOutput[T_Schema](
             artifacts=[],
+            task_status=state.task_status,
+            parsed=None,
             usage=AgentUsageStatistics(
                 token_usage=sum(state.token_usages, Usage.zero())
             ),

@@ -1,10 +1,8 @@
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
+from agentle.agents.tasks.task_state import TaskState
+
 
 class TaskInfo(BaseModel):
-    completed: bool = Field(
-        description="Whether the task is completed or not. "
-        + "A task is completed if the agent has provided a response that "
-        + "satisfies the task's objective."
-    )
+    state: TaskState = Field(description="The current state of the task. ")

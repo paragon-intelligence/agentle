@@ -5,8 +5,8 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 from rsb.models.base_model import BaseModel
-from rsb.models.field import Field
 from rsb.models.config_dict import ConfigDict
+from rsb.models.field import Field
 
 
 class Tool[T_Output = Any](BaseModel):
@@ -14,7 +14,7 @@ class Tool[T_Output = Any](BaseModel):
     name: str
     description: str | None = Field(default=None)
     parameters: dict[str, object]
-    callable_ref: Callable[..., T_Output] | None = Field(default=None)
+    callable_ref: Callable[..., T_Output] | None = Field(default=None, exclude=True)
     needs_human_confirmation: bool = Field(default=False)
 
     config = ConfigDict(arbitrary_types_allowed=True, frozen=True)

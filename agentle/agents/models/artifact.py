@@ -9,7 +9,7 @@ from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 
 
-class Artifact[T_Parsed](BaseModel):
+class Artifact(BaseModel):
     name: str | None = Field(default=None)
     description: str | None = Field(default=None)
     parts: Sequence[TextPart | FilePart]
@@ -17,6 +17,5 @@ class Artifact[T_Parsed](BaseModel):
     index: int
     append: bool | None = Field(default=None)
     last_chunk: bool | None = Field(default=None)
-    parsed: T_Parsed
 
     config = ConfigDict(frozen=True)

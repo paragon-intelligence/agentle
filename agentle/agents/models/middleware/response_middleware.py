@@ -2,6 +2,7 @@ from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
 from agentle.agents.models.middleware.task_info import TaskInfo
+from agentle.agents.tasks.task_state import TaskState
 
 type StringOutput = str
 
@@ -17,4 +18,4 @@ class ResponseMiddleware[T_Schema = StringOutput](BaseModel):
 
     @property
     def task_completed(self) -> bool:
-        return self.task_info.completed
+        return self.task_info.state == TaskState.COMPLETED
