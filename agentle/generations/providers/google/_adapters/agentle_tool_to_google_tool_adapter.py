@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from google.genai import types
 
 
-class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], types.Tool]):
+class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
     def adapt(self, agentle_tool: Tool[Any]) -> types.Tool:
         from google.genai import types
 
