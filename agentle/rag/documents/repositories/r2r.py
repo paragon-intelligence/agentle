@@ -103,7 +103,7 @@ class R2RGraphDocumentRepository(
                 num_sub_queries=filters.get("num_sub_queries") or 5,
                 search_strategy=filters.get("search_strategy") or "query_fusion",
                 limit=filters.get("limit") or 20,
-                filters=filters.get("filters"),
+                filters=filters.get("filters") or {},
             ),
         )
 
