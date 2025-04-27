@@ -17,7 +17,7 @@ class Tool[T_Output = Any](BaseModel):
     callable_ref: Callable[..., T_Output] | None = Field(default=None, exclude=True)
     needs_human_confirmation: bool = Field(default=False)
 
-    config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
     @property
     def text(self) -> str:

@@ -14,7 +14,7 @@ class ToolExecutionSuggestion(BaseModel):
     tool_name: str
     args: dict[str, object] = Field(default_factory=dict)
 
-    config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True)
 
     @property
     def text(self) -> str:

@@ -18,4 +18,4 @@ class Artifact(BaseModel):
     append: bool | None = Field(default=None)
     last_chunk: bool | None = Field(default=None)
 
-    config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True)
