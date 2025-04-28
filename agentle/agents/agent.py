@@ -274,7 +274,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         state = RunState[T_Schema].init_state()
         # Convert all tools in the array to Tool objects
-        called_tools: MutableMapping[ToolExecutionSuggestion, Any] = {}
+        called_tools: dict[ToolExecutionSuggestion, Any] = {}
         while state.iteration < self.config.maxIterations:
             # Filter out tools that have already been called
             filtered_tools = [
