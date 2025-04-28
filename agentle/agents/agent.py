@@ -305,6 +305,24 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 else ""
             )
 
+            no_more_tools = len(filtered_tools) == 0
+            if no_more_tools:
+                generation = await self.generation_provider.create_generation_async(
+                    model=self.model,
+                    messages=MessageSequence(context.messages)
+                    .append_before_last_message(called_tools_prompt)
+                    .elements,
+                    generation_config=self.config.generationConfig,
+                    response_schema=self.response_schema,
+                )
+
+                return self._build_agent_run_output(
+                    artifact_name="Artifact",
+                    artifact_description="End result of the task",
+                    artifact_metadata=None,
+                    context=context,
+                    generation=generation,
+                )
             tool_call_generation = (
                 await self.generation_provider.create_generation_async(
                     model=self.model,
@@ -318,8 +336,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
             agent_didnt_call_any_tool = tool_call_generation.tool_calls_amount() == 0
             if agent_didnt_call_any_tool:
-                # Agent didn't call any tool. We can return/process the final answer.
-
                 generation = await self.generation_provider.create_generation_async(
                     model=self.model,
                     messages=context.messages,
@@ -338,7 +354,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             # Agent called one tool. We must call the tool and update the state.
 
             for tool_execution_suggestion in tool_call_generation.tool_calls:
-                called_tools[tool_execution_suggestion.id] = (
+                called_tools[tool_execution_suggestion.id] = (  # here
                     tool_execution_suggestion,
                     available_tools[tool_execution_suggestion.tool_name].call(
                         **tool_execution_suggestion.args
@@ -664,3 +680,22 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 UserMessage(parts=[TextPart(text=str(input))]),
             ]
         )
+
+
+if __name__ == "__main__":
+    from agentle.generations.providers.google.google_generation_provider import (
+        GoogleGenerationProvider,
+    )
+
+    def get_weather(location: str) -> str:
+        return "The weather in " + location + " is sunny."
+
+    weather_agent = Agent(
+        generation_provider=GoogleGenerationProvider(),
+        model="gemini-2.0-flash",
+        instructions="You are a weather agent that can answer questions about the weather.",
+        tools=[get_weather],
+    )
+
+    output = weather_agent.run("Hello. What is the weather in Tokyo? what do you think about tokio?")
+    print(output)
