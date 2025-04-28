@@ -1,0 +1,2 @@
+class MaxToolCallsExceededError(Exception):
+    pass

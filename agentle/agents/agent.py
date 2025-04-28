@@ -5,7 +5,6 @@ import json
 from collections.abc import AsyncGenerator, Callable, MutableMapping, Sequence
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Literal, cast
-from uuid import UUID
 
 from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
@@ -17,16 +16,15 @@ from rsb.models.mimetype import MimeType
 from agentle.agents.agent_config import AgentConfig
 from agentle.agents.agent_run_output import AgentRunOutput
 from agentle.agents.context import Context
+from agentle.agents.errors.max_tool_calls_exceeded_error import (
+    MaxToolCallsExceededError,
+)
 from agentle.agents.models.agent_skill import AgentSkill
 from agentle.agents.models.agent_usage_statistics import AgentUsageStatistics
 from agentle.agents.models.artifact import Artifact
 from agentle.agents.models.authentication import Authentication
 from agentle.agents.models.capabilities import Capabilities
-
-# from gat.agents.models.middleware.response_middleware import ResponseMiddleware
 from agentle.agents.models.run_state import RunState
-
-# from gat.agents.tools.agent_tool import AgentTool
 from agentle.agents.tasks.task_state import TaskState
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
@@ -89,7 +87,7 @@ type AgentInput = (
 
 class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     # Agent-to-agent protocol fields
-    name: str
+    name: str = Field(default="Agent")
     """
     Human readable name of the agent.
     (e.g. "Recipe Agent")
@@ -107,7 +105,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     A URL to the address the agent is hosted at.
     """
 
-    generation_provider: GenerationProvider = Field(...)
+    generation_provider: GenerationProvider
     """
     The service provider of the agent
     """
@@ -190,7 +188,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     """
 
     # Internal fields
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
     @property
     def uid(self) -> str:
@@ -212,15 +210,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     def run(
         self,
         input: AgentInput,
-        task_id: UUID | None = None,
         timeout: float | None = None,
     ) -> AgentRunOutput[T_Schema]:
-        return run_sync(self.run_async, timeout=timeout, input=input, task_id=task_id)
+        return run_sync(self.run_async, timeout=timeout, input=input)
 
     async def run_async(
         self,
         input: AgentInput,
-        task_id: UUID | None = None,
     ) -> AgentRunOutput[T_Schema]:
         context: Context = self._convert_input_to_context(
             input, instructions=self._convert_instructions_to_str(self.instructions)
@@ -279,10 +275,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         state = RunState[T_Schema].init_state()
         # Convert all tools in the array to Tool objects
         called_tools: MutableMapping[ToolExecutionSuggestion, Any] = {}
-        while (
-            state.task_status == TaskState.WORKING
-            and state.iteration < self.config.maxIterations
-        ):
+        while state.iteration < self.config.maxIterations:
             # Filter out tools that have already been called
             filtered_tools = [
                 tool
@@ -290,7 +283,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 if tool.name
                 not in {
                     tool_execution_suggestion.tool_name
-                    for tool_execution_suggestion in state.called_tools
+                    for tool_execution_suggestion in called_tools
                 }
             ]
 
@@ -307,11 +300,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     <args>{tool_execution_suggestion.args}</args>
                     <result>{result}</result>
                 </tool_execution>"""
-                            for tool_execution_suggestion, result in state.called_tools.items()
+                            for tool_execution_suggestion, result in called_tools.items()
                         ]
                     )
                 )
-                if state.called_tools
+                if called_tools
                 else ""
             )
 
@@ -354,14 +347,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
             state.update(
                 last_response=tool_call_generation.text,
-                called_tools=called_tools,
                 tool_calls_amount=tool_call_generation.tool_calls_amount(),
                 iteration=state.iteration + 1,
                 token_usage=tool_call_generation.usage,
-                task_status=TaskState.WORKING,
             )
 
-        raise NotImplementedError("Not implemented")
+        raise MaxToolCallsExceededError(
+            f"Max tool calls exceeded after {self.config.maxIterations} iterations"
+        )
 
     def to_http_router(
         self, path: str, type: Literal["fastapi"] = "fastapi"
