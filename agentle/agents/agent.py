@@ -274,17 +274,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         state = RunState[T_Schema].init_state()
         # Convert all tools in the array to Tool objects
-        called_tools: dict[ToolExecutionSuggestion, Any] = {}
+        called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]] = {}
         while state.iteration < self.config.maxIterations:
             # Filter out tools that have already been called
             filtered_tools = [
                 tool
                 for tool in all_tools
                 if tool.name
-                not in {
-                    tool_execution_suggestion.tool_name
-                    for tool_execution_suggestion in called_tools
-                }
+                not in {suggestion.tool_name for suggestion, _ in called_tools.values()}
             ]
 
             called_tools_prompt: str = (
@@ -296,11 +293,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     + "\n".join(
                         [
                             f"""<tool_execution>
-                    <tool_name>{tool_execution_suggestion.tool_name}</tool_name>
-                    <args>{tool_execution_suggestion.args}</args>
+                    <tool_name>{suggestion.tool_name}</tool_name>
+                    <args>{suggestion.args}</args>
                     <result>{result}</result>
                 </tool_execution>"""
-                            for tool_execution_suggestion, result in called_tools.items()
+                            for suggestion, result in called_tools.values()
                         ]
                     )
                 )
@@ -341,9 +338,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             # Agent called one tool. We must call the tool and update the state.
 
             for tool_execution_suggestion in tool_call_generation.tool_calls:
-                called_tools[tool_execution_suggestion] = available_tools[
-                    tool_execution_suggestion.tool_name
-                ].call(**tool_execution_suggestion.args)
+                called_tools[tool_execution_suggestion.id] = (
+                    tool_execution_suggestion,
+                    available_tools[tool_execution_suggestion.tool_name].call(
+                        **tool_execution_suggestion.args
+                    ),
+                )
 
             state.update(
                 last_response=tool_call_generation.text,
