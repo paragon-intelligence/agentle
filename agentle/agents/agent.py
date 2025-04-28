@@ -429,7 +429,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         append: bool = False,
         last_chunk: bool = False,
     ) -> AgentRunOutput[T_Schema]:
-        return AgentRunOutput[T_Schema](
+        parsed = generation.parsed
+
+        return AgentRunOutput(
             artifacts=artifacts
             or [
                 Artifact(
@@ -447,7 +449,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             task_status=task_status,
             usage=AgentUsageStatistics(token_usage=generation.usage),
             final_context=context,
-            parsed=generation.parsed,
+            parsed=parsed,
         )
 
     def _to_fastapi_router(self, path: str) -> APIRouter:
@@ -686,16 +688,25 @@ if __name__ == "__main__":
     from agentle.generations.providers.google.google_generation_provider import (
         GoogleGenerationProvider,
     )
+    import pydantic
 
-    def get_weather(location: str) -> str:
-        return "The weather in " + location + " is sunny."
+    class Weather(pydantic.BaseModel):
+        location: str
+        weather: str
+
+    def get_weather(location: str) -> Weather:
+        return Weather(location=location, weather="sunny")
 
     weather_agent = Agent(
         generation_provider=GoogleGenerationProvider(),
         model="gemini-2.0-flash",
         instructions="You are a weather agent that can answer questions about the weather.",
         tools=[get_weather],
+        response_schema=Weather,
     )
 
-    output = weather_agent.run("Hello. What is the weather in Tokyo? what do you think about tokio?")
+    output = weather_agent.run(
+        "Hello. What is the weather in Tokyo? what do you think about tokio?"
+    )
+
     print(output)

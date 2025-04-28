@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, cast, override
 
 from rsb.adapters.adapter import Adapter
 
@@ -142,6 +142,13 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             list(tools or []) + message_tools if tools or message_tools else None
         )
 
+        disable_function_calling = self.function_calling_config.get("disable", True)
+        # if disable_function_calling is True, set maximum_remote_calls to None
+        maximum_remote_calls = None if disable_function_calling else 10
+        ignore_call_history = self.function_calling_config.get(
+            "ignore_call_history", False
+        )
+
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             temperature=_generation_config.temperature,
@@ -155,19 +162,16 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             response_schema=response_schema if bool(response_schema) else None,
             response_mime_type="application/json" if bool(response_schema) else None,
             automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                disable=self.function_calling_config.get("disable", True),
-                maximum_remote_calls=self.function_calling_config.get(
-                    "maximum_remote_calls", 10
-                ),
-                ignore_call_history=self.function_calling_config.get(
-                    "ignore_call_history", False
-                ),
+                disable=disable_function_calling,
+                maximum_remote_calls=maximum_remote_calls,
+                ignore_call_history=ignore_call_history,
             ),
         )
 
+        contents = [self.message_adapter.adapt(message) for message in messages]
         generate_content_response = await client.aio.models.generate_content(
             model=model,
-            contents=[self.message_adapter.adapt(message) for message in messages],
+            contents=cast(types.ContentListUnion, contents),
             config=config,
         )
 
