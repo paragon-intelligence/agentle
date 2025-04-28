@@ -32,7 +32,6 @@ class MessageSequence(ReadonlyCollection[Message]):
         """
         if isinstance(message, str):
             if message.strip() == "":
-                logger.warning("Message is empty. Skipping append.")
                 return self
 
             message = UserMessage(parts=[TextPart(text=message)])
