@@ -1,4 +1,29 @@
+"""
+The main module of the Agentle framework for creating and managing AI agents.
+
+This module contains the definition of the Agent class, which is the central component of the Agentle framework.
+It allows you to create intelligent agents capable of processing different types of input,
+using external tools, and generating structured responses. The Agent facilitates integration
+with different AI model providers and supports a wide variety of input formats.
+
+Basic example:
+```python
+from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+from agentle.agents.agent import Agent
+
+weather_agent = Agent(
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a weather agent that can answer questions about the weather.",
+    tools=[get_weather],
+)
+
+output = weather_agent.run("Hello. What is the weather in Tokyo?")
+```
+"""
+
 from __future__ import annotations
+
 
 import datetime
 import json
@@ -86,6 +111,59 @@ type AgentInput = (
 
 
 class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
+    """
+    The main class of the Agentle framework that represents an intelligent agent.
+
+    An Agent is an entity that can process various types of input,
+    perform tasks using tools, and generate responses that can be structured.
+    It encapsulates all the logic needed to interact with AI models,
+    manage context, call external tools, and format responses.
+
+    The Agent class is generic and supports structured response types through
+    the T_Schema type parameter, which can be a Pydantic class to define
+    the expected output structure.
+
+    Attributes:
+        name: Human-readable name of the agent.
+        description: Description of the agent, used for communication with users and other agents.
+        url: URL where the agent is hosted.
+        generation_provider: Generation provider used by the agent.
+        version: Version of the agent.
+        documentationUrl: URL to agent documentation.
+        capabilities: Optional capabilities supported by the agent.
+        authentication: Authentication requirements for the agent.
+        defaultInputModes: Input interaction modes supported by the agent.
+        defaultOutputModes: Output interaction modes supported by the agent.
+        skills: Skills that the agent can perform.
+        model: Model to be used by the agent's service provider.
+        instructions: Instructions for the agent.
+        response_schema: Schema of the response to be returned by the agent.
+        mcp_servers: MCP servers to be used by the agent.
+        tools: Tools to be used by the agent.
+        config: Configuration for the agent.
+
+    Example:
+        ```python
+        from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+        from agentle.agents.agent import Agent
+
+        # Define a simple tool
+        def get_weather(location: str) -> str:
+            return f"The weather in {location} is sunny."
+
+        # Create a weather agent
+        weather_agent = Agent(
+            generation_provider=GoogleGenerationProvider(),
+            model="gemini-2.0-flash",
+            instructions="You are a weather agent that can answer questions about the weather.",
+            tools=[get_weather],
+        )
+
+        # Run the agent
+        output = weather_agent.run("What is the weather in London?")
+        ```
+    """
+
     # Agent-to-agent protocol fields
     name: str = Field(default="Agent")
     """
@@ -192,13 +270,42 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
     @property
     def uid(self) -> str:
+        """
+        Returns a unique identifier for this agent.
+
+        Returns:
+            str: Hash of the agent converted to string.
+        """
         return str(hash(self))
 
     def has_tools(self) -> bool:
+        """
+        Checks if this agent has configured tools.
+
+        Returns:
+            bool: True if the agent has tools, False otherwise.
+        """
         return len(self.tools) > 0
 
     @asynccontextmanager
     async def with_mcp_servers(self) -> AsyncGenerator[None, None]:
+        """
+        Asynchronous context manager to connect and clean up MCP servers.
+
+        This method ensures that all MCP servers are connected before the
+        code block is executed and cleaned up after completion, even in case of exceptions.
+
+        Yields:
+            None: Does not return a value, just manages the context.
+
+        Example:
+            ```python
+            async with agent.with_mcp_servers():
+                # Operations that require connection to MCP servers
+                result = await agent.run_async("Query to server")
+            # Servers are automatically disconnected here
+            ```
+        """
         for server in self.mcp_servers:
             await server.connect()
         try:
@@ -212,12 +319,72 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         input: AgentInput,
         timeout: float | None = None,
     ) -> AgentRunOutput[T_Schema]:
+        """
+        Runs the agent synchronously with the provided input.
+
+        This method is a synchronous wrapper for run_async, allowing
+        easy use in synchronous contexts.
+
+        Args:
+            input: The input for the agent, which can be of various types.
+            timeout: Optional time limit in seconds for execution.
+
+        Returns:
+            AgentRunOutput[T_Schema]: The result of the agent execution.
+
+        Example:
+            ```python
+            # Input as string
+            result = agent.run("What is the weather in London?")
+
+            # Input as UserMessage object
+            from agentle.generations.models.messages.user_message import UserMessage
+            from agentle.generations.models.message_parts.text import TextPart
+
+            message = UserMessage(parts=[TextPart(text="What is the weather in London?")])
+            result = agent.run(message)
+            ```
+        """
         return run_sync(self.run_async, timeout=timeout, input=input)
 
     async def run_async(
         self,
         input: AgentInput,
     ) -> AgentRunOutput[T_Schema]:
+        """
+        Runs the agent asynchronously with the provided input.
+
+        This main method processes user input, interacts with the
+        generation provider, and optionally calls tools until reaching a final response.
+
+        The method supports both simple agents (without tools) and agents with
+        tools that can perform iterative calls to solve complex tasks.
+
+        Args:
+            input: The input for the agent, which can be of various types.
+
+        Returns:
+            AgentRunOutput[T_Schema]: The result of the agent execution, possibly
+                                     with a structured response according to the defined schema.
+
+        Raises:
+            MaxToolCallsExceededError: If the maximum number of tool calls is exceeded.
+
+        Example:
+            ```python
+            # Asynchronous use
+            result = await agent.run_async("What is the weather in London?")
+
+            # Processing the response
+            response_text = result.artifacts[0].parts[0].text
+            print(response_text)
+
+            # With structured response schema
+            if result.parsed:
+                location = result.parsed.location
+                weather = result.parsed.weather
+            ```
+        """
         context: Context = self._convert_input_to_context(
             input, instructions=self._convert_instructions_to_str(self.instructions)
         )
@@ -375,6 +542,29 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     def to_http_router(
         self, path: str, type: Literal["fastapi"] = "fastapi"
     ) -> APIRouter:
+        """
+        Converts the agent into an HTTP router to be used in an API.
+
+        Currently only supports the FastAPI framework.
+
+        Args:
+            path: The base path for the agent endpoint.
+            type: The type of framework to use (currently only "fastapi").
+
+        Returns:
+            APIRouter: An HTTP router that can be included in a web application.
+
+        Example:
+            ```python
+            from fastapi import FastAPI
+
+            app = FastAPI()
+
+            # Add the agent as an endpoint
+            router = agent.to_http_router("/weather")
+            app.include_router(router)
+            ```
+        """
         match type:
             case "fastapi":
                 return self._to_fastapi_router(path=path)
@@ -398,6 +588,41 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         new_generation_provider: GenerationProvider | None = None,
         new_url: str | None = None,
     ) -> Agent[T_Schema]:
+        """
+        Creates a clone of the current agent with optionally modified attributes.
+
+        This method facilitates creating variations of an agent without modifying the original.
+        Unspecified parameters will retain the values from the original agent.
+
+        Args:
+            new_name: New name for the agent.
+            new_instructions: New instructions for the agent.
+            new_tools: New tools for the agent.
+            new_config: New configuration for the agent.
+            new_model: New model for the agent.
+            new_version: New version for the agent.
+            new_documentation_url: New documentation URL for the agent.
+            new_capabilities: New capabilities for the agent.
+            new_authentication: New authentication for the agent.
+            new_default_input_modes: New default input modes for the agent.
+            new_default_output_modes: New default output modes for the agent.
+            new_skills: New skills for the agent.
+            new_mcp_servers: New MCP servers for the agent.
+            new_generation_provider: New generation provider for the agent.
+            new_url: New URL for the agent.
+
+        Returns:
+            Agent[T_Schema]: A new agent with the specified attributes modified.
+
+        Example:
+            ```python
+            # Create a variation of the agent with different instructions
+            weather_agent_fr = weather_agent.clone(
+                new_name="French Weather Agent",
+                new_instructions="You are a weather agent that can answer questions about the weather in French."
+            )
+            ```
+        """
         return Agent[T_Schema](
             name=new_name or self.name,
             instructions=new_instructions or self.instructions,
@@ -429,6 +654,26 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         append: bool = False,
         last_chunk: bool = False,
     ) -> AgentRunOutput[T_Schema]:
+        """
+        Builds an AgentRunOutput object from the generation results.
+
+        This internal method creates the standardized output structure of the agent,
+        including artifacts, usage statistics, and final context.
+
+        Args:
+            artifacts: Optional sequence of pre-built artifacts.
+            artifact_name: Name of the artifact to be created (if artifacts is not provided).
+            artifact_description: Description of the artifact to be created.
+            artifact_metadata: Optional metadata for the artifact.
+            context: The final context of the execution.
+            generation: The Generation object produced by the provider.
+            task_status: The state of the task (default: COMPLETED).
+            append: Whether the artifact should be appended to existing artifacts.
+            last_chunk: Whether this is the last chunk of the artifact.
+
+        Returns:
+            AgentRunOutput[T_Schema]: The structured result of the agent execution.
+        """
         parsed = generation.parsed
 
         return AgentRunOutput(
@@ -453,6 +698,17 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         )
 
     def _to_fastapi_router(self, path: str) -> APIRouter:
+        """
+        Creates a FastAPI router for this agent.
+
+        Internal method used by to_http_router when the type is "fastapi".
+
+        Args:
+            path: The base path for the agent endpoint.
+
+        Returns:
+            APIRouter: A FastAPI router that can be included in a FastAPI application.
+        """
         from fastapi import APIRouter
 
         router = APIRouter()
@@ -465,7 +721,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         self, instructions: str | Callable[[], str] | Sequence[str]
     ) -> str:
         """
-        Convert the instructions to an AgentInstructions object.
+        Converts the instructions to a string.
+
+        This internal method handles the different formats that instructions
+        can have: simple string, callable that returns string, or sequence of strings.
+
+        Args:
+            instructions: The instructions in any supported format.
+
+        Returns:
+            str: The instructions converted to string.
         """
         if isinstance(instructions, str):
             return instructions
@@ -479,6 +744,22 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         input: AgentInput,
         instructions: str,
     ) -> Context:
+        """
+        Converts user input to a Context object.
+
+        This internal method converts the various supported input types to
+        a standardized Context object that contains the messages to be processed.
+
+        Supports a wide variety of input types, from simple strings to
+        complex objects like DataFrames, images, files, and Pydantic models.
+
+        Args:
+            input: The input in any supported format.
+            instructions: The agent instructions as a string.
+
+        Returns:
+            Context: A Context object containing the messages to be processed.
+        """
         developer_message = DeveloperMessage(parts=[TextPart(text=instructions)])
 
         if isinstance(input, Context):
@@ -613,7 +894,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                             UserMessage(
                                 parts=[
                                     TextPart(
-                                        text=f"Falha ao ler o arquivo {input}: {str(e)}"
+                                        text=f"Failed to read file {input}: {str(e)}"
                                     )
                                 ]
                             ),
