@@ -406,6 +406,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
 
             return AgentRunOutput[T_Schema](
+                model_name=self.model,
                 artifacts=[
                     Artifact(
                         name="Artifact",
@@ -677,6 +678,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         parsed = generation.parsed
 
         return AgentRunOutput(
+            model_name=self.model,
             artifacts=artifacts
             or [
                 Artifact(

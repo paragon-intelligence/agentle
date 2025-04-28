@@ -39,7 +39,7 @@
     // Project configuration
     "pythonVersion": "3.13",
     "include": [
-        "gat",
+        "agentle",
         "tests"
     ],
     "exclude": [

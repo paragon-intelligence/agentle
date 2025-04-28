@@ -9,11 +9,11 @@ from agentle.generations.models.message_parts.file import (
     FilePart as GenerationFilePart,
 )
 from agentle.generations.models.message_parts.text import TextPart as GenerationTextPart
-from agentle.generations.models.message_parts.tool_declaration import (
-    Tool as GenerationTool,
-)
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion as GenerationToolExecutionSuggestion,
+)
+from agentle.generations.tools.tool import (
+    Tool as GenerationTool,
 )
 
 
