@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable, Sequence
+import datetime
+import json
+from collections.abc import AsyncGenerator, Callable, MutableMapping, Sequence
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Literal, cast
 from uuid import UUID
 
+from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
@@ -16,16 +19,17 @@ from agentle.agents.agent_run_output import AgentRunOutput
 from agentle.agents.context import Context
 from agentle.agents.models.agent_skill import AgentSkill
 from agentle.agents.models.agent_usage_statistics import AgentUsageStatistics
+from agentle.agents.models.artifact import Artifact
 from agentle.agents.models.authentication import Authentication
 from agentle.agents.models.capabilities import Capabilities
-from agentle.agents.models.middleware.response_middleware import ResponseMiddleware
 
 # from gat.agents.models.middleware.response_middleware import ResponseMiddleware
 from agentle.agents.models.run_state import RunState
 
 # from gat.agents.tools.agent_tool import AgentTool
 from agentle.agents.tasks.task_state import TaskState
-from agentle.generations.models.generation.usage import Usage
+from agentle.generations.collections.message_sequence import MessageSequence
+from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
@@ -41,6 +45,16 @@ from agentle.generations.providers.base.generation_provider import (
 from agentle.generations.tools.tool import Tool
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
+if TYPE_CHECKING:
+    from io import BytesIO, StringIO
+    from pathlib import Path
+
+    import numpy as np
+    import pandas as pd
+    from fastapi import APIRouter
+    from PIL import Image
+    from pydantic import BaseModel as PydanticBaseModel
+
 type WithoutStructuredOutput = None
 type _ToolName = str
 
@@ -54,10 +68,23 @@ type AgentInput = (
     | Tool[Any]
     | Sequence[TextPart | FilePart | Tool[Any]]
     | Callable[[], str]
+    | pd.DataFrame
+    | np.ndarray[Any, Any]
+    | Image.Image
+    | bytes
+    | dict[str, Any]
+    | list[Any]
+    | tuple[Any, ...]
+    | set[Any]
+    | frozenset[Any]
+    | datetime.datetime
+    | datetime.date
+    | datetime.time
+    | Path
+    | BytesIO
+    | StringIO
+    | PydanticBaseModel
 )
-
-if TYPE_CHECKING:
-    from fastapi import APIRouter
 
 
 class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
@@ -169,6 +196,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     def uid(self) -> str:
         return str(hash(self))
 
+    def has_tools(self) -> bool:
+        return len(self.tools) > 0
+
     @asynccontextmanager
     async def with_mcp_servers(self) -> AsyncGenerator[None, None]:
         for server in self.mcp_servers:
@@ -192,62 +222,131 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         input: AgentInput,
         task_id: UUID | None = None,
     ) -> AgentRunOutput[T_Schema]:
-        final_instructions: str = self._convert_instructions_to_str(self.instructions)
         context: Context = self._convert_input_to_context(
-            input, instructions=final_instructions
+            input, instructions=self._convert_instructions_to_str(self.instructions)
         )
 
-        state = RunState[T_Schema].init_state()
+        mcp_tools: list[MCPTool] = []
+        for server in self.mcp_servers:
+            tools = await server.list_tools()
+            mcp_tools.extend(tools)
 
-        filtered_tools: list[Tool[Any]] = [
+        agent_has_tools = self.has_tools() or len(mcp_tools) > 0
+        if not agent_has_tools:
+            generation: Generation[
+                T_Schema
+            ] = await self.generation_provider.create_generation_async(
+                model=self.model,
+                messages=context.messages,
+                response_schema=self.response_schema,
+                generation_config=self.config.generationConfig,
+            )
+
+            return AgentRunOutput[T_Schema](
+                artifacts=[
+                    Artifact(
+                        name="Artifact",
+                        description="End result of the task",
+                        parts=list(
+                            part
+                            for part in generation.parts
+                            if isinstance(part, TextPart)
+                        ),
+                        metadata=None,
+                        index=0,
+                        append=False,
+                        last_chunk=None,
+                    )
+                ],
+                task_status=TaskState.COMPLETED,
+                usage=AgentUsageStatistics(token_usage=generation.usage),
+                final_context=context,
+                parsed=generation.parsed,
+            )
+
+        # Agent has tools. We must iterate until generate the final answer.
+
+        all_tools: list[Tool[Any]] = [
+            Tool.from_mcp_tool(tool) for tool in mcp_tools
+        ] + [
             Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
         ]
 
+        available_tools: MutableMapping[str, Tool[Any]] = {
+            tool.name: tool for tool in all_tools
+        }
+
+        state = RunState[T_Schema].init_state()
+        # Convert all tools in the array to Tool objects
+        called_tools: MutableMapping[ToolExecutionSuggestion, Any] = {}
         while (
-            not (
-                state.task_status == TaskState.COMPLETED
-                or state.task_status == TaskState.FAILED
-                or state.task_status == TaskState.CANCELED
-                or state.task_status == TaskState.INPUT_REQUIRED
-            )
+            state.task_status == TaskState.WORKING
             and state.iteration < self.config.maxIterations
         ):
-            called_tools_names: set[str] = {
-                tool_execution_suggestion.tool_name
-                for tool_execution_suggestion in state.called_tools
-            }
-
+            # Filter out tools that have already been called
             filtered_tools = [
-                tool for tool in filtered_tools if tool.name not in called_tools_names
+                tool
+                for tool in all_tools
+                if tool.name
+                not in {
+                    tool_execution_suggestion.tool_name
+                    for tool_execution_suggestion in state.called_tools
+                }
             ]
 
-            called_tools_prompt: list[str] = [
-                "The following are the tool calls made by the agent:"
-            ]
-            for tool_execution_suggestion, result in state.called_tools.items():
-                called_tools_prompt.append(
-                    f"""
-                <tool_execution>
+            called_tools_prompt: str = (
+                (
+                    """<info>
+                    The following are the other tool calls made by the agent:
+                    </info>"""
+                    + "\n"
+                    + "\n".join(
+                        [
+                            f"""<tool_execution>
                     <tool_name>{tool_execution_suggestion.tool_name}</tool_name>
                     <args>{tool_execution_suggestion.args}</args>
                     <result>{result}</result>
-                </tool_execution>
-                """
+                </tool_execution>"""
+                            for tool_execution_suggestion, result in state.called_tools.items()
+                        ]
+                    )
                 )
+                if state.called_tools
+                else ""
+            )
 
             tool_call_generation = (
                 await self.generation_provider.create_generation_async(
                     model=self.model,
-                    messages=context.messages,
+                    messages=MessageSequence(context.messages)
+                    .append_before_last_message(called_tools_prompt)
+                    .elements,
                     generation_config=self.config.generationConfig,
                     tools=filtered_tools,
                 )
             )
 
-            called_tools: dict[ToolExecutionSuggestion, Any] = {}
-            available_tools: dict[_ToolName, Tool[Any]] = {
-                tool.name: tool for tool in filtered_tools
-            }
+            agent_didnt_call_any_tool = tool_call_generation.tool_calls_amount() == 0
+            if agent_didnt_call_any_tool:
+                # Agent didn't call any tool. We can return/process the final answer.
+
+                generation = await self.generation_provider.create_generation_async(
+                    model=self.model,
+                    messages=context.messages,
+                    response_schema=self.response_schema,
+                    generation_config=self.config.generationConfig,
+                )
+
+                return self._build_agent_run_output(
+                    artifact_name="Artifact",
+                    artifact_description="End result of the task",
+                    artifact_metadata=None,
+                    context=context,
+                    generation=generation,
+                )
+
+            # Agent called one tool. We must call the tool and update the state.
+
             for tool_execution_suggestion in tool_call_generation.tool_calls:
                 called_tools[tool_execution_suggestion] = available_tools[
                     tool_execution_suggestion.tool_name
@@ -256,29 +355,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             state.update(
                 last_response=tool_call_generation.text,
                 called_tools=called_tools,
-                tool_calls_amount=tool_call_generation.tool_calls_amount,
+                tool_calls_amount=tool_call_generation.tool_calls_amount(),
                 iteration=state.iteration + 1,
                 token_usage=tool_call_generation.usage,
                 task_status=TaskState.WORKING,
             )
 
-            response_schema_type: (
-                type[ResponseMiddleware[T_Schema]] | type[ResponseMiddleware[str]]
-            ) = (
-                ResponseMiddleware[str]
-                if self.response_schema is None
-                else ResponseMiddleware[T_Schema]
-            )
-
-        return AgentRunOutput[T_Schema](
-            artifacts=[],
-            task_status=state.task_status,
-            parsed=None,
-            usage=AgentUsageStatistics(
-                token_usage=sum(state.token_usages, Usage.zero())
-            ),
-            final_context=context,
-        )
+        raise NotImplementedError("Not implemented")
 
     def to_http_router(
         self, path: str, type: Literal["fastapi"] = "fastapi"
@@ -324,6 +407,40 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             url=new_url or self.url,
         )
 
+    def _build_agent_run_output(
+        self,
+        *,
+        artifacts: Sequence[Artifact] | None = None,
+        artifact_name: str,
+        artifact_description: str,
+        artifact_metadata: dict[str, Any] | None,
+        context: Context,
+        generation: Generation[T_Schema],
+        task_status: TaskState = TaskState.COMPLETED,
+        append: bool = False,
+        last_chunk: bool = False,
+    ) -> AgentRunOutput[T_Schema]:
+        return AgentRunOutput[T_Schema](
+            artifacts=artifacts
+            or [
+                Artifact(
+                    name=artifact_name,
+                    description=artifact_description,
+                    parts=list(
+                        part for part in generation.parts if isinstance(part, TextPart)
+                    ),
+                    metadata=artifact_metadata,
+                    index=0,
+                    append=append,
+                    last_chunk=last_chunk,
+                )
+            ],
+            task_status=task_status,
+            usage=AgentUsageStatistics(token_usage=generation.usage),
+            final_context=context,
+            parsed=generation.parsed,
+        )
+
     def _to_fastapi_router(self, path: str) -> APIRouter:
         from fastapi import APIRouter
 
@@ -351,60 +468,206 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         input: AgentInput,
         instructions: str,
     ) -> Context:
-        if isinstance(input, str):
-            return Context(
-                messages=[
-                    DeveloperMessage(parts=[TextPart(text=instructions)]),
-                    UserMessage(parts=[TextPart(text=input)]),
-                ],
-            )
-        elif isinstance(input, Context):
+        developer_message = DeveloperMessage(parts=[TextPart(text=instructions)])
+
+        if isinstance(input, Context):
+            # If it's already a Context, return it as is.
             return input
-        elif callable(input) and not isinstance(input, Tool):
+        elif isinstance(input, UserMessage):
+            # If it's a UserMessage, prepend the developer instructions.
+            return Context(messages=[developer_message, input])
+        elif isinstance(input, str):
+            # Handle plain string input
             return Context(
                 messages=[
-                    DeveloperMessage(parts=[TextPart(text=instructions)]),
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=input)]),
+                ]
+            )
+        elif isinstance(input, (TextPart, FilePart, Tool)):
+            # Handle single message parts
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(
+                        parts=cast(Sequence[TextPart | FilePart | Tool], [input])
+                    ),
+                ]
+            )
+        elif callable(input) and not isinstance(input, Tool):
+            # Handle callable input (that's not a Tool)
+            return Context(
+                messages=[
+                    developer_message,
                     UserMessage(parts=[TextPart(text=input())]),
                 ]
             )
-        elif isinstance(input, UserMessage):
-            # Tratar mensagem do usuário
-            return Context(
-                messages=[DeveloperMessage(parts=[TextPart(text=instructions)]), input]
-            )
-        elif (
-            isinstance(input, TextPart)
-            or isinstance(input, FilePart)
-            or isinstance(input, Tool)
-        ):
-            # Tratar parte única
-            input_parts = [input]
+        elif isinstance(input, pd.DataFrame):
+            # Convert DataFrame to Markdown
             return Context(
                 messages=[
-                    DeveloperMessage(parts=[TextPart(text=instructions)]),
-                    UserMessage(parts=input_parts),
-                ],
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=input.to_markdown() or "")]),
+                ]
             )
-        else:
-            # Verificar se é uma sequência de mensagens ou partes
-            if isinstance(input[0], AssistantMessage | DeveloperMessage | UserMessage):
-                # Sequência de mensagens
-                return Context(messages=list(cast(Sequence[Message], input)))
-            elif isinstance(input[0], TextPart) or isinstance(input[0], FilePart):
-                # Sequência de partes
+        elif isinstance(input, np.ndarray):
+            # Convert NumPy array to string representation
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=np.array2string(input))]),
+                ]
+            )
+        elif isinstance(input, Image.Image):
+            import io
+
+            img_byte_arr = io.BytesIO()
+            img_format = getattr(input, "format", "PNG") or "PNG"
+            input.save(img_byte_arr, format=img_format)
+            img_byte_arr.seek(0)
+
+            mime_type_map = {
+                "PNG": "image/png",
+                "JPEG": "image/jpeg",
+                "JPG": "image/jpeg",
+                "GIF": "image/gif",
+                "WEBP": "image/webp",
+                "BMP": "image/bmp",
+                "TIFF": "image/tiff",
+            }
+            mime_type = mime_type_map.get(img_format, f"image/{img_format.lower()}")
+
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(
+                        parts=[
+                            FilePart(data=img_byte_arr.getvalue(), mime_type=mime_type)
+                        ]
+                    ),
+                ]
+            )
+        elif isinstance(input, bytes):
+            # Try decoding bytes, otherwise provide a description
+            try:
+                text = input.decode("utf-8")
+            except UnicodeDecodeError:
+                text = f"Input is binary data of size {len(input)} bytes."
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=text)]),
+                ]
+            )
+        elif isinstance(input, (dict, list, tuple, set, frozenset)):
+            # Convert dict, list, tuple, set, frozenset to JSON string
+            try:
+                # Use json.dumps for serialization
+                text = json.dumps(
+                    input, indent=2, default=str
+                )  # Add default=str for non-serializable
+            except TypeError:
+                # Fallback to string representation if json fails
+                text = f"Input is a collection: {str(input)}"
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
+                ]
+            )
+        elif isinstance(input, (datetime.datetime, datetime.date, datetime.time)):
+            # Convert datetime objects to ISO format string
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=input.isoformat())]),
+                ]
+            )
+        elif isinstance(input, Path):
+            # Read file content if it's a file path that exists
+            if input.is_file():
+                try:
+                    file_content = input.read_text()
+                    return Context(
+                        messages=[
+                            developer_message,
+                            UserMessage(parts=[TextPart(text=file_content)]),
+                        ]
+                    )
+                except Exception as e:
+                    # Fallback to string representation if reading fails
+                    return Context(
+                        messages=[
+                            developer_message,
+                            UserMessage(
+                                parts=[
+                                    TextPart(
+                                        text=f"Falha ao ler o arquivo {input}: {str(e)}"
+                                    )
+                                ]
+                            ),
+                        ]
+                    )
+            else:
+                # If it's not a file or doesn't exist, use the string representation
                 return Context(
                     messages=[
-                        DeveloperMessage(parts=[TextPart(text=instructions)]),
-                        UserMessage(
-                            parts=list(
-                                cast(
-                                    Sequence[TextPart | FilePart | Tool],
-                                    input,
-                                )
-                            )
-                        ),
+                        developer_message,
+                        UserMessage(parts=[TextPart(text=str(input))]),
+                    ]
+                )
+        elif isinstance(input, (BytesIO, StringIO)):
+            # Read content from BytesIO/StringIO
+            input.seek(0)  # Ensure reading from the start
+            content = input.read()
+            if isinstance(content, bytes):
+                try:
+                    text = content.decode("utf-8")
+                except UnicodeDecodeError:
+                    text = f"Input is binary data stream of size {len(content)} bytes."
+            else:  # str
+                text = content
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=text)]),
+                ]
+            )
+        elif isinstance(input, PydanticBaseModel):
+            # Convert Pydantic model to JSON string
+            text = input.model_dump_json(indent=2)
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
+                ]
+            )
+        # Sequence handling: Check for Message sequences or Part sequences
+        # Explicitly check for Sequence for MyPy's benefit
+        elif isinstance(input, Sequence) and not isinstance(input, (str, bytes)):  # pyright: ignore[reportUnnecessaryIsInstance]
+            # Check if it's a sequence of Messages or Parts (AFTER specific types)
+            if input and isinstance(
+                input[0], (AssistantMessage, DeveloperMessage, UserMessage)
+            ):
+                # Sequence of Messages
+                # Ensure it's a list of Messages for type consistency
+                return Context(messages=list(cast(Sequence[Message], input)))
+            elif input and isinstance(input[0], (TextPart, FilePart, Tool)):
+                # Sequence of Parts
+                # Ensure it's a list of the correct Part types
+                valid_parts = cast(Sequence[TextPart | FilePart | Tool], input)
+                return Context(
+                    messages=[
+                        developer_message,
+                        UserMessage(parts=list(valid_parts)),
                     ]
                 )
 
-        # Retorno padrão para evitar erro de tipo
-        return Context(messages=[DeveloperMessage(parts=[TextPart(text=instructions)])])
+        # Fallback for any unhandled type
+        # Convert to string representation as a last resort
+        return Context(
+            messages=[
+                developer_message,
+                UserMessage(parts=[TextPart(text=str(input))]),
+            ]
+        )

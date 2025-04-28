@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 from rsb.models.private_attr import PrivateAttr
+
+if TYPE_CHECKING:
+    from mcp.types import Tool as MCPTool
 
 
 class Tool[T_Output = Any](BaseModel):
@@ -31,6 +34,14 @@ class Tool[T_Output = Any](BaseModel):
             )
 
         return self._callable_ref(**kwargs)
+
+    @classmethod
+    def from_mcp_tool(cls, mcp_tool: MCPTool) -> Tool[T_Output]:
+        return cls(
+            name=mcp_tool.name,
+            description=mcp_tool.description,
+            parameters=mcp_tool.inputSchema,
+        )
 
     @classmethod
     def from_callable(

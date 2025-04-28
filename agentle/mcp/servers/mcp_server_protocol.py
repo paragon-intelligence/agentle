@@ -11,7 +11,6 @@ from mcp.types import (
 from rsb.models.base_model import BaseModel
 
 
-
 class MCPServerProtocol(BaseModel, abc.ABC):
     """Base class for Model Context Protocol servers."""
 

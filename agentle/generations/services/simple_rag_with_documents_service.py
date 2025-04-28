@@ -8,7 +8,9 @@ from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.messages.message import Message
-from agentle.generations.models.structured_outputs_store.query_expansion import QueryExpansion
+from agentle.generations.models.structured_outputs_store.query_expansion import (
+    QueryExpansion,
+)
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers import GenerationProvider

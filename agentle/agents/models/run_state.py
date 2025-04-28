@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import MutableSequence
+from collections.abc import MutableMapping, MutableSequence
 from typing import Any
 
 from rsb.models.base_model import BaseModel
@@ -16,7 +16,7 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
 class RunState[T_Schema = str](BaseModel):
     iteration: int
     tool_calls_amount: int
-    called_tools: dict[ToolExecutionSuggestion, Any] = Field(
+    called_tools: MutableMapping[ToolExecutionSuggestion, Any] = Field(
         description="A dictionary of tool execution suggestions and their results (tool calls)"
     )
     last_response: T_Schema | str | None = None
@@ -37,7 +37,7 @@ class RunState[T_Schema = str](BaseModel):
     def update(
         self,
         last_response: T_Schema | str,
-        called_tools: dict[ToolExecutionSuggestion, Any],
+        called_tools: MutableMapping[ToolExecutionSuggestion, Any],
         tool_calls_amount: int,
         iteration: int,
         token_usage: Usage,

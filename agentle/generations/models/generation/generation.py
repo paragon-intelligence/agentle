@@ -1,17 +1,18 @@
 from __future__ import annotations
 
+import copy
 import logging
 import uuid
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 from typing import Literal, overload
-import copy
 
 from pydantic import BaseModel
 from rsb.decorators.entities import entity
 
 from agentle.generations.models.generation.choice import Choice
 from agentle.generations.models.generation.usage import Usage
+from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
 )
@@ -43,6 +44,20 @@ class Generation[T](BaseModel):
             )
 
         return self.get_parsed(0)
+
+    @property
+    def parts(self) -> Sequence[TextPart | ToolExecutionSuggestion]:
+        if len(self.choices) > 1:
+            logger.warning(
+                "WARNING: choices list is > 1. Coudn't determine the parts. Returning the first choice parts."
+            )
+
+        return self.get_message_parts(0)
+
+    def get_message_parts(
+        self, choice: int
+    ) -> Sequence[TextPart | ToolExecutionSuggestion]:
+        return self.choices[choice].message.parts
 
     @property
     def tool_calls(self) -> Sequence[ToolExecutionSuggestion]:
@@ -183,7 +198,6 @@ class Generation[T](BaseModel):
             "Invalid combination of parameters for clone method. Use one of the defined overloads."
         )
 
-    @property
     def tool_calls_amount(self) -> int:
         return len(self.tool_calls)
 
