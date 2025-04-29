@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentle - Python Toolkit for Intelligent Applications</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-dark: #4F46E5;
+            --secondary: #14B8A6;
+            --dark: #1E293B;
+            --light: #F8FAFC;
+            --gray: #64748B;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: var(--light);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .logo span {
+            color: var(--secondary);
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        nav a:hover {
+            color: var(--primary);
+        }
+        .hero {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 8rem 0 6rem;
+            margin-top: 4rem;
+        }
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        .hero-text h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        .hero-text p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.8rem;
+            border-radius: 0.4rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background-color: white;
+            color: var(--primary);
+        }
+        .btn-primary:hover {
+            background-color: rgba(255,255,255,0.9);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+        .hero-image img {
+            width: 100%;
+            border-radius: 0.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .features {
+            padding: 6rem 0;
+        }
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .section-title h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        .section-title p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .feature-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        .feature-card p {
+            color: var(--gray);
+        }
+        .cta {
+            background-color: var(--primary);
+            color: white;
+            padding: 6rem 0;
+            text-align: center;
+        }
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+        .footer-column ul {
+            list-style: none;
+        }
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+        .footer-column a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .footer-column a:hover {
+            color: white;
+        }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 2rem;
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+        @media (max-width: 900px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .hero-text h1 {
+                font-size: 2.8rem;
+            }
+            .buttons {
+                justify-content: center;
+            }
+            .hero-image {
+                grid-row: 1;
+                margin-bottom: 2rem;
+            }
+        }
+        @media (max-width: 600px) {
+            header {
+                position: relative;
+            }
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            nav ul {
+                gap: 1rem;
+            }
+            .hero {
+                margin-top: 0;
+                padding: 4rem 0;
+            }
+            .hero-text h1 {
+                font-size: 2.2rem;
+            }
+            .section-title h2 {
+                font-size: 2rem;
+            }
+        }
+        .code-block {
+            background-color: #1a1a1a;
+            color: #f8f8f2;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+        .code-block .comment {
+            color: #6272a4;
+        }
+        .code-block .keyword {
+            color: #ff79c6;
+        }
+        .code-block .string {
+            color: #f1fa8c;
+        }
+        .code-block .function {
+            color: #50fa7b;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">Agent<span>le</span></a>
+                <nav>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#examples">Examples</a></li>
+                        <li><a href="docs/index.html">Documentation</a></li>
+                        <li><a href="https://github.com/arthurbrenno/agentle" target="_blank">GitHub</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Build Intelligent AI Agents with Python</h1>
+                    <p>Agentle is a comprehensive toolkit for creating, deploying, and managing AI agents with built-in RAG, guardrails, and speech capabilities.</p>
+                    <div class="buttons">
+                        <a href="docs/index.html" class="btn btn-primary">Get Started</a>
+                        <a href="https://github.com/arthurbrenno/agentle" class="btn btn-secondary">View on GitHub</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="code-block">
+                        <span class="comment"># Create an intelligent agent in just a few lines</span><br>
+                        <span class="keyword">from</span> agentle.agents <span class="keyword">import</span> Agent<br>
+                        <span class="keyword">from</span> agentle.rag <span class="keyword">import</span> RAGSystem<br>
+                        <span class="keyword">from</span> agentle.guardrails <span class="keyword">import</span> GuardrailConfig<br><br>
+                        
+                        <span class="comment"># Configure your agent</span><br>
+                        rag = RAGSystem(documents=["knowledge.pdf"])<br>
+                        guardrails = GuardrailConfig(content_safety=<span class="keyword">True</span>)<br><br>
+                        
+                        <span class="comment"># Initialize and run</span><br>
+                        agent = Agent(name="assistant", rag=rag, guardrails=guardrails)<br>
+                        response = agent.<span class="function">run</span>("How can I help you today?")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Key Features</h2>
+                <p>Everything you need to build powerful AI agents in one toolkit</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>Agent Framework</h3>
+                    <p>Create customizable AI agents with different personalities, capabilities, and knowledge bases.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>RAG System</h3>
+                    <p>Enhance your agents with Retrieval Augmented Generation for accurate, grounded responses.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Guardrails</h3>
+                    <p>Implement safety measures and content filtering to ensure responsible AI outputs.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗣️</div>
+                    <h3>Speech Integration</h3>
+                    <p>Seamlessly convert between text and speech with high-quality TTS and STT components.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <h3>Extensible</h3>
+                    <p>Easily integrate with your existing Python stack and extend with custom components.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Analytics</h3>
+                    <p>Track agent performance and user interactions to continuously improve your AI systems.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <h2>Ready to Build Your AI Agent?</h2>
+            <p>Get started with Agentle today and join the community of developers building the next generation of AI assistants.</p>
+            <div class="buttons">
+                <a href="docs/index.html" class="btn btn-primary">Read the Docs</a>
+                <a href="https://github.com/arthurbrenno/agentle" class="btn btn-secondary">Star on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Documentation</h3>
+                    <ul>
+                        <li><a href="docs/index.html">Getting Started</a></li>
+                        <li><a href="docs/api/index.html">API Reference</a></li>
+                        <li><a href="docs/examples.html">Examples</a></li>
+                        <li><a href="docs/contributing.html">Contributing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://github.com/arthurbrenno/agentle">GitHub</a></li>
+                        <li><a href="https://github.com/arthurbrenno/agentle/issues">Issues</a></li>
+                        <li><a href="https://github.com/arthurbrenno/agentle/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="docs/examples.html">Code Examples</a></li>
+                        <li><a href="https://github.com/arthurbrenno/agentle/releases">Releases</a></li>
+                        <li><a href="https://pypi.org/project/agentle/">PyPI Package</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Arthur Brenno. All rights reserved. Agentle is released under the MIT License.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
