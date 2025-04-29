@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, cast, override
 
 import httpx
 from rsb.adapters.adapter import Adapter
+from rsb.contracts.maybe_protocol import MaybeProtocol
 
 # idk why mypy is not recognising this as a module
 from agentle.generations.json.json_schema_builder import (  # type: ignore[attr-defined]
@@ -45,6 +46,9 @@ from agentle.generations.providers.cerebras._adapters.completion_to_generation_a
     CerebrasCompletionToGenerationAdapter,
 )
 from agentle.generations.tools.tool import Tool
+from agentle.generations.tracing.contracts.stateful_observability_client import (
+    StatefulObservabilityClient,
+)
 
 if TYPE_CHECKING:
     from cerebras.cloud.sdk.types.chat.completion_create_params import (
@@ -69,6 +73,8 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
     structured output parsing via response schemas.
 
     Attributes:
+        tracing_client: Optional client for observability and tracing of generation
+            requests and responses.
         api_key: Optional API key for authentication with Cerebras AI.
         base_url: Optional custom base URL for the Cerebras API.
         timeout: Optional timeout for API requests.
@@ -81,6 +87,7 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         message_adapter: Adapter to convert Agentle messages to Cerebras format.
     """
 
+    tracing_client: MaybeProtocol[StatefulObservabilityClient]
     api_key: str | None
     base_url: str | httpx.URL | None
     timeout: float | httpx.Timeout | None
@@ -100,6 +107,7 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
     def __init__(
         self,
         *,
+        tracing_client: StatefulObservabilityClient | None = None,
         api_key: str | None = None,
         base_url: str | httpx.URL | None = None,
         timeout: float | httpx.Timeout | None,
@@ -121,6 +129,8 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         Initialize the Cerebras Generation Provider.
 
         Args:
+            tracing_client: Optional client for observability and tracing of generation
+                requests and responses.
             api_key: Optional API key for authentication with Cerebras AI.
             base_url: Optional custom base URL for the Cerebras API.
             timeout: Optional timeout for API requests.
@@ -132,7 +142,7 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
             warm_tcp_connection: Whether to keep the TCP connection warm.
             message_adapter: Optional adapter to convert Agentle messages to Cerebras format.
         """
-        super().__init__()  # Note: This doesn't pass tracing_client
+        super().__init__(tracing_client=tracing_client)
         self.api_key = api_key
         self.base_url = base_url
         self.timeout = timeout
