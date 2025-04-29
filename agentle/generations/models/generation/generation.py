@@ -98,8 +98,8 @@ class Generation[T](BaseModel):
     usage: Usage = Field(
         description="Token usage statistics for tracking resource consumption and cost. Contains counts for tokens in the prompt and completion, enabling precise usage tracking and cost estimation across providers.",
         examples=[
-            "Usage(prompt_tokens=150, completion_tokens=50)",
-            "Usage(prompt_tokens=800, completion_tokens=200)",
+            Usage(prompt_tokens=150, completion_tokens=50),
+            Usage(prompt_tokens=800, completion_tokens=200),
         ],
     )
 
