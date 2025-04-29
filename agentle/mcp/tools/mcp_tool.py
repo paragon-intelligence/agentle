@@ -1,23 +1,82 @@
+"""
+MCP Tool definition module.
+
+This module provides the MCPTool class, which represents a callable tool in the
+Model Control Protocol (MCP) system. MCPTools encapsulate functions or methods
+with their metadata and input schemas, making them available for discovery and
+execution by MCP clients.
+"""
+
 from __future__ import annotations
 
 import inspect
 from typing import Callable
 from agentle.mcp.tools.input_schema import InputSchema
 from rsb.models.base_model import BaseModel
+from rsb.models.field import Field
 
 
 class MCPTool(BaseModel):
-    """Definition for a tool the client can call."""
+    """
+    Definition for a tool that clients can call in the MCP system.
 
-    name: str
+    An MCPTool represents a callable function or method with its associated metadata
+    and input schema. It provides information about the tool's name, description,
+    and expected parameters that clients can use for discovery and execution.
+
+    Tools can be created directly or from existing callables using the `from_callable`
+    class method, which automatically extracts parameter information.
+
+    Attributes:
+        name (str): The name of the tool
+        description (str | None): A human-readable description of the tool
+        inputSchema (InputSchema): A schema defining the expected parameters
+    """
+
+    name: str = Field(..., description="The name of the tool.")
     """The name of the tool."""
-    description: str | None = None
+    description: str | None = Field(
+        default=None, description="A human-readable description of the tool."
+    )
     """A human-readable description of the tool."""
-    inputSchema: InputSchema
+    inputSchema: InputSchema = Field(
+        ...,
+        description="A JSON Schema object defining the expected parameters for the tool.",
+    )
     """A JSON Schema object defining the expected parameters for the tool."""
 
     @classmethod
     def from_callable(cls, _callable: Callable[..., object], /) -> MCPTool:
+        """
+        Create an MCPTool from a callable function or method.
+
+        This method inspects the provided callable and extracts metadata to create
+        an MCPTool instance. It automatically determines:
+        - Tool name from the function name
+        - Description from the function docstring
+        - Input schema from parameter annotations, defaults, and metadata
+
+        The method handles special cases such as self/cls parameters for methods
+        and extracts type information and descriptions when available.
+
+        Args:
+            _callable (Callable[..., object]): The function or method to convert
+                to an MCPTool
+
+        Returns:
+            MCPTool: A new MCPTool instance representing the callable
+
+        Example:
+            ```python
+            def add(a: int, b: int) -> int:
+                '''Add two numbers together.'''
+                return a + b
+
+            tool = MCPTool.from_callable(add)
+            # Creates a tool with name="add", description="Add two numbers together."
+            # and appropriate input schema for the parameters
+            ```
+        """
         name = getattr(_callable, "__name__", "anonymous_function")
         description = _callable.__doc__ or None
 
