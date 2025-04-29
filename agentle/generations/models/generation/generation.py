@@ -24,8 +24,9 @@ from collections.abc import Sequence
 from datetime import datetime, timedelta
 from typing import Literal, overload
 
-from pydantic import BaseModel
 from rsb.decorators.entities import entity
+from rsb.models.base_model import BaseModel
+from rsb.models.field import Field
 
 from agentle.generations.models.generation.choice import Choice
 from agentle.generations.models.generation.usage import Usage
@@ -67,13 +68,13 @@ class Generation[T](BaseModel):
         usage: Token usage statistics for this generation
     """
 
-    elapsed_time: timedelta
-    id: uuid.UUID
-    object: Literal["chat.generation"]
-    created: datetime
-    model: str
-    choices: Sequence[Choice[T]]
-    usage: Usage
+    elapsed_time: timedelta = Field(description="Time taken to generate the response")
+    id: uuid.UUID = Field(description="Unique identifier for this generation")
+    object: Literal["chat.generation"] = Field(description="Type identifier, always 'chat.generation'")
+    created: datetime = Field(description="Timestamp when this generation was created")
+    model: str = Field(description="Identifier of the model that produced this generation")
+    choices: Sequence[Choice[T]] = Field(description="Sequence of alternative responses from the model")
+    usage: Usage = Field(description="Token usage statistics for this generation")
 
     @property
     def parsed(self) -> T:
