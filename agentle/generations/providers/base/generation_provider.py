@@ -1,3 +1,21 @@
+"""
+Abstract base class defining the contract for AI generation providers in Agentle.
+
+This module defines the GenerationProvider abstract base class, which serves as the
+foundation for all AI provider implementations in the Agentle framework. It establishes
+a common interface that all providers must implement, ensuring consistency across
+different AI services.
+
+The GenerationProvider abstract class defines methods for generating AI completions
+from both prompts and message sequences, supporting both synchronous and asynchronous
+execution patterns. It also includes support for structured output parsing through
+generic type parameters and tool/function calling capabilities.
+
+Provider implementations (such as for OpenAI, Google, Anthropic, etc.) inherit from
+this base class and implement the abstract methods according to each provider's specific
+API requirements, while maintaining the common interface for framework consumers.
+"""
+
 import abc
 from collections.abc import Sequence
 from typing import cast
@@ -27,17 +45,49 @@ type WithoutStructuredOutput = None
 
 
 class GenerationProvider(abc.ABC):
+    """
+    Abstract base class for AI generation service providers.
+
+    This class defines the interface that all AI provider implementations must adhere to
+    in the Agentle framework. It provides methods for generating AI completions from both
+    simple prompts and structured message sequences, supporting synchronous and asynchronous
+    patterns.
+
+    The class is generic over type T, which represents the optional structured data format
+    that can be extracted from model responses when a response_schema is provided.
+
+    Attributes:
+        tracing_client: An optional client for observability and tracing of generation requests.
+    """
+
     tracing_client: MaybeProtocol[StatefulObservabilityClient]
 
     def __init__(
         self,
         tracing_client: StatefulObservabilityClient | None = None,
     ) -> None:
+        """
+        Initialize the generation provider.
+
+        Args:
+            tracing_client: Optional client for observability and tracing of generation
+                requests and responses.
+        """
         self.tracing_client = Maybe(tracing_client)
 
     @property
     @abc.abstractmethod
-    def organization(self) -> str: ...
+    def organization(self) -> str:
+        """
+        Get the organization identifier for this provider.
+
+        This property should return a string that uniquely identifies the AI provider
+        organization (e.g., "openai", "google", "anthropic").
+
+        Returns:
+            str: The organization identifier.
+        """
+        ...
 
     def create_generation_by_prompt[T = WithoutStructuredOutput](
         self,
@@ -49,6 +99,24 @@ class GenerationProvider(abc.ABC):
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
+        """
+        Create a generation from a prompt synchronously.
+
+        This is a convenience method that converts prompt-based inputs into a message-based
+        format and calls the asynchronous implementation synchronously.
+
+        Args:
+            model: The model identifier to use for generation.
+            prompt: The user's prompt as a string, Prompt object, or sequence of Parts.
+            developer_prompt: The system/developer prompt as a string or Prompt object.
+            response_schema: Optional Pydantic model for structured output parsing.
+            generation_config: Optional configuration for the generation request.
+            tools: Optional sequence of Tool objects for function calling.
+
+        Returns:
+            Generation[T]: An Agentle Generation object containing the model's response,
+                potentially with structured output if a response_schema was provided.
+        """
         return run_sync(
             self.create_generation_by_prompt_async,
             timeout=generation_config.timeout if generation_config else None,
@@ -70,6 +138,24 @@ class GenerationProvider(abc.ABC):
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
+        """
+        Create a generation from a prompt asynchronously.
+
+        This method converts various prompt formats into a structured message sequence
+        and calls the create_generation_async method with the converted messages.
+
+        Args:
+            model: The model identifier to use for generation.
+            prompt: The user's prompt as a string, Prompt object, or sequence of Parts.
+            developer_prompt: The system/developer prompt as a string or Prompt object.
+            response_schema: Optional Pydantic model for structured output parsing.
+            generation_config: Optional configuration for the generation request.
+            tools: Optional sequence of Tool objects for function calling.
+
+        Returns:
+            Generation[T]: An Agentle Generation object containing the model's response,
+                potentially with structured output if a response_schema was provided.
+        """
         user_message_parts: Sequence[Part]
         match prompt:
             case str():
@@ -112,6 +198,23 @@ class GenerationProvider(abc.ABC):
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
+        """
+        Create a generation from a message sequence synchronously.
+
+        This is a convenience method that calls the asynchronous implementation
+        synchronously using a wrapper.
+
+        Args:
+            model: The model identifier to use for generation.
+            messages: A sequence of structured Message objects to send to the model.
+            response_schema: Optional Pydantic model for structured output parsing.
+            generation_config: Optional configuration for the generation request.
+            tools: Optional sequence of Tool objects for function calling.
+
+        Returns:
+            Generation[T]: An Agentle Generation object containing the model's response,
+                potentially with structured output if a response_schema was provided.
+        """
         return run_sync(
             self.create_generation_async,
             timeout=generation_config.timeout if generation_config else None,
@@ -119,6 +222,7 @@ class GenerationProvider(abc.ABC):
             messages=messages,
             response_schema=response_schema,
             generation_config=generation_config,
+            tools=tools,
         )
 
     @abc.abstractmethod
@@ -130,4 +234,23 @@ class GenerationProvider(abc.ABC):
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool] | None = None,
-    ) -> Generation[T]: ...
+    ) -> Generation[T]:
+        """
+        Create a generation from a message sequence asynchronously.
+
+        This is the core method that all provider implementations must implement. It sends
+        a sequence of messages to the AI model and processes the response according to
+        the provider-specific API requirements.
+
+        Args:
+            model: The model identifier to use for generation.
+            messages: A sequence of structured Message objects to send to the model.
+            response_schema: Optional Pydantic model for structured output parsing.
+            generation_config: Optional configuration for the generation request.
+            tools: Optional sequence of Tool objects for function calling.
+
+        Returns:
+            Generation[T]: An Agentle Generation object containing the model's response,
+                potentially with structured output if a response_schema was provided.
+        """
+        ...

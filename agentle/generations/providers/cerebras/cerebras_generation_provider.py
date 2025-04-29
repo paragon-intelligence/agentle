@@ -1,3 +1,23 @@
+"""
+Cerebras AI provider implementation for the Agentle framework.
+
+This module provides the CerebrasGenerationProvider class, which enables Agentle
+to interact with Cerebras AI models through a consistent interface. It handles all
+the provider-specific details of communicating with Cerebras's API while maintaining
+compatibility with Agentle's abstraction layer.
+
+The provider supports:
+- API key authentication
+- Message-based interactions with Cerebras models
+- Structured output parsing via response schemas
+- Custom HTTP client configuration
+- Usage statistics tracking
+
+This implementation transforms Agentle's unified message format into Cerebras's
+request format and adapts responses back into Agentle's Generation objects,
+providing a consistent experience regardless of the AI provider being used.
+"""
+
 import datetime
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, cast, override
@@ -37,6 +57,30 @@ type WithoutStructuredOutput = None
 
 
 class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
+    """
+    Provider implementation for Cerebras AI services.
+
+    This class implements the GenerationProvider interface for Cerebras AI models,
+    allowing seamless integration with the Agentle framework. It handles the conversion
+    of Agentle messages to Cerebras format, manages API communication, and processes
+    responses back into the standardized Agentle format.
+
+    The provider supports API key authentication, custom HTTP configuration, and
+    structured output parsing via response schemas.
+
+    Attributes:
+        api_key: Optional API key for authentication with Cerebras AI.
+        base_url: Optional custom base URL for the Cerebras API.
+        timeout: Optional timeout for API requests.
+        max_retries: Maximum number of retries for failed requests.
+        default_headers: Optional default HTTP headers for requests.
+        default_query: Optional default query parameters for requests.
+        http_client: Optional custom HTTP client for requests.
+        _strict_response_validation: Whether to enable strict validation of responses.
+        warm_tcp_connection: Whether to keep the TCP connection warm.
+        message_adapter: Adapter to convert Agentle messages to Cerebras format.
+    """
+
     api_key: str | None
     base_url: str | httpx.URL | None
     timeout: float | httpx.Timeout | None
@@ -73,6 +117,22 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         ]
         | None = None,
     ):
+        """
+        Initialize the Cerebras Generation Provider.
+
+        Args:
+            api_key: Optional API key for authentication with Cerebras AI.
+            base_url: Optional custom base URL for the Cerebras API.
+            timeout: Optional timeout for API requests.
+            max_retries: Maximum number of retries for failed requests.
+            default_headers: Optional default HTTP headers for requests.
+            default_query: Optional default query parameters for requests.
+            http_client: Optional custom HTTP client for requests.
+            _strict_response_validation: Whether to enable strict validation of responses.
+            warm_tcp_connection: Whether to keep the TCP connection warm.
+            message_adapter: Optional adapter to convert Agentle messages to Cerebras format.
+        """
+        super().__init__()  # Note: This doesn't pass tracing_client
         self.api_key = api_key
         self.base_url = base_url
         self.timeout = timeout
@@ -89,6 +149,12 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
     @property
     @override
     def organization(self) -> str:
+        """
+        Get the provider organization identifier.
+
+        Returns:
+            str: The organization identifier, which is "cerebras" for this provider.
+        """
         return "cerebras"
 
     @override
@@ -101,6 +167,29 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
+        """
+        Create a generation asynchronously using a Cerebras AI model.
+
+        This method handles the conversion of Agentle messages to Cerebras's format,
+        sends the request to Cerebras's API, and processes the response into Agentle's
+        standardized Generation format.
+
+        Args:
+            model: The Cerebras model identifier to use for generation.
+            messages: A sequence of Agentle messages to send to the model.
+            response_schema: Optional Pydantic model for structured output parsing.
+            generation_config: Optional configuration for the generation request.
+            tools: Optional sequence of Tool objects for function calling (not yet
+                supported by Cerebras).
+
+        Returns:
+            Generation[T]: An Agentle Generation object containing the model's response,
+                potentially with structured output if a response_schema was provided.
+
+        Note:
+            Tool/function calling support may vary depending on the Cerebras model
+            capabilities. Check the Cerebras documentation for details on supported features.
+        """
         from cerebras.cloud.sdk import AsyncCerebras
         from cerebras.cloud.sdk.types.chat.chat_completion import ChatCompletionResponse
 
@@ -147,10 +236,30 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
     def price_per_million_tokens_input(
         self, model: str, estimate_tokens: int | None = None
     ) -> float:
+        """
+        Get the price per million tokens for input/prompt tokens.
+
+        Args:
+            model: The model identifier.
+            estimate_tokens: Optional estimate of token count.
+
+        Returns:
+            float: The price per million input tokens for the specified model.
+        """
         return 0.0  # TODO(arthur)
 
     @override
     def price_per_million_tokens_output(
         self, model: str, estimate_tokens: int | None = None
     ) -> float:
+        """
+        Get the price per million tokens for output/completion tokens.
+
+        Args:
+            model: The model identifier.
+            estimate_tokens: Optional estimate of token count.
+
+        Returns:
+            float: The price per million output tokens for the specified model.
+        """
         return 0.0  # TODO(arthur)
