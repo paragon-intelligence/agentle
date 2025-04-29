@@ -24,7 +24,6 @@ output = weather_agent.run("Hello. What is the weather in Tokyo?")
 
 from __future__ import annotations
 
-
 import datetime
 import json
 from collections.abc import AsyncGenerator, Callable, MutableMapping, Sequence
@@ -38,19 +37,19 @@ from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 from rsb.models.mimetype import MimeType
 
+from agentle.agents.a2a.models.agent_skill import AgentSkill
+from agentle.agents.a2a.models.agent_usage_statistics import AgentUsageStatistics
+from agentle.agents.a2a.models.artifact import Artifact
+from agentle.agents.a2a.models.authentication import Authentication
+from agentle.agents.a2a.models.capabilities import Capabilities
+from agentle.agents.a2a.models.run_state import RunState
+from agentle.agents.a2a.tasks.task_state import TaskState
 from agentle.agents.agent_config import AgentConfig
 from agentle.agents.agent_run_output import AgentRunOutput
 from agentle.agents.context import Context
 from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
-from agentle.agents.models.agent_skill import AgentSkill
-from agentle.agents.models.agent_usage_statistics import AgentUsageStatistics
-from agentle.agents.models.artifact import Artifact
-from agentle.agents.models.authentication import Authentication
-from agentle.agents.models.capabilities import Capabilities
-from agentle.agents.models.run_state import RunState
-from agentle.agents.tasks.task_state import TaskState
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.message_parts.file import FilePart
@@ -968,10 +967,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
 
 if __name__ == "__main__":
+    import pydantic
+
     from agentle.generations.providers.google.google_generation_provider import (
         GoogleGenerationProvider,
     )
-    import pydantic
 
     class Weather(pydantic.BaseModel):
         location: str

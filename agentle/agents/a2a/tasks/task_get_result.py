@@ -3,7 +3,7 @@ import uuid
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.tasks.task import Task
+from agentle.agents.a2a.tasks.task import Task
 
 
 class TaskGetResult(BaseModel):

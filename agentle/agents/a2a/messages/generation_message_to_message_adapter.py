@@ -2,10 +2,10 @@ from typing import Literal
 
 from rsb.adapters.adapter import Adapter
 
-from agentle.agents.message_parts.generation_part_to_agent_part_adapter import (
+from agentle.agents.a2a.message_parts.adapters.generation_part_to_agent_part_adapter import (
     GenerationPartToAgentPartAdapter,
 )
-from agentle.agents.messages.message import Message
+from agentle.agents.a2a.messages.message import Message
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.user_message import UserMessage
 

@@ -3,7 +3,7 @@ from typing import Any
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.models.artifact import Artifact
+from agentle.agents.a2a.models.artifact import Artifact
 
 
 class TaskArtifactUpdateEvent(BaseModel):

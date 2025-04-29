@@ -1,8 +1,8 @@
 from rsb.models.base_model import BaseModel
 
+from agentle.agents.a2a.resources.task_resource import TaskResource
+from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
 from agentle.agents.agent import Agent
-from agentle.agents.resources.task_resource import TaskResource
-from agentle.agents.tasks.managment.task_manager import TaskManager
 
 
 class A2AInterface(BaseModel):

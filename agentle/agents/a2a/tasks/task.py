@@ -5,9 +5,9 @@ from typing import Any
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.messages.message import Message
-from agentle.agents.models.artifact import Artifact
-from agentle.agents.tasks.task_state import TaskState
+from agentle.agents.a2a.messages.message import Message
+from agentle.agents.a2a.models.artifact import Artifact
+from agentle.agents.a2a.tasks.task_state import TaskState
 
 
 class Task(BaseModel):

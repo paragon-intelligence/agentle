@@ -10,7 +10,7 @@
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.models.authentication import Authentication
+from agentle.agents.a2a.models.authentication import Authentication
 
 
 class PushNotificationConfig(BaseModel):

@@ -2,9 +2,9 @@ import base64
 
 from rsb.adapters.adapter import Adapter
 
-from agentle.agents.message_parts.file_part import FilePart
-from agentle.agents.message_parts.text_part import TextPart
-from agentle.agents.models.file import File
+from agentle.agents.a2a.message_parts.file_part import FilePart
+from agentle.agents.a2a.message_parts.text_part import TextPart
+from agentle.agents.a2a.models.file import File
 from agentle.generations.models.message_parts.file import (
     FilePart as GenerationFilePart,
 )

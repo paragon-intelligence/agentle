@@ -1,6 +1,8 @@
 from rsb.models.base_model import BaseModel
 
-from agentle.agents.notifications.push_notification_config import PushNotificationConfig
+from agentle.agents.a2a.notifications.push_notification_config import (
+    PushNotificationConfig,
+)
 
 
 class TaskPushNotificationConfig(BaseModel):

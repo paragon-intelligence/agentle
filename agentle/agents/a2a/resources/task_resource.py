@@ -1,15 +1,15 @@
 from rsb.models.base_model import BaseModel
 
+from agentle.agents.a2a.models.json_rpc_response import JSONRPCResponse
+from agentle.agents.a2a.resources.push_notification_resource import (
+    PushNotificationResource,
+)
+from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
+from agentle.agents.a2a.tasks.task import Task
+from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
+from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
+from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
 from agentle.agents.agent import Agent
-
-
-from agentle.agents.models.json_rpc_response import JSONRPCResponse
-from agentle.agents.resources.push_notification_resource import PushNotificationResource
-from agentle.agents.tasks.task import Task
-from agentle.agents.tasks.managment.task_manager import TaskManager
-from agentle.agents.tasks.task_get_result import TaskGetResult
-from agentle.agents.tasks.task_query_params import TaskQueryParams
-from agentle.agents.tasks.task_send_params import TaskSendParams
 
 type WithoutStructuredOutput = None
 

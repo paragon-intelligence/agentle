@@ -34,10 +34,10 @@ from collections.abc import Sequence
 
 from rsb.models.base_model import BaseModel
 
+from agentle.agents.a2a.models.agent_usage_statistics import AgentUsageStatistics
+from agentle.agents.a2a.models.artifact import Artifact
+from agentle.agents.a2a.tasks.task_state import TaskState
 from agentle.agents.context import Context
-from agentle.agents.models.agent_usage_statistics import AgentUsageStatistics
-from agentle.agents.models.artifact import Artifact
-from agentle.agents.tasks.task_state import TaskState
 
 logger = logging.getLogger(__name__)
 

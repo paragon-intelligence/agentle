@@ -4,7 +4,7 @@ from typing import Any
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.tasks.task_status import TaskStatus
+from agentle.agents.a2a.tasks.task_status import TaskStatus
 
 
 class TaskStatusUpdateEvent(BaseModel):

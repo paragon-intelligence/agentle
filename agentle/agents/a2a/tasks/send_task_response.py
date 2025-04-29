@@ -1,8 +1,8 @@
 from rsb.models.field import Field
 
-from agentle.agents.models.json_rpc_error import JSONRPCError
-from agentle.agents.models.json_rpc_response import JSONRPCResponse
-from agentle.agents.tasks.task import Task
+from agentle.agents.a2a.models.json_rpc_error import JSONRPCError
+from agentle.agents.a2a.models.json_rpc_response import JSONRPCResponse
+from agentle.agents.a2a.tasks.task import Task
 
 
 class SendTaskResponse(JSONRPCResponse[Task]):

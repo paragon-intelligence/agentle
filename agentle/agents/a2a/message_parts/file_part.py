@@ -6,7 +6,7 @@ from typing import Literal
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.models.file import File
+from agentle.agents.a2a.models.file import File
 
 
 class FilePart(BaseModel):

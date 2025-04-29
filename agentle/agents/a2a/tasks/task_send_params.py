@@ -4,8 +4,10 @@ from typing import Any
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.messages.message import Message
-from agentle.agents.notifications.push_notification_config import PushNotificationConfig
+from agentle.agents.a2a.messages.message import Message
+from agentle.agents.a2a.notifications.push_notification_config import (
+    PushNotificationConfig,
+)
 
 
 class TaskSendParams(BaseModel):
