@@ -1,3 +1,7 @@
+"""
+Module defining the AssistantMessage class representing messages from assistants.
+"""
+
 from typing import Literal, Sequence
 
 from agentle.generations.models.message_parts.file import FilePart
@@ -12,5 +16,18 @@ from rsb.models.field import Field
 
 @valueobject
 class AssistantMessage(BaseModel):
-    parts: Sequence[TextPart | FilePart | ToolExecutionSuggestion]
-    role: Literal["assistant"] = Field(default="assistant")
+    """
+    Represents a message from an assistant in the system.
+
+    This class can contain a sequence of different message parts including
+    text, files, and tool execution suggestions.
+    """
+
+    parts: Sequence[TextPart | FilePart | ToolExecutionSuggestion] = Field(
+        description="The sequence of message parts that make up this assistant message."
+    )
+
+    role: Literal["assistant"] = Field(
+        default="assistant",
+        description="Discriminator field to identify this as an assistant message. Always set to 'assistant'.",
+    )

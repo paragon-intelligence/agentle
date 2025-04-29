@@ -1,3 +1,7 @@
+"""
+Module defining the UserMessage class representing messages from users.
+"""
+
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -13,5 +17,18 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
 
 
 class UserMessage(BaseModel):
-    parts: Sequence[TextPart | FilePart | Tool[Any] | ToolExecutionSuggestion]
-    role: Literal["user"] = Field(default="user")
+    """
+    Represents a message from a user in the system.
+
+    This class can contain a sequence of different message parts including
+    text, files, tools, and tool execution suggestions.
+    """
+
+    parts: Sequence[TextPart | FilePart | Tool[Any] | ToolExecutionSuggestion] = Field(
+        description="The sequence of message parts that make up this user message."
+    )
+
+    role: Literal["user"] = Field(
+        default="user",
+        description="Discriminator field to identify this as a user message. Always set to 'user'.",
+    )

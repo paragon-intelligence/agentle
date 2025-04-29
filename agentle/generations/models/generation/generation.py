@@ -1,3 +1,20 @@
+"""
+Core Generation model for AI responses in the Agentle framework.
+
+This module defines the Generation class, which serves as the core container for
+AI-generated content in the Agentle framework. It encapsulates all aspects of a
+model's response, including the generated content itself, metadata, usage statistics,
+and structured data parsing.
+
+The Generation model is designed to be provider-independent, allowing applications
+to work with different AI providers through a unified interface. It supports
+multiple response choices, structured data parsing via generic typing, and
+provides convenient accessors for common operations.
+
+The model includes extensive clone functionality to support transformation and
+manipulation of generation objects while maintaining immutability.
+"""
+
 from __future__ import annotations
 
 import copy
@@ -25,6 +42,31 @@ logger = logging.getLogger(__name__)
 
 @entity
 class Generation[T](BaseModel):
+    """
+    Primary container for AI-generated content with metadata.
+
+    The Generation class encapsulates a complete response from an AI model,
+    including the generated content, metadata about the generation process,
+    usage statistics, and potential structured data of type T.
+
+    This class serves as the central return type for all provider implementations,
+    ensuring a consistent interface regardless of which AI provider is being used.
+    It supports multiple response choices (alternatives), type-safe structured data
+    access, and convenient accessors for commonly needed information.
+
+    The generic type parameter T allows for structured output parsing, enabling
+    type-safe access to parsed data when a response_schema is provided.
+
+    Attributes:
+        elapsed_time: Time taken to generate the response
+        id: Unique identifier for this generation
+        object: Type identifier, always "chat.generation"
+        created: Timestamp when this generation was created
+        model: Identifier of the model that produced this generation
+        choices: Sequence of alternative responses from the model
+        usage: Token usage statistics for this generation
+    """
+
     elapsed_time: timedelta
     id: uuid.UUID
     object: Literal["chat.generation"]
@@ -35,6 +77,20 @@ class Generation[T](BaseModel):
 
     @property
     def parsed(self) -> T:
+        """
+        Get the parsed structured data from the first choice.
+
+        This is a convenience property that returns the parsed data from the
+        first choice in the choices sequence. It's useful when you only have
+        one choice and want direct access to the parsed data.
+
+        Returns:
+            T: The parsed structured data from the first choice
+
+        Raises:
+            ValueError: If there are multiple choices, as it's ambiguous
+                which one to use
+        """
         if len(self.choices) > 1:
             raise ValueError(
                 "Choices list is > 1. Coudn't determine the parsed "
@@ -47,6 +103,17 @@ class Generation[T](BaseModel):
 
     @property
     def parts(self) -> Sequence[TextPart | ToolExecutionSuggestion]:
+        """
+        Get the message parts from the first choice.
+
+        This is a convenience property that returns the message parts from the
+        first choice in the choices sequence. It includes both text parts and
+        tool execution suggestions.
+
+        Returns:
+            Sequence[TextPart | ToolExecutionSuggestion]: The message parts
+                from the first choice
+        """
         if len(self.choices) > 1:
             logger.warning(
                 "WARNING: choices list is > 1. Coudn't determine the parts. Returning the first choice parts."
@@ -57,10 +124,30 @@ class Generation[T](BaseModel):
     def get_message_parts(
         self, choice: int
     ) -> Sequence[TextPart | ToolExecutionSuggestion]:
+        """
+        Get the message parts from a specific choice.
+
+        Args:
+            choice: The index of the choice to get message parts from
+
+        Returns:
+            Sequence[TextPart | ToolExecutionSuggestion]: The message parts
+                from the specified choice
+        """
         return self.choices[choice].message.parts
 
     @property
     def tool_calls(self) -> Sequence[ToolExecutionSuggestion]:
+        """
+        Get tool execution suggestions from the first choice.
+
+        This is a convenience property that returns only the tool execution
+        suggestions from the first choice in the choices sequence.
+
+        Returns:
+            Sequence[ToolExecutionSuggestion]: The tool execution suggestions
+                from the first choice
+        """
         if len(self.choices) > 1:
             logger.warning(
                 "Choices list is > 1. Coudn't determine the tool calls. "
@@ -127,6 +214,36 @@ class Generation[T](BaseModel):
         new_choices: Sequence[Choice[T_Schema]] | None = None,
         new_usage: Usage | None = None,
     ) -> Generation[T_Schema] | Generation[T]:  # Adjusted return type hint for clarity
+        """
+        Create a clone of this Generation, optionally with modified attributes.
+
+        This method creates a new Generation object based on the current one,
+        with the option to modify specific attributes. It supports several scenarios:
+
+        1. Creating a new Generation with the same structure but different parsed data
+        2. Creating a new Generation with entirely new choices
+        3. Creating a simple clone with optional metadata changes
+
+        The method uses overloads to provide proper type safety depending on which
+        scenario is being used.
+
+        Args:
+            new_parseds: New parsed data to use in place of existing parsed data
+            new_elapsed_time: New elapsed time value
+            new_id: New ID for the generation
+            new_object: New object type identifier
+            new_created: New creation timestamp
+            new_model: New model identifier
+            new_choices: New choices to replace the existing ones
+            new_usage: New usage statistics
+
+        Returns:
+            A new Generation object with the requested modifications
+
+        Raises:
+            ValueError: If both new_parseds and new_choices are provided, which
+                would be ambiguous
+        """
         # Validate against ambiguous parameter usage
         if new_choices and new_parseds:
             raise ValueError(
@@ -199,13 +316,38 @@ class Generation[T](BaseModel):
         )
 
     def tool_calls_amount(self) -> int:
+        """
+        Get the number of tool execution suggestions in the first choice.
+
+        Returns:
+            int: The number of tool execution suggestions
+        """
         return len(self.tool_calls)
 
     def get_tool_calls(self, choice: int = 0) -> Sequence[ToolExecutionSuggestion]:
+        """
+        Get tool execution suggestions from a specific choice.
+
+        Args:
+            choice: The index of the choice to get tool calls from (default: 0)
+
+        Returns:
+            Sequence[ToolExecutionSuggestion]: The tool execution suggestions
+                from the specified choice
+        """
         return self.choices[choice].message.tool_calls
 
     @classmethod
     def mock(cls) -> Generation[T]:
+        """
+        Create a mock Generation object for testing purposes.
+
+        This method creates a Generation with minimal default values,
+        useful for testing without making actual API calls.
+
+        Returns:
+            Generation[T]: A mock Generation object
+        """
         return cls(
             model="mock-model",
             elapsed_time=timedelta(seconds=0),
@@ -218,7 +360,25 @@ class Generation[T](BaseModel):
 
     @property
     def text(self) -> str:
+        """
+        Get the concatenated text from all choices.
+
+        This is a convenience property that returns all the text content
+        from all choices concatenated into a single string.
+
+        Returns:
+            str: The concatenated text from all choices
+        """
         return "".join([choice.message.text for choice in self.choices])
 
     def get_parsed(self, choice: int) -> T:
+        """
+        Get the parsed structured data from a specific choice.
+
+        Args:
+            choice: The index of the choice to get parsed data from
+
+        Returns:
+            T: The parsed structured data from the specified choice
+        """
         return self.choices[choice].message.parsed

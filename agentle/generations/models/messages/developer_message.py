@@ -1,3 +1,7 @@
+"""
+Module defining the DeveloperMessage class representing messages from developers.
+"""
+
 from typing import Literal, Sequence
 
 from rsb.decorators.value_objects import valueobject
@@ -11,5 +15,18 @@ from agentle.generations.tools.tool import Tool
 
 @valueobject
 class DeveloperMessage(BaseModel):
-    parts: Sequence[TextPart | FilePart | Tool]
-    role: Literal["developer"] = Field(default="developer")
+    """
+    Represents a message from a developer in the system.
+
+    This class can contain a sequence of different message parts including
+    text, files, and tools.
+    """
+
+    parts: Sequence[TextPart | FilePart | Tool] = Field(
+        description="The sequence of message parts that make up this developer message."
+    )
+
+    role: Literal["developer"] = Field(
+        default="developer",
+        description="Discriminator field to identify this as a developer message. Always set to 'developer'.",
+    )

@@ -1,3 +1,21 @@
+"""
+Chain of Thought reasoning implementation for the Agentle framework.
+
+This module provides the primary model for representing and working with
+chain-of-thought reasoning processes in AI generations. The Chain of Thought
+technique makes the reasoning process explicit by breaking down complex problem-solving
+into discrete, observable steps, leading to a final answer.
+
+This structured approach offers several benefits:
+- Improved reasoning transparency for complex tasks
+- Better error detection and debugging of model reasoning
+- Support for step-by-step verification of logical processes
+- Enhanced explainability for regulatory or user trust requirements
+
+The module implements a Pydantic model for structured Chain of Thought representation
+with multilingual output formatting capabilities.
+"""
+
 from typing import Sequence
 
 from pydantic import BaseModel, Field
@@ -6,12 +24,26 @@ from agentle.generations.models.chain_of_thought.step import Step
 
 
 class ChainOfThought[T](BaseModel):
-    """Structured reasoning process with final answer.
+    """
+    Structured reasoning process with final answer.
+
+    This class represents a complete chain-of-thought reasoning process,
+    breaking down complex problem-solving into a sequence of explicit steps
+    with detailed explanations, culminating in a final answer or conclusion.
+
+    Chain of Thought is particularly useful for:
+    - Complex reasoning tasks requiring step-by-step thinking
+    - Making model reasoning transparent and verifiable
+    - Debugging or explaining how a model arrived at a conclusion
+    - Implementing research techniques like Chain of Thought prompting
+
+    The generic type parameter T allows the final_answer to be of any type,
+    such as a string, number, boolean, or complex structured data.
 
     Attributes:
         general_title: High-level description of reasoning goal
         steps: Logical steps in reasoning process
-        final_answer: Conclusion of the reasoning chain
+        final_answer: Conclusion of the reasoning chain, of type T
 
     Example:
         >>> ChainOfThought(
@@ -28,25 +60,6 @@ class ChainOfThought[T](BaseModel):
 
     steps: Sequence[Step] = Field(
         description="The sequence of steps that make up the full reasoning process.",
-        # examples=[
-        #     [
-        #         {
-        #             "step_number": 1,
-        #             "explanation": "Analyze input data",
-        #             "details": [
-        #                 {"detail": "Data: 234 and 567"},
-        #                 {"detail": "Check if they are integers"},
-        #             ],
-        #         },
-        #         {
-        #             "step_number": 2,
-        #             "explanation": "Perform the calculation",
-        #             "details": [
-        #                 {"detail": "234 + 567 = 801"},
-        #             ],
-        #         },
-        #     ]
-        # ],
     )
 
     final_answer: T = Field(

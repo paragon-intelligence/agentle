@@ -1,4 +1,27 @@
 # type: ignore
+"""
+JSON Schema generation for Python types in the Agentle framework.
+
+This module provides functionality to automatically convert Python types into
+JSON Schema Draft 7 representations. It supports a wide range of Python types,
+including:
+
+- Primitive types (str, int, float, bool, None)
+- Standard library types (datetime, UUID, decimal, bytes)
+- Container types (list, dict, tuple)
+- Typing module generics (List, Dict, Union, Optional, Literal, etc.)
+- Enums
+- Dataclasses
+- Pydantic models (v1 and v2)
+- Msgspec structs
+- Generic classes with type annotations
+
+The module handles complex nested types, recursive references, and
+type resolution with appropriate handling of forward references.
+It produces valid JSON Schema Draft 7 output that can be used for
+validation, documentation, or API specification.
+"""
+
 import dataclasses
 import datetime
 import decimal
@@ -50,9 +73,34 @@ class JsonSchemaBuilder:
     """
     Builds JSON Schema draft 7 representations from Python types.
 
-    Handles standard types, dataclasses, Enums, typing generics (list, dict,
-    Union, Optional, Literal, tuple), and attempts to handle Pydantic-like
-    models or other classes via reflection. Uses definitions and $ref for complex types.
+    This class analyzes Python types and generates corresponding JSON Schema
+    representations that adhere to the Draft 7 specification. It intelligently
+    handles complex types by creating definitions with references, avoiding
+    issues with recursive types while maintaining schema correctness.
+
+    The builder supports:
+    - All primitive types (str, int, float, bool, None)
+    - Standard library types (datetime, UUID, decimal, bytes)
+    - Container types (list, dict, tuple) with proper generic parameter handling
+    - Complex typing constructs (Union, Optional, Literal, etc.)
+    - Enums with various value types
+    - Dataclasses with field type and metadata extraction
+    - Pydantic models (both v1 and v2)
+    - Msgspec structs
+    - Generic annotated classes
+    - Forward references and recursive type definitions
+
+    The schema generation process handles attribute defaults, required fields,
+    metadata extraction, and proper type representation according to JSON Schema
+    conventions.
+
+    Attributes:
+        _target_type: The Python type to generate a schema for.
+        remove_examples: Whether to remove example data from the generated schema.
+        schema_draft_uri: The URI of the JSON Schema draft to use.
+        _definitions: Dictionary storing schema definitions for complex types.
+        _definitions_mapping: Mapping between Python types and definition references.
+        _processing: Set of types currently being processed (for recursion detection).
     """
 
     _target_type: Type[Any]
@@ -70,6 +118,14 @@ class JsonSchemaBuilder:
         remove_examples: bool = False,
         schema_draft_uri: str = "http://json-schema.org/draft-07/schema#",
     ) -> None:
+        """
+        Initialize a JSON Schema builder for a specific Python type.
+
+        Args:
+            target_type: The Python type to generate a schema for.
+            remove_examples: Whether to remove example data from the generated schema.
+            schema_draft_uri: The URI of the JSON Schema draft to use.
+        """
         self._target_type = target_type
         self.remove_examples = remove_examples
         self.schema_draft_uri = schema_draft_uri
@@ -79,15 +135,25 @@ class JsonSchemaBuilder:
 
     def build(self, *, dereference: bool = False) -> dict[str, Any]:
         """
-        Build JSON Schema representation.
+        Build JSON Schema representation of the target type.
+
+        This method analyzes the target Python type and generates a complete
+        JSON Schema that represents it. Complex types are decomposed into
+        definitions with references for better organization and to handle
+        recursive types.
 
         Args:
             dereference: Whether to dereference all references in the schema.
-                 If True, this will replace all #/definitions/{type} references with
-                 the actual definition schemas.
+                If True, this will replace all #/definitions/{type} references with
+                the actual definition schemas, producing a fully self-contained schema
+                without references.
 
         Returns:
             A JSON Schema draft 7 representation of the Python type.
+
+        Raises:
+            RuntimeError: If dereferencing fails.
+            UnsupportedTypeError: If the Python type cannot be mapped to JSON Schema.
         """
         self._definitions = {}
         self._definitions_mapping = {}
