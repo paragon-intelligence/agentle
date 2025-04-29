@@ -1,3 +1,24 @@
+"""
+Google AI provider implementation for the Agentle framework.
+
+This module provides integration with Google's Generative AI services, allowing
+Agentle to use models from the Google AI ecosystem. It implements the necessary
+provider interfaces to maintain compatibility with the broader Agentle framework
+while handling all Google-specific implementation details internally.
+
+The module supports:
+- Both API key and credential-based authentication
+- Optional Vertex AI integration for enterprise deployments
+- Configurable HTTP options and timeouts
+- Function/tool calling capabilities
+- Structured output parsing via response schemas
+- Tracing and observability integration
+
+This provider transforms Agentle's unified message format into Google's Content
+format and adapts responses back into Agentle's Generation objects, maintaining
+a consistent interface regardless of the underlying AI provider being used.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -46,6 +67,30 @@ type WithoutStructuredOutput = None
 
 
 class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
+    """
+    Provider implementation for Google's Generative AI service.
+
+    This class implements the GenerationProvider interface for Google AI models,
+    allowing seamless integration with the Agentle framework. It supports both
+    standard API key authentication and Vertex AI integration for enterprise
+    deployments.
+
+    The provider handles message format conversion, tool adaptation, function
+    calling configuration, and response processing to maintain consistency with
+    Agentle's unified interface.
+
+    Attributes:
+        use_vertex_ai: Whether to use Google Vertex AI instead of standard API.
+        api_key: Optional API key for authentication with Google AI.
+        credentials: Optional credentials object for authentication.
+        project: Google Cloud project ID (required for Vertex AI).
+        location: Google Cloud region (required for Vertex AI).
+        debug_config: Optional configuration for debug logging.
+        http_options: HTTP options for the Google AI client.
+        message_adapter: Adapter to convert Agentle messages to Google Content format.
+        function_calling_config: Configuration for function calling behavior.
+    """
+
     use_vertex_ai: bool
     api_key: str | None
     credentials: Credentials | None
@@ -73,6 +118,21 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         | None = None,
         function_calling_config: FunctionCallingConfig | None = None,
     ) -> None:
+        """
+        Initialize the Google Generation Provider.
+
+        Args:
+            tracing_client: Optional client for observability and tracing.
+            use_vertex_ai: Whether to use Google Vertex AI instead of standard API.
+            api_key: Optional API key for authentication with Google AI.
+            credentials: Optional credentials object for authentication.
+            project: Google Cloud project ID (required for Vertex AI).
+            location: Google Cloud region (required for Vertex AI).
+            debug_config: Optional configuration for debug logging.
+            http_options: HTTP options for the Google AI client.
+            message_adapter: Optional adapter to convert Agentle messages to Google Content.
+            function_calling_config: Optional configuration for function calling behavior.
+        """
         super().__init__(tracing_client=tracing_client)
         self.use_vertex_ai = use_vertex_ai
         self.api_key = api_key
@@ -87,6 +147,12 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
     @property
     @override
     def organization(self) -> str:
+        """
+        Get the provider organization identifier.
+
+        Returns:
+            str: The organization identifier, which is "google" for this provider.
+        """
         return "google"
 
     @override
@@ -99,6 +165,24 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
+        """
+        Create a generation asynchronously using a Google AI model.
+
+        This method handles the conversion of Agentle messages and tools to Google's
+        format, sends the request to Google's API, and processes the response into
+        Agentle's standardized Generation format.
+
+        Args:
+            model: The Google AI model identifier to use (e.g., "gemini-1.5-pro").
+            messages: A sequence of Agentle messages to send to the model.
+            response_schema: Optional Pydantic model for structured output parsing.
+            generation_config: Optional configuration for the generation request.
+            tools: Optional sequence of Tool objects for function calling.
+
+        Returns:
+            Generation[T]: An Agentle Generation object containing the model's response,
+                potentially with structured output if a response_schema was provided.
+        """
         from google import genai
         from google.genai import types
 
@@ -183,10 +267,30 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
     def price_per_million_tokens_input(
         self, model: str, estimate_tokens: int | None = None
     ) -> float:
+        """
+        Get the price per million tokens for input/prompt tokens.
+
+        Args:
+            model: The model identifier.
+            estimate_tokens: Optional estimate of token count.
+
+        Returns:
+            float: The price per million input tokens for the specified model.
+        """
         return 0.0  # TODO(arthur)
 
     @override
     def price_per_million_tokens_output(
         self, model: str, estimate_tokens: int | None = None
     ) -> float:
+        """
+        Get the price per million tokens for output/completion tokens.
+
+        Args:
+            model: The model identifier.
+            estimate_tokens: Optional estimate of token count.
+
+        Returns:
+            float: The price per million output tokens for the specified model.
+        """
         return 0.0  # TODO(arthur)

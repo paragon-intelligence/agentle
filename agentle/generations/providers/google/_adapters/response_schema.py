@@ -1,3 +1,65 @@
+"""
+Adapter module for converting schema definitions to Google AI Schema format.
+
+This module provides the SchemaToGoogleSchemaAdapter class, which transforms dictionary-based
+schema definitions into the Schema objects expected by Google's Generative AI APIs.
+This conversion is necessary when using structured output with Google's AI models,
+allowing for type-safe parsing of model responses.
+
+The adapter handles the recursive conversion of complex schemas with nested properties,
+arrays, and enum values. It supports all the schema features provided by Google's API,
+including property ordering, type mapping, and validation constraints.
+
+This adapter is typically used internally by the GoogleGenerationProvider when
+preparing structured output schemas to be sent to Google's API.
+
+Example:
+```python
+from agentle.generations.providers.google._adapters.response_schema import (
+    SchemaToGoogleSchemaAdapter
+)
+
+# Define a schema as a dictionary
+schema_dict = {
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "Person's full name"
+        },
+        "age": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120
+        },
+        "address": {
+            "type": "object",
+            "properties": {
+                "street": {"type": "string"},
+                "city": {"type": "string"},
+                "country": {"type": "string"}
+            }
+        }
+    },
+    "required": ["name"]
+}
+
+# Create an adapter
+adapter = SchemaToGoogleSchemaAdapter(property_ordering=True)
+
+# Convert to Google's Schema format
+google_schema = adapter.adapt(schema_dict)
+
+# Now use with Google's API for structured output
+response = model.generate_content(
+    "Generate information about John Doe",
+    response_schema=google_schema
+)
+```
+"""
+
+from __future__ import annotations
+
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, cast
 
@@ -8,13 +70,134 @@ if TYPE_CHECKING:
 
 
 class SchemaToGoogleSchemaAdapter(Adapter[dict[str, object], "Schema"]):
+    """
+    Adapter for converting dictionary-based schemas to Google AI Schema objects.
+
+    This adapter transforms schema definitions provided as Python dictionaries into
+    the Schema objects required by Google's Generative AI APIs. It supports all schema features including nested objects, arrays, enums, and
+    validation constraints.
+
+    The adapter recursively processes complex schemas, converting each property
+    and maintaining the hierarchical structure. It also handles special features
+    like property ordering, which can influence how Google's models generate
+    structured responses.
+
+    Attributes:
+        property_ordering (bool | Sequence[str] | None): Controls the ordering of
+            properties in object schemas. If True, uses the order from the input
+            dictionary. If a sequence, uses that specific ordering. If None,
+            no explicit ordering is set.
+
+    Conversion support:
+    - Basic properties (title, description, format, pattern, etc.)
+    - Type mapping (string to Google's Type enum)
+    - Enum values
+    - Required fields
+    - Property ordering
+    - Nested object properties
+    - Array item schemas
+    - Any-of schemas for alternatives
+
+    Example:
+        ```python
+        # Create a schema for weather information
+        weather_schema = {
+            "type": "object",
+            "properties": {
+                "location": {"type": "string"},
+                "temperature": {"type": "number"},
+                "conditions": {
+                    "type": "string",
+                    "enum": ["sunny", "cloudy", "rainy", "snowy"]
+                },
+                "forecast": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "day": {"type": "string"},
+                            "high": {"type": "number"},
+                            "low": {"type": "number"}
+                        }
+                    }
+                }
+            },
+            "required": ["location", "temperature"]
+        }
+
+        # Define a specific property order
+        property_order = ["location", "temperature", "conditions", "forecast"]
+
+        # Create the adapter with custom property ordering
+        adapter = SchemaToGoogleSchemaAdapter(property_ordering=property_order)
+
+        # Convert to Google's Schema format
+        google_schema = adapter.adapt(weather_schema)
+        ```
+    """
+
     property_ordering: bool | Sequence[str] | None
 
     def __init__(self, property_ordering: bool | Sequence[str] | None = None) -> None:
+        """
+        Initialize the adapter with optional property ordering configuration.
+
+        Args:
+            property_ordering: Controls how properties in object schemas are ordered.
+                If True, uses the key order from the input dictionary.
+                If a sequence of strings, uses that specific ordering.
+                If None (default), no explicit ordering is set.
+
+        Note:
+            Property ordering can influence how Google's models generate structured
+            responses, potentially improving the quality and consistency of the
+            generated output.
+        """
         super().__init__()
         self.property_ordering = property_ordering
 
-    def adapt(self, _f: dict[str, object]) -> "Schema":
+    def adapt(self, _f: dict[str, object]) -> Schema:
+        """
+        Convert a dictionary-based schema to a Google AI Schema object.
+
+        This method transforms a schema definition provided as a Python dictionary
+        into the Schema object required by Google's Generative AI APIs. It handles
+        all schema features including nested objects, arrays, enums, and validation
+        constraints.
+
+        The method recursively processes complex schemas, ensuring that the entire
+        hierarchical structure is properly converted to Google's format.
+
+        Args:
+            _f: The dictionary-based schema to convert. This should follow JSON Schema
+                conventions with fields like type, properties, items, etc.
+
+        Returns:
+            Schema: A Google AI Schema object representing the converted schema,
+                ready to be used with Google's API for structured output.
+
+        Example:
+            ```python
+            # Define a simple schema for a person
+            person_schema = {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "age": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "hobbies": {
+                        "type": "array",
+                        "items": {"type": "string"}
+                    }
+                }
+            }
+
+            # Convert to Google's format
+            google_schema = adapter.adapt(person_schema)
+            ```
+        """
         from google.genai.types import Schema, Type
 
         # Create the schema instance with all applicable fields
