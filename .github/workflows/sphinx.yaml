@@ -1,0 +1,47 @@
+name: sphinx
+ 
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+  contents: write
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install PIP
+        run: pip install --root-user-action=ignore --upgrade pip
+
+      - name: Install project dependencies for docs using pip # Use uv and dev dependencies
+        run: pip install sphinx furo
+
+      - name: Build Docs # Use your makefile to build docs
+        run: make docs # This will execute 'make docs' in your root directory
+
+      - name: Prepare Deployment Directory
+        run: |
+          mkdir -p deploy_output/docs  # Create deploy_output and docs subdirectory in one go
+          cp docs/_static/landing.html deploy_output/index.html # Copy landing.html to staging root as index.html
+          cp -r docs/_build/html/* deploy_output/docs # Copy ALL Sphinx output to staging/docs
+
+      - name: Deploy to GitHub Pages # Using peaceiris/actions-gh-pages - a popular action
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/master'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy_output # Publish the staging directory
