@@ -1,3 +1,10 @@
+"""
+Module for audio structure models.
+
+This module provides the AudioStructure class which represents the organizational structure
+of audio content, including how elements are arranged, grouped, and emphasized.
+"""
+
 from typing import Optional, Sequence
 
 from pydantic import BaseModel, Field

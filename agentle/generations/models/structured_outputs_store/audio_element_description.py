@@ -1,3 +1,10 @@
+"""
+Module for audio element description models.
+
+This module provides the AudioElementDescription class which represents detailed descriptions
+of individual components within audio content, including their characteristics and relationships.
+"""
+
 from typing import Optional, Sequence
 
 from pydantic import BaseModel, Field

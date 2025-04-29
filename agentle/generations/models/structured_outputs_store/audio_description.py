@@ -1,3 +1,10 @@
+"""
+Module for audio description models.
+
+This module provides the AudioDescription class which represents detailed descriptions
+of audio content, including its overall characteristics and features.
+"""
+
 from pydantic import BaseModel, Field
 
 

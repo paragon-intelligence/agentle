@@ -1,3 +1,11 @@
+"""
+Module for graphical element description models.
+
+This module provides the GraphicalElementDescription class which represents detailed descriptions
+of individual visual or auditory elements within media, including their characteristics,
+roles, and relationships with other elements.
+"""
+
 from typing import Optional, Sequence
 
 from pydantic import BaseModel, Field

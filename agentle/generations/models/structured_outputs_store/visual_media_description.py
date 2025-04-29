@@ -1,3 +1,10 @@
+"""
+Module for media structure models.
+
+This module provides the MediaStructure class which represents the organizational structure
+of visual or auditory media, including layout, groupings of elements, and focal points.
+"""
+
 from typing import Optional, Sequence
 
 from pydantic import BaseModel, Field
@@ -55,11 +62,11 @@ class VisualMediaDescription(BaseModel):
     )
 
     visual_elements: Optional[Sequence[GraphicalElementDescription]] = Field(
-        description="Visual elements"
+        default=None, description="Visual elements"
     )
 
     dominant_features: Optional[Sequence[str]] = Field(
-        description="Dominant features of the Visual media"
+        default=None, description="Dominant features of the Visual media"
     )
 
     structure: Optional[AudioStructure] = Field(

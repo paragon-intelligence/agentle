@@ -1,3 +1,10 @@
+"""
+Module for visual media description models.
+
+This module provides the VisualMediaDescription class which represents detailed descriptions
+of visual content, including overall descriptions, elements, structure, and features.
+"""
+
 from typing import Optional, Sequence
 
 from pydantic import BaseModel, Field
