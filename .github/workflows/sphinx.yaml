@@ -37,7 +37,7 @@ jobs:
         run: |
           mkdir -p deploy_output/docs  # Create deploy_output and docs subdirectory in one go
           cp docs/index.html deploy_output/index.html # Copy index.html to staging root
-          cp -r docs/_build/html/* deploy_output/docs # Copy ALL Sphinx output to staging/docs
+          cp -r docs/build/html/* deploy_output/docs # Copy ALL Sphinx output to staging/docs
 
       - name: Deploy to GitHub Pages # Using peaceiris/actions-gh-pages - a popular action
         uses: peaceiris/actions-gh-pages@v3
