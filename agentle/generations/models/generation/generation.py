@@ -68,13 +68,40 @@ class Generation[T](BaseModel):
         usage: Token usage statistics for this generation
     """
 
-    elapsed_time: timedelta = Field(description="Time taken to generate the response")
-    id: uuid.UUID = Field(description="Unique identifier for this generation")
-    object: Literal["chat.generation"] = Field(description="Type identifier, always 'chat.generation'")
-    created: datetime = Field(description="Timestamp when this generation was created")
-    model: str = Field(description="Identifier of the model that produced this generation")
-    choices: Sequence[Choice[T]] = Field(description="Sequence of alternative responses from the model")
-    usage: Usage = Field(description="Token usage statistics for this generation")
+    elapsed_time: timedelta = Field(
+        description="Duration between request initiation and response completion. Helps track model performance and identify latency issues in generation processing.",
+        examples=[
+            timedelta(seconds=0.8),
+            timedelta(seconds=2.5),
+            timedelta(seconds=10.1),
+        ],
+    )
+    id: uuid.UUID = Field(
+        description="Unique identifier for tracking and referencing this specific generation throughout the system. Used for logging, debugging, and associating generations with specific requests.",
+        examples=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()],
+    )
+    object: Literal["chat.generation"] = Field(
+        description="Type discriminator that identifies this object as a generation. Always set to 'chat.generation' to support polymorphic handling of different response types.",
+        examples=["chat.generation"],
+    )
+    created: datetime = Field(
+        description="ISO 8601 timestamp when this generation was created. Useful for tracking generation history, calculating processing time, and implementing time-based features.",
+        examples=[datetime.now(), datetime.now() - timedelta(minutes=5)],
+    )
+    model: str = Field(
+        description="Identifier string for the AI model that produced this generation. Includes provider and model name/version information to enable model-specific handling and analytics.",
+        examples=["gpt-4-turbo", "claude-3-sonnet", "llama-3-70b-instruct"],
+    )
+    choices: Sequence[Choice[T]] = Field(
+        description="Collection of alternative responses from the model when multiple completions are requested. Each choice contains a generated message with text content, tool calls, and optional parsed structured data.",
+    )
+    usage: Usage = Field(
+        description="Token usage statistics for tracking resource consumption and cost. Contains counts for tokens in the prompt and completion, enabling precise usage tracking and cost estimation across providers.",
+        examples=[
+            "Usage(prompt_tokens=150, completion_tokens=50)",
+            "Usage(prompt_tokens=800, completion_tokens=200)",
+        ],
+    )
 
     @property
     def parsed(self) -> T:
