@@ -23,6 +23,7 @@ from mcp.types import (
 )
 from rsb.models.any_url import AnyUrl
 from rsb.models.field import Field
+from rsb.models.private_attr import PrivateAttr
 
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
@@ -64,9 +65,12 @@ class HTTPMCPServer(MCPServerProtocol):
 
     # Internal state
     _client: httpx.AsyncClient | None = None
-    _logger: logging.Logger = Field(
+    # _logger: logging.Logger = Field(
+    #     default_factory=lambda: logging.getLogger(__name__),
+    #     description="Logger instance for this class",
+    # )
+    _logger: logging.Logger = PrivateAttr(
         default_factory=lambda: logging.getLogger(__name__),
-        description="Logger instance for this class",
     )
 
     async def connect(self) -> None:

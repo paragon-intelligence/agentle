@@ -26,8 +26,14 @@ from __future__ import annotations
 
 import datetime
 import json
-from collections.abc import AsyncGenerator, Callable, MutableMapping, Sequence
-from contextlib import asynccontextmanager
+from collections.abc import (
+    AsyncGenerator,
+    Callable,
+    Generator,
+    MutableMapping,
+    Sequence,
+)
+from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from mcp.types import Tool as MCPTool
@@ -286,8 +292,35 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         """
         return len(self.tools) > 0
 
+    @contextmanager
+    def with_mcp_servers(self) -> Generator[None, None, None]:
+        """
+        Context manager to connect and clean up MCP servers.
+
+        This context manager ensures that all MCP servers are connected before the
+        code block is executed and cleaned up after completion, even in case of exceptions.
+
+        Yields:
+            None: Does not return a value, just manages the context.
+
+        Example:
+            ```python
+            async with agent.with_mcp_servers():
+                # Operations that require connection to MCP servers
+                result = await agent.run_async("Query to server")
+            # Servers are automatically disconnected here
+            ```
+        """
+        for server in self.mcp_servers:
+            run_sync(server.connect)
+        try:
+            yield
+        finally:
+            for server in self.mcp_servers:
+                run_sync(server.cleanup)
+
     @asynccontextmanager
-    async def with_mcp_servers(self) -> AsyncGenerator[None, None]:
+    async def async_with_mcp_servers(self) -> AsyncGenerator[None, None]:
         """
         Asynchronous context manager to connect and clean up MCP servers.
 
@@ -973,6 +1006,15 @@ if __name__ == "__main__":
         GoogleGenerationProvider,
     )
 
+    from agentle.mcp.servers.http_mcp_server import HTTPMCPServer
+
+    class FakeHTTPMCPServer(HTTPMCPServer):
+        async def connect(self) -> None:
+            print("Connected to fake MCP server")
+
+        async def cleanup(self) -> None:
+            print("Disconnected from fake MCP server")
+
     class Weather(pydantic.BaseModel):
         location: str
         weather: str
@@ -988,8 +1030,9 @@ if __name__ == "__main__":
         response_schema=Weather,
     )
 
-    output = weather_agent.run(
-        "Hello. What is the weather in Tokyo? what do you think about tokio?"
-    )
+    with weather_agent.with_mcp_servers():
+        output = weather_agent.run(
+            "Hello. What is the weather in Tokyo? what do you think about tokio?"
+        )
 
     print(output)
