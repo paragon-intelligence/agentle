@@ -58,12 +58,14 @@ class GenerationProvider(abc.ABC):
 
     Attributes:
         tracing_client: An optional client for observability and tracing of generation requests.
+        default_model: An optional default model to use for generation.
     """
 
     tracing_client: MaybeProtocol[StatefulObservabilityClient]
 
     def __init__(
         self,
+        *,
         tracing_client: StatefulObservabilityClient | None = None,
     ) -> None:
         """
@@ -72,8 +74,17 @@ class GenerationProvider(abc.ABC):
         Args:
             tracing_client: Optional client for observability and tracing of generation
                 requests and responses.
+            default_model: Optional default model to use for generation.
         """
         self.tracing_client = Maybe(tracing_client)
+
+    @property
+    @abc.abstractmethod
+    def default_model(self) -> str:
+        """
+        The default model to use for generation.
+        """
+        ...
 
     @property
     @abc.abstractmethod
@@ -92,7 +103,7 @@ class GenerationProvider(abc.ABC):
     def create_generation_by_prompt[T = WithoutStructuredOutput](
         self,
         *,
-        model: str,
+        model: str | None = None,
         prompt: str | Prompt | Part | Sequence[Part],
         developer_prompt: str | Prompt,
         response_schema: type[T] | None = None,
@@ -131,7 +142,7 @@ class GenerationProvider(abc.ABC):
     async def create_generation_by_prompt_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str,
+        model: str | None = None,
         prompt: str | Prompt | Part | Sequence[Part],
         developer_prompt: str | Prompt,
         response_schema: type[T] | None = None,
@@ -192,7 +203,7 @@ class GenerationProvider(abc.ABC):
     def create_generation[T = WithoutStructuredOutput](
         self,
         *,
-        model: str,
+        model: str | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -229,7 +240,7 @@ class GenerationProvider(abc.ABC):
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str,
+        model: str | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,

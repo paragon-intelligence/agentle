@@ -146,6 +146,14 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
 
     @property
     @override
+    def default_model(self) -> str:
+        """
+        The default model to use for generation.
+        """
+        return "gemini-2.0-flash"
+
+    @property
+    @override
     def organization(self) -> str:
         """
         Get the provider organization identifier.
@@ -159,7 +167,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str,
+        model: str | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -187,81 +195,171 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         from google.genai import types
 
         start = datetime.now()
+        used_model = model or self.default_model
 
-        _generation_config = generation_config or GenerationConfig()
-
-        _http_options = self.http_options or types.HttpOptions()
-        # change so if the timeout is provided in the constructor and the user doesnt inform the timeout in the generation config, the timeout in the constructor is used
-        _http_options.timeout = (
-            int(
-                _generation_config.timeout * 1000
-            )  # Convertendo de segundos para milissegundos
-            if _generation_config.timeout
-            else _http_options.timeout
+        # Set up tracing if available
+        generation_tracing = self.tracing_client.map(
+            lambda client: client.generation(
+                name=f"google_generation_{used_model}",
+                input={
+                    "model": used_model,
+                    "messages": [
+                        {
+                            "role": msg.role,
+                            "content": "".join(str(part) for part in msg.parts),
+                        }
+                        for msg in messages
+                    ],
+                    "response_schema": str(response_schema)
+                    if response_schema
+                    else None,
+                    "temperature": generation_config.temperature
+                    if generation_config
+                    else None,
+                    "tools_count": len(tools) if tools else 0,
+                },
+                metadata={
+                    "provider": self.organization,
+                    "model": used_model,
+                    "config": {
+                        k: v
+                        for k, v in (
+                            generation_config.__dict__ if generation_config else {}
+                        ).items()
+                        if not k.startswith("_") and not callable(v)
+                    },
+                },
+            )
         )
 
-        client = genai.Client(
-            vertexai=self.use_vertex_ai,
-            api_key=self.api_key,
-            credentials=self.credentials,
-            project=self.project,
-            location=self.location,
-            debug_config=self.debug_config,
-            http_options=_http_options,
-        )
+        try:
+            _generation_config = generation_config or GenerationConfig()
 
-        system_instruction: Content | None = None
-        first_message = messages[0]
-        if isinstance(first_message, DeveloperMessage):
-            system_instruction = self.message_adapter.adapt(first_message)
+            _http_options = self.http_options or types.HttpOptions()
+            # change so if the timeout is provided in the constructor and the user doesnt inform the timeout in the generation config, the timeout in the constructor is used
+            _http_options.timeout = (
+                int(
+                    _generation_config.timeout * 1000
+                )  # Convertendo de segundos para milissegundos
+                if _generation_config.timeout
+                else _http_options.timeout
+            )
 
-        message_tools = [
-            part
-            for message in messages
-            for part in message.parts
-            if isinstance(part, Tool)
-        ]
+            client = genai.Client(
+                vertexai=self.use_vertex_ai,
+                api_key=self.api_key,
+                credentials=self.credentials,
+                project=self.project,
+                location=self.location,
+                debug_config=self.debug_config,
+                http_options=_http_options,
+            )
 
-        final_tools = (
-            list(tools or []) + message_tools if tools or message_tools else None
-        )
+            system_instruction: Content | None = None
+            first_message = messages[0]
+            if isinstance(first_message, DeveloperMessage):
+                system_instruction = self.message_adapter.adapt(first_message)
 
-        disable_function_calling = self.function_calling_config.get("disable", True)
-        # if disable_function_calling is True, set maximum_remote_calls to None
-        maximum_remote_calls = None if disable_function_calling else 10
-        ignore_call_history = self.function_calling_config.get(
-            "ignore_call_history", False
-        )
+            message_tools = [
+                part
+                for message in messages
+                for part in message.parts
+                if isinstance(part, Tool)
+            ]
 
-        config = types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            temperature=_generation_config.temperature,
-            top_p=_generation_config.top_p,
-            top_k=_generation_config.top_k,
-            candidate_count=_generation_config.n,
-            tools=[AgentleToolToGoogleToolAdapter().adapt(tool) for tool in final_tools]
-            if final_tools
-            else None,
-            max_output_tokens=_generation_config.max_output_tokens,
-            response_schema=response_schema if bool(response_schema) else None,
-            response_mime_type="application/json" if bool(response_schema) else None,
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                disable=disable_function_calling,
-                maximum_remote_calls=maximum_remote_calls,
-                ignore_call_history=ignore_call_history,
-            ),
-        )
+            final_tools = (
+                list(tools or []) + message_tools if tools or message_tools else None
+            )
 
-        contents = [self.message_adapter.adapt(message) for message in messages]
-        generate_content_response = await client.aio.models.generate_content(
-            model=model,
-            contents=cast(types.ContentListUnion, contents),
-            config=config,
-        )
+            disable_function_calling = self.function_calling_config.get("disable", True)
+            # if disable_function_calling is True, set maximum_remote_calls to None
+            maximum_remote_calls = None if disable_function_calling else 10
+            ignore_call_history = self.function_calling_config.get(
+                "ignore_call_history", False
+            )
 
-        return GenerateGenerateContentResponseToGenerationAdapter[T](
-            response_schema=response_schema, start_time=start, model=model
-        ).adapt(generate_content_response)
+            config = types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=_generation_config.temperature,
+                top_p=_generation_config.top_p,
+                top_k=_generation_config.top_k,
+                candidate_count=_generation_config.n,
+                tools=[
+                    AgentleToolToGoogleToolAdapter().adapt(tool) for tool in final_tools
+                ]
+                if final_tools
+                else None,
+                max_output_tokens=_generation_config.max_output_tokens,
+                response_schema=response_schema if bool(response_schema) else None,
+                response_mime_type="application/json"
+                if bool(response_schema)
+                else None,
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                    disable=disable_function_calling,
+                    maximum_remote_calls=maximum_remote_calls,
+                    ignore_call_history=ignore_call_history,
+                ),
+            )
+
+            contents = [self.message_adapter.adapt(message) for message in messages]
+            generate_content_response = await client.aio.models.generate_content(
+                model=used_model,
+                contents=cast(types.ContentListUnion, contents),
+                config=config,
+            )
+
+            # Create the response
+            response = GenerateGenerateContentResponseToGenerationAdapter[T](
+                response_schema=response_schema,
+                start_time=start,
+                model=used_model,
+            ).adapt(generate_content_response)
+
+            # End the generation with success output
+            generation_tracing.map(
+                lambda client: client.end(
+                    output={
+                        "completion": response.text,
+                        "usage": {
+                            "input_tokens": response.usage.prompt_tokens
+                            if response.usage
+                            else None,
+                            "output_tokens": response.usage.completion_tokens
+                            if response.usage
+                            else None,
+                            "total_tokens": response.usage.total_tokens
+                            if response.usage
+                            else None,
+                        },
+                    },
+                    metadata={
+                        "latency_ms": (datetime.now() - start).total_seconds() * 1000,
+                        "status": "success",
+                    },
+                )
+            )
+
+            return response
+
+        except Exception:
+            # Capture the exception details
+            import sys
+
+            exc_type, exc_value, _ = sys.exc_info()
+
+            # Record error in tracing
+            generation_tracing.map(
+                lambda client: client.end(
+                    output={"error": str(exc_value)},
+                    metadata={
+                        "latency_ms": (datetime.now() - start).total_seconds() * 1000,
+                        "status": "error",
+                        "error_type": exc_type.__name__ if exc_type else "Exception",
+                    },
+                )
+            )
+            # Re-raise the exception
+            raise
 
     @override
     def price_per_million_tokens_input(

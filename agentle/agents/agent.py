@@ -134,6 +134,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         url: URL where the agent is hosted.
         generation_provider: Generation provider used by the agent.
         version: Version of the agent.
+        endpoint: Endpoint of the agent.
         documentationUrl: URL to agent documentation.
         capabilities: Optional capabilities supported by the agent.
         authentication: Authentication requirements for the agent.
@@ -188,14 +189,28 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     A URL to the address the agent is hosted at.
     """
 
-    generation_provider: GenerationProvider
+    generation_provider: GenerationProvider | type[GenerationProvider]
     """
     The service provider of the agent
     """
 
-    version: str = Field(default="0.0.1")
+    version: str = Field(
+        default="0.0.1",
+        description="The version of the agent - format is up to the provider. (e.g. '1.0.0')",
+        examples=["1.0.0", "1.0.1", "1.1.0"],
+        pattern=r"^\d+\.\d+\.\d+$",
+    )
     """
     The version of the agent - format is up to the provider. (e.g. "1.0.0")
+    """
+
+    endpoint: str = Field(
+        default=f"/api/v1/agents/{name}",
+        description="The endpoint of the agent",
+        examples=["/api/v1/agents/weather-agent"],
+    )
+    """
+    The endpoint of the agent
     """
 
     documentationUrl: str | None = Field(default=None)
@@ -238,7 +253,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     """
 
     # Library-specific fields
-    model: str
+    model: str | None = Field(default=None)
     """
     The model to use for the agent's service provider.
     """
@@ -421,6 +436,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             input, instructions=self._convert_instructions_to_str(self.instructions)
         )
 
+        generation_provider: GenerationProvider = (
+            self.generation_provider
+            if isinstance(self.generation_provider, GenerationProvider)
+            else self.generation_provider()
+        )
+
         mcp_tools: list[MCPTool] = []
         for server in self.mcp_servers:
             tools = await server.list_tools()
@@ -430,7 +451,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         if not agent_has_tools:
             generation: Generation[
                 T_Schema
-            ] = await self.generation_provider.create_generation_async(
+            ] = await generation_provider.create_generation_async(
                 model=self.model,
                 messages=context.messages,
                 response_schema=self.response_schema,
@@ -438,7 +459,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
 
             return AgentRunOutput[T_Schema](
-                model_name=self.model,
+                model_name=generation.model,
                 artifacts=[
                     Artifact(
                         name="Artifact",
@@ -507,7 +528,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
             no_more_tools = len(filtered_tools) == 0
             if no_more_tools:
-                generation = await self.generation_provider.create_generation_async(
+                generation = await generation_provider.create_generation_async(
                     model=self.model,
                     messages=MessageSequence(context.messages)
                     .append_before_last_message(called_tools_prompt)
@@ -523,20 +544,18 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     context=context,
                     generation=generation,
                 )
-            tool_call_generation = (
-                await self.generation_provider.create_generation_async(
-                    model=self.model,
-                    messages=MessageSequence(context.messages)
-                    .append_before_last_message(called_tools_prompt)
-                    .elements,
-                    generation_config=self.config.generationConfig,
-                    tools=filtered_tools,
-                )
+            tool_call_generation = await generation_provider.create_generation_async(
+                model=self.model,
+                messages=MessageSequence(context.messages)
+                .append_before_last_message(called_tools_prompt)
+                .elements,
+                generation_config=self.config.generationConfig,
+                tools=filtered_tools,
             )
 
             agent_didnt_call_any_tool = tool_call_generation.tool_calls_amount() == 0
             if agent_didnt_call_any_tool:
-                generation = await self.generation_provider.create_generation_async(
+                generation = await generation_provider.create_generation_async(
                     model=self.model,
                     messages=context.messages,
                     response_schema=self.response_schema,
@@ -710,7 +729,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         parsed = generation.parsed
 
         return AgentRunOutput(
-            model_name=self.model,
+            model_name=self.model or generation.model,
             artifacts=artifacts
             or [
                 Artifact(
@@ -1005,7 +1024,6 @@ if __name__ == "__main__":
     from agentle.generations.providers.google.google_generation_provider import (
         GoogleGenerationProvider,
     )
-
     from agentle.mcp.servers.http_mcp_server import HTTPMCPServer
 
     class FakeHTTPMCPServer(HTTPMCPServer):
@@ -1023,8 +1041,7 @@ if __name__ == "__main__":
         return Weather(location=location, weather="sunny")
 
     weather_agent = Agent(
-        generation_provider=GoogleGenerationProvider(),
-        model="gemini-2.0-flash",
+        generation_provider=GoogleGenerationProvider,
         instructions="You are a weather agent that can answer questions about the weather.",
         tools=[get_weather],
         response_schema=Weather,

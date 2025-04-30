@@ -167,11 +167,19 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         """
         return "cerebras"
 
+    @property
+    @override
+    def default_model(self) -> str:
+        """
+        The default model to use for generation.
+        """
+        return "llama-3.3-70b"
+
     @override
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str,
+        model: str | None = None,
         messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -221,7 +229,7 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
             ChatCompletionResponse,
             await client.chat.completions.create(
                 messages=[self.message_adapter.adapt(message) for message in messages],
-                model=model,
+                model=model or self.default_model,
                 response_format={
                     "type": "json_schema",
                     "json_schema": {
@@ -239,7 +247,9 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         )
 
         return CerebrasCompletionToGenerationAdapter[T](
-            response_schema=response_schema, start_time=start, model=model
+            response_schema=response_schema,
+            start_time=start,
+            model=model or self.default_model,
         ).adapt(cerebras_completion)
 
     @override

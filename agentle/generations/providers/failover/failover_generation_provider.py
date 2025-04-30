@@ -59,6 +59,7 @@ class FailoverGenerationProvider(GenerationProvider):
 
     def __init__(
         self,
+        *,
         tracing_client: StatefulObservabilityClient | None,
         generation_providers: Sequence[GenerationProvider],
         shuffle: bool = False,
@@ -95,7 +96,7 @@ class FailoverGenerationProvider(GenerationProvider):
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str,
+        model: str | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
