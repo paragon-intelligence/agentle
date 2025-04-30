@@ -174,6 +174,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
             ```
         """
         from langfuse.client import Langfuse
+
         self._logger = logging.getLogger(self.__class__.__name__)
         self._client = client or Langfuse(
             host=host,
@@ -576,3 +577,26 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
                 )
 
         return self
+
+    def flush(self) -> None:
+        """
+        Flush all pending events to Langfuse.
+
+        This method ensures that all queued events are sent to the Langfuse backend
+        before the application exits. It's especially important for short-lived
+        applications (like serverless functions) where the process might terminate
+        before the background thread has a chance to send all events.
+
+        The method is blocking and will wait until all events have been processed.
+
+        Example:
+            ```python
+            # At the end of your application or before shutdown
+            client.flush()
+            ```
+        """
+        try:
+            self._client.flush()
+            self._logger.debug("Successfully flushed all events to Langfuse")
+        except Exception as e:
+            self._logger.error(f"Error flushing events to Langfuse: {e}")

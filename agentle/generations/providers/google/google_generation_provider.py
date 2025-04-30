@@ -100,6 +100,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
     http_options: HttpOptions | None
     message_adapter: Adapter[AssistantMessage | UserMessage | DeveloperMessage, Content]
     function_calling_config: FunctionCallingConfig
+    _current_trace: StatefulObservabilityClient | None
 
     def __init__(
         self,
@@ -143,6 +144,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         self.http_options = http_options
         self.message_adapter = message_adapter or MessageToGoogleContentAdapter()
         self.function_calling_config = function_calling_config or {}
+        self._current_trace = None
 
     @property
     @override
@@ -201,6 +203,49 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         _generation_config = generation_config or GenerationConfig()
         trace_params = _generation_config.trace_params
 
+        # Extract user details for tracing if available
+        user_id = trace_params.get("user_id", "anonymous")
+        session_id = trace_params.get("session_id")
+
+        # Create or get the top-level trace for this interaction
+        trace_client = None
+        if self.tracing_client:
+            # Create a top-level trace for the conversation if it doesn't exist yet
+            if not self._current_trace:
+                # Create a descriptive trace name combining model and purpose
+                trace_name = trace_params.get(
+                    "name", f"agentle_{used_model}_conversation"
+                )
+                # Use map to safely access the trace method on the Maybe-wrapped client
+                trace_result = self.tracing_client.map(
+                    lambda client: client.trace(
+                        name=trace_name,
+                        user_id=user_id,
+                        session_id=session_id,
+                        input={
+                            "model": used_model,
+                            "message_count": len(messages),
+                            "has_tools": tools is not None and len(tools) > 0,
+                            "has_schema": response_schema is not None,
+                        },
+                        metadata={
+                            "provider": self.organization,
+                            "model": used_model,
+                        },
+                    )
+                )
+                # Extract the actual StatefulObservabilityClient from MaybeProtocol
+                if trace_result:
+                    try:
+                        self._current_trace = trace_result.unwrap()
+                        trace_client = self._current_trace
+                    except Exception:
+                        # Fall back to not using a trace if unwrapping fails
+                        self._current_trace = None
+                        trace_client = None
+            else:
+                trace_client = self._current_trace
+
         # Prepare input data for tracing
         input_data: dict[str, object] = {
             "messages": [
@@ -228,9 +273,11 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     if isinstance(k, str):
                         trace_metadata[k] = v
 
-        # Set up tracing with user-customized trace parameters
-        generation_tracing = self.tracing_client.map(
-            lambda client: client.model_generation(
+        # Set up generation tracing with user-customized trace parameters
+        generation_tracing = None
+        if trace_client:
+            # Create a nested generation within the trace
+            generation_tracing = trace_client.model_generation(
                 provider=self.organization,
                 model=used_model,
                 input_data=input_data,
@@ -246,7 +293,6 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     "name", f"{self.organization}_{used_model}_generation"
                 ),
             )
-        )
 
         try:
             _http_options = self.http_options or types.HttpOptions()
@@ -355,13 +401,30 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     output_data["user_defined_output"] = custom_output
 
             # End the generation with success
-            generation_tracing.map(
-                lambda client: client.complete_with_success(
+            if generation_tracing:
+                generation_tracing.complete_with_success(
                     output=output_data,
                     start_time=start,
                     metadata=trace_metadata,
                 )
-            )
+
+                # If this is the last generation (as indicated by response_schema being present)
+                # also complete the trace
+                if response_schema and self._current_trace:
+                    self._current_trace.end(
+                        output={
+                            "final_response": response.text,
+                            "structured_output": response.parsed
+                            if hasattr(response, "parsed")
+                            else None,
+                            "usage": output_data["usage"],
+                        },
+                        metadata={"completion_status": "success"},
+                    )
+                    # Flush all events to Langfuse to ensure they're sent
+                    if self.tracing_client:
+                        self.tracing_client.map(lambda client: client.flush())
+                    self._current_trace = None
 
             return response
 
@@ -372,14 +435,27 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             _, exc_value, _ = sys.exc_info()
 
             # Record error using the new helper method
-            generation_tracing.map(
-                lambda client: client.complete_with_error(
+            if generation_tracing:
+                generation_tracing.complete_with_error(
                     error=str(exc_value) if exc_value else "Unknown error",
                     start_time=start,
                     error_type="Exception",
                     metadata=trace_metadata,
                 )
-            )
+
+                # Also mark the trace as failed if it exists
+                if self._current_trace:
+                    self._current_trace.end(
+                        output={
+                            "error": str(exc_value) if exc_value else "Unknown error"
+                        },
+                        metadata={"completion_status": "error"},
+                    )
+                    # Flush all events to Langfuse to ensure they're sent
+                    if self.tracing_client:
+                        self.tracing_client.map(lambda client: client.flush())
+                    self._current_trace = None
+
             # Re-raise the exception
             raise
 

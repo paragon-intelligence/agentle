@@ -309,6 +309,26 @@ class StatefulObservabilityClient(abc.ABC):
         """
         ...
 
+    @abc.abstractmethod
+    def flush(self) -> None:
+        """
+        Flush all pending events to ensure they are sent to the observability platform.
+
+        This method ensures that all queued events are immediately processed and sent
+        to the backend system. It's particularly important for short-lived applications
+        like serverless functions where the process might terminate before background
+        threads have a chance to send all events.
+
+        The method is typically blocking and will wait until all events have been processed.
+
+        Example:
+            ```python
+            # At the end of your application or before shutdown
+            client.flush()
+            ```
+        """
+        ...
+
     # Helper methods that build on the abstract methods
 
     def model_generation(
