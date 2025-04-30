@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, cast, override, Any
 
 from rsb.adapters.adapter import Adapter
 
@@ -53,6 +53,7 @@ from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
+from agentle.generations.tracing.tracing_manager import TracingManager
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -89,6 +90,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         http_options: HTTP options for the Google AI client.
         message_adapter: Adapter to convert Agentle messages to Google Content format.
         function_calling_config: Configuration for function calling behavior.
+        tracing_manager: Manager for tracing generation activities.
     """
 
     use_vertex_ai: bool
@@ -100,6 +102,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
     http_options: HttpOptions | None
     message_adapter: Adapter[AssistantMessage | UserMessage | DeveloperMessage, Content]
     function_calling_config: FunctionCallingConfig
+    tracing_manager: TracingManager
 
     def __init__(
         self,
@@ -143,6 +146,9 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         self.http_options = http_options
         self.message_adapter = message_adapter or MessageToGoogleContentAdapter()
         self.function_calling_config = function_calling_config or {}
+        self.tracing_manager = TracingManager(
+            tracing_client=tracing_client, provider_name=self.organization
+        )
 
     @property
     @override
@@ -196,73 +202,11 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
 
         start = datetime.now()
         used_model = model or self.default_model
-
-        # Get trace params if available
         _generation_config = generation_config or GenerationConfig()
-        trace_params = _generation_config.trace_params
-
-        # Extract user details for tracing if available
-        user_id = trace_params.get("user_id", "anonymous")
-        session_id = trace_params.get("session_id")
-
-        # Get or create conversation trace for this interaction
-        trace_client = None
-        parent_trace_id = trace_params.get("parent_trace_id")
         is_final_generation = response_schema is not None
 
-        if self.tracing_client:
-            # Check if we have an existing trace ID to continue using
-            if parent_trace_id:
-                # Use the existing trace by passing its ID in future calls
-                try:
-                    trace_result = self.tracing_client.map(
-                        lambda client: client.trace(
-                            name=trace_params.get("name"),
-                            user_id=user_id,
-                            session_id=session_id,
-                        )
-                    )
-                    if trace_result:
-                        trace_client = trace_result.unwrap()
-                except Exception:
-                    trace_client = None
-            else:
-                # Create a new trace for this conversation
-                trace_name = trace_params.get(
-                    "name", f"agentle_{used_model}_conversation"
-                )
-                try:
-                    trace_result = self.tracing_client.map(
-                        lambda client: client.trace(
-                            name=trace_name,
-                            user_id=user_id,
-                            session_id=session_id,
-                            input={
-                                "model": used_model,
-                                "message_count": len(messages),
-                                "has_tools": tools is not None and len(tools) > 0,
-                                "has_schema": response_schema is not None,
-                            },
-                            metadata={
-                                "provider": self.organization,
-                                "model": used_model,
-                            },
-                        )
-                    )
-                    if trace_result:
-                        trace_client = trace_result.unwrap()
-
-                        # If we created a new trace, save its ID for future calls
-                        if trace_client and not is_final_generation:
-                            # Store the trace ID in trace_params for subsequent calls
-                            trace_id = getattr(trace_client, "id", None)
-                            if trace_id:
-                                trace_params["parent_trace_id"] = trace_id
-                except Exception:
-                    trace_client = None
-
         # Prepare input data for tracing
-        input_data: dict[str, object] = {
+        input_data: dict[str, Any] = {
             "messages": [
                 {
                     "role": msg.role,
@@ -276,10 +220,22 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             "top_k": _generation_config.top_k,
             "max_output_tokens": _generation_config.max_output_tokens,
             "tools_count": len(tools) if tools else 0,
+            "message_count": len(messages),
+            "has_tools": tools is not None and len(tools) > 0,
+            "has_schema": response_schema is not None,
         }
 
+        # Set up tracing using the tracing manager
+        trace_client, generation_client = self.tracing_manager.setup_trace(
+            generation_config=_generation_config,
+            model=used_model,
+            input_data=input_data,
+            is_final_generation=is_final_generation,
+        )
+
         # Extract trace metadata if available
-        trace_metadata: dict[str, object] = {}
+        trace_metadata: dict[str, Any] = {}
+        trace_params = _generation_config.trace_params
         if "metadata" in trace_params:
             metadata_val = trace_params["metadata"]
             if isinstance(metadata_val, dict):
@@ -287,27 +243,6 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                 for k, v in metadata_val.items():
                     if isinstance(k, str):
                         trace_metadata[k] = v
-
-        # Set up generation tracing with user-customized trace parameters
-        generation_tracing = None
-        if trace_client:
-            # Create a nested generation within the trace
-            generation_tracing = trace_client.model_generation(
-                provider=self.organization,
-                model=used_model,
-                input_data=input_data,
-                metadata={
-                    "config": {
-                        k: v
-                        for k, v in _generation_config.__dict__.items()
-                        if not k.startswith("_") and not callable(v)
-                    },
-                    **trace_metadata,
-                },
-                name=trace_params.get(
-                    "name", f"{self.organization}_{used_model}_generation"
-                ),
-            )
 
         try:
             _http_options = self.http_options or types.HttpOptions()
@@ -391,7 +326,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             ).adapt(generate_content_response)
 
             # Prepare output data for tracing
-            output_data: dict[str, object] = {
+            output_data: dict[str, Any] = {
                 "completion": response.text,
                 "usage": {
                     "input_tokens": response.usage.prompt_tokens
@@ -415,65 +350,42 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                 else:
                     output_data["user_defined_output"] = custom_output
 
-            # End the generation with success
-            if generation_tracing:
-                generation_tracing.complete_with_success(
-                    output=output_data,
-                    start_time=start,
-                    metadata=trace_metadata,
-                )
+            # Complete the generation and trace if needed
+            self.tracing_manager.complete_generation(
+                generation_client=generation_client,
+                start_time=start,
+                output_data=output_data,
+                trace_metadata=trace_metadata,
+            )
 
-                # If this is the final generation (with response_schema), complete the trace
-                if is_final_generation and trace_client:
-                    trace_client.end(
-                        output={
-                            "final_response": response.text,
-                            "structured_output": response.parsed
-                            if hasattr(response, "parsed")
-                            else None,
-                            "usage": output_data["usage"],
-                        },
-                        metadata={"completion_status": "success"},
-                    )
-                    # Flush all events to Langfuse to ensure they're sent
-                    if self.tracing_client:
-                        self.tracing_client.map(lambda client: client.flush())
-                    # Remove the parent_trace_id from trace_params to start fresh next time
-                    if "parent_trace_id" in trace_params:
-                        del trace_params["parent_trace_id"]
+            # If this is the final generation, complete the trace
+            if is_final_generation:
+                final_output = {
+                    "final_response": response.text,
+                    "structured_output": response.parsed
+                    if hasattr(response, "parsed")
+                    else None,
+                    "usage": output_data["usage"],
+                }
+                self.tracing_manager.complete_trace(
+                    trace_client=trace_client,
+                    generation_config=_generation_config,
+                    output_data=final_output,
+                    success=True,
+                )
 
             return response
 
-        except Exception:
-            # Capture the exception details
-            import sys
-
-            _, exc_value, _ = sys.exc_info()
-
-            # Record error using the new helper method
-            if generation_tracing:
-                generation_tracing.complete_with_error(
-                    error=str(exc_value) if exc_value else "Unknown error",
-                    start_time=start,
-                    error_type="Exception",
-                    metadata=trace_metadata,
-                )
-
-                # Also mark the trace as failed if it exists
-                if trace_client:
-                    trace_client.end(
-                        output={
-                            "error": str(exc_value) if exc_value else "Unknown error"
-                        },
-                        metadata={"completion_status": "error"},
-                    )
-                    # Flush all events to Langfuse to ensure they're sent
-                    if self.tracing_client:
-                        self.tracing_client.map(lambda client: client.flush())
-                    # Remove the parent_trace_id from trace_params to start fresh next time
-                    if "parent_trace_id" in trace_params:
-                        del trace_params["parent_trace_id"]
-
+        except Exception as e:
+            # Handle errors using the tracing manager
+            self.tracing_manager.handle_error(
+                generation_client=generation_client,
+                trace_client=trace_client,
+                generation_config=_generation_config,
+                start_time=start,
+                error=e,
+                trace_metadata=trace_metadata,
+            )
             # Re-raise the exception
             raise
 
