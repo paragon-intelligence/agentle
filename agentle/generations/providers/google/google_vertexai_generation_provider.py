@@ -46,7 +46,6 @@ class GoogleVertexaiGenerationProvider(GoogleGenerationProvider):
 
         Args:
             tracing_client: Optional client for observability and tracing.
-            use_vertex_ai: Whether to use Google Vertex AI instead of standard API.
             api_key: Optional API key for authentication with Google AI.
             credentials: Optional credentials object for authentication.
             project: Google Cloud project ID (required for Vertex AI).
