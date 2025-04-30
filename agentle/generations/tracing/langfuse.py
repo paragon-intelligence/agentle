@@ -180,7 +180,6 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
             host=host,
             secret_key=secret_key,
             public_key=public_key,
-            debug=True,
         )
         self._stateful_client = stateful_client
         self._trace_id = trace_id or str(uuid.uuid4())
