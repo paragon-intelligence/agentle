@@ -62,9 +62,6 @@ from agentle.generations.tracing.contracts.stateful_observability_client import 
 )
 
 if TYPE_CHECKING:
-    from langfuse.client import StatefulGenerationClient
-    from langfuse.client import StatefulSpanClient
-    from langfuse.client import StatefulTraceClient
     from langfuse import Langfuse
     from langfuse.client import StatefulClient as LangfuseStatefulClient
 
@@ -128,6 +125,9 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         client: Optional[Langfuse] = None,
         stateful_client: Optional[LangfuseStatefulClient] = None,
         trace_id: Optional[str] = None,
+        secret_key: Optional[str] = None,
+        public_key: Optional[str] = None,
+        host: Optional[str] = None,
     ) -> None:
         """
         Initialize a new LangfuseObservabilityClient.
@@ -173,10 +173,14 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
             custom_client = LangfuseObservabilityClient(client=langfuse_client)
             ```
         """
-        from langfuse import Langfuse
-
+        from langfuse.client import Langfuse
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._client = client or Langfuse()
+        self._client = client or Langfuse(
+            host=host,
+            secret_key=secret_key,
+            public_key=public_key,
+            debug=True,
+        )
         self._stateful_client = stateful_client
         self._trace_id = trace_id or str(uuid.uuid4())
 
@@ -540,6 +544,12 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
             )
             ```
         """
+        from langfuse.client import (
+            StatefulGenerationClient,
+            StatefulSpanClient,
+            StatefulTraceClient,
+        )
+
         if self._stateful_client:
             if isinstance(
                 self._stateful_client,

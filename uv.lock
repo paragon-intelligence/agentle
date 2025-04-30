@@ -4,7 +4,7 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "agentle"
-version = "0.0.13"
+version = "0.0.16"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },

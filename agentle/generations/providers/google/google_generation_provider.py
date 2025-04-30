@@ -197,42 +197,58 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         start = datetime.now()
         used_model = model or self.default_model
 
-        # Set up tracing if available - using new model_generation helper
+        # Get trace params if available
+        _generation_config = generation_config or GenerationConfig()
+        trace_params = _generation_config.trace_params
+
+        # Prepare input data for tracing
+        input_data: dict[str, object] = {
+            "messages": [
+                {
+                    "role": msg.role,
+                    "content": "".join(str(part) for part in msg.parts),
+                }
+                for msg in messages
+            ],
+            "response_schema": str(response_schema) if response_schema else None,
+            "temperature": _generation_config.temperature,
+            "top_p": _generation_config.top_p,
+            "top_k": _generation_config.top_k,
+            "max_output_tokens": _generation_config.max_output_tokens,
+            "tools_count": len(tools) if tools else 0,
+        }
+
+        # Extract trace metadata if available
+        trace_metadata: dict[str, object] = {}
+        if "metadata" in trace_params:
+            metadata_val = trace_params["metadata"]
+            if isinstance(metadata_val, dict):
+                # Convert to properly typed dict
+                for k, v in metadata_val.items():
+                    if isinstance(k, str):
+                        trace_metadata[k] = v
+
+        # Set up tracing with user-customized trace parameters
         generation_tracing = self.tracing_client.map(
             lambda client: client.model_generation(
                 provider=self.organization,
                 model=used_model,
-                input_data={
-                    "messages": [
-                        {
-                            "role": msg.role,
-                            "content": "".join(str(part) for part in msg.parts),
-                        }
-                        for msg in messages
-                    ],
-                    "response_schema": str(response_schema)
-                    if response_schema
-                    else None,
-                    "temperature": generation_config.temperature
-                    if generation_config
-                    else None,
-                    "tools_count": len(tools) if tools else 0,
-                },
+                input_data=input_data,
                 metadata={
                     "config": {
                         k: v
-                        for k, v in (
-                            generation_config.__dict__ if generation_config else {}
-                        ).items()
+                        for k, v in _generation_config.__dict__.items()
                         if not k.startswith("_") and not callable(v)
                     },
+                    **trace_metadata,
                 },
+                name=trace_params.get(
+                    "name", f"{self.organization}_{used_model}_generation"
+                ),
             )
         )
 
         try:
-            _generation_config = generation_config or GenerationConfig()
-
             _http_options = self.http_options or types.HttpOptions()
             # change so if the timeout is provided in the constructor and the user doesnt inform the timeout in the generation config, the timeout in the constructor is used
             _http_options.timeout = (
@@ -313,24 +329,37 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                 model=used_model,
             ).adapt(generate_content_response)
 
-            # End the generation with success using the new helper method
+            # Prepare output data for tracing
+            output_data: dict[str, object] = {
+                "completion": response.text,
+                "usage": {
+                    "input_tokens": response.usage.prompt_tokens
+                    if response.usage
+                    else None,
+                    "output_tokens": response.usage.completion_tokens
+                    if response.usage
+                    else None,
+                    "total_tokens": response.usage.total_tokens
+                    if response.usage
+                    else None,
+                },
+            }
+
+            # Add user-specified output if available
+            if "output" in trace_params:
+                custom_output = trace_params["output"]
+                if isinstance(custom_output, dict):
+                    for k, v in custom_output.items():
+                        output_data[k] = v
+                else:
+                    output_data["user_defined_output"] = custom_output
+
+            # End the generation with success
             generation_tracing.map(
                 lambda client: client.complete_with_success(
-                    output={
-                        "completion": response.text,
-                        "usage": {
-                            "input_tokens": response.usage.prompt_tokens
-                            if response.usage
-                            else None,
-                            "output_tokens": response.usage.completion_tokens
-                            if response.usage
-                            else None,
-                            "total_tokens": response.usage.total_tokens
-                            if response.usage
-                            else None,
-                        },
-                    },
+                    output=output_data,
                     start_time=start,
+                    metadata=trace_metadata,
                 )
             )
 
@@ -348,6 +377,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     error=str(exc_value) if exc_value else "Unknown error",
                     start_time=start,
                     error_type="Exception",
+                    metadata=trace_metadata,
                 )
             )
             # Re-raise the exception

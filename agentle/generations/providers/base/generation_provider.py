@@ -76,7 +76,7 @@ class GenerationProvider(abc.ABC):
                 requests and responses.
             default_model: Optional default model to use for generation.
         """
-        self.tracing_client = Maybe(tracing_client, ignore_errors=True)
+        self.tracing_client = Maybe(tracing_client, ignore_errors=False)
 
     @property
     @abc.abstractmethod

@@ -71,6 +71,7 @@ from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
 from agentle.generations.tools.tool import Tool
+from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
 if TYPE_CHECKING:
@@ -1025,6 +1026,9 @@ if __name__ == "__main__":
         GoogleGenerationProvider,
     )
     from agentle.mcp.servers.http_mcp_server import HTTPMCPServer
+    from dotenv import load_dotenv
+
+    load_dotenv(override=True)
 
     class FakeHTTPMCPServer(HTTPMCPServer):
         async def connect(self) -> None:
@@ -1041,7 +1045,9 @@ if __name__ == "__main__":
         return Weather(location=location, weather="sunny")
 
     weather_agent = Agent(
-        generation_provider=GoogleGenerationProvider,
+        generation_provider=GoogleGenerationProvider(
+            tracing_client=LangfuseObservabilityClient()
+        ),
         instructions="You are a weather agent that can answer questions about the weather.",
         tools=[get_weather],
         response_schema=Weather,
