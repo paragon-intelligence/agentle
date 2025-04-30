@@ -308,3 +308,109 @@ class StatefulObservabilityClient(abc.ABC):
             ```
         """
         ...
+
+    # Helper methods that build on the abstract methods
+
+    def model_generation(
+        self,
+        *,
+        provider: str,
+        model: str,
+        input_data: dict[str, object],
+        metadata: dict[str, object] | None = None,
+        name: str | None = None,
+    ) -> StatefulObservabilityClient:
+        """
+        Create a standardized generation trace for model invocations.
+
+        A convenience method that creates a generation with standardized naming
+        and common fields for AI model generations.
+
+        Args:
+            provider: The provider name (e.g., "google", "openai", "anthropic")
+            model: The model identifier
+            input_data: The input data sent to the model
+            metadata: Additional metadata to track
+            name: Optional custom name (defaults to "{provider}_{model}_generation")
+
+        Returns:
+            A new stateful client for the created generation
+        """
+        combined_metadata: dict[str, object] = {"provider": provider, "model": model}
+        if metadata:
+            combined_metadata.update(metadata)
+
+        return self.generation(
+            name=name or f"{provider}_{model}_generation",
+            input=input_data,
+            metadata=combined_metadata,
+        )
+
+    def complete_with_success(
+        self,
+        *,
+        output: dict[str, object],
+        start_time: datetime | None = None,
+        metadata: dict[str, object] | None = None,
+    ) -> StatefulObservabilityClient:
+        """
+        End the current trace/span/generation with success status and timing.
+
+        Args:
+            output: The output data
+            start_time: Start time for calculating latency
+            metadata: Additional metadata
+
+        Returns:
+            The parent stateful client
+        """
+        complete_metadata: dict[str, object] = {"status": "success"}
+
+        if start_time:
+            # Convert float to object type for dictionary
+            latency_ms = (datetime.now() - start_time).total_seconds() * 1000
+            complete_metadata["latency_ms"] = latency_ms
+
+        if metadata:
+            complete_metadata.update(metadata)
+
+        return self.end(output=output, metadata=complete_metadata)
+
+    def complete_with_error(
+        self,
+        *,
+        error: Exception | str,
+        start_time: datetime | None = None,
+        error_type: str | None = None,
+        metadata: dict[str, object] | None = None,
+    ) -> StatefulObservabilityClient:
+        """
+        End the current trace/span/generation with error information.
+
+        Args:
+            error: The exception that occurred or error message
+            start_time: Start time for calculating latency
+            error_type: Type of error (defaults to the exception class name)
+            metadata: Additional metadata
+
+        Returns:
+            The parent stateful client
+        """
+        complete_metadata: dict[str, object] = {"status": "error"}
+
+        if isinstance(error, Exception):
+            complete_metadata["error_type"] = error_type or type(error).__name__
+            error_output: dict[str, object] = {"error": str(error)}
+        else:
+            complete_metadata["error_type"] = error_type or "Error"
+            error_output: dict[str, object] = {"error": error}
+
+        if start_time:
+            # Convert float to object type for dictionary
+            latency_ms = (datetime.now() - start_time).total_seconds() * 1000
+            complete_metadata["latency_ms"] = latency_ms
+
+        if metadata:
+            complete_metadata.update(metadata)
+
+        return self.end(output=error_output, metadata=complete_metadata)

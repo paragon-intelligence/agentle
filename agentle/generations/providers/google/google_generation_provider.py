@@ -197,12 +197,12 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         start = datetime.now()
         used_model = model or self.default_model
 
-        # Set up tracing if available
+        # Set up tracing if available - using new model_generation helper
         generation_tracing = self.tracing_client.map(
-            lambda client: client.generation(
-                name=f"google_generation_{used_model}",
-                input={
-                    "model": used_model,
+            lambda client: client.model_generation(
+                provider=self.organization,
+                model=used_model,
+                input_data={
                     "messages": [
                         {
                             "role": msg.role,
@@ -219,8 +219,6 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     "tools_count": len(tools) if tools else 0,
                 },
                 metadata={
-                    "provider": self.organization,
-                    "model": used_model,
                     "config": {
                         k: v
                         for k, v in (
@@ -315,9 +313,9 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                 model=used_model,
             ).adapt(generate_content_response)
 
-            # End the generation with success output
+            # End the generation with success using the new helper method
             generation_tracing.map(
-                lambda client: client.end(
+                lambda client: client.complete_with_success(
                     output={
                         "completion": response.text,
                         "usage": {
@@ -332,10 +330,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                             else None,
                         },
                     },
-                    metadata={
-                        "latency_ms": (datetime.now() - start).total_seconds() * 1000,
-                        "status": "success",
-                    },
+                    start_time=start,
                 )
             )
 
@@ -345,17 +340,14 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             # Capture the exception details
             import sys
 
-            exc_type, exc_value, _ = sys.exc_info()
+            _, exc_value, _ = sys.exc_info()
 
-            # Record error in tracing
+            # Record error using the new helper method
             generation_tracing.map(
-                lambda client: client.end(
-                    output={"error": str(exc_value)},
-                    metadata={
-                        "latency_ms": (datetime.now() - start).total_seconds() * 1000,
-                        "status": "error",
-                        "error_type": exc_type.__name__ if exc_type else "Exception",
-                    },
+                lambda client: client.complete_with_error(
+                    error=str(exc_value) if exc_value else "Unknown error",
+                    start_time=start,
+                    error_type="Exception",
                 )
             )
             # Re-raise the exception
