@@ -92,6 +92,17 @@ class FailoverGenerationProvider(GenerationProvider):
         """
         return "mixed"
 
+    @property
+    @override
+    def default_model(self) -> str:
+        """
+        Get the default model for the generation provider.
+
+        Returns:
+            str: The default model for the generation provider.
+        """
+        return self.generation_providers[0].default_model
+
     @override
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
