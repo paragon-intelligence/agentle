@@ -23,11 +23,12 @@ class AssistantMessage(BaseModel):
     text, files, and tool execution suggestions.
     """
 
-    parts: Sequence[TextPart | FilePart | ToolExecutionSuggestion] = Field(
-        description="The sequence of message parts that make up this assistant message."
-    )
-
     role: Literal["assistant"] = Field(
         default="assistant",
         description="Discriminator field to identify this as an assistant message. Always set to 'assistant'.",
     )
+
+    parts: Sequence[TextPart | FilePart | ToolExecutionSuggestion] = Field(
+        description="The sequence of message parts that make up this assistant message."
+    )
+

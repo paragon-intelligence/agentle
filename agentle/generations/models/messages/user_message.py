@@ -24,11 +24,11 @@ class UserMessage(BaseModel):
     text, files, tools, and tool execution suggestions.
     """
 
-    parts: Sequence[TextPart | FilePart | Tool[Any] | ToolExecutionSuggestion] = Field(
-        description="The sequence of message parts that make up this user message."
-    )
-
     role: Literal["user"] = Field(
         default="user",
         description="Discriminator field to identify this as a user message. Always set to 'user'.",
+    )
+
+    parts: Sequence[TextPart | FilePart | Tool[Any] | ToolExecutionSuggestion] = Field(
+        description="The sequence of message parts that make up this user message."
     )

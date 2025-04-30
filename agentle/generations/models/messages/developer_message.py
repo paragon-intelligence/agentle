@@ -21,12 +21,12 @@ class DeveloperMessage(BaseModel):
     This class can contain a sequence of different message parts including
     text, files, and tools.
     """
+    role: Literal["developer"] = Field(
+        default="developer",
+        description="Discriminator field to identify this as a developer message. Always set to 'developer'.",
+    )
 
     parts: Sequence[TextPart | FilePart | Tool] = Field(
         description="The sequence of message parts that make up this developer message."
     )
 
-    role: Literal["developer"] = Field(
-        default="developer",
-        description="Discriminator field to identify this as a developer message. Always set to 'developer'.",
-    )
