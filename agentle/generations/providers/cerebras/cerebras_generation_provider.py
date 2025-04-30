@@ -99,9 +99,7 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
     warm_tcp_connection: bool
     message_adapter: Adapter[
         AssistantMessage | UserMessage | DeveloperMessage,
-        MessageSystemMessageRequestTyped
-        | MessageAssistantMessageRequestTyped
-        | MessageUserMessageRequestTyped,
+        "MessageSystemMessageRequestTyped | MessageAssistantMessageRequestTyped | MessageUserMessageRequestTyped",
     ]
 
     def __init__(
