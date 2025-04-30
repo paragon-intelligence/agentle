@@ -18,23 +18,23 @@ Example:
 client = ConcreteObservabilityClient()
 
 # Create a trace for a user request
-trace_client = client.trace(
+trace_client = await client.trace(
     name="user_query",
     user_id="user123",
     input={"query": "Tell me about Tokyo"}
 )
 
 # Within that trace, track a model generation
-generation_client = trace_client.generation(
+generation_client = await trace_client.generation(
     name="answer_generation",
     metadata={"model": "gemini-1.5-pro"}
 )
 
 # Complete the generation with its output
-generation_client.end(output={"text": "Tokyo is the capital of Japan..."})
+await generation_client.end(output={"text": "Tokyo is the capital of Japan..."})
 
 # Complete the trace
-trace_client.end()
+await trace_client.end()
 ```
 """
 
@@ -67,17 +67,17 @@ class StatefulObservabilityClient(abc.ABC):
         client = ConcreteObservabilityClient()
 
         # Create and track a full interaction with nested operations
-        (client.trace(name="process_query", user_id="user123")
-               .span(name="retrieve_information")
-               .generation(name="generate_response")
-               .end(output={"text": "Generated response"})
-               .end()  # End span
-               .end(output={"final_response": "Processed result"}))  # End trace
+        trace_client = await client.trace(name="process_query", user_id="user123")
+        span_client = await trace_client.span(name="retrieve_information")
+        generation_client = await span_client.generation(name="generate_response")
+        await generation_client.end(output={"text": "Generated response"})
+        await span_client.end()  # End span
+        await trace_client.end(output={"final_response": "Processed result"})  # End trace
         ```
     """
 
     @abc.abstractmethod
-    def trace(
+    async def trace(
         self,
         *,
         name: str | None = None,
@@ -112,7 +112,7 @@ class StatefulObservabilityClient(abc.ABC):
         Example:
             ```python
             # Create a trace for a user query
-            trace = client.trace(
+            trace = await client.trace(
                 name="process_user_query",
                 user_id="user123",
                 input={"query": "What's the weather in Tokyo?"},
@@ -123,7 +123,7 @@ class StatefulObservabilityClient(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def generation(
+    async def generation(
         self,
         *,
         name: str | None = None,
@@ -158,7 +158,7 @@ class StatefulObservabilityClient(abc.ABC):
         Example:
             ```python
             # Create a generation for producing a weather forecast
-            generation = trace.generation(
+            generation = await trace.generation(
                 name="weather_forecast",
                 input={"location": "Tokyo", "units": "celsius"},
                 metadata={"model": "weather-model-v2", "temperature": 0.7}
@@ -168,7 +168,7 @@ class StatefulObservabilityClient(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def span(
+    async def span(
         self,
         *,
         name: str | None = None,
@@ -203,7 +203,7 @@ class StatefulObservabilityClient(abc.ABC):
         Example:
             ```python
             # Create a span for data retrieval
-            span = trace.span(
+            span = await trace.span(
                 name="retrieve_weather_data",
                 input={"location": "Tokyo"},
                 metadata={"data_source": "weather_api"}
@@ -213,7 +213,7 @@ class StatefulObservabilityClient(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def event(
+    async def event(
         self,
         *,
         name: str | None = None,
@@ -248,7 +248,7 @@ class StatefulObservabilityClient(abc.ABC):
         Example:
             ```python
             # Create an event for a specific occurrence
-            event = span.event(
+            event = await span.event(
                 name="api_rate_limit_reached",
                 metadata={"limit": 100, "remaining": 0, "reset_in": "60s"}
             )
@@ -257,7 +257,7 @@ class StatefulObservabilityClient(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def end(
+    async def end(
         self,
         *,
         name: str | None = None,
@@ -296,13 +296,13 @@ class StatefulObservabilityClient(abc.ABC):
         Example:
             ```python
             # End a generation with its output
-            generation.end(
+            await generation.end(
                 output={"forecast": "Sunny, 25°C"},
                 metadata={"completion_tokens": 42}
             )
 
             # End a trace with a final result
-            trace.end(
+            await trace.end(
                 output={"response": "The weather in Tokyo is sunny with 25°C"}
             )
             ```
@@ -310,7 +310,7 @@ class StatefulObservabilityClient(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def flush(self) -> None:
+    async def flush(self) -> None:
         """
         Flush all pending events to ensure they are sent to the observability platform.
 
@@ -324,14 +324,14 @@ class StatefulObservabilityClient(abc.ABC):
         Example:
             ```python
             # At the end of your application or before shutdown
-            client.flush()
+            await client.flush()
             ```
         """
         ...
 
     # Helper methods that build on the abstract methods
 
-    def model_generation(
+    async def model_generation(
         self,
         *,
         provider: str,
@@ -360,13 +360,13 @@ class StatefulObservabilityClient(abc.ABC):
         if metadata:
             combined_metadata.update(metadata)
 
-        return self.generation(
+        return await self.generation(
             name=name or f"{provider}_{model}_generation",
             input=input_data,
             metadata=combined_metadata,
         )
 
-    def complete_with_success(
+    async def complete_with_success(
         self,
         *,
         output: dict[str, object],
@@ -394,9 +394,9 @@ class StatefulObservabilityClient(abc.ABC):
         if metadata:
             complete_metadata.update(metadata)
 
-        return self.end(output=output, metadata=complete_metadata)
+        return await self.end(output=output, metadata=complete_metadata)
 
-    def complete_with_error(
+    async def complete_with_error(
         self,
         *,
         error: Exception | str,
@@ -433,4 +433,4 @@ class StatefulObservabilityClient(abc.ABC):
         if metadata:
             complete_metadata.update(metadata)
 
-        return self.end(output=error_output, metadata=complete_metadata)
+        return await self.end(output=error_output, metadata=complete_metadata)

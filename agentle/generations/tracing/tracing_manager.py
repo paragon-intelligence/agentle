@@ -13,32 +13,12 @@ core responsibilities.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Callable, Optional, Protocol, TypeVar, cast
-
-from rsb.containers.maybe import Maybe
-from rsb.contracts.maybe_protocol import MaybeProtocol
+from typing import Any, Optional, cast
 
 from agentle.generations.models.generation.generation_config import GenerationConfig
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
-
-
-T = TypeVar("T")
-
-
-class TracedObject(Protocol):
-    """Protocol for objects that can provide an ID for tracing purposes."""
-
-    @property
-    def id(self) -> str:
-        """Returns the ID of the traced object."""
-        ...
-
-
-# Type alias for the trace function
-TraceFunction = Callable[[StatefulObservabilityClient], StatefulObservabilityClient]
-FlushFunction = Callable[[StatefulObservabilityClient], None]
 
 
 class TracingManager:
@@ -50,7 +30,7 @@ class TracingManager:
     the complexities of trace hierarchy, error handling, and event flushing.
 
     Attributes:
-        tracing_client: The client used for observability and tracing, wrapped in Maybe.
+        tracing_client: The client used for observability and tracing.
         provider_name: The name of the provider using this tracing manager.
     """
 
@@ -66,13 +46,10 @@ class TracingManager:
             tracing_client: Optional client for observability and tracing.
             provider_name: The name of the provider using this tracing manager.
         """
-        # Use the rsb.containers.maybe.Maybe implementation
-        self.tracing_client: Optional[MaybeProtocol[StatefulObservabilityClient]] = (
-            Maybe(tracing_client) if tracing_client else None
-        )
+        self.tracing_client = tracing_client
         self.provider_name = provider_name
 
-    def setup_trace(
+    async def setup_trace(
         self,
         *,
         generation_config: GenerationConfig,
@@ -112,58 +89,42 @@ class TracingManager:
         try:
             if parent_trace_id:
                 # Use existing trace ID with parent_trace_id
-                def create_trace(
-                    client: StatefulObservabilityClient,
-                ) -> StatefulObservabilityClient:
-                    return client.trace(
-                        name=trace_params.get("name"),
-                        user_id=user_id,
-                        session_id=session_id,
-                    )
-
-                trace_maybe = self.tracing_client.map(create_trace)
-                # RSB Maybe can be used in boolean contexts - if obj is not None
-                if trace_maybe:
-                    trace_client = trace_maybe.unwrap()
+                trace_client = await self.tracing_client.trace(
+                    name=trace_params.get("name"),
+                    user_id=user_id,
+                    session_id=session_id,
+                )
             else:
                 # Create new trace
                 trace_name = trace_params.get(
                     "name", f"{self.provider_name}_{model}_conversation"
                 )
 
-                def create_new_trace(
-                    client: StatefulObservabilityClient,
-                ) -> StatefulObservabilityClient:
-                    return client.trace(
-                        name=trace_name,
-                        user_id=user_id,
-                        session_id=session_id,
-                        input=input_data.get(
-                            "trace_input",
-                            {
-                                "model": model,
-                                "message_count": input_data.get("message_count", 0),
-                                "has_tools": input_data.get("has_tools", False),
-                                "has_schema": input_data.get("has_schema", False),
-                            },
-                        ),
-                        metadata={
-                            "provider": self.provider_name,
+                trace_client = await self.tracing_client.trace(
+                    name=trace_name,
+                    user_id=user_id,
+                    session_id=session_id,
+                    input=input_data.get(
+                        "trace_input",
+                        {
                             "model": model,
+                            "message_count": input_data.get("message_count", 0),
+                            "has_tools": input_data.get("has_tools", False),
+                            "has_schema": input_data.get("has_schema", False),
                         },
-                    )
+                    ),
+                    metadata={
+                        "provider": self.provider_name,
+                        "model": model,
+                    },
+                )
 
-                trace_maybe = self.tracing_client.map(create_new_trace)
-                # RSB Maybe can be used in boolean contexts - if obj is not None
-                if trace_maybe:
-                    trace_client = trace_maybe.unwrap()
-
-                    # Store trace_id for future calls if not final generation
-                    if trace_client and not is_final_generation:
-                        # Check if trace_client has an id attribute and access it safely
-                        trace_id = self._get_trace_id(trace_client)
-                        if trace_id:
-                            trace_params["parent_trace_id"] = trace_id
+                # Store trace_id for future calls if not final generation
+                if trace_client and not is_final_generation:
+                    # Check if trace_client has an id attribute and access it safely
+                    trace_id = self._get_trace_id(trace_client)
+                    if trace_id:
+                        trace_params["parent_trace_id"] = trace_id
         except Exception:
             # Fall back to no tracing if we encounter errors
             trace_client = None
@@ -197,7 +158,7 @@ class TracingManager:
                         if not k.startswith("_") and not callable(v)
                     }
 
-                generation_client = trace_client.model_generation(
+                generation_client = await trace_client.model_generation(
                     provider=self.provider_name,
                     model=model,
                     input_data=input_data,
@@ -230,7 +191,7 @@ class TracingManager:
             return cast(str, getattr(trace_client, "trace_id"))
         return None
 
-    def complete_generation(
+    async def complete_generation(
         self,
         *,
         generation_client: Optional[StatefulObservabilityClient],
@@ -248,13 +209,13 @@ class TracingManager:
             trace_metadata: Additional metadata for the trace.
         """
         if generation_client:
-            generation_client.complete_with_success(
+            await generation_client.complete_with_success(
                 output=output_data,
                 start_time=start_time,
                 metadata=trace_metadata or {},
             )
 
-    def complete_trace(
+    async def complete_trace(
         self,
         *,
         trace_client: Optional[StatefulObservabilityClient],
@@ -279,18 +240,14 @@ class TracingManager:
 
         try:
             # Complete the trace
-            trace_client.end(
+            await trace_client.end(
                 output=output_data,
                 metadata={"completion_status": "success" if success else "error"},
             )
 
             # Flush events and clean up
             if self.tracing_client:
-
-                def flush_client(client: StatefulObservabilityClient) -> None:
-                    client.flush()
-
-                self.tracing_client.map(flush_client)
+                await self.tracing_client.flush()
 
             # Clean up trace_params
             trace_params = generation_config.trace_params
@@ -300,7 +257,7 @@ class TracingManager:
             # Just continue even if we can't clean up properly
             pass
 
-    def handle_error(
+    async def handle_error(
         self,
         *,
         generation_client: Optional[StatefulObservabilityClient],
@@ -327,7 +284,7 @@ class TracingManager:
 
         # Complete generation with error
         if generation_client:
-            generation_client.complete_with_error(
+            await generation_client.complete_with_error(
                 error=error_str,
                 start_time=start_time,
                 error_type="Exception",
@@ -335,7 +292,7 @@ class TracingManager:
             )
 
         # Complete the trace with error
-        self.complete_trace(
+        await self.complete_trace(
             trace_client=trace_client,
             generation_config=generation_config,
             output_data={"error": error_str},

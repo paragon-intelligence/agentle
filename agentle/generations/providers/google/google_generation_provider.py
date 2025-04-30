@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, cast, override, Any
+from typing import TYPE_CHECKING, Any, cast, override
 
 from rsb.adapters.adapter import Adapter
 
@@ -226,7 +226,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         }
 
         # Set up tracing using the tracing manager
-        trace_client, generation_client = self.tracing_manager.setup_trace(
+        trace_client, generation_client = await self.tracing_manager.setup_trace(
             generation_config=_generation_config,
             model=used_model,
             input_data=input_data,
@@ -351,7 +351,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     output_data["user_defined_output"] = custom_output
 
             # Complete the generation and trace if needed
-            self.tracing_manager.complete_generation(
+            await self.tracing_manager.complete_generation(
                 generation_client=generation_client,
                 start_time=start,
                 output_data=output_data,
@@ -367,7 +367,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     else None,
                     "usage": output_data["usage"],
                 }
-                self.tracing_manager.complete_trace(
+                await self.tracing_manager.complete_trace(
                     trace_client=trace_client,
                     generation_config=_generation_config,
                     output_data=final_output,
@@ -378,7 +378,7 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
 
         except Exception as e:
             # Handle errors using the tracing manager
-            self.tracing_manager.handle_error(
+            await self.tracing_manager.handle_error(
                 generation_client=generation_client,
                 trace_client=trace_client,
                 generation_config=_generation_config,

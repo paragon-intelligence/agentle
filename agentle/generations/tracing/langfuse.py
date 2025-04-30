@@ -20,27 +20,27 @@ from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 client = LangfuseObservabilityClient()
 
 # Track an AI-powered interaction
-trace = client.trace(
+trace = await client.trace(
     name="user_conversation",
     user_id="user123",
     metadata={"session_type": "customer_support"}
 )
 
 # Log a model generation within the trace
-generation = trace.generation(
+generation = await trace.generation(
     name="initial_response",
     input={"query": "How do I reset my password?"},
     metadata={"model": "gemini-1.5-pro", "temperature": 0.7}
 )
 
 # Complete the generation with its result
-generation.end(
+await generation.end(
     output={"response": "You can reset your password by..."},
     metadata={"tokens": 42, "latency_ms": 850}
 )
 
 # Complete the trace
-trace.end()
+await trace.end()
 ```
 
 Note: To use this client, you need to set up Langfuse credentials as environment variables:
@@ -107,12 +107,10 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         client = LangfuseObservabilityClient()
 
         # Start a trace and track AI operations
-        result = (
-            client.trace(name="process_request", user_id="user123")
-                  .generation(name="answer_generation", metadata={"model": "gemini-1.5-pro"})
-                  .end(output={"text": "Generated response"})
-                  .end()  # End the trace
-        )
+        trace_client = await client.trace(name="process_request", user_id="user123")
+        generation_client = await trace_client.generation(name="answer_generation", metadata={"model": "gemini-1.5-pro"})
+        await generation_client.end(output={"text": "Generated response"})
+        await trace_client.end()  # End the trace
         ```
     """
 
@@ -185,7 +183,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         self._trace_id = trace_id or str(uuid.uuid4())
 
     @override
-    def trace(
+    async def trace(
         self,
         *,
         name: str | None = None,
@@ -227,7 +225,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         Example:
             ```python
             # Create a trace for a user query
-            trace_client = client.trace(
+            trace_client = await client.trace(
                 name="answer_user_question",
                 user_id="user123",
                 input={"question": "How does AI work?"},
@@ -254,7 +252,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         )
 
     @override
-    def generation(
+    async def generation(
         self,
         *,
         name: str | None = None,
@@ -298,7 +296,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         Example:
             ```python
             # Create a generation for a text completion
-            generation_client = trace_client.generation(
+            generation_client = await trace_client.generation(
                 name="summary_generation",
                 input={"text": "Summarize this article: [...]"},
                 metadata={
@@ -336,7 +334,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         )
 
     @override
-    def span(
+    async def span(
         self,
         *,
         name: str | None = None,
@@ -380,7 +378,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         Example:
             ```python
             # Create a span for data processing
-            span_client = trace_client.span(
+            span_client = await trace_client.span(
                 name="extract_keywords",
                 input={"text": "Machine learning is transforming industry..."},
                 metadata={"algorithm": "TF-IDF", "max_keywords": 10}
@@ -414,7 +412,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         )
 
     @override
-    def event(
+    async def event(
         self,
         *,
         name: str | None = None,
@@ -458,7 +456,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         Example:
             ```python
             # Create an event for a threshold exceeded
-            event_client = span_client.event(
+            event_client = await span_client.event(
                 name="quota_exceeded",
                 metadata={"limit": 1000, "current_usage": 1001, "user_notified": True}
             )
@@ -491,7 +489,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         )
 
     @override
-    def end(
+    async def end(
         self,
         *,
         name: str | None = None,
@@ -532,13 +530,13 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         Example:
             ```python
             # End a generation with its result
-            generation_client.end(
+            await generation_client.end(
                 output={"text": "Generated response about the topic..."},
                 metadata={"tokens": 156, "completion_time_ms": 450}
             )
 
             # End a trace with a final summary
-            trace_client.end(
+            await trace_client.end(
                 output={"final_response": "The processed result of the entire operation"},
                 metadata={"success": True, "total_time_ms": 1250}
             )
@@ -577,7 +575,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
 
         return self
 
-    def flush(self) -> None:
+    async def flush(self) -> None:
         """
         Flush all pending events to Langfuse.
 
@@ -591,7 +589,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         Example:
             ```python
             # At the end of your application or before shutdown
-            client.flush()
+            await client.flush()
             ```
         """
         try:
