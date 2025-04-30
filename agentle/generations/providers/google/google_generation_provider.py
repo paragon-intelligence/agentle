@@ -100,7 +100,6 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
     http_options: HttpOptions | None
     message_adapter: Adapter[AssistantMessage | UserMessage | DeveloperMessage, Content]
     function_calling_config: FunctionCallingConfig
-    _current_trace: StatefulObservabilityClient | None
 
     def __init__(
         self,
@@ -144,7 +143,6 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         self.http_options = http_options
         self.message_adapter = message_adapter or MessageToGoogleContentAdapter()
         self.function_calling_config = function_calling_config or {}
-        self._current_trace = None
 
     @property
     @override
@@ -207,44 +205,61 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         user_id = trace_params.get("user_id", "anonymous")
         session_id = trace_params.get("session_id")
 
-        # Create or get the top-level trace for this interaction
+        # Get or create conversation trace for this interaction
         trace_client = None
+        parent_trace_id = trace_params.get("parent_trace_id")
+        is_final_generation = response_schema is not None
+
         if self.tracing_client:
-            # Create a top-level trace for the conversation if it doesn't exist yet
-            if not self._current_trace:
-                # Create a descriptive trace name combining model and purpose
+            # Check if we have an existing trace ID to continue using
+            if parent_trace_id:
+                # Use the existing trace by passing its ID in future calls
+                try:
+                    trace_result = self.tracing_client.map(
+                        lambda client: client.trace(
+                            name=trace_params.get("name"),
+                            user_id=user_id,
+                            session_id=session_id,
+                        )
+                    )
+                    if trace_result:
+                        trace_client = trace_result.unwrap()
+                except Exception:
+                    trace_client = None
+            else:
+                # Create a new trace for this conversation
                 trace_name = trace_params.get(
                     "name", f"agentle_{used_model}_conversation"
                 )
-                # Use map to safely access the trace method on the Maybe-wrapped client
-                trace_result = self.tracing_client.map(
-                    lambda client: client.trace(
-                        name=trace_name,
-                        user_id=user_id,
-                        session_id=session_id,
-                        input={
-                            "model": used_model,
-                            "message_count": len(messages),
-                            "has_tools": tools is not None and len(tools) > 0,
-                            "has_schema": response_schema is not None,
-                        },
-                        metadata={
-                            "provider": self.organization,
-                            "model": used_model,
-                        },
+                try:
+                    trace_result = self.tracing_client.map(
+                        lambda client: client.trace(
+                            name=trace_name,
+                            user_id=user_id,
+                            session_id=session_id,
+                            input={
+                                "model": used_model,
+                                "message_count": len(messages),
+                                "has_tools": tools is not None and len(tools) > 0,
+                                "has_schema": response_schema is not None,
+                            },
+                            metadata={
+                                "provider": self.organization,
+                                "model": used_model,
+                            },
+                        )
                     )
-                )
-                # Extract the actual StatefulObservabilityClient from MaybeProtocol
-                if trace_result:
-                    try:
-                        self._current_trace = trace_result.unwrap()
-                        trace_client = self._current_trace
-                    except Exception:
-                        # Fall back to not using a trace if unwrapping fails
-                        self._current_trace = None
-                        trace_client = None
-            else:
-                trace_client = self._current_trace
+                    if trace_result:
+                        trace_client = trace_result.unwrap()
+
+                        # If we created a new trace, save its ID for future calls
+                        if trace_client and not is_final_generation:
+                            # Store the trace ID in trace_params for subsequent calls
+                            trace_id = getattr(trace_client, "id", None)
+                            if trace_id:
+                                trace_params["parent_trace_id"] = trace_id
+                except Exception:
+                    trace_client = None
 
         # Prepare input data for tracing
         input_data: dict[str, object] = {
@@ -408,10 +423,9 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     metadata=trace_metadata,
                 )
 
-                # If this is the last generation (as indicated by response_schema being present)
-                # also complete the trace
-                if response_schema and self._current_trace:
-                    self._current_trace.end(
+                # If this is the final generation (with response_schema), complete the trace
+                if is_final_generation and trace_client:
+                    trace_client.end(
                         output={
                             "final_response": response.text,
                             "structured_output": response.parsed
@@ -424,7 +438,9 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     # Flush all events to Langfuse to ensure they're sent
                     if self.tracing_client:
                         self.tracing_client.map(lambda client: client.flush())
-                    self._current_trace = None
+                    # Remove the parent_trace_id from trace_params to start fresh next time
+                    if "parent_trace_id" in trace_params:
+                        del trace_params["parent_trace_id"]
 
             return response
 
@@ -444,8 +460,8 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                 )
 
                 # Also mark the trace as failed if it exists
-                if self._current_trace:
-                    self._current_trace.end(
+                if trace_client:
+                    trace_client.end(
                         output={
                             "error": str(exc_value) if exc_value else "Unknown error"
                         },
@@ -454,7 +470,9 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     # Flush all events to Langfuse to ensure they're sent
                     if self.tracing_client:
                         self.tracing_client.map(lambda client: client.flush())
-                    self._current_trace = None
+                    # Remove the parent_trace_id from trace_params to start fresh next time
+                    if "parent_trace_id" in trace_params:
+                        del trace_params["parent_trace_id"]
 
             # Re-raise the exception
             raise

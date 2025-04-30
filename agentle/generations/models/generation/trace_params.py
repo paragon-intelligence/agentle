@@ -37,6 +37,7 @@ class TraceParams(TypedDict, total=False):
         metadata: Custom JSON-serializable metadata
         tags: Categorization labels for filtering
         public: Visibility flag for trace data
+        parent_trace_id: ID of parent trace for establishing trace hierarchy
 
     Example:
         >>> trace = TraceParams(
@@ -55,3 +56,4 @@ class TraceParams(TypedDict, total=False):
     metadata: NotRequired[Any]
     tags: NotRequired[Sequence[str]]
     public: NotRequired[bool]
+    parent_trace_id: NotRequired[str]
