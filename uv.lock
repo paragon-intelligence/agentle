@@ -29,6 +29,7 @@ dev = [
     { name = "python-dotenv" },
     { name = "r2r" },
     { name = "sphinx" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
@@ -55,6 +56,7 @@ dev = [
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "r2r", specifier = ">=3.5.14" },
     { name = "sphinx", specifier = ">=8.2.3" },
+    { name = "uvicorn", specifier = ">=0.34.1" },
 ]
 
 [[package]]

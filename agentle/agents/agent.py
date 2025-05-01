@@ -1051,6 +1051,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 if __name__ == "__main__":
     import pydantic
     from dotenv import load_dotenv
+    from uvicorn import Server, Config
 
     from agentle.generations.providers.google.google_generation_provider import (
         GoogleGenerationProvider,
@@ -1080,9 +1081,12 @@ if __name__ == "__main__":
         response_schema=Weather,
     )
 
-    with weather_agent.with_mcp_servers():
-        output = weather_agent.run(
-            "Hello. What is the weather in Tokyo? what do you think about tokio?"
+    server = Server(
+        config=Config(
+            host="0.0.0.0",
+            port=8000,
+            app=weather_agent.to_asgi_app(),
         )
+    )
 
-    print(output)
+    server.run()
