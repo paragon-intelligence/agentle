@@ -31,10 +31,12 @@ from collections.abc import (
     Callable,
     Generator,
     MutableMapping,
+    MutableSequence,
     Sequence,
 )
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any, Literal, cast
+import uuid
 
 from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
@@ -58,6 +60,7 @@ from agentle.agents.errors.max_tool_calls_exceeded_error import (
 )
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
+from agentle.generations.models.generation.trace_params import TraceParams
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
@@ -366,6 +369,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         self,
         input: AgentInput,
         timeout: float | None = None,
+        trace_params: TraceParams | None = None,
     ) -> AgentRunOutput[T_Schema]:
         """
         Runs the agent synchronously with the provided input.
@@ -376,6 +380,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         Args:
             input: The input for the agent, which can be of various types.
             timeout: Optional time limit in seconds for execution.
+            trace_params: Optional trace parameters for observability purposes.
 
         Returns:
             AgentRunOutput[T_Schema]: The result of the agent execution.
@@ -393,11 +398,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             result = agent.run(message)
             ```
         """
-        return run_sync(self.run_async, timeout=timeout, input=input)
+        return run_sync(
+            self.run_async, timeout=timeout, input=input, trace_params=trace_params
+        )
 
     async def run_async(
-        self,
-        input: AgentInput,
+        self, input: AgentInput, trace_params: TraceParams | None = None
     ) -> AgentRunOutput[T_Schema]:
         """
         Runs the agent asynchronously with the provided input.
@@ -410,6 +416,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         Args:
             input: The input for the agent, which can be of various types.
+            trace_params: Optional trace parameters for observability purposes.
 
         Returns:
             AgentRunOutput[T_Schema]: The result of the agent execution, possibly
@@ -433,6 +440,22 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 weather = result.parsed.weather
             ```
         """
+
+        # Default trace params when neither trace_params nor generationConfig.trace_params are provided
+        _trace_params: TraceParams | None = None
+        if trace_params is None and not self.config.generationConfig.trace_params:
+            _trace_params = {
+                "name": "agent_run",
+                "user_id": "unknown",
+                "session_id": str(uuid.uuid4()),
+                "metadata": {
+                    "agent_name": self.name,
+                    "agent_description": self.description,
+                    "agent_version": self.version,
+                    "agent_endpoint": self.endpoint,
+                },
+            }
+
         context: Context = self._convert_input_to_context(
             input, instructions=self._convert_instructions_to_str(self.instructions)
         )
@@ -443,7 +466,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             else self.generation_provider()
         )
 
-        mcp_tools: list[MCPTool] = []
+        mcp_tools: MutableSequence[MCPTool] = []
         for server in self.mcp_servers:
             tools = await server.list_tools()
             mcp_tools.extend(tools)
@@ -456,7 +479,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 model=self.model,
                 messages=context.messages,
                 response_schema=self.response_schema,
-                generation_config=self.config.generationConfig,
+                generation_config=self.config.generationConfig
+                if trace_params is None
+                else self.config.generationConfig.clone(new_trace_params=trace_params),
             )
 
             return AgentRunOutput[T_Schema](

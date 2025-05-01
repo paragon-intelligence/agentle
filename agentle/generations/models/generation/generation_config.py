@@ -11,6 +11,8 @@ regardless of which underlying AI provider is being used, allowing for consisten
 behavior and easy switching between providers.
 """
 
+from __future__ import annotations
+
 from agentle.generations.models.generation.trace_params import TraceParams
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
@@ -84,6 +86,56 @@ class GenerationConfig(BaseModel):
         gt=0,
         examples=[10.0, 30.0, 60.0],
     )
+
+    def clone(
+        self,
+        *,
+        new_temperature: float | None = None,
+        new_max_output_tokens: int | None = None,
+        new_n: int | None = None,
+        new_top_p: float | None = None,
+        new_top_k: float | None = None,
+        new_google_generation_kwargs: dict[str, object] | None = None,
+        new_trace_params: TraceParams | None = None,
+        new_timeout: float | None = None,
+    ) -> GenerationConfig:
+        """
+        Creates a new GenerationConfig with optionally updated parameters.
+
+        This method allows creating a modified copy of the current configuration
+        without altering the original object, following the immutable pattern.
+
+        Args:
+            new_temperature: New temperature value, if provided.
+            new_max_output_tokens: New maximum output tokens value, if provided.
+            new_n: New number of completions value, if provided.
+            new_top_p: New top_p value, if provided.
+            new_top_k: New top_k value, if provided.
+            new_google_generation_kwargs: New Google-specific parameters, if provided.
+            new_trace_params: New trace parameters, if provided.
+            new_timeout: New timeout value, if provided.
+
+        Returns:
+            A new GenerationConfig instance with the specified updates applied.
+        """
+        return GenerationConfig(
+            temperature=new_temperature
+            if new_temperature is not None
+            else self.temperature,
+            max_output_tokens=new_max_output_tokens
+            if new_max_output_tokens is not None
+            else self.max_output_tokens,
+            n=new_n if new_n is not None else self.n,
+            top_p=new_top_p if new_top_p is not None else self.top_p,
+            top_k=new_top_k if new_top_k is not None else self.top_k,
+            google_generation_kwargs=new_google_generation_kwargs
+            if new_google_generation_kwargs is not None
+            else self.google_generation_kwargs,
+            trace_params=new_trace_params
+            if new_trace_params is not None
+            else self.trace_params,
+            timeout=new_timeout if new_timeout is not None else self.timeout,
+        )
 
     class Config:
         arbitrary_types_allowed = True
