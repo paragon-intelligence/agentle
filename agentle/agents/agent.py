@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import uuid
 from collections.abc import (
     AsyncGenerator,
     Callable,
@@ -36,7 +37,6 @@ from collections.abc import (
 )
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any, Literal, cast
-import uuid
 
 from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
@@ -46,7 +46,6 @@ from rsb.models.field import Field
 from rsb.models.mimetype import MimeType
 
 from agentle.agents.a2a.models.agent_skill import AgentSkill
-from agentle.agents.a2a.models.agent_usage_statistics import AgentUsageStatistics
 from agentle.agents.a2a.models.artifact import Artifact
 from agentle.agents.a2a.models.authentication import Authentication
 from agentle.agents.a2a.models.capabilities import Capabilities
@@ -74,7 +73,8 @@ from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
 from agentle.generations.tools.tool import Tool
-from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
+
+# from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
 if TYPE_CHECKING:
@@ -83,7 +83,7 @@ if TYPE_CHECKING:
 
     import numpy as np
     import pandas as pd
-    from fastapi import APIRouter
+    from blacksheep.server.controllers import Controller as BlackSheepController
     from PIL import Image
     from pydantic import BaseModel as PydanticBaseModel
 
@@ -339,7 +339,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 run_sync(server.cleanup)
 
     @asynccontextmanager
-    async def async_with_mcp_servers(self) -> AsyncGenerator[None, None]:
+    async def with_mcp_servers_async(self) -> AsyncGenerator[None, None]:
         """
         Asynchronous context manager to connect and clean up MCP servers.
 
@@ -485,25 +485,8 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
 
             return AgentRunOutput[T_Schema](
-                model_name=generation.model,
-                artifacts=[
-                    Artifact(
-                        name="Artifact",
-                        description="End result of the task",
-                        parts=list(
-                            part
-                            for part in generation.parts
-                            if isinstance(part, TextPart)
-                        ),
-                        metadata=None,
-                        index=0,
-                        append=False,
-                        last_chunk=None,
-                    )
-                ],
-                task_status=TaskState.COMPLETED,
-                usage=AgentUsageStatistics(token_usage=generation.usage),
-                final_context=context,
+                generation=generation,
+                steps=context.steps,
                 parsed=generation.parsed,
             )
 
@@ -618,16 +601,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         )
 
     def to_http_router(
-        self, path: str, type: Literal["fastapi"] = "fastapi"
-    ) -> APIRouter:
+        self, path: str, type: Literal["blacksheep"] = "blacksheep"
+    ) -> Any:
         """
         Converts the agent into an HTTP router to be used in an API.
 
-        Currently only supports the FastAPI framework.
+        Currently only supports the BlackSheep framework.
 
         Args:
             path: The base path for the agent endpoint.
-            type: The type of framework to use (currently only "fastapi").
+            type: The type of framework to use (currently only "blacksheep").
 
         Returns:
             APIRouter: An HTTP router that can be included in a web application.
@@ -644,8 +627,65 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             ```
         """
         match type:
-            case "fastapi":
-                return self._to_fastapi_router(path=path)
+            case "blacksheep":
+                return self._to_blacksheep_router()
+
+    def to_asgi_app(
+        self,
+        type: Literal["blacksheep"] = "blacksheep",
+        routers: Sequence[Any] | None = None,
+    ) -> Any:
+        """
+        Converts the agent into an ASGI server to be used in an API.
+
+        Currently only supports the BlackSheep framework.
+        """
+
+        match type:
+            case "blacksheep":
+                return self._to_blacksheep_asgi_app(routers=routers)
+
+    def _to_blacksheep_asgi_app(self, routers: Sequence[Any] | None = None) -> Any:
+        """
+        Creates a BlackSheep ASGI server for the agent.
+        """
+
+        from blacksheep import Application
+
+        app = Application()
+        _ = [self._to_blacksheep_router()] + list(routers or [])
+        return app
+
+    def _to_blacksheep_router(self) -> type[BlackSheepController]:
+        """
+        Creates a BlackSheep router for the agent.
+        """
+        from blacksheep import FromJSON, post
+        from blacksheep.server.controllers import Controller
+        from pydantic import BaseModel, Field
+
+        class AgentRunCommand(BaseModel):
+            input: (
+                str
+                | Sequence[AssistantMessage | DeveloperMessage | UserMessage]
+                | TextPart
+                | FilePart
+            ) = Field(description="Input of the agent")
+
+        agent = self
+
+        class _Run(Controller):
+            @post(agent.endpoint)
+            async def run(
+                self, input: FromJSON[AgentRunCommand]
+            ) -> AgentRunOutput[T_Schema]:
+                async with agent.with_mcp_servers_async():
+                    result = await agent.run_async(input.value.input)
+                    return result
+
+        # Rename the class to match the agent name
+        _Run.__name__ = f"{self.name}Controller"
+        return _Run
 
     def clone(
         self,
@@ -755,46 +795,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         parsed = generation.parsed
 
         return AgentRunOutput(
-            model_name=self.model or generation.model,
-            artifacts=artifacts
-            or [
-                Artifact(
-                    name=artifact_name,
-                    description=artifact_description,
-                    parts=list(
-                        part for part in generation.parts if isinstance(part, TextPart)
-                    ),
-                    metadata=artifact_metadata,
-                    index=0,
-                    append=append,
-                    last_chunk=last_chunk,
-                )
-            ],
-            task_status=task_status,
-            usage=AgentUsageStatistics(token_usage=generation.usage),
-            final_context=context,
+            generation=generation,
+            steps=context.steps,
             parsed=parsed,
         )
-
-    def _to_fastapi_router(self, path: str) -> APIRouter:
-        """
-        Creates a FastAPI router for this agent.
-
-        Internal method used by to_http_router when the type is "fastapi".
-
-        Args:
-            path: The base path for the agent endpoint.
-
-        Returns:
-            APIRouter: A FastAPI router that can be included in a FastAPI application.
-        """
-        from fastapi import APIRouter
-
-        router = APIRouter()
-        # TODO(arthur): create the endpoint here.
-
-        router.add_api_route(path=path, endpoint=self.run)
-        return router
 
     def _convert_instructions_to_str(
         self, instructions: str | Callable[[], str] | Sequence[str]
@@ -1046,12 +1050,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
 if __name__ == "__main__":
     import pydantic
+    from dotenv import load_dotenv
 
     from agentle.generations.providers.google.google_generation_provider import (
         GoogleGenerationProvider,
     )
     from agentle.mcp.servers.http_mcp_server import HTTPMCPServer
-    from dotenv import load_dotenv
 
     load_dotenv(override=True)
 
@@ -1070,9 +1074,7 @@ if __name__ == "__main__":
         return Weather(location=location, weather="sunny")
 
     weather_agent = Agent(
-        generation_provider=GoogleGenerationProvider(
-            tracing_client=LangfuseObservabilityClient()
-        ),
+        generation_provider=GoogleGenerationProvider(),
         instructions="You are a weather agent that can answer questions about the weather.",
         tools=[get_weather],
         response_schema=Weather,

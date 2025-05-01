@@ -34,10 +34,8 @@ from collections.abc import Sequence
 
 from rsb.models.base_model import BaseModel
 
-from agentle.agents.a2a.models.agent_usage_statistics import AgentUsageStatistics
-from agentle.agents.a2a.models.artifact import Artifact
-from agentle.agents.a2a.tasks.task_state import TaskState
-from agentle.agents.context import Context
+from agentle.agents.step import Step
+from agentle.generations.models.generation.generation import Generation
 
 logger = logging.getLogger(__name__)
 
@@ -111,28 +109,12 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
         ```
     """
 
-    artifacts: Sequence[Artifact]
+    generation: Generation[T_StructuredOutput]
     """
-    The primary outputs produced by the agent in response to the user's input.
-    Typically contains text, images, or other content.
-    """
-
-    model_name: str
-    """
-    The name of the model that was used to generate the response.
+    The generation produced by the agent.
     """
 
-    task_status: TaskState
-    """
-    The final status of the agent execution task (completed, failed, etc.).
-    """
-
-    usage: AgentUsageStatistics
-    """
-    Statistics about resource utilization during execution, such as token counts.
-    """
-
-    final_context: Context
+    steps: Sequence[Step]
     """
     The complete conversation context at the end of execution.
     """
