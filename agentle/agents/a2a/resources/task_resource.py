@@ -147,49 +147,71 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
             print(f"Task created with ID: {task.id}")
             ```
         """
-        # Use a more reliable approach for run_sync that avoids task cancellation issues
-        import threading
-        import asyncio
+        # Use the standard run_sync with simpler error handling
         import logging
 
         logger = logging.getLogger(__name__)
 
-        # Create a container for results and exceptions
-        result_container = []
-        exception_container = []
+        try:
+            # Create a new loop for each synchronous call to avoid event loop conflicts
+            import asyncio
+            import threading
 
-        # Run the coroutine in a separate thread with its own event loop
-        def thread_target():
-            try:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+            # Container for thread result
+            result_container = []
+            error_container = []
+
+            # Function to run in a separate thread with a new event loop
+            def run_in_thread():
                 try:
-                    # Run the coroutine to completion in this isolated event loop
-                    result = loop.run_until_complete(
-                        self.manager.send(task_params=task, agent=self.agent)
-                    )
-                    result_container.append(result)
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        result = loop.run_until_complete(
+                            self.manager.send(task_params=task, agent=self.agent)
+                        )
+                        result_container.append(result)
+                    except Exception as e:
+                        logger.exception(f"Error in task execution: {e}")
+                        error_container.append(e)
+                    finally:
+                        loop.close()
                 except Exception as e:
-                    logger.exception(f"Error during task.send execution: {e}")
-                    exception_container.append(e)
-                finally:
-                    loop.close()
-            except Exception as e:
-                logger.exception(f"Error setting up event loop: {e}")
-                exception_container.append(e)
+                    logger.exception(f"Error setting up event loop: {e}")
+                    error_container.append(e)
 
-        # Start and wait for the thread
-        thread = threading.Thread(target=thread_target)
-        thread.start()
-        thread.join(timeout=30)  # 30 second timeout
+            # Create and start thread
+            thread = threading.Thread(target=run_in_thread)
+            thread.start()
+            thread.join(timeout=None)  # Wait indefinitely
 
-        # Check for results or errors
-        if exception_container:
-            raise exception_container[0]
-        elif not result_container:
-            raise TimeoutError("Task send operation timed out")
+            # Check for errors
+            if error_container:
+                raise error_container[0]
 
-        return result_container[0]
+            # Return the result if available
+            if result_container:
+                return result_container[0]
+            else:
+                # Thread didn't set result - try getting task directly if we have an ID
+                if hasattr(task, "id") and task.id:
+                    from agentle.agents.a2a.tasks.task_query_params import (
+                        TaskQueryParams,
+                    )
+
+                    task_result = run_sync(
+                        self.manager.get,
+                        query_params=TaskQueryParams(id=task.id),
+                        agent=self.agent,
+                        timeout=None,
+                    )
+                    return task_result.result
+                else:
+                    raise RuntimeError("No result received from task execution thread")
+
+        except Exception as e:
+            logger.exception(f"Task send failed: {e}")
+            raise
 
     def get(self, query_params: TaskQueryParams) -> TaskGetResult:
         """
@@ -220,49 +242,10 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
                         print(part.text)
             ```
         """
-        # Use a more reliable approach for run_sync that avoids task cancellation issues
-        import threading
-        import asyncio
-        import logging
-
-        logger = logging.getLogger(__name__)
-
-        # Create a container for results and exceptions
-        result_container = []
-        exception_container = []
-
-        # Run the coroutine in a separate thread with its own event loop
-        def thread_target():
-            try:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                try:
-                    # Run the coroutine to completion in this isolated event loop
-                    result = loop.run_until_complete(
-                        self.manager.get(query_params=query_params, agent=self.agent)
-                    )
-                    result_container.append(result)
-                except Exception as e:
-                    logger.exception(f"Error during task.get execution: {e}")
-                    exception_container.append(e)
-                finally:
-                    loop.close()
-            except Exception as e:
-                logger.exception(f"Error setting up event loop: {e}")
-                exception_container.append(e)
-
-        # Start and wait for the thread
-        thread = threading.Thread(target=thread_target)
-        thread.start()
-        thread.join(timeout=10)  # 10 second timeout
-
-        # Check for results or errors
-        if exception_container:
-            raise exception_container[0]
-        elif not result_container:
-            raise TimeoutError("Task get operation timed out")
-
-        return result_container[0]
+        # Use the standard run_sync with a timeout=None for infinite waiting
+        return run_sync(
+            self.manager.get, query_params=query_params, agent=self.agent, timeout=None
+        )
 
     def send_subscribe(self, task: TaskSendParams) -> JSONRPCResponse:
         """
@@ -335,46 +318,58 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
                 print("Failed to cancel task or task not found")
             ```
         """
-        # Use a more reliable approach for run_sync that avoids task cancellation issues
-        import threading
-        import asyncio
+        # Use the same approach as send for consistent handling
         import logging
 
         logger = logging.getLogger(__name__)
 
-        # Create a container for results and exceptions
-        result_container = []
-        exception_container = []
+        try:
+            # Create a new loop for each synchronous call to avoid event loop conflicts
+            import asyncio
+            import threading
 
-        # Run the coroutine in a separate thread with its own event loop
-        def thread_target():
-            try:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+            # Container for thread result
+            result_container = []
+            error_container = []
+
+            # Function to run in a separate thread with a new event loop
+            def run_in_thread():
                 try:
-                    # Run the coroutine to completion in this isolated event loop
-                    result = loop.run_until_complete(
-                        self.manager.cancel(task_id=task_id)
-                    )
-                    result_container.append(result)
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    try:
+                        result = loop.run_until_complete(
+                            self.manager.cancel(task_id=task_id)
+                        )
+                        result_container.append(result)
+                    except Exception as e:
+                        logger.exception(f"Error in cancel execution: {e}")
+                        error_container.append(e)
+                    finally:
+                        loop.close()
                 except Exception as e:
-                    logger.exception(f"Error during task.cancel execution: {e}")
-                    exception_container.append(e)
-                finally:
-                    loop.close()
-            except Exception as e:
-                logger.exception(f"Error setting up event loop: {e}")
-                exception_container.append(e)
+                    logger.exception(f"Error setting up event loop for cancel: {e}")
+                    error_container.append(e)
 
-        # Start and wait for the thread
-        thread = threading.Thread(target=thread_target)
-        thread.start()
-        thread.join(timeout=5)  # 5 second timeout
+            # Create and start thread
+            thread = threading.Thread(target=run_in_thread)
+            thread.start()
+            thread.join(timeout=None)  # Wait indefinitely
 
-        # Check for results or errors
-        if exception_container:
-            raise exception_container[0]
-        elif not result_container:
-            raise TimeoutError("Task cancel operation timed out")
+            # Check for errors
+            if error_container:
+                logger.error(f"Error cancelling task {task_id}: {error_container[0]}")
+                return False
 
-        return result_container[0]
+            # Return the result if available
+            if result_container:
+                return result_container[0]
+            else:
+                logger.warning(
+                    f"No result received from task cancel thread for {task_id}"
+                )
+                return False
+
+        except Exception as e:
+            logger.exception(f"Task cancel failed: {e}")
+            return False

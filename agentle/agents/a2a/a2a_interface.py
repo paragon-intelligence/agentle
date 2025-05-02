@@ -15,6 +15,10 @@ from agentle.agents.a2a.resources.push_notification_resource import (
 )
 from agentle.agents.a2a.resources.task_resource import TaskResource
 from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
+from agentle.agents.a2a.tasks.task import Task
+from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
+from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
+from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
 
 # Use TYPE_CHECKING to avoid circular imports
 if TYPE_CHECKING:
@@ -75,16 +79,61 @@ def _run_async_in_thread(coro, timeout=None):
 
     thread = threading.Thread(target=thread_target)
     thread.start()
-    thread.join(timeout=timeout)
+    thread.join(timeout=timeout)  # Can be None for infinite waiting
 
-    if thread.is_alive():
-        # Timeout occurred
+    if thread.is_alive() and timeout is not None:
+        # Only raise a timeout error if a timeout was specified
         raise TimeoutError(f"Operation timed out after {timeout} seconds")
 
     if exception_container:
         raise exception_container[0]
 
     return result_container[0]
+
+
+# Create a wrapper class for task operations
+class TasksWrapper:
+    """
+    Wrapper for task operations with thread-safe async/sync conversion.
+    """
+
+    def __init__(self, task_manager, agent):
+        """Initialize with the task manager and agent."""
+        self.task_manager = task_manager
+        self.agent = agent
+
+    def send(self, task_params: TaskSendParams) -> Task:
+        """Send a task to the agent."""
+        try:
+            return _run_async_in_thread(
+                self.task_manager.send(task_params=task_params, agent=self.agent),
+                timeout=None,
+            )
+        except Exception as e:
+            logger.error(f"Error in send: {e}")
+            raise
+
+    def get(self, query_params: TaskQueryParams) -> TaskGetResult:
+        """Get a task result."""
+        try:
+            return _run_async_in_thread(
+                self.task_manager.get(query_params=query_params, agent=self.agent),
+                timeout=None,
+            )
+        except Exception as e:
+            logger.error(f"Error in get: {e}")
+            raise
+
+    def cancel(self, task_id: str) -> bool:
+        """Cancel a task."""
+        try:
+            return _run_async_in_thread(
+                self.task_manager.cancel(task_id=task_id),
+                timeout=None,
+            )
+        except Exception as e:
+            logger.error(f"Error in cancel: {e}")
+            raise
 
 
 class A2AInterface:
@@ -152,49 +201,11 @@ class A2AInterface:
         self.agent = agent
         self.task_manager = task_manager
 
-        # Create enhanced task resource with safer execution
-        self.tasks = TaskResource(agent=agent, manager=task_manager)
+        # Use a wrapper for tasks instead of modifying the Pydantic model
+        self.tasks = TasksWrapper(task_manager, agent)
 
-        # Override task methods with more reliable thread-based execution
-        original_send = self.tasks.send
-        original_get = self.tasks.get
-        original_cancel = self.tasks.cancel
+        # Keep the original TaskResource for compatibility if needed
+        self._task_resource = TaskResource(agent=agent, manager=task_manager)
 
-        # Enhance send method to use thread-based async execution
-        def enhanced_send(task_params):
-            try:
-                return _run_async_in_thread(
-                    self.task_manager.send(task_params=task_params, agent=self.agent),
-                    timeout=30,
-                )
-            except Exception as e:
-                logger.error(f"Error in enhanced send: {e}")
-                raise
-
-        # Enhance get method to use thread-based async execution
-        def enhanced_get(query_params):
-            try:
-                return _run_async_in_thread(
-                    self.task_manager.get(query_params=query_params, agent=self.agent),
-                    timeout=10,
-                )
-            except Exception as e:
-                logger.error(f"Error in enhanced get: {e}")
-                raise
-
-        # Enhance cancel method to use thread-based async execution
-        def enhanced_cancel(task_id):
-            try:
-                return _run_async_in_thread(
-                    self.task_manager.cancel(task_id=task_id), timeout=5
-                )
-            except Exception as e:
-                logger.error(f"Error in enhanced cancel: {e}")
-                raise
-
-        # Apply the enhanced methods
-        self.tasks.send = enhanced_send
-        self.tasks.get = enhanced_get
-        self.tasks.cancel = enhanced_cancel
-
+        # Push notifications
         self.push_notifications = PushNotificationResource(agent=agent)

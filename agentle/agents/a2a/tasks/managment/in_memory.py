@@ -167,8 +167,8 @@ class InMemoryTaskManager(TaskManager):
         """
         Creates and starts a new task or continues an existing session.
 
-        This method creates a Task object, starts an asyncio task to run the
-        agent, and stores both in the internal dictionaries.
+        This method creates a Task object, starts a thread to run the
+        agent, and stores the task in the internal dictionaries.
 
         Args:
             task_params: Parameters for the task to create
@@ -200,116 +200,64 @@ class InMemoryTaskManager(TaskManager):
                 history.append(task_params.message)
             self._task_histories[task.id] = history
 
-        # Get the current event loop
-        loop = get_or_create_eventloop()
-        logger.debug(f"Using event loop {id(loop)} for task {task.id}")
+        # Create a thread to run the task in the background
+        import threading
 
-        try:
-            # Create an asyncio task to run the agent
-            # This will run in the background while we immediately return the task
-            logger.debug(f"Creating asyncio task for agent execution in task {task.id}")
+        def run_task_thread():
+            """Run the task in a dedicated thread with its own event loop."""
+            try:
+                # Create a new event loop for this thread
+                thread_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(thread_loop)
 
-            # Define a wrapper function that we can submit to the loop
-            async def run_task_wrapper():
                 try:
-                    # Allow some time for event loop to stabilize
-                    await asyncio.sleep(0.2)
-
-                    # Double-check that the task hasn't been cancelled before we start
+                    # Update task status to WORKING
                     with self._lock:
-                        if task_id not in self._tasks:
+                        if task_id in self._tasks:
+                            self._tasks[task_id].status = TaskState.WORKING
                             logger.debug(
-                                f"Task {task_id} no longer exists, aborting wrapper"
+                                f"Updated task {task_id} status to WORKING in thread"
                             )
-                            return
 
-                        task = self._tasks[task_id]
-                        if task.status == TaskState.CANCELED:
-                            logger.debug(
-                                f"Task {task_id} already cancelled, aborting wrapper"
-                            )
-                            return
-
-                    # Use a separate try block to catch errors during the actual task execution
-                    try:
-                        # Run the task in a way that's protected from cancellation
-                        await self._run_agent_task(task.id, agent, task_params)
-                    except asyncio.CancelledError:
-                        logger.debug(
-                            f"Task {task_id} was cancelled during execution phase"
-                        )
-                        with self._lock:
-                            if task_id in self._tasks:
-                                self._tasks[task_id].status = TaskState.CANCELED
-                    except Exception as e:
-                        logger.exception(f"Error in _run_agent_task for {task_id}: {e}")
-                        with self._lock:
-                            if task_id in self._tasks:
-                                self._tasks[task_id].status = TaskState.FAILED
+                    # Run the agent task to completion in this thread's event loop
+                    thread_loop.run_until_complete(
+                        self._run_agent_task(task_id, agent, task_params)
+                    )
                 except asyncio.CancelledError:
-                    logger.debug(f"Task {task_id} was cancelled during wrapper setup")
+                    logger.debug(f"Task {task_id} was cancelled during execution")
                     with self._lock:
                         if task_id in self._tasks:
                             self._tasks[task_id].status = TaskState.CANCELED
                 except Exception as e:
-                    logger.exception(
-                        f"Unhandled exception in task wrapper for {task_id}: {e}"
-                    )
+                    logger.exception(f"Error running task {task_id} in thread: {e}")
                     with self._lock:
                         if task_id in self._tasks:
                             self._tasks[task_id].status = TaskState.FAILED
-
-            # Start the task in the current event loop
-            asyncio_task = None
-            if loop.is_running():
-                # Create a task in the running loop
-                asyncio_task = asyncio.ensure_future(run_task_wrapper(), loop=loop)
-                logger.debug(f"Created task in running loop for {task.id}")
-            else:
-                # Create a dedicated thread for running this task with its own event loop
-                import threading
-
-                def run_in_thread():
-                    thread_loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(thread_loop)
-                    try:
-                        logger.debug(
-                            f"Created dedicated thread loop for task {task.id}"
-                        )
-                        thread_loop.run_until_complete(run_task_wrapper())
-                    except Exception as e:
-                        logger.exception(f"Error in thread for task {task.id}: {e}")
-                    finally:
-                        thread_loop.close()
-
-                # Start the thread
-                thread = threading.Thread(target=run_in_thread)
-                thread.daemon = True  # Allow program to exit if thread is still running
-                thread.start()
-                logger.debug(f"Started dedicated thread for task {task.id}")
-
-                # Create a dummy task for tracking purposes
-                asyncio_task = asyncio.ensure_future(asyncio.sleep(0))
-                asyncio_task._thread = thread  # Attach thread reference to the task
-
-            # Set up callback to log when the task is done
-            if asyncio_task:
-                asyncio_task.add_done_callback(
-                    lambda t: logger.debug(
-                        f"Asyncio task for {task.id} completed with state: {'Canceled' if t.cancelled() else 'Done'}"
-                    )
+                finally:
+                    # Clean up the event loop
+                    thread_loop.close()
+            except Exception as e:
+                logger.exception(
+                    f"Unhandled exception in thread for task {task_id}: {e}"
                 )
-
                 with self._lock:
-                    self._running_tasks[task.id] = asyncio_task
-                    logger.debug(f"Registered async task for {task.id}")
+                    if task_id in self._tasks:
+                        self._tasks[task_id].status = TaskState.FAILED
 
-        except Exception as e:
-            logger.exception(f"Error creating asyncio task for {task.id}: {e}")
-            with self._lock:
-                # If we fail to create the asyncio task, mark the task as failed
-                if task_id in self._tasks:
-                    self._tasks[task_id].status = TaskState.FAILED
+        # Start the thread
+        task_thread = threading.Thread(target=run_task_thread)
+        task_thread.daemon = (
+            True  # Allow program to exit even if thread is still running
+        )
+        task_thread.start()
+
+        # Store a reference to the thread
+        with self._lock:
+            # Create a dummy task for tracking purposes
+            dummy_task = asyncio.ensure_future(asyncio.sleep(0))
+            dummy_task._thread = task_thread  # Attach thread reference to the task
+            self._running_tasks[task.id] = dummy_task
+            logger.debug(f"Started thread for task {task.id}")
 
         self._log_task_status(task.id, "Task created")
         return task
@@ -465,36 +413,26 @@ class InMemoryTaskManager(TaskManager):
             task_params: Parameters for the task
         """
         logger.debug(f"Starting agent task execution for task {task_id}")
-        self._log_task_status(task_id, "Starting execution")
 
-        # Safety check to ensure we can handle tasks and event loop properly
-        try:
-            # Print the current thread and event loop
-            current_thread = threading.current_thread()
-            logger.debug(
-                f"Task {task_id} running in thread: {current_thread.name}, loop: {id(asyncio.get_event_loop())}"
-            )
-        except Exception as e:
-            logger.exception(f"Error getting thread/loop info: {e}")
+        # Safety check to ensure task exists
+        with self._lock:
+            if task_id not in self._tasks:
+                logger.warning(f"Task {task_id} no longer exists, aborting execution")
+                return
 
-        try:
-            # Update task status to WORKING
-            with self._lock:
-                if task_id not in self._tasks:
-                    logger.warning(
-                        f"Task {task_id} no longer exists, aborting execution"
-                    )
-                    return
-                task = self._tasks[task_id]
+            # Ensure the task is marked as WORKING
+            task = self._tasks[task_id]
+            if task.status != TaskState.WORKING:
                 prev_status = task.status
                 task.status = TaskState.WORKING
                 logger.debug(
                     f"Updated task {task_id} status from {prev_status} to {task.status}"
                 )
 
-            # Get the message history from the task
-            history = self._task_histories.get(task_id, [])
+        # Get the message history from the task
+        history = self._task_histories.get(task_id, [])
 
+        try:
             # Convert the A2A Message to a UserMessage for the agent
             logger.debug(f"Converting message for agent in task {task_id}")
             gen_message = self._a2a_to_generation_adapter.adapt(task_params.message)
@@ -516,13 +454,12 @@ class InMemoryTaskManager(TaskManager):
                 )
                 raise
 
-            # Double-check task still exists (wasn't canceled during execution)
+            # Check if task still exists and hasn't been canceled
             with self._lock:
                 if task_id not in self._tasks:
                     logger.warning(f"Task {task_id} was removed during execution")
                     return
                 task = self._tasks[task_id]
-                # If task was explicitly canceled while we were processing, don't change its status
                 if task.status == TaskState.CANCELED:
                     logger.debug(
                         f"Task {task_id} was canceled during execution, preserving status"
@@ -533,7 +470,6 @@ class InMemoryTaskManager(TaskManager):
             logger.debug(f"Processing agent response for task {task_id}")
 
             # Access the message from the generation result
-            # The Generation class has 'choices', and the first choice contains the message
             if (
                 result.generation
                 and hasattr(result.generation, "choices")
@@ -578,55 +514,26 @@ class InMemoryTaskManager(TaskManager):
                     self._task_histories[task_id] = history
                     logger.debug(f"Task {task_id} - Added default message to history")
 
-            # Update task with the result - use lock to prevent race conditions
+            # Update task status to COMPLETED
             with self._lock:
                 if task_id in self._tasks:
                     task = self._tasks[task_id]
-                    # Only update status if it's still WORKING (not manually CANCELED)
-                    if task.status == TaskState.WORKING:
+                    if (
+                        task.status != TaskState.CANCELED
+                    ):  # Only update if not already canceled
                         prev_status = task.status
                         task.status = TaskState.COMPLETED
                         logger.debug(
                             f"Updated task {task_id} status from {prev_status} to {task.status}"
                         )
-                    else:
-                        logger.debug(
-                            f"Not updating task {task_id} status as it's already {task.status}"
-                        )
-
-        except asyncio.CancelledError:
-            # Task was explicitly canceled
-            logger.info(f"Task {task_id} was explicitly canceled")
-            with self._lock:
-                if task_id in self._tasks:
-                    task = self._tasks[task_id]
-                    prev_status = task.status
-                    task.status = TaskState.CANCELED
-                    logger.debug(
-                        f"Updated task {task_id} status from {prev_status} to {task.status} due to cancellation"
-                    )
+                        logger.debug(f"Task {task_id} completed successfully")
 
         except Exception as e:
-            # Task failed
             logger.exception(f"Error executing task {task_id}: {e}")
-
-            # Print full traceback for debugging
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback_details = traceback.format_exception(
-                exc_type, exc_value, exc_traceback
-            )
-            logger.debug(
-                f"Task {task_id} failure traceback: {''.join(traceback_details)}"
-            )
-
             with self._lock:
                 if task_id in self._tasks:
-                    task = self._tasks[task_id]
-                    prev_status = task.status
-                    task.status = TaskState.FAILED
-                    logger.debug(
-                        f"Updated task {task_id} status from {prev_status} to {task.status} due to failure"
-                    )
+                    self._tasks[task_id].status = TaskState.FAILED
+                    logger.debug(f"Task {task_id} failed with error: {e}")
 
             # Add error message to history
             try:
@@ -635,7 +542,6 @@ class InMemoryTaskManager(TaskManager):
                 error_message = Message(
                     role="agent", parts=[TextPart(text=f"An error occurred: {str(e)}")]
                 )
-
                 history = self._task_histories.get(task_id, [])
                 history.append(error_message)
                 with self._lock:
@@ -643,7 +549,6 @@ class InMemoryTaskManager(TaskManager):
                     logger.debug(f"Added error message to task {task_id} history")
             except Exception as inner_e:
                 logger.exception(f"Failed to add error message to history: {inner_e}")
-
         finally:
             # Remove the running task reference
             with self._lock:
@@ -651,7 +556,7 @@ class InMemoryTaskManager(TaskManager):
                     del self._running_tasks[task_id]
                     logger.debug(f"Removed task {task_id} from running tasks")
 
-            self._log_task_status(task_id, "Task execution completed")
+        self._log_task_status(task_id, "Task execution completed")
 
     def list(self, query_params: Optional[TaskQueryParams] = None) -> List[Task]:
         """
