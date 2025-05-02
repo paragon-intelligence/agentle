@@ -36,7 +36,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.6.0" },
-    { name = "rock-solid-base", specifier = ">=0.0.12" },
+    { name = "rock-solid-base", specifier = ">=0.0.26" },
 ]
 
 [package.metadata.requires-dev]
@@ -1840,14 +1840,14 @@ wheels = [
 
 [[package]]
 name = "rock-solid-base"
-version = "0.0.25"
+version = "0.0.26"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/1d/58b7777e4ca4442736487dc276ff014cbac158f7fdc94c0460e9bdade1da/rock_solid_base-0.0.25.tar.gz", hash = "sha256:79fdd3793b7800bedb6e90cf63c0de35523cca424c19087eff358aed437d8d9c", size = 57306 }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/2b/8ff605c0b83b55ac0649861a8cd7b92c184128b8ac6faab9596c879478d3/rock_solid_base-0.0.26.tar.gz", hash = "sha256:6ad279cd3f64faf00daebf7a476a8b30edd2de99051da25751d6c2690839bca8", size = 57951 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/97/aaa64ff0adaabcf139db83af0ce2b0eb03d52182da204296b2f8a49fa2ec/rock_solid_base-0.0.25-py3-none-any.whl", hash = "sha256:16be629254ca35c742fc7ad13ffd3661703a35a205f93ea6895dd4133eaa1e31", size = 46484 },
+    { url = "https://files.pythonhosted.org/packages/7c/45/f0709aab8ca605cc73515aeab39e85a7259759f94b7058291b94ffe2c965/rock_solid_base-0.0.26-py3-none-any.whl", hash = "sha256:1f03f020072c3f5ea48b8a8422c478351da7c4158b0619818d28d6804ce34be6", size = 47735 },
 ]
 
 [[package]]

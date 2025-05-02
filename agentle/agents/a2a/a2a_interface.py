@@ -5,7 +5,6 @@ The Agent-to-Agent Interface that allows one agent to interact with another
 by sending it tasks or subscribing to it.
 """
 
-import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING, TypeVar, Union
 
@@ -25,26 +24,6 @@ logger = logging.getLogger(__name__)
 
 # Define a type variable for the output schema
 T_Schema = TypeVar("T_Schema")
-
-
-def _get_event_loop():
-    """Get the current event loop or create a new one."""
-    try:
-        return asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop
-
-
-def _run_async(coro):
-    """Run a coroutine in the event loop."""
-    loop = _get_event_loop()
-    if loop.is_running():
-        return asyncio.ensure_future(coro)
-    else:
-        return loop.run_until_complete(coro)
-
 
 class A2AInterface:
     """

@@ -208,9 +208,35 @@ class InMemoryTaskManager(TaskManager):
             # Create an asyncio task to run the agent
             # This will run in the background while we immediately return the task
             logger.debug(f"Creating asyncio task for agent execution in task {task.id}")
-            asyncio_task = loop.create_task(
-                self._run_agent_task(task.id, agent, task_params)
-            )
+
+            # Define a wrapper function that we can submit to the loop
+            async def run_task_wrapper():
+                try:
+                    await asyncio.sleep(
+                        0.1
+                    )  # Small delay to ensure task registration completes
+                    await self._run_agent_task(task.id, agent, task_params)
+                except asyncio.CancelledError:
+                    logger.debug(
+                        f"Task {task_id} was cancelled during wrapper execution"
+                    )
+                    with self._lock:
+                        if task_id in self._tasks:
+                            self._tasks[task_id].status = TaskState.CANCELED
+                except Exception as e:
+                    logger.exception(
+                        f"Unhandled exception in task wrapper for {task_id}: {e}"
+                    )
+                    with self._lock:
+                        if task_id in self._tasks:
+                            self._tasks[task_id].status = TaskState.FAILED
+
+            # If the loop is already running (common in web servers), ensure_future is used
+            # Otherwise, we create a new task
+            if loop.is_running():
+                asyncio_task = asyncio.ensure_future(run_task_wrapper(), loop=loop)
+            else:
+                asyncio_task = loop.create_task(run_task_wrapper())
 
             # Set up callback to log when the task is done
             asyncio_task.add_done_callback(
@@ -394,9 +420,6 @@ class InMemoryTaskManager(TaskManager):
             )
         except Exception as e:
             logger.exception(f"Error getting thread/loop info: {e}")
-
-        # Add delay to ensure task isn't immediately canceled
-        await asyncio.sleep(0.1)
 
         try:
             # Update task status to WORKING

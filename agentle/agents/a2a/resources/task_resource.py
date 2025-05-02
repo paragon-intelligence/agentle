@@ -147,7 +147,10 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
             print(f"Task created with ID: {task.id}")
             ```
         """
-        return run_sync(self.manager.send, task_params=task, agent=self.agent)
+        # Use a timeout to prevent blocking indefinitely
+        return run_sync(
+            self.manager.send, task_params=task, agent=self.agent, timeout=30
+        )
 
     def get(self, query_params: TaskQueryParams) -> TaskGetResult:
         """
@@ -178,7 +181,10 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
                         print(part.text)
             ```
         """
-        return run_sync(self.manager.get, query_params=query_params, agent=self.agent)
+        # Use a short timeout since this should be quick
+        return run_sync(
+            self.manager.get, query_params=query_params, agent=self.agent, timeout=10
+        )
 
     def send_subscribe(self, task: TaskSendParams) -> JSONRPCResponse:
         """
@@ -223,7 +229,10 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
             print(f"Subscription ID: {response.id}")
             ```
         """
-        return run_sync(self.manager.send_subscribe, task_params=task, agent=self.agent)
+        # Use a timeout to prevent blocking indefinitely
+        return run_sync(
+            self.manager.send_subscribe, task_params=task, agent=self.agent, timeout=30
+        )
 
     def cancel(self, task_id: str) -> bool:
         """
@@ -248,4 +257,5 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
                 print("Failed to cancel task or task not found")
             ```
         """
-        return run_sync(self.manager.cancel, task_id=task_id)
+        # Use a short timeout since this should be quick
+        return run_sync(self.manager.cancel, task_id=task_id, timeout=5)
