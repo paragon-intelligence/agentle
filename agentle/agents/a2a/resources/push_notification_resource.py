@@ -7,10 +7,11 @@ endpoints and retrieving notification configurations.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TypeVar
 
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
+from rsb.models.field import Field
 
 from agentle.agents.a2a.notifications.push_notification_config import (
     PushNotificationConfig,
@@ -21,13 +22,9 @@ from agentle.agents.a2a.notifications.task_push_notification_config import (
 from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
 from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 
-if TYPE_CHECKING:
-    from agentle.agents.agent import Agent
-else:
-    # Import for runtime, not for type checking
-    from typing import Any as Agent
-
-type WithoutStructuredOutput = None
+# Define generic type parameter for structured output schema
+T_Schema = TypeVar("T_Schema")
+WithoutStructuredOutput = None
 
 
 class PushNotificationResource[T_Schema = WithoutStructuredOutput](BaseModel):
@@ -70,7 +67,8 @@ class PushNotificationResource[T_Schema = WithoutStructuredOutput](BaseModel):
         ```
     """
 
-    agent: Any  # Type at runtime, actual typing happens through TYPE_CHECKING
+    # Use object type for runtime, while TYPE_CHECKING handles proper typing in editors/linters
+    agent: object = Field(description="The agent associated with the notifications")
     """The agent associated with the notifications"""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

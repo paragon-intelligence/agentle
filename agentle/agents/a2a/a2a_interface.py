@@ -1,105 +1,114 @@
 """
-A2A Interface Implementation
+A2A Interface
 
-This module provides the primary interface for interacting with agents using the A2A protocol.
-The A2AInterface class serves as the main entry point for accessing agent capabilities through
-a standardized task-based interface.
-
-The A2A interface supports interaction with individual agents, agent teams, and agent pipelines,
-providing a consistent protocol regardless of the underlying agent implementation.
+The Agent-to-Agent Interface that allows one agent to interact with another
+by sending it tasks or subscribing to it.
 """
 
-from __future__ import annotations
-from typing import Any, TYPE_CHECKING, Union
+import asyncio
+import logging
+from typing import Optional, TYPE_CHECKING, TypeVar, Union
 
-from rsb.models.base_model import BaseModel
-from rsb.models.config_dict import ConfigDict
-
+from agentle.agents.a2a.resources.push_notification_resource import (
+    PushNotificationResource,
+)
 from agentle.agents.a2a.resources.task_resource import TaskResource
 from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
 
+# Use TYPE_CHECKING to avoid circular imports
 if TYPE_CHECKING:
     from agentle.agents.agent import Agent
     from agentle.agents.agent_pipeline import AgentPipeline
     from agentle.agents.agent_team import AgentTeam
-else:
-    # Import for runtime, not for type checking
-    # This avoids circular import issues while still making the classes available for Pydantic
-    from typing import Any as Agent
-    from typing import Any as AgentPipeline
-    from typing import Any as AgentTeam
+
+logger = logging.getLogger(__name__)
+
+# Define a type variable for the output schema
+T_Schema = TypeVar("T_Schema")
 
 
-class A2AInterface[T_Schema = Any](BaseModel):
+def _get_event_loop():
+    """Get the current event loop or create a new one."""
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
+
+def _run_async(coro):
+    """Run a coroutine in the event loop."""
+    loop = _get_event_loop()
+    if loop.is_running():
+        return asyncio.ensure_future(coro)
+    else:
+        return loop.run_until_complete(coro)
+
+
+class A2AInterface:
     """
-    Main interface for interacting with agents using the A2A protocol.
+    Agent-to-Agent Interface
 
-    This class provides a standardized way to interact with different types of agents
-    (individual agents, agent teams, or agent pipelines) through a task-based interface.
+    This class provides an interface for one agent to interact with another
+    by sending it tasks or subscribing to it.
 
     Attributes:
-        agent: The agent, agent team, or agent pipeline to interact with
-        task_manager: Manager responsible for handling tasks and their lifecycle
+        tasks: Resource for creating, retrieving, and canceling tasks
+        push_notifications: Resource for subscribing to push notifications
 
     Example:
         ```python
-        from agentle.agents.agent import Agent
         from agentle.agents.a2a.a2a_interface import A2AInterface
-        from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
-        from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
-        from agentle.agents.a2a.messages.message import Message
         from agentle.agents.a2a.message_parts.text_part import TextPart
+        from agentle.agents.a2a.messages.message import Message
+        from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
+        from agentle.agents.agent import Agent
 
-        # Set up agent and interface
+        # Create an agent
         agent = Agent(...)
-        task_manager = TaskManager()
-        a2a = A2AInterface(agent=agent, task_manager=task_manager)
 
-        # Create a message and task parameters
+        # Create an A2A interface
+        a2a = A2AInterface(agent=agent)
+
+        # Create a message
         message = Message(
             role="user",
-            parts=[TextPart(text="What is machine learning?")]
-        )
-        task_params = TaskSendParams(
-            message=message,
-            sessionId="session-123"
+            parts=[TextPart(text="What is the meaning of life?")],
         )
 
-        # Send a task and get the result
+        # Send a task to the agent
+        task_params = TaskSendParams(
+            message=message,
+            sessionId="session-1",
+        )
         task = a2a.tasks.send(task_params)
-        result = a2a.tasks.get(query_params={"id": task.id})
+
+        # Get the result of the task
+        task_result = a2a.tasks.get({"id": task.id})
         ```
     """
 
-    agent: Any  # Type at runtime, actual typing happens through TYPE_CHECKING
-    """The agent, agent team, or agent pipeline to interact with"""
-
-    task_manager: TaskManager
-    """Manager responsible for handling tasks and their lifecycle"""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    @property
-    def tasks(self) -> TaskResource[T_Schema]:
+    def __init__(
+        self,
+        agent: "Union[Agent[T_Schema], AgentTeam, AgentPipeline]",
+        task_manager: Optional[TaskManager] = None,
+    ):
         """
-        Access to task-related operations.
+        Initialize the A2A interface.
 
-        This property provides access to the TaskResource, which allows for sending tasks to
-        the agent, retrieving task results, and managing task notifications.
-
-        Returns:
-            TaskResource: The task resource for interacting with the agent
-
-        Example:
-            ```python
-            # Send a task
-            task = a2a.tasks.send(task_params)
-
-            # Get task results
-            result = a2a.tasks.get(query_params={"id": task.id})
-
-            # Set up push notifications
-            a2a.tasks.pushNotification.set(notification_config)
-            ```
+        Args:
+            agent: The agent to interact with
+            task_manager: Optional task manager to use (default: InMemoryTaskManager)
         """
-        return TaskResource(agent=self.agent, manager=self.task_manager)
+        if task_manager is None:
+            # Import here to avoid circular import
+            from agentle.agents.a2a.tasks.managment.in_memory import InMemoryTaskManager
+
+            task_manager = InMemoryTaskManager()
+
+        # Create the task resource
+        self.agent = agent
+        self.task_manager = task_manager
+        self.tasks = TaskResource(agent=agent, manager=task_manager)
+        self.push_notifications = PushNotificationResource(agent=agent)

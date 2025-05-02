@@ -1,12 +1,16 @@
 """
-A2A Simple Task Example (Synchronous Version)
+A2A Simple Task Example
 
-This example demonstrates how to create and monitor tasks using the A2A Interface
-with the InMemoryTaskManager, using a fully synchronous approach.
+This example demonstrates how to create and monitor a task using the A2A Interface
+with the InMemoryTaskManager. It shows the basic functionality of task creation
+and result retrieval.
 """
 
+import logging
+import os
+import sys
 import time
-from typing import Dict, List
+import traceback
 
 from agentle.agents.a2a.a2a_interface import A2AInterface
 from agentle.agents.a2a.message_parts.text_part import TextPart
@@ -20,119 +24,145 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
     GoogleGenaiGenerationProvider,
 )
 
+from dotenv import load_dotenv
 
-# Define a simple tool to list items
-def list_items() -> Dict[str, List[str]]:
-    """
-    A simple tool that returns a list of sample items.
-    """
-    return {
-        "items": [
-            "Laptop",
-            "Smartphone",
-            "Headphones",
-            "Coffee mug",
-            "Notebook",
-        ]
-    }
+load_dotenv(override=True)
 
-
-# Create a generation provider
-provider = GoogleGenaiGenerationProvider()
-
-# Create an agent with a simple tool
-agent = Agent(
-    name="A2A Simple Example Agent",
-    generation_provider=provider,
-    model="gemini-2.0-flash",
-    instructions="""You are a helpful assistant that can list items.
-    When asked to list items, use the list_items tool.
-    """,
-    tools=[list_items],
+# Configure root logger to see what's happening
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 
-# Create a task manager
-task_manager = InMemoryTaskManager()
-
-# Create the A2A interface
-a2a_interface = A2AInterface(agent=agent, task_manager=task_manager)
-
-# Create messages for different tasks
-list_items_message = Message(
-    role="user",
-    parts=[TextPart(text="Please list the available items.")],
-)
-
-greeting_message = Message(
-    role="user",
-    parts=[TextPart(text="Hello, how are you today?")],
-)
-
-# Create task parameters
-list_items_task_params = TaskSendParams(
-    message=list_items_message,
-    sessionId="list-items-session",
-)
-
-greeting_task_params = TaskSendParams(
-    message=greeting_message,
-    sessionId="greeting-session",
-)
-
-# Send the first task
-print("\nSending task to list items...")
-list_items_task = a2a_interface.tasks.send(list_items_task_params)
-print(f"List items task created with ID: {list_items_task.id}")
-
-# Send the second task
-print("\nSending greeting task...")
-greeting_task = a2a_interface.tasks.send(greeting_task_params)
-print(f"Greeting task created with ID: {greeting_task.id}")
+# Add a dedicated logger for this script
+logger = logging.getLogger("a2a_simple_task")
 
 
-# Function to check and print task status
-def check_task_status(task_id, task_name):
-    result = a2a_interface.tasks.get(TaskQueryParams(id=task_id))
-    status = result.result.status
-    print(f"{task_name} status: {status}")
+def main():
+    """Run the example with our simple task."""
+    try:
+        # Get the API key from environment
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        logger.info(f"API key from environment: {'FOUND' if api_key else 'NOT FOUND'}")
 
-    if (
-        status == TaskState.COMPLETED
-        and result.result.history
-        and len(result.result.history) > 1
-    ):
-        agent_response = result.result.history[1]
-        if agent_response.parts:
-            for part in agent_response.parts:
-                if part.type == "text":
-                    print(f"{task_name} response: {part.text}")
+        # Create a generation provider with explicit API key
+        logger.info("Creating GoogleGenaiGenerationProvider...")
+        provider = GoogleGenaiGenerationProvider(api_key=api_key)
 
-    return status
+        # Check if the provider has API key configured
+        logger.info("Checking provider configuration...")
+        if not provider.api_key:
+            logger.warning(
+                "No API key found for GoogleGenaiGenerationProvider. Please set GOOGLE_API_KEY environment variable."
+            )
+            print(
+                "\nERROR: Google API Key is not configured. Set GOOGLE_API_KEY environment variable."
+            )
+            return
+
+        # Create a simple agent
+        logger.info("Creating agent...")
+        agent = Agent(
+            name="A2A Simple Example Agent",
+            generation_provider=provider,
+            model="gemini-2.0-flash",
+            instructions="You are a helpful assistant. Keep your responses concise and direct.",
+        )
+
+        # Create a task manager
+        logger.info("Creating task manager...")
+        task_manager = InMemoryTaskManager()
+
+        # Create the A2A interface
+        logger.info("Creating A2A interface...")
+        a2a_interface = A2AInterface(agent=agent, task_manager=task_manager)
+
+        # Create a simple message
+        logger.info("Creating user message...")
+        user_message = Message(
+            role="user",
+            parts=[TextPart(text="What are three interesting facts about the Moon?")],
+        )
+
+        # Create task parameters
+        logger.info("Creating TaskSendParams...")
+        task_params = TaskSendParams(
+            message=user_message,
+            sessionId="moon-facts-session",
+            agent=agent,  # Explicitly pass the agent to the task
+        )
+
+        # Send the task (this now uses the synchronous version that properly handles async under the hood)
+        print("\nSending task...")
+        try:
+            task = a2a_interface.tasks.send(task_params)
+            print(f"Task created with ID: {task.id}")
+        except Exception as e:
+            logger.error(f"Error sending task: {e}")
+            logger.error(
+                f"Traceback: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
+            )
+            return
+
+        # Poll for results with timeout
+        print("\nWaiting for task to complete...")
+        max_wait_time = 30  # seconds
+        start_time = time.time()
+        completed = False
+
+        while time.time() - start_time < max_wait_time and not completed:
+            # Check task status
+            try:
+                task_result = a2a_interface.tasks.get(TaskQueryParams(id=task.id))
+                status = task_result.result.status
+                logger.debug(
+                    f"Got task with status: {status}, error: {getattr(task_result, 'error', None)}"
+                )
+
+                if status == TaskState.COMPLETED:
+                    completed = True
+                    print(f"\nTask completed! Final status: {status}")
+
+                    # Extract and display the result
+                    if (
+                        task_result.result.history
+                        and len(task_result.result.history) > 1
+                    ):
+                        agent_response = task_result.result.history[1]
+                        if agent_response.parts:
+                            print("\nAgent's response:")
+                            for part in agent_response.parts:
+                                if part.type == "text":
+                                    print(f"{part.text}")
+                elif status == TaskState.FAILED:
+                    completed = True
+                    print(f"\nTask failed! Error: {task_result.result.error}")
+                else:
+                    print(f"Current status: {status}, waiting...")
+                    time.sleep(1)
+            except Exception as e:
+                logger.error(f"Error checking task status: {e}")
+                logger.error(
+                    f"Traceback: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
+                )
+                time.sleep(1)
+
+        if not completed:
+            print(f"\nTask did not complete within {max_wait_time} seconds.")
+            print(f"Final status: {task_result.result.status}")
+            if hasattr(task_result.result, "error") and task_result.result.error:
+                print(f"Error: {task_result.result.error}")
+
+    except KeyboardInterrupt:
+        print("Process interrupted by user")
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        logger.error(f"Unhandled exception: {e}")
+        logger.error(
+            f"Traceback: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
+        )
 
 
-# Wait for tasks to complete, with a timeout
-print("\nWaiting for tasks to complete...")
-timeout = 30  # seconds
-start_time = time.time()
-
-while time.time() - start_time < timeout:
-    time.sleep(2)
-
-    list_items_status = check_task_status(list_items_task.id, "List items task")
-    greeting_status = check_task_status(greeting_task.id, "Greeting task")
-
-    print("")  # Empty line for better readability
-
-    # Check if both tasks are completed or failed
-    if list_items_status in [
-        TaskState.COMPLETED,
-        TaskState.FAILED,
-    ] and greeting_status in [TaskState.COMPLETED, TaskState.FAILED]:
-        break
-
-print("\nTask processing complete!")
-
-# Print final results
-print("\nFinal Results:")
-check_task_status(list_items_task.id, "List items task")
-check_task_status(greeting_task.id, "Greeting task")
+if __name__ == "__main__":
+    main()
