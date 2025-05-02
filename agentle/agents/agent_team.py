@@ -73,6 +73,7 @@ from uuid import UUID
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
+from rsb.models.model_validator import model_validator
 
 from agentle.agents.agent import Agent
 from agentle.agents.agent_config import AgentConfig
@@ -95,13 +96,26 @@ class _OrchestratorOutput(BaseModel):
     the current task step, and (2) whether the overall task is complete.
 
     Attributes:
-        agent_id: The UUID of the chosen agent that should handle the current task step.
+        agent_id: The str of the chosen agent that should handle the current task step.
         task_done: A boolean flag indicating whether the overall task is complete.
                   When True, the team execution will terminate and return the final result.
     """
 
-    agent_id: UUID  # UUID of the chosen agent
+    agent_id: str
     task_done: bool
+
+    @model_validator(mode="after")
+    def validate_agent_id(self) -> _OrchestratorOutput:
+        if not self.agent_id:
+            raise ValueError("agent_id must be a non-empty string")
+
+        # check if it's valid UUID
+        try:
+            UUID(self.agent_id)
+        except ValueError:
+            raise ValueError("agent_id must be a valid UUID")
+
+        return self
 
 
 class AgentTeam(BaseModel):
