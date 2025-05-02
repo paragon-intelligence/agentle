@@ -593,65 +593,111 @@ print(f"Population: {rec.population:,}")
 print(f"Best time to visit: {rec.best_time_to_visit}")
 ```
 
-## 🔄 Agent-to-Agent (A2A) Interface
+### Agent-to-Agent (A2A) Interface
 
-Agentle implements Google's A2A Protocol, allowing agents to communicate with each other using standardized interfaces regardless of their underlying implementations or hosting environments.
+Agentle provides built-in support for Google's [A2A Protocol](https://google.github.io/A2A/), enabling seamless communication between agents:
 
 ```python
-from agentle.agents.agent import Agent
+import os
 from agentle.agents.a2a.a2a_interface import A2AInterface
-from agentle.agents.a2a.messages.message import Message
 from agentle.agents.a2a.message_parts.text_part import TextPart
+from agentle.agents.a2a.messages.message import Message
+from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
+from agentle.agents.a2a.tasks.task_state import TaskState
+from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
 
-# Create two agents
-agent1 = Agent(
-    name="Task Creator",
-    generation_provider=GoogleGenaiGenerationProvider(),
-    model="gemini-2.0-flash",
-    instructions="You create tasks for other agents to complete."
-)
+# Set up agent and A2A interface
+provider = GoogleGenaiGenerationProvider(api_key=os.environ.get("GOOGLE_API_KEY"))
+agent = Agent(name="Example Agent", generation_provider=provider, model="gemini-2.0-flash")
+a2a = A2AInterface(agent=agent)
 
-agent2 = Agent(
-    name="Task Executor",
-    generation_provider=GoogleGenaiGenerationProvider(),
-    model="gemini-2.0-flash",
-    instructions="You execute tasks that other agents assign to you."
-)
+# Send task to agent
+message = Message(role="user", parts=[TextPart(text="What are three facts about the Moon?")])
+task = a2a.tasks.send(TaskSendParams(message=message))
+print(f"Task sent with ID: {task.id}")
 
-# Initialize A2A interface for agent2
-a2a = A2AInterface(agent=agent2)
-
-# Create a message to send to agent2
-message = Message(
-    role="user",
-    parts=[TextPart(text="Please summarize the key features of Python 3.12")]
-)
-
-# Send a task to agent2
-task_params = TaskSendParams(
-    message=message,
-    sessionId="session-123"
-)
-
-# Send the task
-task = a2a.tasks.send(task_params)
-print(f"Task created with ID: {task.id}")
-print(f"Initial status: {task.status}")
-
-# Get the result when ready
-result = a2a.tasks.get({"id": task.id})
-print(f"Final status: {result.task.status}")
-print(f"Response: {result.task.response.message.parts[0].text}")
+# Wait for task completion and get result
+while True:
+    result = a2a.tasks.get(TaskQueryParams(id=task.id))
+    status = result.result.status
+    
+    if status == TaskState.COMPLETED:
+        print("\nResponse:", result.result.history[1].parts[0].text)
+        break
+    elif status == TaskState.FAILED:
+        print(f"Task failed: {result.result.error}")
+        break
+    print(f"Status: {status}")
+    time.sleep(1)
 ```
 
-The A2A protocol provides several key benefits:
-- **Interoperability**: Agents can communicate regardless of their underlying implementation
-- **Standardization**: Common interface for task creation, monitoring, and cancellation
-- **Session Management**: Track conversations across multiple interactions
-- **Asynchronous Processing**: Submit tasks and retrieve results when ready
-- **Extensibility**: Support for various message types including text, images, and custom data formats
+#### What is A2A and Why It Matters
+
+**A2A (Agent-to-Agent)** is an open protocol designed to enable standardized communication between autonomous agents built on different frameworks and by various vendors. Key benefits include:
+
+- **Interoperability**: Agents built with different frameworks can communicate seamlessly
+- **Enterprise Integration**: Easily integrate agents into existing enterprise applications
+- **Asynchronous Communication**: Non-blocking task management for long-running operations
+- **State Management**: Track task progress and history across agent interactions
+- **Multimodal Support**: Exchange rich content including text, images, and structured data
+- **Open Standard**: Community-driven protocol designed for widespread adoption
+
+#### Advanced A2A Usage
+
+Create collaborative agent ecosystems where specialized agents work together:
+
+```python
+from agentle.agents.a2a.a2a_interface import A2AInterface
+from agentle.agents.a2a.message_parts.text_part import TextPart
+from agentle.agents.a2a.messages.message import Message
+from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
+from agentle.agents.agent import Agent
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+
+# Create specialized agents
+research_agent = Agent(
+    name="Research Agent",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a research agent. Find relevant information on topics."
+)
+
+writing_agent = Agent(
+    name="Writing Agent",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash", 
+    instructions="You are a writing agent. Craft engaging content from research."
+)
+
+# Create A2A interfaces for each agent
+research_interface = A2AInterface(agent=research_agent)
+writing_interface = A2AInterface(agent=writing_agent)
+
+# Step 1: Send research task
+research_message = Message(
+    role="user", 
+    parts=[TextPart(text="Research key innovations in quantum computing")]
+)
+research_task = research_interface.tasks.send(TaskSendParams(message=research_message))
+
+# Step 2: Wait for research to complete (implementation omitted for brevity)
+# ...
+
+# Step 3: Pass research results to writing agent
+research_results = research_interface.tasks.get(TaskQueryParams(id=research_task.id))
+research_content = research_results.result.history[1].parts[0].text
+
+writing_message = Message(
+    role="user",
+    parts=[TextPart(text=f"Create an engaging blog post based on this research: {research_content}")]
+)
+writing_task = writing_interface.tasks.send(TaskSendParams(message=writing_message))
+
+# Step 4: Get final written content (implementation omitted for brevity)
+# ...
+```
 
 ## 🗓️ Roadmap
 
