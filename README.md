@@ -593,9 +593,68 @@ print(f"Population: {rec.population:,}")
 print(f"Best time to visit: {rec.best_time_to_visit}")
 ```
 
+## 🔄 Agent-to-Agent (A2A) Interface
+
+Agentle implements Google's A2A Protocol, allowing agents to communicate with each other using standardized interfaces regardless of their underlying implementations or hosting environments.
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.a2a.a2a_interface import A2AInterface
+from agentle.agents.a2a.messages.message import Message
+from agentle.agents.a2a.message_parts.text_part import TextPart
+from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+
+# Create two agents
+agent1 = Agent(
+    name="Task Creator",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You create tasks for other agents to complete."
+)
+
+agent2 = Agent(
+    name="Task Executor",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You execute tasks that other agents assign to you."
+)
+
+# Initialize A2A interface for agent2
+a2a = A2AInterface(agent=agent2)
+
+# Create a message to send to agent2
+message = Message(
+    role="user",
+    parts=[TextPart(text="Please summarize the key features of Python 3.12")]
+)
+
+# Send a task to agent2
+task_params = TaskSendParams(
+    message=message,
+    sessionId="session-123"
+)
+
+# Send the task
+task = a2a.tasks.send(task_params)
+print(f"Task created with ID: {task.id}")
+print(f"Initial status: {task.status}")
+
+# Get the result when ready
+result = a2a.tasks.get({"id": task.id})
+print(f"Final status: {result.task.status}")
+print(f"Response: {result.task.response.message.parts[0].text}")
+```
+
+The A2A protocol provides several key benefits:
+- **Interoperability**: Agents can communicate regardless of their underlying implementation
+- **Standardization**: Common interface for task creation, monitoring, and cancellation
+- **Session Management**: Track conversations across multiple interactions
+- **Asynchronous Processing**: Submit tasks and retrieve results when ready
+- **Extensibility**: Support for various message types including text, images, and custom data formats
+
 ## 🗓️ Roadmap
 
-- 🔄 Finishing A2A (Agent-to-Agent) interface for standardized agent communication
 - 🗣️ Speech-to-Text and Text-to-Speech modules for voice-enabled agents
 - 📚 RAG module for integration with knowledge sources and vector databases
 - 🔗 More provider integrations
