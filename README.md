@@ -599,6 +599,8 @@ Agentle provides built-in support for Google's [A2A Protocol](https://google.git
 
 ```python
 import os
+import time
+
 from agentle.agents.a2a.a2a_interface import A2AInterface
 from agentle.agents.a2a.message_parts.text_part import TextPart
 from agentle.agents.a2a.messages.message import Message
@@ -644,29 +646,48 @@ while True:
 - **Multimodal Support**: Exchange rich content including text, images, and structured data
 - **Open Standard**: Community-driven protocol designed for widespread adoption
 
+#### How Agentle Simplifies A2A Integration
+
+Agentle's A2A implementation handles the complexity of:
+
+- **Task Lifecycle Management**: Automatically manages task creation, execution, and state transitions
+- **Thread-Safe Execution**: Uses isolated threads with dedicated event loops to prevent concurrency issues
+- **Error Handling**: Provides robust error recovery mechanisms during task execution
+- **Standardized Messaging**: Offers a clean interface for creating, sending, and processing A2A messages
+- **Session Management**: Maintains conversation history and context across multiple interactions
+- **Asynchronous Processing**: Transparently converts asynchronous A2A operations into synchronous methods
+
+The `A2AInterface` class acts as the gateway between your application and any A2A-compliant agent, serving as a unified interface for task management, messaging, and notification handling.
+
 #### Advanced A2A Usage
 
 Create collaborative agent ecosystems where specialized agents work together:
 
 ```python
+import os
+import time
+
 from agentle.agents.a2a.a2a_interface import A2AInterface
 from agentle.agents.a2a.message_parts.text_part import TextPart
 from agentle.agents.a2a.messages.message import Message
+from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
+from agentle.agents.a2a.tasks.task_state import TaskState
 from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
 
 # Create specialized agents
+provider = GoogleGenaiGenerationProvider(api_key=os.environ.get("GOOGLE_API_KEY"))
 research_agent = Agent(
     name="Research Agent",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=provider,
     model="gemini-2.0-flash",
     instructions="You are a research agent. Find relevant information on topics."
 )
 
 writing_agent = Agent(
     name="Writing Agent",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=provider,
     model="gemini-2.0-flash", 
     instructions="You are a writing agent. Craft engaging content from research."
 )
@@ -675,28 +696,52 @@ writing_agent = Agent(
 research_interface = A2AInterface(agent=research_agent)
 writing_interface = A2AInterface(agent=writing_agent)
 
-# Step 1: Send research task
+# Step 1: Send research task to the research agent
 research_message = Message(
     role="user", 
     parts=[TextPart(text="Research key innovations in quantum computing")]
 )
 research_task = research_interface.tasks.send(TaskSendParams(message=research_message))
+print(f"Research task created with ID: {research_task.id}")
 
-# Step 2: Wait for research to complete (implementation omitted for brevity)
-# ...
+# Step 2: Wait for research to complete
+while True:
+    research_result = research_interface.tasks.get(TaskQueryParams(id=research_task.id))
+    status = research_result.result.status
+    
+    if status == TaskState.COMPLETED:
+        print("\nResearch completed!")
+        research_content = research_result.result.history[1].parts[0].text
+        break
+    elif status == TaskState.FAILED:
+        print(f"Research task failed: {research_result.result.error}")
+        exit(1)
+    print(f"Research status: {status}")
+    time.sleep(1)
 
 # Step 3: Pass research results to writing agent
-research_results = research_interface.tasks.get(TaskQueryParams(id=research_task.id))
-research_content = research_results.result.history[1].parts[0].text
-
 writing_message = Message(
     role="user",
     parts=[TextPart(text=f"Create an engaging blog post based on this research: {research_content}")]
 )
 writing_task = writing_interface.tasks.send(TaskSendParams(message=writing_message))
+print(f"Writing task created with ID: {writing_task.id}")
 
-# Step 4: Get final written content (implementation omitted for brevity)
-# ...
+# Step 4: Wait for writing to complete
+while True:
+    writing_result = writing_interface.tasks.get(TaskQueryParams(id=writing_task.id))
+    status = writing_result.result.status
+    
+    if status == TaskState.COMPLETED:
+        print("\nBlog post completed!")
+        blog_post = writing_result.result.history[1].parts[0].text
+        print(f"\nFinal blog post:\n{blog_post}")
+        break
+    elif status == TaskState.FAILED:
+        print(f"Writing task failed: {writing_result.result.error}")
+        exit(1)
+    print(f"Writing status: {status}")
+    time.sleep(1)
 ```
 
 ## 🗓️ Roadmap
