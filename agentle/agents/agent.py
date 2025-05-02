@@ -196,6 +196,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         ```
     """
 
+    uid: uuid.UUID = Field(default_factory=uuid.uuid4)
+    """
+    A unique identifier for the agent.
+    """
+
     # Agent-to-agent protocol fields
     name: str = Field(default="Agent")
     """
@@ -313,16 +318,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
     # Internal fields
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
-
-    @property
-    def uid(self) -> str:
-        """
-        Returns a unique identifier for this agent.
-
-        Returns:
-            str: Hash of the agent converted to string.
-        """
-        return str(hash(self))
 
     def has_tools(self) -> bool:
         """
