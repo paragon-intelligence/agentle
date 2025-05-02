@@ -3,8 +3,7 @@ Module for representing and managing agent execution results.
 
 This module provides the AgentRunOutput class which encapsulates all data
 produced during an agent's execution cycle. It represents both the final response
-and metadata about the execution process, including resource usage statistics,
-conversation context, and structured outputs.
+and metadata about the execution process, including conversation steps and structured outputs.
 
 Example:
 ```python
@@ -22,9 +21,8 @@ agent = Agent(
 result = agent.run("What is the capital of France?")
 
 # Access different aspects of the result
-text_response = result.artifacts[0].parts[0].text
-resource_usage = result.usage
-conversation_context = result.final_context
+text_response = result.generation.text
+conversation_steps = result.steps
 structured_data = result.parsed  # If using a response_schema
 ```
 """
@@ -45,33 +43,21 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
     Represents the complete result of an agent execution.
 
     AgentRunOutput encapsulates all data produced when an agent is run, including
-    the primary response artifacts, execution metadata, resource usage statistics,
-    and optionally structured output data when a response schema is provided.
+    the primary generation response, conversation steps, and optionally
+    structured output data when a response schema is provided.
 
     This class is generic over T_StructuredOutput, which represents the optional
     structured data format that can be extracted from the agent's response when
     a response schema is specified.
 
     Attributes:
-        artifacts (Sequence[Artifact]): The primary outputs produced by the agent,
-            typically containing text, images, or other content in response to
-            the user's input. Most commonly, the first artifact contains the main
-            response text.
+        generation (Generation[T_StructuredOutput]): The primary generation produced by the agent,
+            containing the response to the user's input. This includes text, potentially images,
+            and any other output format supported by the model.
 
-        model_name (str): The name of the model that was used to generate the response,
-            useful for tracking and debugging purposes.
-
-        task_status (TaskState): The final status of the agent execution task,
-            indicating whether it completed successfully, was interrupted, etc.
-
-        usage (AgentUsageStatistics): Statistics about resource utilization during
-            execution, such as token counts, which is valuable for monitoring,
-            billing, and optimizing resource usage.
-
-        final_context (Context): The complete conversation context at the end of
-            execution, including all messages exchanged during the agent run.
-            This is useful for maintaining conversation state across multiple
-            interactions.
+        steps (Sequence[Step]): The sequence of conversation steps that occurred during the
+            agent execution. This includes user inputs, model responses, and any intermediate
+            steps that were part of the execution flow.
 
         parsed (T_StructuredOutput): The structured data extracted from the agent's
             response when a response schema was provided. This will be None if
@@ -82,12 +68,13 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
         ```python
         # Basic usage to access the text response
         result = agent.run("Tell me about Paris")
-        response_text = result.artifacts[0].parts[0].text
+        response_text = result.generation.text
         print(response_text)
 
-        # Checking task completion status
-        if result.task_status == TaskState.COMPLETED:
-            print("Task completed successfully")
+        # Examining conversation steps
+        for step in result.steps:
+            print(f"Step type: {step.type}")
+            print(f"Content: {step.content}")
 
         # Working with structured output
         from pydantic import BaseModel
