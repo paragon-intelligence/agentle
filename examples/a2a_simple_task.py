@@ -6,6 +6,7 @@ with the InMemoryTaskManager. It shows the basic functionality of task creation
 and result retrieval.
 """
 
+import asyncio
 import logging
 import os
 import sys
@@ -39,8 +40,8 @@ logging.basicConfig(
 logger = logging.getLogger("a2a_simple_task")
 
 
-def main():
-    """Run the example with our simple task."""
+async def main_async():
+    """Run the example with our simple task asynchronously."""
     try:
         # Get the API key from environment
         api_key = os.environ.get("GOOGLE_API_KEY")
@@ -93,10 +94,10 @@ def main():
             agent=agent,  # Explicitly pass the agent to the task
         )
 
-        # Send the task (this now uses the synchronous version that properly handles async under the hood)
+        # Send the task (using async version directly)
         print("\nSending task...")
         try:
-            task = a2a_interface.tasks.send(task_params)
+            task = await a2a_interface.task_manager.send(task_params, agent=agent)
             print(f"Task created with ID: {task.id}")
         except Exception as e:
             logger.error(f"Error sending task: {e}")
@@ -114,7 +115,9 @@ def main():
         while time.time() - start_time < max_wait_time and not completed:
             # Check task status
             try:
-                task_result = a2a_interface.tasks.get(TaskQueryParams(id=task.id))
+                task_result = await a2a_interface.task_manager.get(
+                    TaskQueryParams(id=task.id), agent=agent
+                )
                 status = task_result.result.status
                 logger.debug(
                     f"Got task with status: {status}, error: {getattr(task_result, 'error', None)}"
@@ -140,13 +143,13 @@ def main():
                     print(f"\nTask failed! Error: {task_result.result.error}")
                 else:
                     print(f"Current status: {status}, waiting...")
-                    time.sleep(1)
+                    await asyncio.sleep(1)
             except Exception as e:
                 logger.error(f"Error checking task status: {e}")
                 logger.error(
                     f"Traceback: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
                 )
-                time.sleep(1)
+                await asyncio.sleep(1)
 
         if not completed:
             print(f"\nTask did not complete within {max_wait_time} seconds.")
@@ -162,6 +165,11 @@ def main():
         logger.error(
             f"Traceback: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
         )
+
+
+def main():
+    """Run the async main function using asyncio.run."""
+    asyncio.run(main_async())
 
 
 if __name__ == "__main__":
