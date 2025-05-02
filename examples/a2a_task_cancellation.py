@@ -1,11 +1,10 @@
 """
-A2A Task Cancellation Example
+A2A Task Cancellation Example (Synchronous Version)
 
 This example demonstrates how to create, monitor, and cancel tasks using the A2A Interface
-with the InMemoryTaskManager.
+with the InMemoryTaskManager, using a fully synchronous approach.
 """
 
-import asyncio
 import time
 from typing import Any, Dict
 
@@ -40,116 +39,113 @@ def slow_calculation(iterations: int) -> Dict[str, Any]:
     return result
 
 
-async def main():
-    # Create a generation provider
-    provider = GoogleGenaiGenerationProvider()
+# Create a generation provider
+provider = GoogleGenaiGenerationProvider()
 
-    # Create an agent with a tool that takes time to complete
-    agent = Agent(
-        name="A2A Cancellation Example Agent",
-        generation_provider=provider,
-        model="gemini-2.0-flash",
-        instructions="""You are a helpful assistant that can perform calculations.
-        When asked to perform a calculation, use the slow_calculation tool.
-        """,
-        tools=[slow_calculation],
-    )
+# Create an agent with a tool that takes time to complete
+agent = Agent(
+    name="A2A Cancellation Example Agent",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="""You are a helpful assistant that can perform calculations.
+    When asked to perform a calculation, use the slow_calculation tool.
+    """,
+    tools=[slow_calculation],
+)
 
-    # Create a task manager
-    task_manager = InMemoryTaskManager()
+# Create a task manager
+task_manager = InMemoryTaskManager()
 
-    # Create the A2A interface
-    a2a_interface = A2AInterface(agent=agent, task_manager=task_manager)
+# Create the A2A interface
+a2a_interface = A2AInterface(agent=agent, task_manager=task_manager)
 
-    # Create messages for different tasks
-    quick_message = Message(
-        role="user",
-        parts=[TextPart(text="What is the capital of France?")],
-    )
+# Create messages for different tasks
+quick_message = Message(
+    role="user",
+    parts=[TextPart(text="What is the capital of France?")],
+)
 
-    slow_message = Message(
-        role="user",
-        parts=[TextPart(text="Please perform a calculation with 10 iterations.")],
-    )
+slow_message = Message(
+    role="user",
+    parts=[TextPart(text="Please perform a calculation with 10 iterations.")],
+)
 
-    # Create task parameters
-    quick_task_params = TaskSendParams(
-        message=quick_message,
-        sessionId="quick-session",
-    )
+# Create task parameters
+quick_task_params = TaskSendParams(
+    message=quick_message,
+    sessionId="quick-session",
+)
 
-    slow_task_params = TaskSendParams(
-        message=slow_message,
-        sessionId="slow-session",
-    )
+slow_task_params = TaskSendParams(
+    message=slow_message,
+    sessionId="slow-session",
+)
 
-    # Send the quick task
-    print("\nSending quick task...")
-    quick_task = a2a_interface.tasks.send(quick_task_params)
-    print(f"Quick task created with ID: {quick_task.id}")
+# Send the quick task
+print("\nSending quick task...")
+quick_task = a2a_interface.tasks.send(quick_task_params)
+print(f"Quick task created with ID: {quick_task.id}")
 
-    # Send the slow task
-    print("\nSending slow task...")
-    slow_task = a2a_interface.tasks.send(slow_task_params)
-    print(f"Slow task created with ID: {slow_task.id}")
+# Send the slow task
+print("\nSending slow task...")
+slow_task = a2a_interface.tasks.send(slow_task_params)
+print(f"Slow task created with ID: {slow_task.id}")
 
-    # Wait a moment for tasks to start processing
-    await asyncio.sleep(2)
+# Wait a moment for tasks to start processing
+print("\nWaiting for tasks to start processing...")
+time.sleep(2)
 
-    # Check status of both tasks
-    quick_result = a2a_interface.tasks.get(TaskQueryParams(id=quick_task.id))
-    slow_result = a2a_interface.tasks.get(TaskQueryParams(id=slow_task.id))
+# Check status of both tasks
+quick_result = a2a_interface.tasks.get(TaskQueryParams(id=quick_task.id))
+slow_result = a2a_interface.tasks.get(TaskQueryParams(id=slow_task.id))
 
-    print(f"\nQuick task status: {quick_result.result.status}")
-    print(f"Slow task status: {slow_result.result.status}")
+print(f"\nQuick task status: {quick_result.result.status}")
+print(f"Slow task status: {slow_result.result.status}")
 
-    # Cancel the slow task
-    print("\nCancelling slow task...")
-    cancel_success = a2a_interface.tasks.cancel(slow_task.id)
-    print(f"Cancel successful: {cancel_success}")
+# Cancel the slow task
+print("\nCancelling slow task...")
+cancel_success = a2a_interface.tasks.cancel(slow_task.id)
+print(f"Cancel successful: {cancel_success}")
 
-    # Wait a moment for cancellation to complete
-    await asyncio.sleep(2)
+# Wait a moment for cancellation to complete
+print("\nWaiting for cancellation to complete...")
+time.sleep(2)
 
-    # Check status after cancellation
-    quick_result = a2a_interface.tasks.get(TaskQueryParams(id=quick_task.id))
-    slow_result = a2a_interface.tasks.get(TaskQueryParams(id=slow_task.id))
+# Check status after cancellation
+quick_result = a2a_interface.tasks.get(TaskQueryParams(id=quick_task.id))
+slow_result = a2a_interface.tasks.get(TaskQueryParams(id=slow_task.id))
 
-    print(f"\nQuick task status after cancellation: {quick_result.result.status}")
-    print(f"Slow task status after cancellation: {slow_result.result.status}")
+print(f"\nQuick task status after cancellation: {quick_result.result.status}")
+print(f"Slow task status after cancellation: {slow_result.result.status}")
 
-    # Wait for the quick task to complete if it hasn't already
-    if quick_result.result.status not in [
-        TaskState.COMPLETED,
-        TaskState.FAILED,
-        TaskState.CANCELED,
-    ]:
-        print("\nWaiting for quick task to complete...")
-        while True:
-            await asyncio.sleep(1)
-            quick_result = a2a_interface.tasks.get(TaskQueryParams(id=quick_task.id))
-            if quick_result.result.status in [
-                TaskState.COMPLETED,
-                TaskState.FAILED,
-                TaskState.CANCELED,
-            ]:
-                break
+# Wait for the quick task to complete if it hasn't already
+if quick_result.result.status not in [
+    TaskState.COMPLETED,
+    TaskState.FAILED,
+    TaskState.CANCELED,
+]:
+    print("\nWaiting for quick task to complete...")
+    while True:
+        time.sleep(1)
+        quick_result = a2a_interface.tasks.get(TaskQueryParams(id=quick_task.id))
+        if quick_result.result.status in [
+            TaskState.COMPLETED,
+            TaskState.FAILED,
+            TaskState.CANCELED,
+        ]:
+            break
 
-    # Get final results
-    final_quick_result = a2a_interface.tasks.get(TaskQueryParams(id=quick_task.id))
-    final_slow_result = a2a_interface.tasks.get(TaskQueryParams(id=slow_task.id))
+# Get final results
+final_quick_result = a2a_interface.tasks.get(TaskQueryParams(id=quick_task.id))
+final_slow_result = a2a_interface.tasks.get(TaskQueryParams(id=slow_task.id))
 
-    print("\nFinal Results:")
-    print(f"Quick task final status: {final_quick_result.result.status}")
-    print(f"Slow task final status: {final_slow_result.result.status}")
+print("\nFinal Results:")
+print(f"Quick task final status: {final_quick_result.result.status}")
+print(f"Slow task final status: {final_slow_result.result.status}")
 
-    if final_quick_result.result.history and len(final_quick_result.result.history) > 1:
-        agent_response = final_quick_result.result.history[1]
-        if agent_response.parts:
-            for part in agent_response.parts:
-                if part.type == "text":
-                    print(f"\nQuick task response: {part.text}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+if final_quick_result.result.history and len(final_quick_result.result.history) > 1:
+    agent_response = final_quick_result.result.history[1]
+    if agent_response.parts:
+        for part in agent_response.parts:
+            if part.type == "text":
+                print(f"\nQuick task response: {part.text}")

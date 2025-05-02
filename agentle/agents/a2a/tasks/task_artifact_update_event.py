@@ -68,7 +68,7 @@ class TaskArtifactUpdateEvent(BaseModel):
     Task id
     """
 
-    artifact: Artifact[Any]
+    artifact: Artifact
     """
     artifact created by the agent
     """
