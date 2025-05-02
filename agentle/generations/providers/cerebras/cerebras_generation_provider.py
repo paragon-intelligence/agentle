@@ -18,7 +18,6 @@ request format and adapts responses back into Agentle's Generation objects,
 providing a consistent experience regardless of the AI provider being used.
 """
 
-import datetime
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, cast, override
 
@@ -207,8 +206,6 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
         from cerebras.cloud.sdk import AsyncCerebras
         from cerebras.cloud.sdk.types.chat.chat_completion import ChatCompletionResponse
 
-        start = datetime.datetime.now()
-
         client = AsyncCerebras(
             api_key=self.api_key,
             base_url=self.base_url,
@@ -244,7 +241,6 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
 
         return CerebrasCompletionToGenerationAdapter[T](
             response_schema=response_schema,
-            start_time=start,
             model=model or self.default_model,
         ).adapt(cerebras_completion)
 

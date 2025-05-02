@@ -686,7 +686,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         """
         agent = self
 
-        endpoint = agent.endpoint or f"/api/v1/agents/{self.name}"
+        endpoint = agent.endpoint or f"/api/v1/agents/{self.name.lower()}/run"
 
         class _Run(Controller):
             @blacksheep.post(endpoint)

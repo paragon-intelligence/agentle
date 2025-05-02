@@ -68,14 +68,6 @@ class Generation[T](BaseModel):
         usage: Token usage statistics for this generation
     """
 
-    elapsed_time: timedelta = Field(
-        description="Duration between request initiation and response completion. Helps track model performance and identify latency issues in generation processing.",
-        examples=[
-            timedelta(seconds=0.8),
-            timedelta(seconds=2.5),
-            timedelta(seconds=10.1),
-        ],
-    )
     id: uuid.UUID = Field(
         description="Unique identifier for tracking and referencing this specific generation throughout the system. Used for logging, debugging, and associating generations with specific requests.",
         examples=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()],
@@ -299,7 +291,6 @@ class Generation[T](BaseModel):
             ]
 
             return Generation[T_Schema](
-                elapsed_time=new_elapsed_time or self.elapsed_time,
                 id=new_id or self.id,
                 object=new_object or self.object,
                 created=new_created or self.created,
@@ -311,7 +302,6 @@ class Generation[T](BaseModel):
         # Scenario 2: Clone with entirely new choices provided
         if new_choices:
             return Generation[T_Schema](
-                elapsed_time=new_elapsed_time or self.elapsed_time,
                 id=new_id or self.id,
                 object=new_object or self.object,
                 created=new_created or self.created,
@@ -329,7 +319,6 @@ class Generation[T](BaseModel):
             # Cast is needed because the method signature expects T_Schema, but in this branch,
             # we know we are returning Generation[T]. Overloads handle the public API typing.
             return Generation[T](  # type: ignore[return-value]
-                elapsed_time=new_elapsed_time or self.elapsed_time,
                 id=new_id or self.id,
                 object=new_object or self.object,
                 created=new_created or self.created,
@@ -378,7 +367,6 @@ class Generation[T](BaseModel):
         """
         return cls(
             model="mock-model",
-            elapsed_time=timedelta(seconds=0),
             id=uuid.uuid4(),
             object="chat.generation",
             created=datetime.now(),

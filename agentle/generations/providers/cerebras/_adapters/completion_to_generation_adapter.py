@@ -59,7 +59,6 @@ class CerebrasCompletionToGenerationAdapter[T](
     """
 
     response_schema: type[T] | None
-    start_time: datetime.datetime
     model: str
     message_to_generated_assistant_message_adapter: (
         CerebrasMessageToGeneratedAssistantMessageAdapter[T]
@@ -70,7 +69,6 @@ class CerebrasCompletionToGenerationAdapter[T](
         self,
         *,
         response_schema: type[T] | None = None,
-        start_time: datetime.datetime,
         model: str,
         message_to_generated_assistant_message_adapter: CerebrasMessageToGeneratedAssistantMessageAdapter[
             T
@@ -92,7 +90,6 @@ class CerebrasCompletionToGenerationAdapter[T](
         """
         self.response_schema = response_schema
         self.model = model
-        self.start_time = start_time
         self.message_to_generated_assistant_message_adapter = (
             message_to_generated_assistant_message_adapter
             or CerebrasMessageToGeneratedAssistantMessageAdapter(
@@ -133,7 +130,6 @@ class CerebrasCompletionToGenerationAdapter[T](
         )
 
         return Generation(
-            elapsed_time=datetime.datetime.now() - self.start_time,
             id=self.preferred_id or uuid.uuid4(),
             choices=choices,
             object="chat.generation",

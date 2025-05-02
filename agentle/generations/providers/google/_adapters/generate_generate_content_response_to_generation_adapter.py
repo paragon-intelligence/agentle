@@ -141,7 +141,6 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
     """
 
     response_schema: type[T] | None
-    start_time: datetime.datetime
     preferred_id: uuid.UUID | None
     model: str
     google_content_to_message_adapter: (
@@ -245,7 +244,6 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
                 )
 
         return Generation[T](
-            elapsed_time=datetime.datetime.now() - self.start_time,
             id=self.preferred_id or uuid.uuid4(),
             object="chat.generation",
             created=datetime.datetime.now(),
