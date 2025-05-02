@@ -526,23 +526,23 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
 
             agent_didnt_call_any_tool = tool_call_generation.tool_calls_amount() == 0
-            if agent_didnt_call_any_tool and self.response_schema is None:
+            if agent_didnt_call_any_tool:
+                # Only make another call if we need structured output or didn't get text
+                if self.response_schema is not None or not tool_call_generation.text:
+                    generation = await generation_provider.create_generation_async(
+                        model=self.model,
+                        messages=context.messages,
+                        response_schema=self.response_schema,
+                        generation_config=self.config.generationConfig,
+                    )
+                    return self._build_agent_run_output(
+                        context=context, generation=generation
+                    )
+
+                # If we got text and don't need structure, use what we have
                 return self._build_agent_run_output(
                     generation=cast(Generation[T_Schema], tool_call_generation),
                     context=context,
-                )
-
-            if agent_didnt_call_any_tool:
-                generation = await generation_provider.create_generation_async(
-                    model=self.model,
-                    messages=context.messages,
-                    response_schema=self.response_schema,
-                    generation_config=self.config.generationConfig,
-                )
-
-                return self._build_agent_run_output(
-                    context=context,
-                    generation=generation,
                 )
 
             # Agent called one tool. We must call the tool and update the state.
