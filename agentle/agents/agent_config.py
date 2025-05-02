@@ -80,7 +80,7 @@ class AgentConfig(BaseModel):
         Validates that the generation configuration is compatible with agent requirements.
 
         This validator ensures that the number of generations (n) is set to 1, as agents
-        do not support multiple parallel generations.
+        do not (thanks GOD) support multiple parallel generations.
 
         Returns:
             Self: The validated AgentConfig instance.
