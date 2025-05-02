@@ -10,6 +10,7 @@ providing a consistent protocol regardless of the underlying agent implementatio
 """
 
 from typing import Any
+
 from rsb.models.base_model import BaseModel
 
 from agentle.agents.a2a.resources.task_resource import TaskResource

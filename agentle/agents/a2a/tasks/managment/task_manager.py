@@ -6,6 +6,9 @@ managing tasks in the A2A protocol. The TaskManager is responsible for handling 
 of tasks, including creation, retrieval, and notification subscription.
 """
 
+from abc import ABC, abstractmethod
+from typing import Any
+
 from rsb.models.base_model import BaseModel
 
 from agentle.agents.a2a.models.json_rpc_response import JSONRPCResponse
@@ -14,135 +17,90 @@ from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
 from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
 from agentle.agents.agent import Agent
+from agentle.agents.agent_pipeline import AgentPipeline
+from agentle.agents.agent_team import AgentTeam
 
 type WithoutStructuredOutput = None
 
 
-class TaskManager(BaseModel):
+class TaskManager(ABC):
     """
-    Abstract base class for managing tasks in the A2A protocol.
+    Abstract base class for task management in the A2A protocol.
 
-    The TaskManager is responsible for handling the lifecycle of tasks, including
-    creation, retrieval, and notification subscription. It provides a consistent
-    interface for different implementations (e.g., in-memory, database-backed).
+    This class defines the interface for creating, retrieving, and managing tasks.
+    Concrete implementations, such as InMemoryTaskManager, provide the specific
+    storage and execution behavior.
 
-    Implementations of this class must provide concrete methods for sending tasks,
-    retrieving task results, and setting up subscriptions for task updates.
-
-    Example:
-        ```python
-        from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
-        from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
-        from agentle.agents.agent import Agent
-
-        # Create an agent and task manager
-        agent = Agent(...)
-        task_manager = ConcreteTaskManager()  # Some implementation of TaskManager
-
-        # Send a task
-        task_params = TaskSendParams(...)
-        task = task_manager.send(task_params, agent=agent)
-
-        # Retrieve task results
-        query_params = TaskQueryParams(id=task.id)
-        result = task_manager.get(query_params, agent=agent)
-        ```
+    Methods:
+        send: Creates and starts a new task or continues an existing session
+        get: Retrieves a task based on query parameters
+        send_subscribe: Sends a task and sets up a subscription for updates
+        cancel: Cancels an ongoing task
     """
 
-    def send[T_Schema = WithoutStructuredOutput](
-        self, task: TaskSendParams, agent: Agent[T_Schema]
+    @abstractmethod
+    async def send(
+        self,
+        task_params: TaskSendParams,
+        agent: Agent[Any] | AgentTeam | AgentPipeline,
     ) -> Task:
         """
-        Sends a task to an agent for processing.
-
-        This method takes task parameters and an agent, creates a new task or
-        continues an existing session, and returns the resulting task.
+        Creates and starts a new task or continues an existing session.
 
         Args:
-            task: The parameters for the task to send
-            agent: The agent to process the task
+            task_params: Parameters for the task to create
+            agent: The agent to execute the task
 
         Returns:
             Task: The created or updated task
-
-        Example:
-            ```python
-            from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
-
-            # Create task parameters
-            task_params = TaskSendParams(...)
-
-            # Send the task
-            task = task_manager.send(task_params, agent=agent)
-            ```
         """
-        ...
+        pass
 
-    def get[T_Schema = WithoutStructuredOutput](
-        self, query_params: TaskQueryParams, agent: Agent[T_Schema]
+    @abstractmethod
+    async def get(
+        self,
+        query_params: TaskQueryParams,
+        agent: Agent[Any] | AgentTeam | AgentPipeline,
     ) -> TaskGetResult:
         """
-        Retrieves the result of a task.
-
-        This method takes query parameters and an agent, retrieves the
-        specified task, and returns its result.
+        Retrieves a task based on query parameters.
 
         Args:
-            query_params: The parameters for querying the task
+            query_params: Parameters to query the task
             agent: The agent associated with the task
 
         Returns:
             TaskGetResult: The result of the task
-
-        Example:
-            ```python
-            from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
-
-            # Create query parameters
-            query_params = TaskQueryParams(id="task-123")
-
-            # Retrieve the task result
-            result = task_manager.get(query_params, agent=agent)
-            ```
         """
-        ...
+        pass
 
-    def send_subscribe[T_Schema = WithoutStructuredOutput](
-        self, task: TaskSendParams, agent: Agent[T_Schema]
+    @abstractmethod
+    async def send_subscribe(
+        self,
+        task_params: TaskSendParams,
+        agent: Agent[Any] | AgentTeam | AgentPipeline,
     ) -> JSONRPCResponse:
         """
-        Sends a task and subscribes to updates.
-
-        This method takes task parameters and an agent, creates a new task or
-        continues an existing session, and sets up a subscription to receive
-        updates about the task's progress.
+        Sends a task and sets up a subscription for updates.
 
         Args:
-            task: The parameters for the task to send
-            agent: The agent to process the task
+            task_params: Parameters for the task to create
+            agent: The agent to execute the task
 
         Returns:
             JSONRPCResponse: The response containing subscription information
-
-        Example:
-            ```python
-            from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
-            from agentle.agents.a2a.notifications.push_notification_config import PushNotificationConfig
-
-            # Create task parameters with notification config
-            notification_config = PushNotificationConfig(
-                url="https://example.com/notifications",
-                token="notification-token-123"
-            )
-
-            task_params = TaskSendParams(
-                message=message,
-                sessionId="analysis-session",
-                pushNotification=notification_config
-            )
-
-            # Send the task and subscribe to updates
-            response = task_manager.send_subscribe(task_params, agent=agent)
-            ```
         """
-        ...
+        pass
+
+    @abstractmethod
+    async def cancel(self, task_id: str) -> bool:
+        """
+        Cancels an ongoing task.
+
+        Args:
+            task_id: The ID of the task to cancel
+
+        Returns:
+            bool: True if the task was successfully canceled, False otherwise
+        """
+        pass

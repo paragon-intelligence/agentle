@@ -93,7 +93,11 @@ class PushNotificationResource[T_Schema = WithoutStructuredOutput](BaseModel):
             print(f"Task ID: {task_notification.id}")
             ```
         """
-        ...
+        # For now, just create a minimal implementation that returns a dummy TaskPushNotificationConfig
+        return TaskPushNotificationConfig(
+            id="notification-" + config.url.split("/")[-1],
+            pushNotificationConfig=config,
+        )
 
     def get(self, query_params: TaskQueryParams) -> TaskGetResult:
         """
@@ -127,4 +131,16 @@ class PushNotificationResource[T_Schema = WithoutStructuredOutput](BaseModel):
                     print(f"Notification URL: {task.metadata['notification_url']}")
             ```
         """
-        ...
+        # This would be a real implementation in a production system
+        # For now, just create a minimal implementation that returns a dummy TaskGetResult
+        from agentle.agents.a2a.tasks.task import Task
+        from agentle.agents.a2a.tasks.task_state import TaskState
+
+        task = Task(
+            id=query_params.id,
+            sessionId=query_params.id,
+            status=TaskState.COMPLETED,
+            metadata={"notification_configured": True},
+        )
+
+        return TaskGetResult(result=task)

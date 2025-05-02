@@ -6,6 +6,7 @@ in the A2A protocol. The TaskResource acts as an interface for sending tasks to 
 retrieving task results, and managing task notifications.
 """
 
+from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 
 from agentle.agents.a2a.models.json_rpc_response import JSONRPCResponse
@@ -133,7 +134,7 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
             print(f"Task created with ID: {task.id}")
             ```
         """
-        return self.manager.send(task, agent=self.agent)
+        return run_sync(self.manager.send, task_params=task, agent=self.agent)
 
     def get(self, query_params: TaskQueryParams) -> TaskGetResult:
         """
@@ -164,7 +165,7 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
                         print(part.text)
             ```
         """
-        return self.manager.get(query_params, agent=self.agent)
+        return run_sync(self.manager.get, query_params=query_params, agent=self.agent)
 
     def send_subscribe(self, task: TaskSendParams) -> JSONRPCResponse:
         """
@@ -209,4 +210,29 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
             print(f"Subscription ID: {response.id}")
             ```
         """
-        return self.manager.send_subscribe(task, agent=self.agent)
+        return run_sync(self.manager.send_subscribe, task_params=task, agent=self.agent)
+
+    def cancel(self, task_id: str) -> bool:
+        """
+        Cancels an ongoing task.
+
+        This method cancels the execution of a task identified by the task ID.
+        It's useful for long-running tasks that need to be stopped before completion.
+
+        Args:
+            task_id: The ID of the task to cancel
+
+        Returns:
+            bool: True if the task was successfully canceled, False otherwise
+
+        Example:
+            ```python
+            # Cancel a task
+            success = task_resource.cancel("task-123")
+            if success:
+                print("Task was successfully canceled")
+            else:
+                print("Failed to cancel task or task not found")
+            ```
+        """
+        return run_sync(self.manager.cancel, task_id=task_id)
