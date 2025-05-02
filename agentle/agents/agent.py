@@ -77,13 +77,20 @@ from agentle.generations.tools.tool import Tool
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
+try:
+    import blacksheep
+    from blacksheep.server.controllers import Controller
+except ImportError:
+    pass
+
 if TYPE_CHECKING:
     from io import BytesIO, StringIO
     from pathlib import Path
 
+    import blacksheep
     import numpy as np
     import pandas as pd
-    from blacksheep.server.controllers import Controller as BlackSheepController
+    from blacksheep.server.controllers import Controller
     from PIL import Image
     from pydantic import BaseModel as PydanticBaseModel
 
@@ -117,6 +124,15 @@ type AgentInput = (
     | StringIO
     | PydanticBaseModel
 )
+
+
+class _AgentRunCommand(BaseModel):
+    input: (
+        str
+        | Sequence[AssistantMessage | DeveloperMessage | UserMessage]
+        | TextPart
+        | FilePart
+    ) = Field(description="Input of the agent")
 
 
 class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
@@ -650,34 +666,20 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         Creates a BlackSheep ASGI server for the agent.
         """
 
-        from blacksheep import Application
-
-        app = Application()
+        app = blacksheep.Application()
         _ = [self._to_blacksheep_router()] + list(routers or [])
         return app
 
-    def _to_blacksheep_router(self) -> type[BlackSheepController]:
+    def _to_blacksheep_router(self) -> type[Controller]:
         """
         Creates a BlackSheep router for the agent.
         """
-        from blacksheep import FromJSON, post
-        from blacksheep.server.controllers import Controller
-        from pydantic import BaseModel, Field
-
-        class AgentRunCommand(BaseModel):
-            input: (
-                str
-                | Sequence[AssistantMessage | DeveloperMessage | UserMessage]
-                | TextPart
-                | FilePart
-            ) = Field(description="Input of the agent")
-
         agent = self
 
         class _Run(Controller):
-            @post(agent.endpoint)
+            @blacksheep.post(agent.endpoint)
             async def run(
-                self, input: FromJSON[AgentRunCommand]
+                self, input: blacksheep.FromJSON[_AgentRunCommand]
             ) -> AgentRunOutput[T_Schema]:
                 async with agent.with_mcp_servers_async():
                     result = await agent.run_async(input.value.input)
@@ -1051,7 +1053,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 if __name__ == "__main__":
     import pydantic
     from dotenv import load_dotenv
-    from uvicorn import Server, Config
+    from uvicorn import Config, Server
 
     from agentle.generations.providers.google.google_generation_provider import (
         GoogleGenerationProvider,
