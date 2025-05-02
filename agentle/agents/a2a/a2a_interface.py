@@ -9,15 +9,25 @@ The A2A interface supports interaction with individual agents, agent teams, and 
 providing a consistent protocol regardless of the underlying agent implementation.
 """
 
-from typing import Any
+from __future__ import annotations
+from typing import Any, TYPE_CHECKING, Union
 
 from rsb.models.base_model import BaseModel
+from rsb.models.config_dict import ConfigDict
 
 from agentle.agents.a2a.resources.task_resource import TaskResource
 from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
-from agentle.agents.agent import Agent
-from agentle.agents.agent_pipeline import AgentPipeline
-from agentle.agents.agent_team import AgentTeam
+
+if TYPE_CHECKING:
+    from agentle.agents.agent import Agent
+    from agentle.agents.agent_pipeline import AgentPipeline
+    from agentle.agents.agent_team import AgentTeam
+else:
+    # Import for runtime, not for type checking
+    # This avoids circular import issues while still making the classes available for Pydantic
+    from typing import Any as Agent
+    from typing import Any as AgentPipeline
+    from typing import Any as AgentTeam
 
 
 class A2AInterface[T_Schema = Any](BaseModel):
@@ -61,11 +71,13 @@ class A2AInterface[T_Schema = Any](BaseModel):
         ```
     """
 
-    agent: Agent[T_Schema] | AgentTeam | AgentPipeline
+    agent: Any  # Type at runtime, actual typing happens through TYPE_CHECKING
     """The agent, agent team, or agent pipeline to interact with"""
 
     task_manager: TaskManager
     """Manager responsible for handling tasks and their lifecycle"""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def tasks(self) -> TaskResource[T_Schema]:

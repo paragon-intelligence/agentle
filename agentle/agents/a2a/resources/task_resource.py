@@ -6,8 +6,12 @@ in the A2A protocol. The TaskResource acts as an interface for sending tasks to 
 retrieving task results, and managing task notifications.
 """
 
+from __future__ import annotations
+from typing import TYPE_CHECKING, Any
+
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
+from rsb.models.config_dict import ConfigDict
 
 from agentle.agents.a2a.models.json_rpc_response import JSONRPCResponse
 from agentle.agents.a2a.resources.push_notification_resource import (
@@ -18,9 +22,16 @@ from agentle.agents.a2a.tasks.task import Task
 from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
 from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
-from agentle.agents.agent import Agent
-from agentle.agents.agent_pipeline import AgentPipeline
-from agentle.agents.agent_team import AgentTeam
+
+if TYPE_CHECKING:
+    from agentle.agents.agent import Agent
+    from agentle.agents.agent_pipeline import AgentPipeline
+    from agentle.agents.agent_team import AgentTeam
+else:
+    # Import for runtime, not for type checking
+    from typing import Any as Agent
+    from typing import Any as AgentPipeline
+    from typing import Any as AgentTeam
 
 type WithoutStructuredOutput = None
 
@@ -69,11 +80,13 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
         ```
     """
 
-    agent: Agent[T_Schema] | AgentTeam[T_Schema] | AgentPipeline[T_Schema]
+    agent: Any  # Type at runtime, actual typing happens through TYPE_CHECKING
     """The agent, agent team, or agent pipeline to interact with"""
 
     manager: TaskManager
     """The task manager responsible for handling tasks"""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def pushNotification(self) -> PushNotificationResource[T_Schema]:

@@ -6,19 +6,26 @@ managing tasks in the A2A protocol. The TaskManager is responsible for handling 
 of tasks, including creation, retrieval, and notification subscription.
 """
 
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from rsb.models.base_model import BaseModel
 
 from agentle.agents.a2a.models.json_rpc_response import JSONRPCResponse
 from agentle.agents.a2a.tasks.task import Task
 from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
 from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
-from agentle.agents.agent import Agent
-from agentle.agents.agent_pipeline import AgentPipeline
-from agentle.agents.agent_team import AgentTeam
+
+if TYPE_CHECKING:
+    from agentle.agents.agent import Agent
+    from agentle.agents.agent_pipeline import AgentPipeline
+    from agentle.agents.agent_team import AgentTeam
+else:
+    # Import for runtime, not for type checking
+    from typing import Any as Agent
+    from typing import Any as AgentPipeline
+    from typing import Any as AgentTeam
 
 type WithoutStructuredOutput = None
 
@@ -42,7 +49,7 @@ class TaskManager(ABC):
     async def send(
         self,
         task_params: TaskSendParams,
-        agent: Agent[Any] | AgentTeam | AgentPipeline,
+        agent: Any,  # Type at runtime, actual typing happens through TYPE_CHECKING
     ) -> Task:
         """
         Creates and starts a new task or continues an existing session.
@@ -60,7 +67,7 @@ class TaskManager(ABC):
     async def get(
         self,
         query_params: TaskQueryParams,
-        agent: Agent[Any] | AgentTeam | AgentPipeline,
+        agent: Any,  # Type at runtime, actual typing happens through TYPE_CHECKING
     ) -> TaskGetResult:
         """
         Retrieves a task based on query parameters.
@@ -78,7 +85,7 @@ class TaskManager(ABC):
     async def send_subscribe(
         self,
         task_params: TaskSendParams,
-        agent: Agent[Any] | AgentTeam | AgentPipeline,
+        agent: Any,  # Type at runtime, actual typing happens through TYPE_CHECKING
     ) -> JSONRPCResponse:
         """
         Sends a task and sets up a subscription for updates.
