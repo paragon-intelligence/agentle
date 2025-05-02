@@ -87,7 +87,7 @@ from rsb.coroutines.run_sync import run_sync
 logger = logging.getLogger(__name__)
 
 
-class OrchestratorOutput(BaseModel):
+class _OrchestratorOutput(BaseModel):
     """
     Structured output for the orchestrator agent to determine task routing.
 
@@ -197,6 +197,9 @@ class AgentTeam(BaseModel):
         default_factory=AgentConfig,
         description="Configuration options for the team, including iteration limits.",
     )
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def extend(self, other: Agent[Any] | AgentTeam) -> AgentTeam:
         """
@@ -328,7 +331,7 @@ class AgentTeam(BaseModel):
             If you believe the task has been fully addressed, set task_done to true.
             If you believe the task requires further processing, select the appropriate agent and set task_done to false.
             """,
-            response_schema=OrchestratorOutput,
+            response_schema=_OrchestratorOutput,
             config=self.team_config,  # Use the team config for the orchestrator
         )
 

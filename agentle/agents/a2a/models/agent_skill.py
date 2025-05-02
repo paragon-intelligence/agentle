@@ -23,7 +23,7 @@ class AgentSkill(BaseModel):
     as a hint to understand what the skill does.
     """
 
-    tags: Sequence[str]
+    tags: Sequence[str] = Field(default_factory=list)
     """
     Set of tagwords describing classes of capabilities for this specific skill
     """
