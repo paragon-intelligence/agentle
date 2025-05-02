@@ -14,6 +14,7 @@ and normalizes them to Agentle's internal representation.
 The adapter supports structured output parsing for type-safe responses through its
 generic type parameter.
 """
+
 from __future__ import annotations
 import datetime
 import uuid

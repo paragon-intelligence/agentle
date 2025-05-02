@@ -25,6 +25,7 @@ class GeneratedAssistantMessage[T](BaseModel):
     representation of the message content of type T. It supports generic typing
     to allow for different types of parsed content.
     """
+
     role: Literal["assistant"] = Field(
         default="assistant",
         description="Discriminator field to identify this as an assistant message. Always set to 'assistant'.",
@@ -37,7 +38,6 @@ class GeneratedAssistantMessage[T](BaseModel):
     parsed: T = Field(
         description="The parsed representation of the message content of type T."
     )
-
 
     @property
     def tool_calls(self) -> Sequence[ToolExecutionSuggestion]:

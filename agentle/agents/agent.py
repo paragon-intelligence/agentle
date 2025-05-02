@@ -575,6 +575,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     context=context,
                     generation=generation,
                 )
+
             tool_call_generation = await generation_provider.create_generation_async(
                 model=self.model,
                 messages=MessageSequence(context.messages)
@@ -1068,6 +1069,26 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             ]
         )
 
+    def __add__(self, other: Agent) -> AgentTeam:
+        return AgentTeam(agents=[self, other])
+
+
+class AgentTeam(BaseModel):
+    agents: Sequence[Agent[Any]]
+    orchestrator: Agent[str] | None = Field(default=None)
+
+    def __add__(self, other: Agent[Any] | AgentTeam) -> AgentTeam:
+        if isinstance(other, Agent):
+            return AgentTeam(
+                agents=cast(Sequence[Agent[Any]], [self.agents, other]),
+                orchestrator=self.orchestrator,
+            )
+
+        return AgentTeam(
+            agents=cast(Sequence[Agent[Any]], list(self.agents) + list(other.agents)),
+            orchestrator=self.orchestrator,
+        )
+
 
 if __name__ == "__main__":
     import pydantic
@@ -1101,6 +1122,13 @@ if __name__ == "__main__":
         tools=[get_weather],
         response_schema=Weather,
     )
+
+    greetings_agent = Agent(
+        generation_provider=GoogleGenerationProvider(),
+        instructions="You are a greetings agent. You can greet the user in different languages.",
+    )
+
+    team = weather_agent + greetings_agent
 
     server = Server(
         config=Config(

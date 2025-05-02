@@ -31,4 +31,3 @@ class AssistantMessage(BaseModel):
     parts: Sequence[TextPart | FilePart | ToolExecutionSuggestion] = Field(
         description="The sequence of message parts that make up this assistant message."
     )
-
