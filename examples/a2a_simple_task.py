@@ -12,11 +12,16 @@ import os
 import sys
 import time
 import traceback
+from typing import Any
 
 from agentle.agents.a2a.a2a_interface import A2AInterface
 from agentle.agents.a2a.message_parts.text_part import TextPart
 from agentle.agents.a2a.messages.message import Message
+from agentle.agents.a2a.models.json_rpc_response import JSONRPCResponse
+from agentle.agents.a2a.resources.task_resource import TaskResource
 from agentle.agents.a2a.tasks.managment.in_memory import InMemoryTaskManager
+from agentle.agents.a2a.tasks.task import Task
+from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
 from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
 from agentle.agents.a2a.tasks.task_state import TaskState
@@ -40,8 +45,85 @@ logging.basicConfig(
 logger = logging.getLogger("a2a_simple_task")
 
 
-async def main_async():
-    """Run the example with our simple task asynchronously."""
+class FixedTaskResource(TaskResource):
+    """
+    A patched version of TaskResource that ensures proper event loop handling
+    for synchronous operations.
+    """
+
+    def send(self, task: TaskSendParams) -> Task:
+        """
+        Sends a task to the agent with improved event loop handling.
+        """
+        # Create and run a new event loop for this operation
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            return loop.run_until_complete(
+                self.manager.send(task_params=task, agent=self.agent)
+            )
+        finally:
+            loop.close()
+
+    def get(self, query_params: TaskQueryParams) -> TaskGetResult:
+        """
+        Retrieves a task result with improved event loop handling.
+        """
+        # Create and run a new event loop for this operation
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            return loop.run_until_complete(
+                self.manager.get(query_params=query_params, agent=self.agent)
+            )
+        finally:
+            loop.close()
+
+    def send_subscribe(self, task: TaskSendParams) -> JSONRPCResponse:
+        """
+        Sends a task and subscribes to updates with improved event loop handling.
+        """
+        # Create and run a new event loop for this operation
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            return loop.run_until_complete(
+                self.manager.send_subscribe(task_params=task, agent=self.agent)
+            )
+        finally:
+            loop.close()
+
+    def cancel(self, task_id: str) -> bool:
+        """
+        Cancels an ongoing task with improved event loop handling.
+        """
+        # Create and run a new event loop for this operation
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            return loop.run_until_complete(self.manager.cancel(task_id=task_id))
+        finally:
+            loop.close()
+
+
+class FixedA2AInterface(A2AInterface):
+    """
+    A patched version of A2AInterface that uses FixedTaskResource
+    """
+
+    def __init__(self, agent: Any, task_manager: InMemoryTaskManager):
+        """Initialize with the fixed task resource"""
+        super().__init__(agent=agent, task_manager=task_manager)
+        # Override the tasks property with our fixed implementation
+        self.tasks = FixedTaskResource(agent=agent, manager=task_manager)
+
+
+def main():
+    """Run the example with our simple task."""
     try:
         # Get the API key from environment
         api_key = os.environ.get("GOOGLE_API_KEY")
@@ -75,9 +157,9 @@ async def main_async():
         logger.info("Creating task manager...")
         task_manager = InMemoryTaskManager()
 
-        # Create the A2A interface
-        logger.info("Creating A2A interface...")
-        a2a_interface = A2AInterface(agent=agent, task_manager=task_manager)
+        # Create the A2A interface with our fixed implementation
+        logger.info("Creating Fixed A2A interface...")
+        a2a_interface = FixedA2AInterface(agent=agent, task_manager=task_manager)
 
         # Create a simple message
         logger.info("Creating user message...")
@@ -91,13 +173,12 @@ async def main_async():
         task_params = TaskSendParams(
             message=user_message,
             sessionId="moon-facts-session",
-            agent=agent,  # Explicitly pass the agent to the task
         )
 
-        # Send the task (using async version directly)
+        # Send the task (using the synchronous interface)
         print("\nSending task...")
         try:
-            task = await a2a_interface.task_manager.send(task_params, agent=agent)
+            task = a2a_interface.tasks.send(task_params)
             print(f"Task created with ID: {task.id}")
         except Exception as e:
             logger.error(f"Error sending task: {e}")
@@ -115,9 +196,7 @@ async def main_async():
         while time.time() - start_time < max_wait_time and not completed:
             # Check task status
             try:
-                task_result = await a2a_interface.task_manager.get(
-                    TaskQueryParams(id=task.id), agent=agent
-                )
+                task_result = a2a_interface.tasks.get(TaskQueryParams(id=task.id))
                 status = task_result.result.status
                 logger.debug(
                     f"Got task with status: {status}, error: {getattr(task_result, 'error', None)}"
@@ -143,13 +222,13 @@ async def main_async():
                     print(f"\nTask failed! Error: {task_result.result.error}")
                 else:
                     print(f"Current status: {status}, waiting...")
-                    await asyncio.sleep(1)
+                    time.sleep(1)
             except Exception as e:
                 logger.error(f"Error checking task status: {e}")
                 logger.error(
                     f"Traceback: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
                 )
-                await asyncio.sleep(1)
+                time.sleep(1)
 
         if not completed:
             print(f"\nTask did not complete within {max_wait_time} seconds.")
@@ -165,11 +244,6 @@ async def main_async():
         logger.error(
             f"Traceback: {''.join(traceback.format_exception(type(e), e, e.__traceback__))}"
         )
-
-
-def main():
-    """Run the async main function using asyncio.run."""
-    asyncio.run(main_async())
 
 
 if __name__ == "__main__":
