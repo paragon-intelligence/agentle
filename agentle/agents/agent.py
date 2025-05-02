@@ -665,8 +665,18 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         """
         Creates a BlackSheep ASGI server for the agent.
         """
+        from blacksheep.server.openapi.ui import ScalarUIProvider
+        from blacksheep.server.openapi.v3 import OpenAPIHandler
+        from openapidocs.v3 import Info
 
         app = blacksheep.Application()
+
+        docs: OpenAPIHandler = OpenAPIHandler(
+            ui_path="/openapi", info=Info(title="Cortex", version="0.0.1", description="app")
+        )
+        docs.ui_providers.append(ScalarUIProvider(ui_path="/docs"))
+        docs.bind_app(app)
+
         _ = [self._to_blacksheep_router()] + list(routers or [])
         return app
 
