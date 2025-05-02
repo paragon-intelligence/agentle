@@ -6,6 +6,19 @@ from rsb.models.base_model import BaseModel
 
 @valueobject
 class Prompt(BaseModel):
+    """
+    Represents a text prompt that can contain variable placeholders.
+
+    A Prompt instance manages a text content that can optionally include
+    variable placeholders in the format {{variable_name}}. These placeholders
+    can be replaced with actual values using the compile method.
+
+    Attributes:
+        content (str): The text content of the prompt.
+        compiled (bool): Flag indicating if the prompt has been compiled
+                        (had its variables replaced). Default is False.
+    """
+
     content: str
     compiled: bool = False
 
@@ -48,7 +61,19 @@ class Prompt(BaseModel):
 
     @property
     def text(self) -> str:
+        """
+        Get the content of the prompt as a string.
+
+        Returns:
+            str: The content of the prompt.
+        """
         return self.content
 
     def __str__(self) -> str:
+        """
+        String representation of the prompt.
+
+        Returns:
+            str: The content of the prompt.
+        """
         return self.text
