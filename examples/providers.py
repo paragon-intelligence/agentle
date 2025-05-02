@@ -4,7 +4,6 @@ Providers Example
 This example demonstrates how to use different model providers with the Agentle framework.
 """
 
-from agentle.agents.agent import Agent
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.generations.providers.google.google_genai_generation_provider import (
