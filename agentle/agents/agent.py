@@ -618,9 +618,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             f"Max tool calls exceeded after {self.config.maxIterations} iterations"
         )
 
-    def to_http_router(
-        self, path: str, type: Literal["blacksheep"] = "blacksheep"
-    ) -> Any:
+    def to_http_router(self, type: Literal["blacksheep"] = "blacksheep") -> Any:
         """
         Converts the agent into an HTTP router to be used in an API.
 
@@ -1673,6 +1671,10 @@ class AgentTeam(BaseModel):
     agents: Sequence[Agent[Any]]
     orchestrator: Agent[str] | None = Field(default=None)
 
+    def to_asgi_app(self) -> Any:
+        routes = [agent.to_http_router() for agent in self.agents]
+        return self.agents[0].to_asgi_app(routers=routes)
+
     def __add__(self, other: Agent[Any] | AgentTeam) -> AgentTeam:
         if isinstance(other, Agent):
             return AgentTeam(
@@ -1689,7 +1691,6 @@ class AgentTeam(BaseModel):
 if __name__ == "__main__":
     import pydantic
     from dotenv import load_dotenv
-    from uvicorn import Config, Server
 
     from agentle.generations.providers.google.google_generation_provider import (
         GoogleGenerationProvider,
@@ -1719,19 +1720,5 @@ if __name__ == "__main__":
         response_schema=Weather,
     )
 
-    greetings_agent = Agent(
-        generation_provider=GoogleGenerationProvider(),
-        instructions="You are a greetings agent. You can greet the user in different languages.",
-    )
-
-    team = weather_agent + greetings_agent
-
-    server = Server(
-        config=Config(
-            host="0.0.0.0",
-            port=8000,
-            app=weather_agent.to_asgi_app(),
-        )
-    )
-
-    server.run()
+    app = weather_agent.to_streamlit_app()
+    app()
