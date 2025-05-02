@@ -5,7 +5,7 @@ This module provides functionality for creating dynamic teams of AI agents manag
 AgentTeam implements a flexible approach to multi-agent systems where agents are selected at runtime
 based on the specific requirements of each task and subtask.
 
-Unlike the AgenticPipeline which follows a fixed sequence of agents, AgentTeam uses an orchestrator
+Unlike the AgentPipeline which follows a fixed sequence of agents, AgentTeam uses an orchestrator
 agent to dynamically analyze tasks and select the most appropriate agent to handle each step.
 This provides greater flexibility and adaptability, particularly for complex workflows where:
 

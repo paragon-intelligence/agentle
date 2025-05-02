@@ -338,7 +338,7 @@ Connect agents in a sequence where the output of one becomes the input to the ne
 
 ```python
 from agentle.agents.agent import Agent
-from agentle.agents.agent_pipeline import AgenticPipeline
+from agentle.agents.agent_pipeline import AgentPipeline
 
 # Create specialized agents
 research_agent = Agent(
@@ -366,7 +366,7 @@ summary_agent = Agent(
 )
 
 # Create a pipeline
-pipeline = AgenticPipeline(
+pipeline = AgentPipeline(
     agents=[research_agent, analysis_agent, summary_agent],
     debug_mode=True  # Enable to see intermediate steps
 )

@@ -10,12 +10,14 @@ from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
 from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
 from agentle.agents.agent import Agent
+from agentle.agents.agent_pipeline import AgentPipeline
+from agentle.agents.agent_team import AgentTeam
 
 type WithoutStructuredOutput = None
 
 
 class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
-    agent: Agent[T_Schema]
+    agent: Agent[T_Schema] | AgentTeam[T_Schema] | AgentPipeline[T_Schema]
     manager: TaskManager
 
     @property

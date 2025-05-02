@@ -6,7 +6,7 @@ A pipeline is a sequence of agents where the output from one agent becomes the i
 """
 
 from agentle.agents.agent import Agent
-from agentle.agents.agent_pipeline import AgenticPipeline
+from agentle.agents.agent_pipeline import AgentPipeline
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
 )
@@ -57,7 +57,7 @@ summary_agent = Agent(
 )
 
 # Step 2: Create a pipeline of these agents
-research_pipeline = AgenticPipeline(
+research_pipeline = AgentPipeline(
     agents=[research_agent, analysis_agent, summary_agent],
     debug_mode=True,  # Enable debug mode to see intermediate steps
 )

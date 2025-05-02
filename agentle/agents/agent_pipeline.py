@@ -6,7 +6,7 @@ where the output of one agent becomes the input to the next. Pipelines offer a d
 way to decompose complex tasks into a series of simpler steps handled by specialized agents.
 
 Unlike the AgentTeam which uses an orchestrator to dynamically select agents,
-AgenticPipeline follows a fixed sequence of predefined agents, providing a more
+AgentPipeline follows a fixed sequence of predefined agents, providing a more
 predictable execution flow. This is particularly useful for workflows where:
 
 1. The sequence of operations is known in advance
@@ -16,7 +16,7 @@ predictable execution flow. This is particularly useful for workflows where:
 Example:
 ```python
 from agentle.agents.agent import Agent
-from agentle.agents.pipelines.agent_pipeline import AgenticPipeline
+from agentle.agents.pipelines.agent_pipeline import AgentPipeline
 from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
 
 # Create specialized agents
@@ -42,7 +42,7 @@ summary_agent = Agent(
 )
 
 # Create a pipeline of agents
-pipeline = AgenticPipeline(agents=[research_agent, analysis_agent, summary_agent])
+pipeline = AgentPipeline(agents=[research_agent, analysis_agent, summary_agent])
 
 # Run the pipeline
 result = pipeline.run("Tell me about renewable energy technologies")
@@ -66,11 +66,11 @@ from rsb.coroutines.run_sync import run_sync
 logger = logging.getLogger(__name__)
 
 
-class AgenticPipeline(BaseModel):
+class AgentPipeline(BaseModel):
     """
     A sequential pipeline of AI agents where the output of one agent becomes the input to the next.
 
-    AgenticPipeline provides a way to chain multiple agents together in a fixed sequence,
+    AgentPipeline provides a way to chain multiple agents together in a fixed sequence,
     allowing complex tasks to be broken down into manageable steps. Each agent in the pipeline
     specializes in a specific subtask, and the agents work together by passing information
     from one to the next.
@@ -101,7 +101,7 @@ class AgenticPipeline(BaseModel):
         )
 
         # Chain the agents into a pipeline
-        translation_pipeline = AgenticPipeline(
+        translation_pipeline = AgentPipeline(
             agents=[english_to_french, french_to_spanish]
         )
 
@@ -122,7 +122,7 @@ class AgenticPipeline(BaseModel):
         recommender = Agent(name="Recommender", instructions="Based on the analysis...")
 
         # Create analysis pipeline
-        analysis_pipeline = AgenticPipeline(
+        analysis_pipeline = AgentPipeline(
             agents=[extractor, analyzer, recommender],
             debug_mode=True  # Enable logging for debugging
         )
@@ -158,7 +158,7 @@ class AgenticPipeline(BaseModel):
 
         Example:
             ```python
-            pipeline = AgenticPipeline(agents=[agent1, agent2, agent3])
+            pipeline = AgentPipeline(agents=[agent1, agent2, agent3])
 
             # Simple string input
             result = pipeline.run("Analyze this text")
@@ -193,7 +193,7 @@ class AgenticPipeline(BaseModel):
 
         Example:
             ```python
-            pipeline = AgenticPipeline(agents=[agent1, agent2, agent3])
+            pipeline = AgentPipeline(agents=[agent1, agent2, agent3])
 
             # Using with async/await
             import asyncio
