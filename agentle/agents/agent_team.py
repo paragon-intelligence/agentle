@@ -1,3 +1,68 @@
+"""
+Agent Team Module for the Agentle Framework
+
+This module provides functionality for creating dynamic teams of AI agents managed by an orchestrator.
+AgentTeam implements a flexible approach to multi-agent systems where agents are selected at runtime
+based on the specific requirements of each task and subtask.
+
+Unlike the AgenticPipeline which follows a fixed sequence of agents, AgentTeam uses an orchestrator
+agent to dynamically analyze tasks and select the most appropriate agent to handle each step.
+This provides greater flexibility and adaptability, particularly for complex workflows where:
+
+1. The optimal sequence of agents depends on the specific task
+2. Different agents may be needed depending on the content of previous responses
+3. The same agent may need to be invoked multiple times for different aspects of a task
+4. The task completion criteria can only be determined at runtime
+
+Example:
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.agent_team import AgentTeam
+from agentle.agents.agent_config import AgentConfig
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+
+# Create provider for all agents
+provider = GoogleGenaiGenerationProvider()
+
+# Create specialized agents
+research_agent = Agent(
+    name="Research Agent",
+    description="Specialized in finding information and data on various topics",
+    generation_provider=provider,
+    model="gemini-pro",
+    instructions="You are a research agent focused on gathering accurate information.",
+)
+
+coding_agent = Agent(
+    name="Coding Agent",
+    description="Specialized in writing and debugging code in various languages",
+    generation_provider=provider,
+    model="gemini-pro",
+    instructions="You are a coding expert that writes clean, efficient code.",
+)
+
+writing_agent = Agent(
+    name="Writing Agent",
+    description="Specialized in creating clear and engaging written content",
+    generation_provider=provider,
+    model="gemini-pro",
+    instructions="You are a writing expert that creates compelling content.",
+)
+
+# Create a team with these agents and an orchestrator
+team = AgentTeam(
+    agents=[research_agent, coding_agent, writing_agent],
+    orchestrator_provider=provider,
+    orchestrator_model="gemini-2.0-flash",
+    team_config=AgentConfig(maxIterations=10)
+)
+
+# Run the team with a task
+result = team.run("Research the latest advancements in quantum computing and summarize them.")
+print(result.generation.text)
+```
+"""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -6,6 +71,7 @@ from uuid import UUID
 
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
+import logging
 
 from agentle.agents.agent import Agent
 from agentle.agents.agent_config import AgentConfig
@@ -18,27 +84,201 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
 from rsb.coroutines.run_sync import run_sync
 
 
+logger = logging.getLogger(__name__)
+
+
 class OrchestratorOutput(BaseModel):
-    """Structured output for the orchestrator agent"""
+    """
+    Structured output for the orchestrator agent to determine task routing.
+
+    This model defines the format of responses expected from the orchestrator agent.
+    The orchestrator analyzes tasks and determines: (1) which agent should handle
+    the current task step, and (2) whether the overall task is complete.
+
+    Attributes:
+        agent_id: The UUID of the chosen agent that should handle the current task step.
+        task_done: A boolean flag indicating whether the overall task is complete.
+                  When True, the team execution will terminate and return the final result.
+    """
 
     agent_id: UUID  # UUID of the chosen agent
     task_done: bool = False  # Indicates if the task is complete
 
 
 class AgentTeam(BaseModel):
-    agents: Sequence[Agent[Any]]
-    orchestrator_provider: GenerationProvider = Field(
-        default_factory=GoogleGenaiGenerationProvider
+    """
+    A dynamic team of AI agents managed by an orchestrator agent.
+
+    AgentTeam implements an approach to multi-agent systems where agents are selected
+    dynamically at runtime by an orchestrator. The orchestrator analyzes each task or
+    subtask and determines which specialized agent is best suited to handle it.
+
+    This provides greater flexibility than sequential pipelines, as the exact sequence
+    of agent invocations can be determined based on the specifics of the task and the
+    content of intermediate responses.
+
+    Key features:
+    - Dynamic agent selection: The orchestrator chooses the most appropriate agent for each step
+    - Adaptable workflows: The sequence of agents is determined at runtime based on the task
+    - Conversation history: Context is maintained throughout the task execution
+    - Configurable execution limits: Prevents infinite loops with clear termination criteria
+
+    Attributes:
+        agents: A sequence of specialized Agent instances available to the team.
+        orchestrator_provider: The generation provider used by the orchestrator agent.
+        orchestrator_model: The model to be used by the orchestrator agent.
+        team_config: Configuration options for the team, including iteration limits.
+
+    Examples:
+        ```python
+        # Create a basic team with several specialized agents
+        provider = GoogleGenaiGenerationProvider()
+
+        math_agent = Agent(
+            name="Math Agent",
+            description="Expert in solving mathematical problems",
+            generation_provider=provider,
+            model="gemini-pro",
+            instructions="You are a mathematics expert."
+        )
+
+        language_agent = Agent(
+            name="Language Agent",
+            description="Expert in language translation and linguistics",
+            generation_provider=provider,
+            model="gemini-pro",
+            instructions="You are a language and translation expert."
+        )
+
+        team = AgentTeam(
+            agents=[math_agent, language_agent],
+            orchestrator_provider=provider,
+            orchestrator_model="gemini-pro"
+        )
+
+        # Run the team on a task
+        result = team.run("Translate the phrase 'The square root of 144 is 12' into French")
+        ```
+
+        Creating a team with custom configuration:
+        ```python
+        # Create a team with custom configuration
+        custom_team = AgentTeam(
+            agents=[agent1, agent2, agent3],
+            orchestrator_provider=provider,
+            orchestrator_model="gemini-pro",
+            team_config=AgentConfig(
+                maxIterations=15,  # Allow more iterations than default
+                maxToolCalls=20    # Allow more tool calls if agents use tools
+            )
+        )
+
+        # Run the team with a complex multi-step task
+        result = custom_team.run("Research, analyze, and summarize recent developments in AI safety")
+        ```
+    """
+
+    agents: Sequence[Agent[Any]] = Field(
+        ...,  # This is a required field
+        description="A sequence of specialized Agent instances available to the team.",
     )
-    orchestrator_model: str
-    team_config: AgentConfig = Field(default_factory=AgentConfig)
+
+    orchestrator_provider: GenerationProvider = Field(
+        default_factory=GoogleGenaiGenerationProvider,
+        description="The generation provider used by the orchestrator agent.",
+    )
+
+    orchestrator_model: str = Field(
+        ...,  # This is a required field
+        description="The model to be used by the orchestrator agent.",
+    )
+
+    team_config: AgentConfig = Field(
+        default_factory=AgentConfig,
+        description="Configuration options for the team, including iteration limits.",
+    )
 
     def run(self, input: AgentInput) -> AgentRunOutput[Any]:
+        """
+        Run the agent team synchronously with the provided input.
+
+        This method is a synchronous wrapper around run_async that allows
+        the team to be used in synchronous contexts.
+
+        Args:
+            input: The initial input to the team.
+                  Can be a string, UserMessage, Context, or any supported AgentInput type.
+
+        Returns:
+            AgentRunOutput: The final output from the team after task completion.
+
+        Example:
+            ```python
+            team = AgentTeam(
+                agents=[research_agent, writing_agent, code_agent],
+                orchestrator_provider=provider,
+                orchestrator_model="gemini-pro"
+            )
+
+            # Simple string input
+            result = team.run("Create a Python function to calculate the Fibonacci sequence")
+
+            # Access the result
+            final_text = result.generation.text
+            ```
+        """
         return run_sync(self.run_async, input=input)
 
     async def run_async(self, input: AgentInput) -> AgentRunOutput[Any]:
-        """Analyse the task. Call the appropriate agents until the task is concluded.
-        Remove the called agents from the call stack. Simple implementation for now."""
+        """
+        Dynamically executes a team of agents guided by an orchestrator.
+
+        This method creates an orchestrator agent that analyzes each task step and
+        selects the most appropriate agent to handle it. The process continues iteratively
+        until the orchestrator determines the task is complete or the maximum number of
+        iterations is reached.
+
+        Process flow:
+        1. Orchestrator analyzes the current input/task
+        2. Orchestrator selects the most appropriate agent and indicates if task is complete
+        3. If task is complete, return the latest result
+        4. Otherwise, the selected agent processes the input
+        5. The agent's output becomes the next input
+        6. The process repeats until completion or max iterations
+
+        Args:
+            input: The initial input to the team
+
+        Returns:
+            AgentRunOutput: The final result when the task is complete
+
+        Raises:
+            ValueError: If the team contains no agents
+
+        Example:
+            ```python
+            # Using the team with async/await
+            import asyncio
+
+            async def process_complex_task():
+                team = AgentTeam(
+                    agents=[agent1, agent2, agent3],
+                    orchestrator_provider=provider,
+                    orchestrator_model="gemini-pro"
+                )
+
+                result = await team.run_async("Perform this complex multi-step task")
+                return result.generation.text
+
+            final_result = asyncio.run(process_complex_task())
+            ```
+
+        Notes:
+            - The team_config.maxIterations parameter controls the maximum number of
+              agent invocations to prevent infinite loops.
+            - Conversation history is maintained to provide context to the orchestrator.
+            - The orchestrator has complete information about all available agents.
+        """
         if not self.agents:
             raise ValueError("AgentTeam must have at least one agent")
 
@@ -128,11 +368,17 @@ Current input:
 
             if not orchestrator_output:
                 # Fallback in case the orchestrator fails to produce structured output
+                logger.warning(
+                    "Orchestrator failed to produce structured output, using first agent as fallback"
+                )
                 return await self.agents[0].run_async(current_input)
 
             # Check if the task is done
             task_done = orchestrator_output.task_done
             if task_done:
+                logger.info(
+                    f"Task marked as complete by orchestrator after {iteration_count} iterations"
+                )
                 return (
                     last_output
                     if last_output is not None
@@ -143,9 +389,15 @@ Current input:
             agent_id = str(orchestrator_output.agent_id)
             if agent_id not in agent_map:
                 # Fallback if the orchestrator chooses an unknown agent
+                logger.warning(
+                    f"Orchestrator selected unknown agent ID: {agent_id}, using first agent as fallback"
+                )
                 return await self.agents[0].run_async(current_input)
 
             chosen_agent = agent_map[agent_id]
+            logger.info(
+                f"Iteration {iteration_count}: Orchestrator selected agent '{chosen_agent.name}'"
+            )
 
             # Run the chosen agent with the current input
             agent_output = await chosen_agent.run_async(current_input)
@@ -164,11 +416,14 @@ Current input:
                 current_input = agent_output.generation.text
             else:
                 # If we don't have text output, use the original input again
+                logger.warning(
+                    f"Agent '{chosen_agent.name}' produced no text output, returning current output"
+                )
                 return agent_output
 
         # If we've reached max iterations, return the last output
         if iteration_count >= max_iterations:
-            print(
+            logger.warning(
                 f"Warning: AgentTeam reached maximum iterations ({max_iterations}) without completion"
             )
 
@@ -178,6 +433,38 @@ Current input:
         return last_output
 
     def __add__(self, other: Agent[Any] | AgentTeam) -> AgentTeam:
+        """
+        Combine this AgentTeam with another Agent or AgentTeam.
+
+        This operator allows for easy composition of teams by combining their agents.
+        When adding an Agent, it's incorporated into the current team's agent list.
+        When adding another AgentTeam, all its agents are added to the current team.
+
+        Args:
+            other: Another Agent or AgentTeam to combine with this team
+
+        Returns:
+            AgentTeam: A new AgentTeam containing all agents from both sources
+
+        Example:
+            ```python
+            # Create initial team
+            basic_team = AgentTeam(
+                agents=[agent1, agent2],
+                orchestrator_provider=provider,
+                orchestrator_model="gemini-pro"
+            )
+
+            # Add another agent
+            expanded_team = basic_team + specialized_agent
+
+            # Add another team
+            other_team = AgentTeam(agents=[agent3, agent4], ...)
+            combined_team = expanded_team + other_team
+
+            # The combined team now contains all agents from both teams
+            ```
+        """
         if isinstance(other, Agent):
             return AgentTeam(
                 agents=cast(Sequence[Agent[Any]], list(self.agents) + [other]),
