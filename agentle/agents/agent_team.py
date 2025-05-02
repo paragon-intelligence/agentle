@@ -65,13 +65,14 @@ print(result.generation.text)
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
-from typing import Any, cast, Optional
+from typing import Any, Optional, cast
 from uuid import UUID
 
+from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
-import logging
 
 from agentle.agents.agent import Agent
 from agentle.agents.agent_config import AgentConfig
@@ -81,8 +82,6 @@ from agentle.generations.providers.base.generation_provider import GenerationPro
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
 )
-from rsb.coroutines.run_sync import run_sync
-
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +101,7 @@ class _OrchestratorOutput(BaseModel):
     """
 
     agent_id: UUID  # UUID of the chosen agent
-    task_done: bool = False  # Indicates if the task is complete
+    task_done: bool
 
 
 class AgentTeam(BaseModel):
