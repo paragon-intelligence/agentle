@@ -41,5 +41,6 @@ dev = [
     "python-dotenv>=1.1.0",
     "r2r>=3.5.14",
     "sphinx>=8.2.3",
+    "streamlit>=1.45.0",
     "uvicorn>=0.34.1",
 ]

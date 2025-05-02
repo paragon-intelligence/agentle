@@ -67,6 +67,9 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
 )
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
+from agentle.generations.models.messages.generated_assistant_message import (
+    GeneratedAssistantMessage,
+)
 from agentle.generations.models.messages.message import Message
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers.base.generation_provider import (
@@ -662,6 +665,317 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         match type:
             case "blacksheep":
                 return self._to_blacksheep_asgi_app(routers=routers)
+
+    def to_streamlit_app(
+        self,
+        title: str | None = None,
+        description: str | None = None,
+        initial_mode: Literal["dev", "presentation"] = "presentation",
+    ) -> Callable[[], None]:
+        """
+        Creates a Streamlit app that provides a chat interface to interact with the agent.
+
+        This method returns a function that can be executed as a Streamlit app.
+        The returned app provides a chat interface where users can interact with the agent,
+        view the conversation history, and switch between development and presentation modes.
+
+        Dev mode shows detailed information useful for developers, including raw response data,
+        token usage, and parsed outputs. Presentation mode provides a clean interface for
+        demonstrating the agent's capabilities.
+
+        Args:
+            title: Optional title for the Streamlit app (defaults to agent name)
+            description: Optional description for the Streamlit app (defaults to agent description)
+            initial_mode: The initial display mode ("dev" or "presentation", defaults to "presentation")
+
+        Returns:
+            Callable[[], None]: A function that can be executed as a Streamlit app
+
+        Example:
+            ```python
+            from agentle.agents.agent import Agent
+            from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+
+            # Create an agent
+            agent = Agent(
+                generation_provider=GoogleGenerationProvider(),
+                model="gemini-2.0-flash",
+                instructions="You are a helpful assistant."
+            )
+
+            # Get the Streamlit app function
+            app = agent.to_streamlit_app(title="My Assistant")
+
+            # Save this as app.py and run with: streamlit run app.py
+            app()
+            ```
+        """
+        agent = self
+        app_title = title or f"{self.name} Agent"
+        app_description = description or self.description
+
+        def _generate_assistant_message_from_generated(
+            generated_message: GeneratedAssistantMessage[Any],
+        ) -> AssistantMessage:
+            """
+            Converts a GeneratedAssistantMessage to a regular AssistantMessage.
+            This is necessary because GeneratedAssistantMessage is for output,
+            while AssistantMessage is for input.
+            """
+            # Filter out tool execution suggestions when creating the AssistantMessage
+            # since they were already executed
+            text_parts = [
+                part for part in generated_message.parts if isinstance(part, TextPart)
+            ]
+            return AssistantMessage(parts=text_parts)
+
+        def _format_tool_call(tool_call: ToolExecutionSuggestion) -> str:
+            """Format a tool call for display in the UI."""
+            args_str = json.dumps(tool_call.args, indent=2)
+            return f"**Tool Call:** `{tool_call.tool_name}`\n```json\n{args_str}\n```"
+
+        def _streamlit_app() -> None:
+            try:
+                import streamlit as st
+            except ImportError:
+                print(
+                    "Error: Streamlit is required for this feature. "
+                    + "Please install it with: pip install streamlit"
+                )
+                return
+
+            # Setup page config
+            st.set_page_config(
+                page_title=app_title,
+                page_icon="🤖",
+                layout="wide",
+                initial_sidebar_state="expanded",
+            )
+
+            # Initialize session state
+            if "messages" not in st.session_state:
+                st.session_state.messages = []
+            if "display_mode" not in st.session_state:
+                st.session_state.display_mode = initial_mode
+            if "token_usage" not in st.session_state:
+                st.session_state.token_usage = []
+
+            # Sidebar for settings and developer tools
+            with st.sidebar:
+                st.title("⚙️ Settings")
+
+                # Display mode selector
+                st.session_state.display_mode = st.selectbox(
+                    "Display Mode",
+                    ["presentation", "dev"],
+                    index=0 if st.session_state.display_mode == "presentation" else 1,
+                )
+
+                # Agent information
+                st.subheader("Agent Info")
+                st.write(f"**Name:** {agent.name}")
+                st.write(f"**Model:** {agent.model or 'Not specified'}")
+
+                if agent.has_tools():
+                    st.subheader("Available Tools")
+                    for tool in agent.tools:
+                        tool_name = getattr(tool, "name", str(tool))
+                        st.write(f"- {tool_name}")
+
+                # In dev mode, show more details
+                if st.session_state.display_mode == "dev":
+                    st.subheader("Usage Statistics")
+                    if st.session_state.token_usage:
+                        total_prompt = sum(
+                            u[0]
+                            for u in st.session_state.token_usage
+                            if isinstance(u, tuple) and len(u) > 0
+                        )
+                        total_completion = sum(
+                            u[1]
+                            for u in st.session_state.token_usage
+                            if isinstance(u, tuple) and len(u) > 1
+                        )
+                        total = total_prompt + total_completion
+
+                        st.write(f"**Total Prompt Tokens:** {total_prompt}")
+                        st.write(f"**Total Completion Tokens:** {total_completion}")
+                        st.write(f"**Total Tokens:** {total}")
+                    else:
+                        st.write("No usage data yet.")
+
+                    if hasattr(agent, "config"):
+                        st.subheader("Configuration")
+                        if hasattr(agent.config, "model_dump"):
+                            st.json(agent.config.model_dump())
+                        elif hasattr(agent.config, "__dict__"):
+                            st.json(agent.config.__dict__)
+                        else:
+                            st.json(str(agent.config))
+
+                # Add a clear button
+                if st.button("Clear Conversation"):
+                    st.session_state.messages = []
+                    st.session_state.token_usage = []
+                    st.rerun()
+
+            # Main chat interface
+            st.title(app_title)
+            st.write(app_description)
+
+            # Display chat messages
+            message_container = st.container()
+            with message_container:
+                for message in st.session_state.messages:
+                    role = message.get("role", "")
+                    content = message.get("content", "")
+                    metadata = message.get("metadata", {})
+
+                    if role == "user":
+                        with st.chat_message("user", avatar="👤"):
+                            st.write(content)
+                    elif role == "assistant":
+                        with st.chat_message("assistant", avatar="🤖"):
+                            st.write(content)
+
+                            # Show tool calls if available and in dev mode
+                            if (
+                                st.session_state.display_mode == "dev"
+                                and "tool_calls" in metadata
+                            ):
+                                for tool_call in metadata["tool_calls"]:
+                                    if (
+                                        isinstance(tool_call, dict)
+                                        and "tool_name" in tool_call
+                                        and "args" in tool_call
+                                    ):
+                                        tc_obj = ToolExecutionSuggestion(
+                                            tool_name=tool_call["tool_name"],
+                                            args=tool_call["args"],
+                                            id=tool_call.get("id", str(uuid.uuid4())),
+                                        )
+                                        st.markdown(_format_tool_call(tc_obj))
+
+                                    # If we have a result, display it
+                                    if "result" in tool_call:
+                                        st.write("**Result:**")
+                                        st.code(
+                                            str(tool_call["result"]), language="python"
+                                        )
+
+                            # Show parsed data if available and in dev mode
+                            if (
+                                st.session_state.display_mode == "dev"
+                                and "parsed" in metadata
+                                and metadata["parsed"] is not None
+                            ):
+                                st.write("**Parsed Output:**")
+                                try:
+                                    st.json(json.dumps(metadata["parsed"], default=str))
+                                except Exception:
+                                    st.code(str(metadata["parsed"]))
+
+            # Input area
+            user_input = st.chat_input("Type your message here...")
+
+            if user_input:
+                # Add user message to chat
+                st.session_state.messages.append(
+                    {"role": "user", "content": user_input}
+                )
+
+                # Display user message immediately
+                with st.chat_message("user", avatar="👤"):
+                    st.write(user_input)
+
+                # Display a spinner while waiting for the agent's response
+                with st.chat_message("assistant", avatar="🤖"):
+                    with st.spinner("Thinking..."):
+                        # Run the agent
+                        try:
+                            with agent.with_mcp_servers():
+                                result = agent.run(user_input)
+
+                                # Extract information from the result
+                                generation = result.generation
+                                response_text = generation.text
+                                tool_calls = (
+                                    generation.tool_calls
+                                    if hasattr(generation, "tool_calls")
+                                    else []
+                                )
+                                parsed = result.parsed
+
+                                # Update token usage stats
+                                if hasattr(generation, "usage"):
+                                    st.session_state.token_usage.append(
+                                        (
+                                            generation.usage.prompt_tokens,
+                                            generation.usage.completion_tokens,
+                                        )
+                                    )
+
+                                # Prepare metadata for storage
+                                metadata = {}
+                                if tool_calls:
+                                    tool_call_data = []
+                                    for tc in tool_calls:
+                                        tc_data = {
+                                            "tool_name": tc.tool_name,
+                                            "args": tc.args,
+                                            "id": tc.id,
+                                        }
+                                        tool_call_data.append(tc_data)
+                                    metadata["tool_calls"] = tool_call_data
+
+                                if parsed is not None:
+                                    try:
+                                        # Try to convert to a dict for storage
+                                        if hasattr(parsed, "model_dump"):
+                                            metadata["parsed"] = parsed.model_dump()
+                                        elif hasattr(parsed, "__dict__"):
+                                            metadata["parsed"] = parsed.__dict__
+                                        else:
+                                            metadata["parsed"] = str(parsed)
+                                    except Exception:
+                                        metadata["parsed"] = str(parsed)
+
+                                # Store the message and metadata
+                                st.session_state.messages.append(
+                                    {
+                                        "role": "assistant",
+                                        "content": response_text,
+                                        "metadata": metadata,
+                                    }
+                                )
+
+                                # Display the response
+                                st.write(response_text)
+
+                                # In dev mode, show tool calls and parsed data
+                                if st.session_state.display_mode == "dev":
+                                    for tc in tool_calls:
+                                        st.markdown(_format_tool_call(tc))
+
+                                    if parsed is not None:
+                                        st.write("**Parsed Output:**")
+                                        try:
+                                            st.json(
+                                                json.dumps(
+                                                    metadata["parsed"], default=str
+                                                )
+                                            )
+                                        except:
+                                            st.code(str(parsed))
+
+                        except Exception as e:
+                            error_msg = f"Error: {str(e)}"
+                            st.error(error_msg)
+                            st.session_state.messages.append(
+                                {"role": "assistant", "content": error_msg}
+                            )
+
+        return _streamlit_app
 
     def _to_blacksheep_asgi_app(self, routers: Sequence[Any] | None = None) -> Any:
         """
