@@ -100,22 +100,3 @@ combined_query = (
 print(f"QUERY: {combined_query}")
 combined_result = team.run(combined_query)
 print(f"RESPONSE: {combined_result.text[:500]}...\n")
-
-# Step 4: You can also extend an existing team with additional agents
-print("You can easily extend teams by adding more agents:")
-extension_explanation = """
-# Example of extending a team with a new agent:
-data_analysis_agent = Agent(
-    name="Data Analysis Agent",
-    description="Specialized in analyzing and visualizing data",
-    # ... other parameters ...
-)
-
-# Add the new agent to the existing team
-extended_team = team + data_analysis_agent
-
-# Or combine two teams
-other_team = AgentTeam(agents=[agent1, agent2], ...)
-combined_team = team + other_team
-"""
-print(extension_explanation)
