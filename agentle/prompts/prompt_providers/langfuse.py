@@ -1,3 +1,11 @@
+"""
+Langfuse-based prompt provider implementation.
+
+This module provides an implementation of the PromptProvider interface that fetches
+prompts from the Langfuse API. It allows integration with Langfuse's prompt management
+and versioning capabilities for more advanced prompt engineering workflows.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, override

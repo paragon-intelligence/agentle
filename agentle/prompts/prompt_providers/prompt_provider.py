@@ -1,3 +1,10 @@
+"""
+Defines the abstract base class for prompt providers.
+
+This module establishes the common interface that all prompt providers must implement,
+enabling a consistent way to retrieve prompts regardless of their source.
+"""
+
 from __future__ import annotations
 
 import abc

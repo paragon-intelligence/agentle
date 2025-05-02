@@ -1,3 +1,11 @@
+"""
+File system based prompt provider implementation.
+
+This module provides an implementation of the PromptProvider interface that reads prompt
+content from files in the local file system. It's designed for simple use cases where
+prompts are stored as Markdown files in a specific directory.
+"""
+
 from pathlib import Path
 
 from agentle.prompts.models.prompt import Prompt

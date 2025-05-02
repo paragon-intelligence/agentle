@@ -10,6 +10,7 @@ from agentle.generations.models.messages.developer_message import DeveloperMessa
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.tools.tool import Tool
 from agentle.mcp.sampling.messages.assistant_message import AssistantMessage
+from agentle.prompts.models.prompt import Prompt
 
 if TYPE_CHECKING:
     import datetime
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 
 type AgentInput = (
     str
+    | Prompt
     | Context
     | Sequence[AssistantMessage | DeveloperMessage | UserMessage]
     | UserMessage

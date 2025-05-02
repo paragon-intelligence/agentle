@@ -75,6 +75,7 @@ from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+from agentle.prompts.models.prompt import Prompt
 
 if TYPE_CHECKING:
     from io import BytesIO, StringIO
@@ -863,6 +864,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         UserMessage(parts=[TextPart(text=str(input))]),
                     ]
                 )
+        elif isinstance(input, Prompt):
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=input.text)]),
+                ]
+            )
         elif isinstance(input, (BytesIO, StringIO)):
             # Read content from BytesIO/StringIO
             input.seek(0)  # Ensure reading from the start

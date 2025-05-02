@@ -1,3 +1,11 @@
+"""
+Defines the Prompt model for representing and manipulating prompt content.
+
+This module provides the core Prompt class which represents a text prompt that can
+contain variable placeholders. It supports variable substitution through the compile
+method and provides convenient access to the prompt content.
+"""
+
 from __future__ import annotations
 
 from rsb.decorators.value_objects import valueobject
