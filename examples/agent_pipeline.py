@@ -1,0 +1,84 @@
+"""
+Agent Pipeline Example
+
+This example demonstrates how to create and use an agent pipeline in the Agentle framework.
+A pipeline is a sequence of agents where the output from one agent becomes the input to the next.
+"""
+
+from agentle.agents.agent import Agent
+from agentle.agents.agent_pipeline import AgenticPipeline
+from agentle.generations.providers.google.google_genai_generation_provider import (
+    GoogleGenaiGenerationProvider,
+)
+
+# Create a common provider for all agents
+provider = GoogleGenaiGenerationProvider()
+
+# Step 1: Create specialized agents for each stage of the pipeline
+
+# Research agent that gathers information
+research_agent = Agent(
+    name="Research Agent",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="""You are a research agent focused on gathering accurate information.
+    Your task is to collect relevant facts and data on the given topic.
+    Be thorough and prioritize accuracy over speculation.
+    ONLY present factual information. Do not analyze, just gather relevant data.
+    """,
+)
+
+# Analysis agent that processes the research and identifies patterns/insights
+analysis_agent = Agent(
+    name="Analysis Agent",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="""You are an analysis agent that processes information and identifies patterns.
+    You will receive research data and your task is to:
+    1. Identify key themes and patterns
+    2. Highlight meaningful relationships and correlations
+    3. Determine what insights can be drawn from the data
+    Focus on analysis, not summarization. Don't repeat all the research, transform it.
+    """,
+)
+
+# Summary agent that creates a concise, reader-friendly summary
+summary_agent = Agent(
+    name="Summary Agent",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="""You are a summary agent that creates concise, well-structured summaries.
+    Your task is to take the analysis you receive and create a clear, reader-friendly summary that:
+    1. Presents key findings in a logical order
+    2. Uses simple, accessible language
+    3. Maintains accuracy while eliminating unnecessary details
+    4. Includes a brief conclusion with the most important takeaways
+    """,
+)
+
+# Step 2: Create a pipeline of these agents
+research_pipeline = AgenticPipeline(
+    agents=[research_agent, analysis_agent, summary_agent],
+    debug_mode=True,  # Enable debug mode to see intermediate steps
+)
+
+# Step 3: Run the pipeline with an initial input
+topic = "The impact of artificial intelligence on healthcare"
+print(f"Running research pipeline on topic: {topic}\n")
+
+result = research_pipeline.run(f"Research the following topic: {topic}")
+
+print("\nFINAL RESULT FROM PIPELINE:")
+print("-" * 80)
+print(result.generation.text)
+print("-" * 80)
+
+# Step 4: You can also access the steps to see the pipeline execution
+print("\nPipeline Execution Steps:")
+for i, step in enumerate(result.steps):
+    print(f"Step {i + 1}: {step.type}")
+
+# You could modify this example to create different types of pipelines:
+# - Content creation pipeline (research → draft → edit → finalize)
+# - Data processing pipeline (extract → transform → analyze → visualize)
+# - Language translation pipeline (translate → improve → localize)

@@ -38,3 +38,6 @@ class ResourceContent(BaseModel):
     blob: Base64Str | None = Field(
         default=None, description="Base64-encoded binary data of the resource"
     )
+
+    class Config:
+        arbitrary_types_allowed = True

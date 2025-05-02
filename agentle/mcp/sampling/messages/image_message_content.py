@@ -39,3 +39,6 @@ class ImageMessageContent(BaseModel):
         default="image",
         description="Content type identifier, always 'image' for this class",
     )
+
+    class Config:
+        arbitrary_types_allowed = True

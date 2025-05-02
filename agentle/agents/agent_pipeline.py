@@ -23,21 +23,21 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
 research_agent = Agent(
     name="Research Agent",
     instructions="You are a research agent. Your task is to gather information on a topic.",
-    model="gemini-pro",
+    model="gemini-2.0-flash",
     generation_provider=GoogleGenaiGenerationProvider(),
 )
 
 analysis_agent = Agent(
     name="Analysis Agent",
     instructions="You are an analysis agent. Your task is to analyze information and identify patterns.",
-    model="gemini-pro",
+    model="gemini-2.0-flash",
     generation_provider=GoogleGenaiGenerationProvider(),
 )
 
 summary_agent = Agent(
     name="Summary Agent",
     instructions="You are a summary agent. Your task is to create concise summaries.",
-    model="gemini-pro",
+    model="gemini-2.0-flash",
     generation_provider=GoogleGenaiGenerationProvider(),
 )
 
@@ -91,13 +91,13 @@ class AgenticPipeline(BaseModel):
         english_to_french = Agent(
             name="English to French",
             instructions="Translate English text to French.",
-            model="gemini-pro"
+            model="gemini-2.0-flash"
         )
 
         french_to_spanish = Agent(
             name="French to Spanish",
             instructions="Translate French text to Spanish.",
-            model="gemini-pro"
+            model="gemini-2.0-flash"
         )
 
         # Chain the agents into a pipeline
