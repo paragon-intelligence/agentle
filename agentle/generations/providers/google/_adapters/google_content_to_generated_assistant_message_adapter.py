@@ -158,7 +158,9 @@ class GoogleContentToGeneratedAssistantMessageAdapter[T](
         parts = _f.parts
 
         if parts is None:
-            raise ValueError("No parts found in Google Content.")
+            raise ValueError(
+                f"No parts found in Google Content. This is a Google bug, please report it. Content: {_f}"
+            )
 
         adapted_parts = [self.part_adapter.adapt(part) for part in parts]
 

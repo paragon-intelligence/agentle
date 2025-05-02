@@ -449,7 +449,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 else self.config.generationConfig.clone(new_trace_params=trace_params),
             )
 
-            return AgentRunOutput[T_Schema](
+            return AgentRunOutput(
                 generation=generation,
                 steps=context.steps,
                 parsed=generation.parsed,
