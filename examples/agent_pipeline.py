@@ -63,10 +63,10 @@ research_pipeline = AgenticPipeline(
 )
 
 # Step 3: Run the pipeline with an initial input
-topic = "The impact of artificial intelligence on healthcare"
-print(f"Running research pipeline on topic: {topic}\n")
+TOPIC = "The impact of artificial intelligence on healthcare"
+print(f"Running research pipeline on topic: {TOPIC}\n")
 
-result = research_pipeline.run(f"Research the following topic: {topic}")
+result = research_pipeline.run(f"Research the following topic: {TOPIC}")
 
 print("\nFINAL RESULT FROM PIPELINE:")
 print("-" * 80)
