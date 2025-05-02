@@ -10,9 +10,6 @@ from agentle.generations.providers.base.generation_provider import GenerationPro
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
 )
-from agentle.generations.models.generation.generation_config import GenerationConfig
-from agentle.agents.agent_config import AgentConfig
-
 
 # Example 1: Create an agent with Google's Gemini model
 provider: GenerationProvider = GoogleGenaiGenerationProvider()
