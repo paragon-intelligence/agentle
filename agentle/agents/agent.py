@@ -224,8 +224,8 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     The version of the agent - format is up to the provider. (e.g. "1.0.0")
     """
 
-    endpoint: str = Field(
-        default=f"/api/v1/agents/{name}",
+    endpoint: str | None = Field(
+        default=None,
         description="The endpoint of the agent",
         examples=["/api/v1/agents/weather-agent"],
     )
@@ -686,11 +686,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         """
         agent = self
 
+        endpoint = agent.endpoint or f"/api/v1/agents/{self.name}"
+
         class _Run(Controller):
-            @blacksheep.post(agent.endpoint)
+            @blacksheep.post(endpoint)
             async def run(
                 self, input: blacksheep.FromJSON[_AgentRunCommand]
-            ) -> AgentRunOutput[T_Schema]:
+            ) -> AgentRunOutput[Any]:
                 async with agent.with_mcp_servers_async():
                     result = await agent.run_async(input.value.input)
                     return result
