@@ -77,8 +77,3 @@ print("-" * 80)
 print("\nPipeline Execution Steps:")
 for i, step in enumerate(result.steps):
     print(f"Step {i + 1}: {step.type}")
-
-# You could modify this example to create different types of pipelines:
-# - Content creation pipeline (research → draft → edit → finalize)
-# - Data processing pipeline (extract → transform → analyze → visualize)
-# - Language translation pipeline (translate → improve → localize)
