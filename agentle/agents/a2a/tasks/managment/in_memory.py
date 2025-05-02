@@ -212,14 +212,42 @@ class InMemoryTaskManager(TaskManager):
             # Define a wrapper function that we can submit to the loop
             async def run_task_wrapper():
                 try:
-                    await asyncio.sleep(
-                        0.1
-                    )  # Small delay to ensure task registration completes
-                    await self._run_agent_task(task.id, agent, task_params)
+                    # Allow some time for event loop to stabilize
+                    await asyncio.sleep(0.2)
+
+                    # Double-check that the task hasn't been cancelled before we start
+                    with self._lock:
+                        if task_id not in self._tasks:
+                            logger.debug(
+                                f"Task {task_id} no longer exists, aborting wrapper"
+                            )
+                            return
+
+                        task = self._tasks[task_id]
+                        if task.status == TaskState.CANCELED:
+                            logger.debug(
+                                f"Task {task_id} already cancelled, aborting wrapper"
+                            )
+                            return
+
+                    # Use a separate try block to catch errors during the actual task execution
+                    try:
+                        # Run the task in a way that's protected from cancellation
+                        await self._run_agent_task(task.id, agent, task_params)
+                    except asyncio.CancelledError:
+                        logger.debug(
+                            f"Task {task_id} was cancelled during execution phase"
+                        )
+                        with self._lock:
+                            if task_id in self._tasks:
+                                self._tasks[task_id].status = TaskState.CANCELED
+                    except Exception as e:
+                        logger.exception(f"Error in _run_agent_task for {task_id}: {e}")
+                        with self._lock:
+                            if task_id in self._tasks:
+                                self._tasks[task_id].status = TaskState.FAILED
                 except asyncio.CancelledError:
-                    logger.debug(
-                        f"Task {task_id} was cancelled during wrapper execution"
-                    )
+                    logger.debug(f"Task {task_id} was cancelled during wrapper setup")
                     with self._lock:
                         if task_id in self._tasks:
                             self._tasks[task_id].status = TaskState.CANCELED
@@ -231,23 +259,51 @@ class InMemoryTaskManager(TaskManager):
                         if task_id in self._tasks:
                             self._tasks[task_id].status = TaskState.FAILED
 
-            # If the loop is already running (common in web servers), ensure_future is used
-            # Otherwise, we create a new task
+            # Start the task in the current event loop
+            asyncio_task = None
             if loop.is_running():
+                # Create a task in the running loop
                 asyncio_task = asyncio.ensure_future(run_task_wrapper(), loop=loop)
+                logger.debug(f"Created task in running loop for {task.id}")
             else:
-                asyncio_task = loop.create_task(run_task_wrapper())
+                # Create a dedicated thread for running this task with its own event loop
+                import threading
+
+                def run_in_thread():
+                    thread_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(thread_loop)
+                    try:
+                        logger.debug(
+                            f"Created dedicated thread loop for task {task.id}"
+                        )
+                        thread_loop.run_until_complete(run_task_wrapper())
+                    except Exception as e:
+                        logger.exception(f"Error in thread for task {task.id}: {e}")
+                    finally:
+                        thread_loop.close()
+
+                # Start the thread
+                thread = threading.Thread(target=run_in_thread)
+                thread.daemon = True  # Allow program to exit if thread is still running
+                thread.start()
+                logger.debug(f"Started dedicated thread for task {task.id}")
+
+                # Create a dummy task for tracking purposes
+                asyncio_task = asyncio.ensure_future(asyncio.sleep(0))
+                asyncio_task._thread = thread  # Attach thread reference to the task
 
             # Set up callback to log when the task is done
-            asyncio_task.add_done_callback(
-                lambda t: logger.debug(
-                    f"Asyncio task for {task.id} completed with state: {'Canceled' if t.cancelled() else 'Done'}"
+            if asyncio_task:
+                asyncio_task.add_done_callback(
+                    lambda t: logger.debug(
+                        f"Asyncio task for {task.id} completed with state: {'Canceled' if t.cancelled() else 'Done'}"
+                    )
                 )
-            )
 
-            with self._lock:
-                self._running_tasks[task.id] = asyncio_task
-                logger.debug(f"Registered async task for {task.id}")
+                with self._lock:
+                    self._running_tasks[task.id] = asyncio_task
+                    logger.debug(f"Registered async task for {task.id}")
+
         except Exception as e:
             logger.exception(f"Error creating asyncio task for {task.id}: {e}")
             with self._lock:

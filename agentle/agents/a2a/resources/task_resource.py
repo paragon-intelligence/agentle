@@ -147,10 +147,49 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
             print(f"Task created with ID: {task.id}")
             ```
         """
-        # Use a timeout to prevent blocking indefinitely
-        return run_sync(
-            self.manager.send, task_params=task, agent=self.agent, timeout=30
-        )
+        # Use a more reliable approach for run_sync that avoids task cancellation issues
+        import threading
+        import asyncio
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Create a container for results and exceptions
+        result_container = []
+        exception_container = []
+
+        # Run the coroutine in a separate thread with its own event loop
+        def thread_target():
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    # Run the coroutine to completion in this isolated event loop
+                    result = loop.run_until_complete(
+                        self.manager.send(task_params=task, agent=self.agent)
+                    )
+                    result_container.append(result)
+                except Exception as e:
+                    logger.exception(f"Error during task.send execution: {e}")
+                    exception_container.append(e)
+                finally:
+                    loop.close()
+            except Exception as e:
+                logger.exception(f"Error setting up event loop: {e}")
+                exception_container.append(e)
+
+        # Start and wait for the thread
+        thread = threading.Thread(target=thread_target)
+        thread.start()
+        thread.join(timeout=30)  # 30 second timeout
+
+        # Check for results or errors
+        if exception_container:
+            raise exception_container[0]
+        elif not result_container:
+            raise TimeoutError("Task send operation timed out")
+
+        return result_container[0]
 
     def get(self, query_params: TaskQueryParams) -> TaskGetResult:
         """
@@ -181,10 +220,49 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
                         print(part.text)
             ```
         """
-        # Use a short timeout since this should be quick
-        return run_sync(
-            self.manager.get, query_params=query_params, agent=self.agent, timeout=10
-        )
+        # Use a more reliable approach for run_sync that avoids task cancellation issues
+        import threading
+        import asyncio
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Create a container for results and exceptions
+        result_container = []
+        exception_container = []
+
+        # Run the coroutine in a separate thread with its own event loop
+        def thread_target():
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    # Run the coroutine to completion in this isolated event loop
+                    result = loop.run_until_complete(
+                        self.manager.get(query_params=query_params, agent=self.agent)
+                    )
+                    result_container.append(result)
+                except Exception as e:
+                    logger.exception(f"Error during task.get execution: {e}")
+                    exception_container.append(e)
+                finally:
+                    loop.close()
+            except Exception as e:
+                logger.exception(f"Error setting up event loop: {e}")
+                exception_container.append(e)
+
+        # Start and wait for the thread
+        thread = threading.Thread(target=thread_target)
+        thread.start()
+        thread.join(timeout=10)  # 10 second timeout
+
+        # Check for results or errors
+        if exception_container:
+            raise exception_container[0]
+        elif not result_container:
+            raise TimeoutError("Task get operation timed out")
+
+        return result_container[0]
 
     def send_subscribe(self, task: TaskSendParams) -> JSONRPCResponse:
         """
@@ -257,5 +335,46 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
                 print("Failed to cancel task or task not found")
             ```
         """
-        # Use a short timeout since this should be quick
-        return run_sync(self.manager.cancel, task_id=task_id, timeout=5)
+        # Use a more reliable approach for run_sync that avoids task cancellation issues
+        import threading
+        import asyncio
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Create a container for results and exceptions
+        result_container = []
+        exception_container = []
+
+        # Run the coroutine in a separate thread with its own event loop
+        def thread_target():
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    # Run the coroutine to completion in this isolated event loop
+                    result = loop.run_until_complete(
+                        self.manager.cancel(task_id=task_id)
+                    )
+                    result_container.append(result)
+                except Exception as e:
+                    logger.exception(f"Error during task.cancel execution: {e}")
+                    exception_container.append(e)
+                finally:
+                    loop.close()
+            except Exception as e:
+                logger.exception(f"Error setting up event loop: {e}")
+                exception_container.append(e)
+
+        # Start and wait for the thread
+        thread = threading.Thread(target=thread_target)
+        thread.start()
+        thread.join(timeout=5)  # 5 second timeout
+
+        # Check for results or errors
+        if exception_container:
+            raise exception_container[0]
+        elif not result_container:
+            raise TimeoutError("Task cancel operation timed out")
+
+        return result_container[0]
