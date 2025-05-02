@@ -130,9 +130,15 @@ class _AgentRunCommand(BaseModel):
     input: (
         str
         | Sequence[AssistantMessage | DeveloperMessage | UserMessage]
+        | Sequence[TextPart | FilePart]
         | TextPart
         | FilePart
-    ) = Field(description="Input of the agent")
+    ) = Field(
+        description="Input of the agent",
+        examples=[
+            "Hello, how are you?",
+        ],
+    )
 
 
 class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
@@ -672,7 +678,8 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         app = blacksheep.Application()
 
         docs: OpenAPIHandler = OpenAPIHandler(
-            ui_path="/openapi", info=Info(title="Cortex", version="0.0.1", description="app")
+            ui_path="/openapi",
+            info=Info(title="Cortex", version="0.0.1", description="app"),
         )
         docs.ui_providers.append(ScalarUIProvider(ui_path="/docs"))
         docs.bind_app(app)
