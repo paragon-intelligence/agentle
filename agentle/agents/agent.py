@@ -952,7 +952,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                                                 else:
                                                     # Convert non-string keys to strings
                                                     try:
-                                                        args_dict[str(k)] = v
+                                                        args_dict[
+                                                            str(cast(object, k))
+                                                        ] = v
                                                     except (ValueError, TypeError):
                                                         pass
 
@@ -976,7 +978,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                                                 "result", ""
                                             )
                                             result_str: str = (
-                                                str(result_value)
+                                                str(cast(object, result_value))
                                                 if result_value is not None
                                                 else ""
                                             )
