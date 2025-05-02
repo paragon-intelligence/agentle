@@ -943,12 +943,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                                         call_id = id_value
 
                                         # Convert args to a safe dictionary with explicit type checking
-                                        args_dict = {}
+                                        args_dict: dict[str, object] = {}
                                         args_value = tool_call.get("args")
                                         if isinstance(args_value, dict):
                                             for k, v in args_value.items():
                                                 if isinstance(k, str):
-                                                    args_dict[k] = v
+                                                    args_dict[k] = cast(object, v)
                                                 else:
                                                     # Convert non-string keys to strings
                                                     try:
@@ -972,8 +972,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                                         # If we have a result, display it
                                         if "result" in tool_call:
                                             st.write("**Result:**")
-                                            result_value = tool_call.get("result", "")
-                                            result_str = (
+                                            result_value: object = tool_call.get(
+                                                "result", ""
+                                            )
+                                            result_str: str = (
                                                 str(result_value)
                                                 if result_value is not None
                                                 else ""
@@ -990,11 +992,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                                 st.write("**Parsed Output:**")
                                 try:
                                     parsed_json = json.dumps(
-                                        metadata.get("parsed", {}), default=str
+                                        cast(object, metadata.get("parsed", {})),
+                                        default=str,
                                     )
                                     st.json(parsed_json)
                                 except Exception:
-                                    st.code(str(metadata.get("parsed", "")))
+                                    st.code(
+                                        str(cast(object, metadata.get("parsed", "")))
+                                    )
 
             # File upload area
             uploaded_file = st.file_uploader(
@@ -1008,9 +1013,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 mime_type = uploaded_file.type or "application/octet-stream"
 
                 # Only add if it's valid bytes
-                if file_bytes is not None and not isinstance(
-                    file_bytes, (bytearray, memoryview)
-                ):
+                if not isinstance(file_bytes, (bytearray, memoryview)):
                     st.session_state.uploaded_files.append(
                         {
                             "name": uploaded_file.name,
