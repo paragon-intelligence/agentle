@@ -16,6 +16,9 @@ from agentle.agents.a2a.messages.generation_message_to_message_adapter import (
     GenerationMessageToMessageAdapter,
 )
 from agentle.agents.a2a.messages.message import Message
+from agentle.agents.a2a.messages.message_to_generation_message_adapter import (
+    MessageToGenerationMessageAdapter,
+)
 from agentle.agents.a2a.models.json_rpc_error import JSONRPCError
 from agentle.agents.a2a.models.json_rpc_response import JSONRPCResponse
 from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
@@ -74,6 +77,7 @@ class InMemoryTaskManager(TaskManager):
         self._running_tasks: Dict[str, asyncio.Task] = {}
         self._task_histories: Dict[str, MutableSequence[Message]] = {}
         self._message_adapter = GenerationMessageToMessageAdapter()
+        self._a2a_to_generation_adapter = MessageToGenerationMessageAdapter()
 
     async def send(
         self,
@@ -265,10 +269,13 @@ class InMemoryTaskManager(TaskManager):
             history = self._task_histories.get(task_id, [])
 
             # Convert the A2A Message to a UserMessage for the agent
-            user_message = UserMessage(parts=task_params.message.parts)
+            gen_message = self._a2a_to_generation_adapter.adapt(task_params.message)
+            # Only UserMessage is accepted, so ensure we have the right type
+            if not isinstance(gen_message, UserMessage):
+                gen_message = UserMessage(parts=gen_message.parts)
 
             # Run the agent
-            result = await agent.run_async(user_message)
+            result = await agent.run_async(gen_message)
 
             # Convert the assistant message to an A2A Message
             if result.generation.output:
