@@ -277,10 +277,33 @@ class InMemoryTaskManager(TaskManager):
             # Run the agent
             result = await agent.run_async(gen_message)
 
-            # Convert the assistant message to an A2A Message
-            if result.generation.output:
-                assistant_message = self._message_adapter.adapt(
-                    result.generation.output
+            # Access the message from the generation result
+            # The Generation class has 'choices', and the first choice contains the message
+            if (
+                result.generation
+                and result.generation.choices
+            ):
+                # Get the message from the first choice
+                output_message = result.generation.choices[0].message
+                if output_message:
+                    # Convert the generated message to an A2A Message
+                    assistant_message = self._message_adapter.adapt(output_message)
+                    history.append(assistant_message)
+                    self._task_histories[task_id] = history
+            else:
+                # If no response is available, create a default one
+                from agentle.agents.a2a.message_parts.text_part import TextPart
+
+                default_text = (
+                    "I processed your request but couldn't generate a proper response."
+                )
+
+                # If generation has text property, use that
+                if result.generation and hasattr(result.generation, "text"):
+                    default_text = result.generation.text
+
+                assistant_message = Message(
+                    role="agent", parts=[TextPart(text=default_text)]
                 )
                 history.append(assistant_message)
                 self._task_histories[task_id] = history
@@ -299,6 +322,20 @@ class InMemoryTaskManager(TaskManager):
             logger.exception(f"Error executing task {task_id}: {e}")
             task = self._tasks[task_id]
             task.status = TaskState.FAILED
+
+            # Add error message to history
+            try:
+                from agentle.agents.a2a.message_parts.text_part import TextPart
+
+                error_message = Message(
+                    role="agent", parts=[TextPart(text=f"An error occurred: {str(e)}")]
+                )
+
+                history = self._task_histories.get(task_id, [])
+                history.append(error_message)
+                self._task_histories[task_id] = history
+            except Exception as inner_e:
+                logger.exception(f"Failed to add error message to history: {inner_e}")
 
         finally:
             # Remove the running task reference
