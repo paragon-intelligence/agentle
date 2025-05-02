@@ -5,6 +5,7 @@ This example demonstrates how to use the A2A Interface to interact with an agent
 using a standardized protocol interface.
 """
 
+from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.agent import Agent
 from agentle.agents.a2a.a2a_interface import A2AInterface
 from agentle.agents.a2a.tasks.managment.task_manager import TaskManager
@@ -57,7 +58,7 @@ print(f"Task created with ID: {task.id}")
 print(f"Task status: {task.status}")
 
 # Get the task result
-task_result = a2a_interface.tasks.get(query_params={"id": task.id})
+task_result = a2a_interface.tasks.get(TaskQueryParams(id=task.id))
 
 print("\nTask Result:")
 print("-" * 80)
