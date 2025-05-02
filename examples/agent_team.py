@@ -85,13 +85,13 @@ print("Running agent team with various queries...\n")
 research_query = "What are the main challenges in quantum computing today?"
 print(f"QUERY: {research_query}")
 research_result = team.run(research_query)
-print(f"RESPONSE: {research_result.generation.text[:500]}...\n")
+print(f"RESPONSE: {research_result.text[:500]}...\n")
 
 # A query requiring coding skills
 coding_query = "Write a Python function to find the Fibonacci sequence up to n terms."
 print(f"QUERY: {coding_query}")
 coding_result = team.run(coding_query)
-print(f"RESPONSE: {coding_result.generation.text[:500]}...\n")
+print(f"RESPONSE: {coding_result.text[:500]}...\n")
 
 # A query requiring both research and writing skills
 combined_query = (
@@ -99,7 +99,7 @@ combined_query = (
 )
 print(f"QUERY: {combined_query}")
 combined_result = team.run(combined_query)
-print(f"RESPONSE: {combined_result.generation.text[:500]}...\n")
+print(f"RESPONSE: {combined_result.text[:500]}...\n")
 
 # Step 4: You can also extend an existing team with additional agents
 print("You can easily extend teams by adding more agents:")

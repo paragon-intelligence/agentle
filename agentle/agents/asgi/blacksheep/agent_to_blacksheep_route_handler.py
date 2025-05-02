@@ -51,8 +51,10 @@ class AgentToBlackSheepRouteHandler(Adapter[Agent[Any], "type[Controller]"]):
         import blacksheep
 
         agent = _f
-
-        endpoint = agent.endpoint or f"/api/v1/agents/{agent.name.lower()}/run"
+        endpoint = (
+            agent.endpoint
+            or f"/api/v1/agents/{agent.name.lower().replace(' ', '_')}/run"
+        )
 
         class _Run(Controller):
             @blacksheep.post(endpoint)

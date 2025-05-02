@@ -67,11 +67,11 @@ agent_with_tools = Agent(
 # Run the agent with queries that will likely trigger tool use
 weather_response = agent_with_tools.run("What's the weather like in Tokyo?")
 print("Weather Query Response:")
-print(weather_response.generation.text)
+print(weather_response.text)
 print("\n" + "-" * 50 + "\n")
 
 mortgage_response = agent_with_tools.run(
     "Calculate the monthly payment for a $300,000 mortgage at 4.5% interest for 30 years."
 )
 print("Mortgage Query Response:")
-print(mortgage_response.generation.text)
+print(mortgage_response.text)

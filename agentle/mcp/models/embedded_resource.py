@@ -41,7 +41,6 @@ class EmbeddedResource(BaseModel):
     )
     resource: TextResourceContents | BlobResourceContents = Field(
         ...,
-        discriminator="type",
         description="The actual resource contents, either text or binary data",
     )
     annotations: Annotations | None = Field(

@@ -111,3 +111,10 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
     Structured data extracted from the agent's response when a response schema was provided.
     Will be None if no schema was specified.
     """
+
+    @property
+    def text(self) -> str:
+        """
+        The text response from the agent.
+        """
+        return self.generation.text

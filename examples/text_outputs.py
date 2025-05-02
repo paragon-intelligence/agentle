@@ -22,7 +22,7 @@ agent = Agent(
 response = agent.run("What are the three laws of robotics?")
 
 # Print the response text
-print(response.generation.text)
+print(response.text)
 
 # You can also access conversation steps if needed
 print("\nConversation steps:")
@@ -33,5 +33,5 @@ for i, step in enumerate(response.steps):
 # import asyncio
 # async def main():
 #     response = await agent.run_async("What are the three laws of robotics?")
-#     print(response.generation.text)
+#     print(response.text)
 # asyncio.run(main())

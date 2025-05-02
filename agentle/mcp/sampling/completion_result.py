@@ -44,6 +44,5 @@ class CompletionResult(BaseModel):
         description="Role associated with the message content, either 'user' or 'assistant'"
     )
     content: TextMessageContent | ImageMessageContent = Field(
-        discriminator="type",
         description="Content of the completion, which can be either text or image data",
     )

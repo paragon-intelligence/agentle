@@ -34,7 +34,6 @@ class SamplingRequest(BaseModel):
     """
 
     messages: Sequence[AssistantMessage | UserMessage] = Field(
-        discriminator="role",
         description="Sequence of messages representing the conversation history",
         examples=[
             [

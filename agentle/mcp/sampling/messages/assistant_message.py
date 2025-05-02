@@ -35,7 +35,7 @@ class AssistantMessage(BaseModel):
     """
 
     content: TextMessageContent | ImageMessageContent = Field(
-        discriminator="type", description="Content of the message, either text or image"
+        description="Content of the message, either text or image"
     )
     role: Literal["assistant"] = Field(
         default="assistant",

@@ -70,7 +70,7 @@ result = research_pipeline.run(f"Research the following topic: {topic}")
 
 print("\nFINAL RESULT FROM PIPELINE:")
 print("-" * 80)
-print(result.generation.text)
+print(result.text)
 print("-" * 80)
 
 # Step 4: You can also access the steps to see the pipeline execution
