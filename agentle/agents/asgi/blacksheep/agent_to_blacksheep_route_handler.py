@@ -49,6 +49,12 @@ class AgentToBlackSheepRouteHandler(Adapter[Agent[Any], "type[Controller]"]):
         Creates a BlackSheep router for the agent.
         """
         import blacksheep
+        from blacksheep.server.openapi.common import (
+            ContentInfo,
+            ResponseInfo,
+        )
+        from blacksheep.server.openapi.v3 import OpenAPIHandler
+        from openapidocs.v3 import Info
 
         agent = _f
         endpoint = (
@@ -56,7 +62,25 @@ class AgentToBlackSheepRouteHandler(Adapter[Agent[Any], "type[Controller]"]):
             or f"/api/v1/agents/{agent.name.lower().replace(' ', '_')}/run"
         )
 
+        docs = OpenAPIHandler(
+            info=Info(
+                title=agent.name,
+                version="1.0.0",
+                summary=agent.description,
+            )
+        )
+
+        agent_return_type = agent.run_async.__annotations__["return"]
+
         class _Run(Controller):
+            @docs(
+                responses={
+                    200: ResponseInfo(
+                        description="The agent run output",
+                        content=[ContentInfo(type=AgentRunOutput[agent_return_type])],
+                    )
+                }
+            )
             @blacksheep.post(endpoint)
             async def run(
                 self, input: blacksheep.FromJSON[_AgentRunCommand]
