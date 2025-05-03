@@ -78,6 +78,11 @@ class AgentPartToGenerationPartAdapter(
                 # Get MIME type from the file
                 mime_type = _f.file.mimeType
 
+                if mime_type is None:
+                    raise ValueError(
+                        f"MIME type is required, but got None for file: {_f.file.name}"
+                    )
+
                 # Handle base64-encoded bytes
                 if _f.file.bytes:
                     try:

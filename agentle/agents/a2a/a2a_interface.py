@@ -8,7 +8,17 @@ by sending it tasks or subscribing to it.
 import asyncio
 import logging
 import threading
-from typing import Optional, TYPE_CHECKING, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Coroutine,
+    Optional,
+    TypeVar,
+    Union,
+    List,
+    cast,
+    Generic,
+)
 
 from agentle.agents.a2a.resources.push_notification_resource import (
     PushNotificationResource,
@@ -30,40 +40,21 @@ logger = logging.getLogger(__name__)
 
 # Define a type variable for the output schema
 T_Schema = TypeVar("T_Schema")
+R = TypeVar("R")  # Return type for _run_async_in_thread
 
 
-def _get_event_loop():
-    """Get the current event loop or create a new one."""
-    try:
-        return asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop
-
-
-def _run_async(coro):
-    """Run a coroutine in the event loop safely."""
-    loop = _get_event_loop()
-    if loop.is_running():
-        # We're in a context where the event loop is already running
-        # For example, in a GUI application or web server
-        return asyncio.ensure_future(coro)
-    else:
-        # We're in a synchronous context, so we can run the coroutine to completion
-        return loop.run_until_complete(coro)
-
-
-def _run_async_in_thread(coro, timeout=None):
+def _run_async_in_thread(
+    coro: Coroutine[Any, Any, R], timeout: Optional[float] = None
+) -> R:
     """
     Run a coroutine in a separate thread with its own event loop.
 
     This avoids issues with cancellations in nested event loops.
     """
-    result_container = []
-    exception_container = []
+    result_container: List[Any] = []
+    exception_container: List[Exception] = []
 
-    def thread_target():
+    def thread_target() -> None:
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -88,16 +79,20 @@ def _run_async_in_thread(coro, timeout=None):
     if exception_container:
         raise exception_container[0]
 
-    return result_container[0]
+    return cast(R, result_container[0])
 
 
 # Create a wrapper class for task operations
-class TasksWrapper:
+class TasksWrapper(Generic[T_Schema]):
     """
     Wrapper for task operations with thread-safe async/sync conversion.
     """
 
-    def __init__(self, task_manager, agent):
+    def __init__(
+        self,
+        task_manager: TaskManager,
+        agent: Union["Agent[T_Schema]", "AgentTeam", "AgentPipeline"],
+    ) -> None:
         """Initialize with the task manager and agent."""
         self.task_manager = task_manager
         self.agent = agent
@@ -136,7 +131,7 @@ class TasksWrapper:
             raise
 
 
-class A2AInterface:
+class A2AInterface(Generic[T_Schema]):
     """
     Agent-to-Agent Interface
 
@@ -181,7 +176,7 @@ class A2AInterface:
 
     def __init__(
         self,
-        agent: "Union[Agent[T_Schema], AgentTeam, AgentPipeline]",
+        agent: Union["Agent[T_Schema]", "AgentTeam", "AgentPipeline"],
         task_manager: Optional[TaskManager] = None,
     ):
         """
@@ -202,7 +197,7 @@ class A2AInterface:
         self.task_manager = task_manager
 
         # Use a wrapper for tasks instead of modifying the Pydantic model
-        self.tasks = TasksWrapper(task_manager, agent)
+        self.tasks = TasksWrapper[T_Schema](task_manager, agent)
 
         # Keep the original TaskResource for compatibility if needed
         self._task_resource = TaskResource(agent=agent, manager=task_manager)

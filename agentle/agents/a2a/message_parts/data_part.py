@@ -57,3 +57,10 @@ class DataPart(BaseModel):
 
     data: dict[str, Any]
     """A dictionary containing the structured data"""
+
+    @property
+    def text(self) -> str:
+        """
+        Get the text content of the data part.
+        """
+        return str(self.data)

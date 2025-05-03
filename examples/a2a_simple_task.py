@@ -34,11 +34,17 @@ while True:
     result = a2a.tasks.get(TaskQueryParams(id=task.id))
     status = result.result.status
 
+    history = result.result.history
+    if history is None:
+        print("No history found")
+        time.sleep(1)
+        continue
+
     if status == TaskState.COMPLETED:
-        print("\nResponse:", result.result.history[1].parts[0].text)
+        print("\nResponse:", history[1].parts[0].text)
         break
     elif status == TaskState.FAILED:
-        print(f"Task failed: {result.result.error}")
+        print("Task failed.")
         break
     print(f"Status: {status}")
     time.sleep(1)

@@ -7,6 +7,7 @@ endpoints and retrieving notification configurations.
 """
 
 from __future__ import annotations
+
 from typing import TypeVar
 
 from rsb.models.base_model import BaseModel
@@ -24,7 +25,7 @@ from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 
 # Define generic type parameter for structured output schema
 T_Schema = TypeVar("T_Schema")
-WithoutStructuredOutput = None
+type WithoutStructuredOutput = None
 
 
 class PushNotificationResource[T_Schema = WithoutStructuredOutput](BaseModel):

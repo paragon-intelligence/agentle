@@ -68,3 +68,10 @@ class FilePart(BaseModel):
 
     file: File
     """A File object containing the file data and metadata"""
+
+    @property
+    def text(self) -> str:
+        """
+        Get the text content of the file.
+        """
+        return f"<file>{self.file.name}</file>"
