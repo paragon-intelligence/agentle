@@ -67,7 +67,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
-from typing import Any, Optional, cast
+from typing import Any, Optional, Self, cast
 from uuid import UUID
 
 from rsb.coroutines.run_sync import run_sync
@@ -105,7 +105,7 @@ class _OrchestratorOutput(BaseModel):
     task_done: bool
 
     @model_validator(mode="after")
-    def validate_agent_id(self) -> _OrchestratorOutput:
+    def validate_agent_id(self) -> Self:
         if not self.agent_id:
             raise ValueError("agent_id must be a non-empty string")
 

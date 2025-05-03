@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field
+from rsb.models.base_model import BaseModel
+from rsb.models.field import Field
 
 
 class SentenceSegment(BaseModel):

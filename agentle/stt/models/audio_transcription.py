@@ -1,15 +1,18 @@
-from typing import Sequence
+from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from collections.abc import Sequence
 
-from agentle.tts.models.sentence_segment import SentenceSegment
+from rsb.models.base_model import BaseModel
+from rsb.models.field import Field
+
+from agentle.stt.models.sentence_segment import SentenceSegment
+from agentle.stt.models.subtitles import Subtitles
 
 
 class AudioTranscription(BaseModel):
     """Result of audio-to-text transcription.
 
     Attributes:
-        elapsed_time: Processing time in seconds
         text: Full transcribed text
         segments: Timed text segments with confidence
         cost: API cost in USD
@@ -22,11 +25,6 @@ class AudioTranscription(BaseModel):
         ...     cost=0.02
         ... )
     """
-
-    elapsed_time: float = Field(
-        title="Elapsed Time",
-        description="The amount of time it took to generate the transcriptions.",
-    )
 
     text: str = Field(title="Text", description="The transcribed text.")
 
@@ -43,7 +41,10 @@ class AudioTranscription(BaseModel):
         description="The duration of the audio file in seconds. May not be precise.",
     )
 
-    srt: str = Field(title="SRT", description="The transcribed text in SubRip format.")
+    subtitles: Subtitles = Field(
+        title="Subtitles",
+        description="The subtitles of the audio file.",
+    )
 
     def merge(
         self, *audio_transcriptions: "AudioTranscription"
@@ -97,7 +98,6 @@ class AudioTranscription(BaseModel):
             return "\n\n".join(parts)
 
         all_transcriptions = [self] + list(audio_transcriptions)
-        merged_elapsed_time = sum(t.elapsed_time for t in all_transcriptions)
         merged_text = " ".join(t.text for t in all_transcriptions)
         merged_cost = sum(t.cost for t in all_transcriptions)
         merged_duration = sum(t.duration for t in all_transcriptions)
@@ -118,10 +118,12 @@ class AudioTranscription(BaseModel):
                 merged_segments.append(new_segment)
 
         return AudioTranscription(
-            elapsed_time=round(merged_elapsed_time, 2),
             text=merged_text,
             segments=merged_segments,
             cost=merged_cost,
             duration=merged_duration,
-            srt=segments_to_srt(merged_segments),
+            subtitles=Subtitles(
+                format="srt",
+                subtitles=segments_to_srt(merged_segments),
+            ),
         )
