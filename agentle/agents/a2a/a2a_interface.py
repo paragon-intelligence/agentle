@@ -5,19 +5,17 @@ The Agent-to-Agent Interface that allows one agent to interact with another
 by sending it tasks or subscribing to it.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import threading
+from collections.abc import Coroutine
 from typing import (
     TYPE_CHECKING,
     Any,
-    Coroutine,
     Optional,
-    TypeVar,
-    Union,
-    List,
     cast,
-    Generic,
 )
 
 from agentle.agents.a2a.resources.push_notification_resource import (
@@ -38,12 +36,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Define a type variable for the output schema
-T_Schema = TypeVar("T_Schema")
-R = TypeVar("R")  # Return type for _run_async_in_thread
 
-
-def _run_async_in_thread(
+def _run_async_in_thread[R](
     coro: Coroutine[Any, Any, R], timeout: Optional[float] = None
 ) -> R:
     """
@@ -51,8 +45,8 @@ def _run_async_in_thread(
 
     This avoids issues with cancellations in nested event loops.
     """
-    result_container: List[Any] = []
-    exception_container: List[Exception] = []
+    result_container: list[Any] = []
+    exception_container: list[Exception] = []
 
     def thread_target() -> None:
         try:
@@ -83,7 +77,7 @@ def _run_async_in_thread(
 
 
 # Create a wrapper class for task operations
-class TasksWrapper(Generic[T_Schema]):
+class TasksWrapper[T_Schema]:
     """
     Wrapper for task operations with thread-safe async/sync conversion.
     """
@@ -91,7 +85,7 @@ class TasksWrapper(Generic[T_Schema]):
     def __init__(
         self,
         task_manager: TaskManager,
-        agent: Union["Agent[T_Schema]", "AgentTeam", "AgentPipeline"],
+        agent: "Agent[T_Schema] | AgentTeam | AgentPipeline",
     ) -> None:
         """Initialize with the task manager and agent."""
         self.task_manager = task_manager
@@ -131,7 +125,7 @@ class TasksWrapper(Generic[T_Schema]):
             raise
 
 
-class A2AInterface(Generic[T_Schema]):
+class A2AInterface[T_Schema]:
     """
     Agent-to-Agent Interface
 
@@ -176,7 +170,7 @@ class A2AInterface(Generic[T_Schema]):
 
     def __init__(
         self,
-        agent: Union["Agent[T_Schema]", "AgentTeam", "AgentPipeline"],
+        agent: "Agent[T_Schema] | AgentTeam | AgentPipeline",
         task_manager: Optional[TaskManager] = None,
     ):
         """

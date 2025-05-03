@@ -8,6 +8,7 @@ from rsb.adapters.adapter import Adapter
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
+from agentle.agents.a2a.a2a_interface import A2AInterface
 from agentle.agents.agent import Agent
 from agentle.agents.agent_input import AgentInput
 from agentle.agents.agent_run_output import AgentRunOutput
@@ -43,11 +44,20 @@ class _AgentRunCommand(BaseModel):
     )
 
 
-class AgentToBlackSheepRouteHandler(Adapter[Agent[Any], "type[Controller]"]):
-    def adapt(self, _f: Agent[Any]) -> type[Controller]:
+class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]"]):
+    def adapt(self, _f: Agent[Any] | A2AInterface[Any]) -> type[Controller]:
         """
         Creates a BlackSheep router for the agent.
         """
+        if isinstance(_f, Agent):
+            return self._adapt_agent(_f)
+
+        return self._adapt_a2a_interface(_f)
+
+    def _adapt_a2a_interface(self, _f: A2AInterface[Any]) -> type[Controller]:
+        raise NotImplementedError("A2AInterface is not supported yet")
+
+    def _adapt_agent(self, _f: Agent[Any]) -> type[Controller]:
         import blacksheep
         from blacksheep.server.openapi.common import (
             ContentInfo,

@@ -10,7 +10,7 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
     GoogleGenaiGenerationProvider,
 )
 from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application import (
-    AgentToBlackSheepApplication,
+    AgentToBlackSheepApplicationAdapter,
 )
 
 # Create a simple agent
@@ -26,7 +26,7 @@ code_assistant = Agent(
 )
 
 # Convert the agent to a Blacksheep ASGI application
-app = AgentToBlackSheepApplication().adapt(code_assistant)
+app = AgentToBlackSheepApplicationAdapter().adapt(code_assistant)
 
 # This is how you would run the API server
 if __name__ == "__main__":
