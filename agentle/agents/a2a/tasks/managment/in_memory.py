@@ -12,10 +12,9 @@ import logging
 import sys
 import threading
 import time
-import traceback
 import uuid
 from collections.abc import MutableSequence
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from agentle.agents.a2a.messages.generation_message_to_message_adapter import (
     GenerationMessageToMessageAdapter,
@@ -51,7 +50,7 @@ logger.addHandler(handler)
 
 
 # Global event loop management
-def get_or_create_eventloop():
+def get_or_create_eventloop() -> asyncio.AbstractEventLoop:
     try:
         loop = asyncio.get_event_loop()
         logger.debug(f"Using existing event loop: {id(loop)}")
@@ -118,16 +117,16 @@ class InMemoryTaskManager(TaskManager):
     def __init__(self):
         """Initialize the in-memory task manager."""
         logger.debug("Initializing InMemoryTaskManager")
-        self._tasks: Dict[str, Task] = {}
-        self._running_tasks: Dict[str, asyncio.Task] = {}
-        self._task_histories: Dict[str, MutableSequence[Message]] = {}
+        self._tasks: dict[str, Task] = {}
+        self._running_tasks: dict[str, asyncio.Task[Any]] = {}
+        self._task_histories: dict[str, MutableSequence[Message]] = {}
         self._message_adapter = GenerationMessageToMessageAdapter()
         self._a2a_to_generation_adapter = MessageToGenerationMessageAdapter()
         self._lock = threading.Lock()
         self._event_loop = get_or_create_eventloop()
 
     def _log_task_status(
-        self, task_id: str, message: str, asyncio_task: asyncio.Task = None
+        self, task_id: str, message: str, asyncio_task: asyncio.Task[Any] | None = None
     ):
         """Helper to log task status with detailed information."""
         with self._lock:
@@ -558,7 +557,7 @@ class InMemoryTaskManager(TaskManager):
 
         self._log_task_status(task_id, "Task execution completed")
 
-    def list(self, query_params: Optional[TaskQueryParams] = None) -> List[Task]:
+    def list(self, query_params: Optional[TaskQueryParams] = None) -> list[Task]:
         """
         List tasks matching the query parameters.
 
@@ -566,7 +565,7 @@ class InMemoryTaskManager(TaskManager):
             query_params (Optional[TaskQueryParams]): Parameters for filtering tasks
 
         Returns:
-            List[Task]: List of tasks matching the query
+            list[Task]: list of tasks matching the query
         """
         with self._lock:
             # Return a copy of all tasks if no query params provided
