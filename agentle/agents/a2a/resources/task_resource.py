@@ -7,7 +7,7 @@ retrieving task results, and managing task notifications.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
@@ -23,15 +23,6 @@ from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
 from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
 from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
 
-if TYPE_CHECKING:
-    from agentle.agents.agent import Agent
-    from agentle.agents.agent_pipeline import AgentPipeline
-    from agentle.agents.agent_team import AgentTeam
-else:
-    # Import for runtime, not for type checking
-    from typing import Any as Agent
-    from typing import Any as AgentPipeline
-    from typing import Any as AgentTeam
 
 type WithoutStructuredOutput = None
 
