@@ -36,7 +36,7 @@ from collections.abc import (
     Sequence,
 )
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any, ClassVar, Mapping, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
@@ -56,6 +56,8 @@ from agentle.agents.context import Context
 from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
+from agentle.agents.knowledge.document_knowledge import DocumentKnowledge
+from agentle.agents.knowledge.url_knowledge import UrlKnowledge
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.trace_params import TraceParams
@@ -75,6 +77,7 @@ from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+from agentle.parsing.document_parser import DocumentParser
 from agentle.prompts.models.prompt import Prompt
 
 if TYPE_CHECKING:
@@ -145,9 +148,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         ```
     """
 
-    # Provider mapping for from_agent_card method
-    _PROVIDER_MAPPING: ClassVar[Mapping[str, type[GenerationProvider]]] = {}
-
     uid: uuid.UUID = Field(default_factory=uuid.uuid4)
     """
     A unique identifier for the agent.
@@ -170,6 +170,20 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     url: str = Field(default="in-memory")
     """
     A URL to the address the agent is hosted at.
+    """
+
+    static_knowledge: Sequence[UrlKnowledge | DocumentKnowledge] = Field(
+        default_factory=list
+    )
+    """
+    Static knowledge to be used by the agent. This will be used to enrich the agent's
+    knowledge base. This will be FULLY (**entire document**) indexed to the conversation.
+    """
+
+    document_parser: DocumentParser | None = Field(default=None)
+    """
+    A document parser to be used by the agent. This will be used to parse the static
+    knowledge documents, if provided.
     """
 
     generation_provider: GenerationProvider | type[GenerationProvider]
@@ -323,7 +337,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         # Fail silently and use fallback later
                         pass
                 case _:
-                    raise ValueError(f"Unsupported (yet) provider organization: {org_name}")
+                    raise ValueError(
+                        f"Unsupported (yet) provider organization: {org_name}"
+                    )
 
         # Convert skills
         skills: list[AgentSkill] = []
@@ -434,19 +450,19 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         # Map provider class to organization name
         provider_name: str | None = None
-        provider_url = "https://example.com" # just for now.
+        provider_url = "https://example.com"  # just for now.
 
         if hasattr(provider_class, "__module__"):
             module_name = provider_class.__module__.lower()
             if "google" in module_name:
                 provider_name = "Google"
-                provider_url = "https://ai.google.dev/" # just for now.
+                provider_url = "https://ai.google.dev/"  # just for now.
             elif "anthropic" in module_name:
                 provider_name = "Anthropic"
-                provider_url = "https://anthropic.com/" # just for now.
+                provider_url = "https://anthropic.com/"  # just for now.
             elif "openai" in module_name:
                 provider_name = "OpenAI"
-                provider_url = "https://openai.com/" # just for now.
+                provider_url = "https://openai.com/"  # just for now.
 
         if provider_name is not None:
             provider_dict = {"organization": provider_name, "url": provider_url}
