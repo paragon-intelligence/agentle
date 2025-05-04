@@ -173,12 +173,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     A URL to the address the agent is hosted at.
     """
 
-    static_knowledge: Sequence[UrlKnowledge | DocumentKnowledge] = Field(
+    static_knowledge: Sequence[UrlKnowledge | DocumentKnowledge | str] = Field(
         default_factory=list
     )
     """
     Static knowledge to be used by the agent. This will be used to enrich the agent's
     knowledge base. This will be FULLY (**entire document**) indexed to the conversation.
+    This can be any url or a local file path.
     """
 
     # Dear dev,

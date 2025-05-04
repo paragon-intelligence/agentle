@@ -1,6 +1,7 @@
 import inspect
 from pathlib import Path
 from typing import Any, Literal, MutableMapping, override
+from urllib.parse import urlparse
 
 from rsb.models.field import Field
 
@@ -19,6 +20,7 @@ from agentle.parsing.factories.visual_description_agent_factory import (
     visual_description_agent_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
+from agentle.parsing.parsers.link import LinkParser
 from agentle.parsing.parses import parser_registry
 
 
@@ -200,7 +202,17 @@ class FileParser(DocumentParser):
         parser_cls = parser_registry.get(path.suffix)
 
         if not parser_cls:
-            raise ValueError(f"Unsupported extension: {path.suffix}")
+            parsed_url = urlparse(document_path)
+            is_url = parsed_url.scheme in ["http", "https"]
+
+            if is_url:
+                parser_cls = LinkParser(
+                    visual_description_agent=self.visual_description_agent,
+                    audio_description_agent=self.audio_description_agent,
+                )
+                return await parser_cls.parse_async(document_path)
+            else:
+                raise ValueError(f"Unsupported extension: {path.suffix}")
 
         # Get the signature of the parser constructor
         parser_signature = inspect.signature(parser_cls.__init__)
