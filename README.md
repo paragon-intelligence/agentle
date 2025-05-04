@@ -831,6 +831,68 @@ research_agent = Agent(
 )
 ```
 
+You can also create completely custom document parsers by implementing the `DocumentParser` abstract base class. This is useful when you want to integrate with specialized document processing libraries or services:
+
+```python
+from typing import override
+from pathlib import Path
+from agentle.parsing.document_parser import DocumentParser
+from agentle.parsing.parsed_document import ParsedDocument
+from agentle.parsing.section_content import SectionContent
+from agentle.parsing.parses import parses
+
+# Create a custom parser (using a hypothetical LlamaParse integration as an example)
+class LlamaParseParser(DocumentParser):
+    """Parser that uses LlamaParse for enhanced document understanding"""
+    
+    def __init__(self, api_key: str):
+        super().__init__()
+        self.api_key = api_key
+        # Initialize your custom parsing service
+        # self.llama_client = LlamaParseClient(api_key=api_key)
+    
+    @override
+    async def parse_async(self, document_path: str) -> ParsedDocument:
+        # Read the document file
+        path = Path(document_path)
+        file_content = path.read_bytes()
+        
+        # Use your custom parsing logic
+        # parsed_content = await self.llama_client.parse_document(file_content)
+        
+        # For this example, we'll just use a placeholder
+        parsed_content = f"Content from {path.name} would be parsed with LlamaParse"
+        
+        # Return in the standard ParsedDocument format
+        return ParsedDocument(
+            name=path.name,
+            sections=[
+                SectionContent(
+                    number=1,
+                    text=parsed_content,
+                    md=parsed_content
+                )
+            ]
+        )
+
+# Use the custom parser with an agent
+from agentle.agents.agent import Agent
+
+agent = Agent(
+    name="Document Expert",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You analyze documents with precision.",
+    static_knowledge=[
+        DocumentKnowledge(path="contracts/agreement.pdf")
+    ],
+    # Pass your custom parser to the agent
+    document_parser=LlamaParseParser(api_key="your-api-key-here")
+)
+```
+
+This approach gives you complete flexibility to integrate any document processing system while maintaining compatibility with Agentle's knowledge integration framework.
+
 The knowledge integration system seamlessly works with the rest of Agentle's features like tool calling, structured outputs, and Agent-to-Agent communication.
 
 #### Agent Cards
@@ -1179,7 +1241,6 @@ from pathlib import Path
 from typing import override
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 @parses("custom", "cst")  # Register for .custom and .cst file extensions
