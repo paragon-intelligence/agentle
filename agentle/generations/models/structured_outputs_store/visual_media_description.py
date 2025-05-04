@@ -100,7 +100,7 @@ class VisualMediaDescription(BaseModel):
     ocr_text: str | None = Field(
         default=None,
         title="OCR Text",
-        description="The OCR text of the visual media. This is the text that is extracted from the visual media.",
+        description="The OCR text of the visual media, if any.",
     )
 
     @property

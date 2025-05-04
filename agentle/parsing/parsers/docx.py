@@ -1,7 +1,8 @@
 import hashlib
-import tempfile
-from typing import override
+from pathlib import Path
+from typing import Literal, override
 
+from rsb.functions.ext_to_mime import ext_to_mime
 from rsb.models.field import Field
 
 from agentle.agents.agent import Agent
@@ -25,6 +26,8 @@ from agentle.parsing.section_content import SectionContent
 
 @parses("doc", "docx")
 class DocxFileParser(DocumentParser):
+    strategy: Literal["high", "low"] = Field(default="high")
+
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,
     )
@@ -48,66 +51,63 @@ class DocxFileParser(DocumentParser):
     ) -> ParsedDocument:
         from docx import Document
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = f"{temp_dir}/{file.name}"
-            file.save_to_file(file_path)
+        document = Document(document_path)
+        image_cache: dict[str, tuple[str, str]] = {}  # (md, ocr_text)
+        extension = Path(document_path).suffix
 
-            document = Document(file_path)
-            image_cache: dict[str, tuple[str, str]] = {}  # (md, ocr_text)
+        paragraph_texts = [p.text for p in document.paragraphs if p.text.strip()]
+        doc_text = "\n".join(paragraph_texts)
 
-            paragraph_texts = [p.text for p in document.paragraphs if p.text.strip()]
-            doc_text = "\n".join(paragraph_texts)
+        doc_images: list[tuple[str, bytes]] = []
+        for rel in document.part._rels.values():  # type: ignore[reportPrivateUsage]
+            if "image" in rel.reltype:
+                image_part = rel.target_part
+                image_name = image_part.partname.split("/")[-1]
+                image_bytes = image_part.blob
+                doc_images.append((image_name, image_bytes))
 
-            doc_images: list[tuple[str, bytes]] = []
-            for rel in document.part._rels.values():  # type: ignore[reportPrivateUsage]
-                if "image" in rel.reltype:
-                    image_part = rel.target_part
-                    image_name = image_part.partname.split("/")[-1]
-                    image_bytes = image_part.blob
-                    doc_images.append((image_name, image_bytes))
+        final_images: list[Image] = []
+        image_descriptions: list[str] = []
+        if self.visual_description_agent and self.strategy == "high":
+            for idx, (image_name, image_bytes) in enumerate(doc_images, start=1):
+                image_hash = hashlib.sha256(image_bytes).hexdigest()
 
-            final_images: list[Image] = []
-            image_descriptions: list[str] = []
-            if self.visual_description_agent and self.strategy == "high":
-                for idx, (image_name, image_bytes) in enumerate(doc_images, start=1):
-                    image_hash = hashlib.sha256(image_bytes).hexdigest()
-
-                    if image_hash in image_cache:
-                        cached_md, cached_ocr = image_cache[image_hash]
-                        image_md = cached_md
-                        ocr_text = cached_ocr
-                    else:
-                        agent_input = FilePart(
-                            mime_type=bytes_to_mime(image_bytes),
-                            data=image_bytes,
-                        )
-                        agent_response = await self.visual_description_agent.run_async(
-                            agent_input
-                        )
-                        image_md = agent_response.parsed.md
-                        ocr_text = agent_response.parsed.ocr_text
-                        image_cache[image_hash] = (image_md, ocr_text or "")
-
-                    image_descriptions.append(f"Docx Image {idx}: {image_md}")
-                    final_images.append(
-                        Image(
-                            name=image_name,
-                            contents=image_bytes,
-                            ocr_text=ocr_text,
-                        )
+                if image_hash in image_cache:
+                    cached_md, cached_ocr = image_cache[image_hash]
+                    image_md = cached_md
+                    ocr_text = cached_ocr
+                else:
+                    agent_input = FilePart(
+                        mime_type=ext_to_mime(extension),
+                        data=image_bytes,
                     )
-
-                if image_descriptions:
-                    doc_text += "\n\n" + "\n".join(image_descriptions)
-
-            return ParsedDocument(
-                name=document_path,
-                sections=[
-                    SectionContent(
-                        number=1,
-                        text=doc_text,
-                        md=doc_text,
-                        images=final_images,
+                    agent_response = await self.visual_description_agent.run_async(
+                        agent_input
                     )
-                ],
-            )
+                    image_md = agent_response.parsed.md
+                    ocr_text = agent_response.parsed.ocr_text
+                    image_cache[image_hash] = (image_md, ocr_text or "")
+
+                image_descriptions.append(f"Docx Image {idx}: {image_md}")
+                final_images.append(
+                    Image(
+                        name=image_name,
+                        contents=image_bytes,
+                        ocr_text=ocr_text,
+                    )
+                )
+
+            if image_descriptions:
+                doc_text += "\n\n" + "\n".join(image_descriptions)
+
+        return ParsedDocument(
+            name=document_path,
+            sections=[
+                SectionContent(
+                    number=1,
+                    text=doc_text,
+                    md=doc_text,
+                    images=final_images,
+                )
+            ],
+        )

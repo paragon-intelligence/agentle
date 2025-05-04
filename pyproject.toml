@@ -43,6 +43,7 @@ dev = [
     "pypdf>=5.4.0",
     "python-docx>=1.1.2",
     "python-dotenv>=1.1.0",
+    "python-pptx>=1.0.2",
     "r2r>=3.5.14",
     "rarfile>=4.2",
     "sphinx>=8.2.3",
