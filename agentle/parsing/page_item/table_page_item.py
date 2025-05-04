@@ -72,4 +72,4 @@ class TablePageItem(BaseModel):
         description="Whether the table is a perfect table. A perfect table is a table that is well-structured and has no irregularities.",
     )
 
-    config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True)

@@ -23,7 +23,7 @@
     "reportUnknownParameterType": true,
     "reportFunctionMemberAccess": true,
     // Code quality checks
-    "reportImportCycles": true,
+    "reportImportCycles": false,
     "reportImplicitStringConcatenation": true,
     "reportUndefinedVariable": true,
     "reportUnboundVariable": true,

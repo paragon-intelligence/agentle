@@ -106,4 +106,4 @@ class Image(BaseModel):
         description="The alt text of the image.",
     )
 
-    config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True)

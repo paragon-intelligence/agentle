@@ -11,4 +11,4 @@ class TextPageItem(BaseModel):
         description="Value of the text item",
     )
 
-    config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True)

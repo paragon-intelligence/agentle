@@ -1,8 +1,6 @@
-from rsb.coroutines.run_sync import run_sync
+from typing import override
 from rsb.models.base_model import BaseModel
-from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
-from rsb.models.model_validator import model_validator
 
 from agentle.agents.agent import Agent
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
@@ -12,15 +10,16 @@ from agentle.generations.providers.base.generation_provider import GenerationPro
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
 )
+from agentle.parsing.document_parser import DocumentParser
+from agentle.parsing.factories.visual_description_agent_factory import (
+    visual_description_agent_factory,
+)
 from agentle.parsing.parsed_document import ParsedDocument
 
 
-def _agent_factory() -> Agent[VisualMediaDescription]: ...
-
-
-class DocumentParser(BaseModel):
+class StaticImageParser(DocumentParser):
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=_agent_factory,
+        default_factory=visual_description_agent_factory,
     )
     """
     The agent to use for generating the visual description of the document.
@@ -35,27 +34,6 @@ class DocumentParser(BaseModel):
     Useful when you want us to customize the prompt for the visual description.
     """
 
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        frozen=True,
-    )
-
-    # both cannot be passed at the same time
-    @model_validator(mode="before")
-    def validate_both_providers_not_passed(self) -> None:
-        if self.visual_description_agent and self.multi_modal_provider:
-            raise ValueError(
-                "Both visual_description_agent and multi_modal_provider cannot be passed at the same time"
-            )
-
-    def parse(self, document_path: str) -> ParsedDocument:
-        """
-        Parse a document and return a ParsedDocument.
-        """
-        return run_sync(self.parse_async, document_path=document_path)
-
+    @override
     async def parse_async(self, document_path: str) -> ParsedDocument:
-        """
-        Parse a document and return a ParsedDocument.
-        """
-        raise NotImplementedError("Subclasses must implement this method.")
+        pass

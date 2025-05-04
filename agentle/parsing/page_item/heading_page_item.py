@@ -46,4 +46,4 @@ class HeadingPageItem(BaseModel):
         description="Level of the heading",
     )
 
-    config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True)

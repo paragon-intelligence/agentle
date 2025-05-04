@@ -76,4 +76,4 @@ class XMLFileParser(DocumentParser):
 
         return "\n".join(lines)
 
-    config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True)

@@ -13,7 +13,7 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
     GoogleGenaiGenerationProvider,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.facade import FileParser
+from agentle.parsing.parsers.facade import FileParser
 from agentle.parsing.factories.visual_description_agent_factory import (
     visual_description_agent_factory,
 )
