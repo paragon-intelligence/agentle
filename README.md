@@ -427,13 +427,16 @@ coding_result = team.run(coding_query)
 
 ## 🌐 Deployment Options
 
-### Web API with BlackSheep
+### Web API with BlackSheep (Experimental)
 
-Expose your agent as a RESTful API:
+Expose your agent or A2A interface as a RESTful API:
+
+#### Agent API
 
 ```python
 from agentle.agents.agent import Agent
 from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
 
 # Create your agent
 code_assistant = Agent(
@@ -454,6 +457,54 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
 ```
+
+**Available Endpoints:**
+- `POST /api/v1/agents/code_assistant/run` - Send prompts to the agent and get responses synchronously
+- `GET /openapi` - Get the OpenAPI specification
+- `GET /docs` - Access the interactive API documentation
+
+#### A2A Interface API
+
+For more complex asynchronous workloads, expose your agent using the Agent-to-Agent (A2A) protocol:
+
+```python
+from agentle.agents.a2a.a2a_interface import A2AInterface
+from agentle.agents.agent import Agent
+from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+
+# Create your agent
+code_assistant = Agent(
+    name="Async Code Assistant",
+    description="An AI assistant specialized in helping with programming tasks asynchronously.",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="""You are a helpful programming assistant.
+    You can answer questions about programming languages, help debug code,
+    explain programming concepts, and provide code examples.""",
+)
+
+# Create an A2A interface for the agent
+a2a_interface = A2AInterface(agent=code_assistant)
+
+# Convert the A2A interface to a BlackSheep ASGI application
+app = AgentToBlackSheepApplicationAdapter().adapt(a2a_interface)
+
+# Run the API server
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+**Available Endpoints:**
+- `POST /api/v1/tasks/send` - Send a task to the agent asynchronously
+- `POST /api/v1/tasks/get` - Get task results
+- `POST /api/v1/tasks/cancel` - Cancel a running task
+- `WebSocket /api/v1/notifications` - Subscribe to push notifications about task status changes (WIP)
+- `GET /openapi` - Get the OpenAPI specification
+- `GET /docs` - Access the interactive API documentation
+
+The A2A interface provides a message broker pattern for task processing, similar to RabbitMQ, but exposed through a RESTful API interface.
 
 ### Interactive UI with Streamlit
 
