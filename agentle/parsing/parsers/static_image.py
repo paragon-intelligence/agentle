@@ -1,5 +1,5 @@
 from typing import override
-from rsb.models.base_model import BaseModel
+
 from rsb.models.field import Field
 
 from agentle.agents.agent import Agent
@@ -36,4 +36,4 @@ class StaticImageParser(DocumentParser):
 
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:
-        pass
+        raise NotImplementedError("Static image parsing is not implemented yet")

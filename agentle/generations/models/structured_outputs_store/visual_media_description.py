@@ -86,7 +86,7 @@ class VisualMediaDescription(BaseModel):
         ],
     )
 
-    intended_purpose: Optional[str] = Field(
+    intended_purpose: str | None = Field(
         default=None,
         title="Intended Purpose or Meaning",
         description="An interpretation of the intended purpose or meaning of the audio, based on its content and structure. What is the audio trying to convey or communicate? For a song, it might be to express emotions. For a podcast, to inform or entertain. For sound effects, to create a specific atmosphere. This is an interpretive field, so focus on reasonable inferences based on the auditory evidence. Examples: 'To tell a story through sound', 'To provide information on a specific topic', 'To create a relaxing and immersive soundscape', 'To evoke feelings of joy and excitement'.",
@@ -95,6 +95,12 @@ class VisualMediaDescription(BaseModel):
             "To educate on a particular subject",
             "To create a sense of atmosphere",
         ],
+    )
+
+    ocr_text: str | None = Field(
+        default=None,
+        title="OCR Text",
+        description="The OCR text of the visual media. This is the text that is extracted from the visual media.",
     )
 
     @property

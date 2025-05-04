@@ -1,6 +1,6 @@
-import io
+import os
 import tempfile
-from collections.abc import Sequence
+from collections.abc import MutableSequence
 from pathlib import Path
 from typing import override
 
@@ -21,6 +21,7 @@ from agentle.parsing.factories.visual_description_agent_factory import (
 from agentle.parsing.migrate import StaticImageFileParser
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parses import parses
+from agentle.parsing.section_content import SectionContent
 
 
 @parses("dwg")
@@ -57,9 +58,8 @@ class DWGFileParser(DocumentParser):
         import aspose.cad as cad  # type: ignore
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = f"{temp_dir}/{document_path}"
-            # file.save_to_file(file_path)
-            # TODO: save the file to the temp directory
+            file_path = f"{temp_dir}/{os.path.basename(document_path)}"
+            # Save the file to the temp directory
             with open(file_path, "wb") as f:
                 f.write(Path(document_path).read_bytes())
 
@@ -74,22 +74,17 @@ class DWGFileParser(DocumentParser):
             # Save as PDF
             image.save(output_path, pdfOptions)  # type: ignore
 
-            image_bytes_list = self.__pdf_to_images(output_path)
-
-            # replace with file paths
-            raw_files = [
-                RawFile.from_bytes(
-                    data=img, name=f"{file.name}_{i}.png", extension="png"
-                )
-                for i, img in enumerate(image_bytes_list)
-            ]
+            # Convert PDF to images and save them to temp directory
+            image_paths = self.__pdf_to_image_paths(output_path, temp_dir)
 
             parser = StaticImageFileParser(
                 visual_description_agent=self.visual_description_agent,
             )
 
-            parsed_files = [await parser.parse_async(f) for f in raw_files]
-            sections = [
+            parsed_files = [
+                await parser.parse_async(image_path) for image_path in image_paths
+            ]
+            sections: MutableSequence[SectionContent] = [
                 section
                 for parsed_file in parsed_files
                 for section in parsed_file.sections
@@ -97,33 +92,38 @@ class DWGFileParser(DocumentParser):
 
             return ParsedDocument.from_sections(document_path, sections)
 
-    def __pdf_to_images(self, pdf_path: str) -> Sequence[bytes]:
-        """Converts each page of a PDF to image bytes.
+    def __pdf_to_image_paths(self, pdf_path: str, temp_dir: str) -> list[str]:
+        """Converts each page of a PDF to image files and returns their paths.
 
         Args:
             pdf_path (str): The path to the PDF file.
+            temp_dir (str): The temporary directory to save the images.
 
         Returns:
-            Sequence[bytes]: A list of bytes objects, each containing a PNG image of a PDF page.
+            list[str]: A list of file paths to the saved images.
         """
         import pymupdf
 
-        image_bytes_list: list[bytes] = []
+        image_paths: list[str] = []
         doc = pymupdf.open(pdf_path)
+        base_filename = os.path.basename(pdf_path).split(".")[0]
 
         try:
             for page_num in range(len(doc)):
                 page = doc.load_page(page_num)  # type: ignore
                 pix = page.get_pixmap()  # type: ignore
 
-                # Create a bytes buffer and save the image into it
-                buffer = io.BytesIO()
-                pix.save(buffer, "png")  # type: ignore
-                image_bytes = buffer.getvalue()
+                # Create the image file path
+                image_path = os.path.join(
+                    temp_dir, f"{base_filename}_page_{page_num}.png"
+                )
 
-                image_bytes_list.append(image_bytes)
+                # Save the image to the temp directory
+                pix.save(image_path, "png")  # type: ignore
+
+                image_paths.append(image_path)
 
         finally:
             doc.close()
 
-        return image_bytes_list
+        return image_paths
