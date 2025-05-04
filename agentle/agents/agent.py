@@ -673,21 +673,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             ```
         """
 
-        # Default trace params when neither trace_params nor generationConfig.trace_params are provided
-        _trace_params: TraceParams | None = None
-        if trace_params is None and not self.config.generationConfig.trace_params:
-            _trace_params = {
-                "name": "agent_run",
-                "user_id": "unknown",
-                "session_id": str(uuid.uuid4()),
-                "metadata": {
-                    "agent_name": self.name,
-                    "agent_description": self.description,
-                    "agent_version": self.version,
-                    "agent_endpoint": self.endpoint,
-                },
-            }
-
         context: Context = self._convert_input_to_context(
             input, instructions=self._convert_instructions_to_str(self.instructions)
         )

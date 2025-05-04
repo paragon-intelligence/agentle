@@ -1,3 +1,4 @@
+import abc
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
@@ -6,7 +7,7 @@ from rsb.models.config_dict import ConfigDict
 from agentle.parsing.parsed_document import ParsedDocument
 
 
-class DocumentParser(BaseModel):
+class DocumentParser(BaseModel, abc.ABC):
     """
     Abstract base class for all document parsers in the Agentle framework.
 
@@ -102,6 +103,7 @@ class DocumentParser(BaseModel):
         """
         return run_sync(self.parse_async, document_path=document_path)
 
+    @abc.abstractmethod
     async def parse_async(self, document_path: str) -> ParsedDocument:
         """
         Parse a document asynchronously and return a structured representation.
@@ -135,4 +137,4 @@ class DocumentParser(BaseModel):
             asyncio.run(main())
             ```
         """
-        raise NotImplementedError("Subclasses must implement this method.")
+        ...
