@@ -31,3 +31,7 @@ for section in parsed_doc.sections:
         print(f"Image: {image.name}, OCR text: {image.ocr_text}")
 ```
 """
+
+from .parse import parse
+
+__all__: list[str] = ["parse"]
