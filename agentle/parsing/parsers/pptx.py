@@ -1,4 +1,6 @@
 import subprocess
+import os
+import tempfile
 from collections.abc import MutableSequence
 from pathlib import Path
 from typing import Literal, cast, override
@@ -160,9 +162,13 @@ class PptxFileParser(DocumentParser):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Write input file to temporary directory
-            input_path = os.path.join(temp_dir, file.name)
-            with open(input_path, "wb") as f:
-                f.write(file.contents)
+            input_filename = Path(document_path).name
+            input_path = os.path.join(temp_dir, input_filename)
+            with (
+                open(document_path, "rb") as src_file,
+                open(input_path, "wb") as dst_file,
+            ):
+                dst_file.write(src_file.read())
 
             # Run LibreOffice conversion
             try:
@@ -188,7 +194,7 @@ class PptxFileParser(DocumentParser):
                 raise RuntimeError("Conversion timed out after 60 seconds")
 
             # Determine output file path
-            output_filename = Path(file.name).stem + ".pptx"
+            output_filename = Path(input_filename).stem + ".pptx"
             output_path = os.path.join(temp_dir, output_filename)
 
             if not os.path.exists(output_path):
@@ -197,4 +203,12 @@ class PptxFileParser(DocumentParser):
                     f"Converted file not found at {output_path}. Found files: {available_files}"
                 )
 
-            ...
+            # Read the converted file and create a temporary file in the system temp directory
+            with open(output_path, "rb") as f:
+                content = f.read()
+
+            temp_output = tempfile.NamedTemporaryFile(suffix=".pptx", delete=False)
+            temp_output.write(content)
+            temp_output.close()
+
+            return temp_output.name

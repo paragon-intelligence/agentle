@@ -5,7 +5,7 @@ import time
 import asyncio
 
 import httpx
-from rsb.functions.ext_to_mime import ext_to_mime
+from rsb.functions.ext2mime import ext2mime
 
 from agentle.stt.models.audio_transcription import AudioTranscription
 from agentle.stt.models.sentence_segment import SentenceSegment
@@ -46,7 +46,7 @@ class GladiaSpeechToTextProvider(SpeechToTextProvider):
             UPLOAD_URL = "https://api.gladia.io/v2/upload"
 
             extension = Path(audio_file).suffix
-            mime_type = ext_to_mime(extension)
+            mime_type = ext2mime(extension)
 
             file_bytes = Path(_audio_file).read_bytes()
 

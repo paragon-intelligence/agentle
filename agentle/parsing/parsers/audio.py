@@ -110,10 +110,8 @@ class AudioFileParser(DocumentParser):
             sections=[
                 SectionContent(
                     number=1,
-                    text=transcription.parsed.audio_transcription.text
-                    if transcription.parsed.audio_transcription is not None
-                    else self._could_not_transcript(),
-                    md=transcription.parsed.final_answer.md,
+                    text=transcription.parsed.overall_description,
+                    md=transcription.parsed.md,
                     images=[],
                 )
             ],
@@ -132,37 +130,9 @@ class AudioFileParser(DocumentParser):
                 stderr=subprocess.PIPE,
                 text=True,
             )
-            exception_logger.exception("FFmpeg is not installed or not in PATH.")
+            logger.exception("FFmpeg is not installed or not in PATH.")
             if result.returncode != 0:
                 raise RuntimeError()
         except FileNotFoundError:
-            exception_logger.exception("FFmpeg is not installed or not in PATH.")
+            logger.exception("FFmpeg is not installed or not in PATH.")
             raise RuntimeError()
-
-
-@parses("mp4")
-class VideoFileParser(FileParser, frozen=True, tag="video"):
-    async def parse_async(self, file: RawFile) -> ParsedFile:
-        if self.visual_description_agent is None:
-            raise ValueError("No visual description agent provided.")
-
-        extension = file.extension
-        if extension != "mp4":
-            raise ValueError("VideoFileParser only supports .mp4 files.")
-
-        file_contents = file.contents
-        visual_media_description = await self.visual_description_agent.run_async(
-            VideoFilePart(data=file_contents, mime_type=bytes_to_mime(file_contents))
-        )
-
-        return ParsedFile(
-            name=file.name,
-            sections=[
-                SectionContent(
-                    number=1,
-                    text=visual_media_description.parsed.final_answer.md,
-                    md=visual_media_description.parsed.final_answer.md,
-                    images=[],
-                )
-            ],
-        )

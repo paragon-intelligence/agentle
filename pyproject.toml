@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "mcp[cli]>=1.6.0",
-    "rock-solid-base>=0.0.26",
+    "rock-solid-base>=0.0.27",
 ]
 
 [[project.authors]]
@@ -25,6 +25,7 @@ packages = ["agentle"]
 
 [dependency-groups]
 dev = [
+    "aiofiles>=24.1.0",
     "blacksheep>=2.2.0",
     "cerebras-cloud-sdk>=1.29.0",
     "furo>=2024.8.6",
@@ -34,6 +35,7 @@ dev = [
     "mypy>=1.15.0",
     "openai>=1.75.0",
     "openai-agents>=0.0.11",
+    "openpyxl>=3.1.5",
     "pandas>=2.2.3",
     "pillow>=11.2.1",
     "playwright>=1.52.0",

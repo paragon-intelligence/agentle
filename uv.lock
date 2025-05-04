@@ -13,6 +13,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "aiofiles" },
     { name = "blacksheep" },
     { name = "cerebras-cloud-sdk" },
     { name = "furo" },
@@ -22,6 +23,7 @@ dev = [
     { name = "mypy" },
     { name = "openai" },
     { name = "openai-agents" },
+    { name = "openpyxl" },
     { name = "pandas" },
     { name = "pillow" },
     { name = "playwright" },
@@ -42,11 +44,12 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "mcp", extras = ["cli"], specifier = ">=1.6.0" },
-    { name = "rock-solid-base", specifier = ">=0.0.26" },
+    { name = "rock-solid-base", specifier = ">=0.0.27" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "aiofiles", specifier = ">=24.1.0" },
     { name = "blacksheep", specifier = ">=2.2.0" },
     { name = "cerebras-cloud-sdk", specifier = ">=1.29.0" },
     { name = "furo", specifier = ">=2024.8.6" },
@@ -56,6 +59,7 @@ dev = [
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "openai", specifier = ">=1.75.0" },
     { name = "openai-agents", specifier = ">=0.0.11" },
+    { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pillow", specifier = ">=11.2.1" },
     { name = "playwright", specifier = ">=1.52.0" },
@@ -492,6 +496,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/48/b4/4ada30c83b0f3322a89ccdcc0b0ad0b94a04d36f444280bfd68bd47ef3a8/essentials_openapi-1.2.0.tar.gz", hash = "sha256:dbaf03130048e5522043b32f16b1f13deafa5b37449a698912c20b651d823588", size = 33139 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6d/8d/4de1296b7f736b555a2c32e6705a04e9e92498be5c0d3196286462810910/essentials_openapi-1.2.0-py3-none-any.whl", hash = "sha256:739d043ad380f8409af4b5b33e911492af7debe2223af9b7483fbd7f1d32fb34", size = 54042 },
+]
+
+[[package]]
+name = "et-xmlfile"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/38/af70d7ab1ae9d4da450eeec1fa3918940a5fafb9055e934af8d6eb0c2313/et_xmlfile-2.0.0.tar.gz", hash = "sha256:dab3f4764309081ce75662649be815c4c9081e88f0837825f90fd28317d4da54", size = 17234 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c1/8b/5fe2cc11fee489817272089c4203e679c63b570a5aaeb18d852ae3cbba6a/et_xmlfile-2.0.0-py3-none-any.whl", hash = "sha256:7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa", size = 18059 },
 ]
 
 [[package]]
@@ -1271,6 +1284,18 @@ wheels = [
 ]
 
 [[package]]
+name = "openpyxl"
+version = "3.1.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "et-xmlfile" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3d/f9/88d94a75de065ea32619465d2f77b29a0469500e99012523b91cc4141cd1/openpyxl-3.1.5.tar.gz", hash = "sha256:cf0e3cf56142039133628b5acffe8ef0c12bc902d2aadd3e0fe5878dc08d1050", size = 186464 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl", hash = "sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2", size = 250910 },
+]
+
+[[package]]
 name = "opentelemetry-api"
 version = "1.32.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1969,14 +1994,14 @@ wheels = [
 
 [[package]]
 name = "rock-solid-base"
-version = "0.0.26"
+version = "0.0.27"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2e/2b/8ff605c0b83b55ac0649861a8cd7b92c184128b8ac6faab9596c879478d3/rock_solid_base-0.0.26.tar.gz", hash = "sha256:6ad279cd3f64faf00daebf7a476a8b30edd2de99051da25751d6c2690839bca8", size = 57951 }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/da/f8dfbed2e549ea6e232a51f6fbc8674ec81907f86f78d9df8ea02704f4a2/rock_solid_base-0.0.27.tar.gz", hash = "sha256:2b40d1d30929a2818f19e4e1ea56bb106a85e1310462eabf9fc41d44dd12496f", size = 59285 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7c/45/f0709aab8ca605cc73515aeab39e85a7259759f94b7058291b94ffe2c965/rock_solid_base-0.0.26-py3-none-any.whl", hash = "sha256:1f03f020072c3f5ea48b8a8422c478351da7c4158b0619818d28d6804ce34be6", size = 47735 },
+    { url = "https://files.pythonhosted.org/packages/32/7d/ec25c51707e9962cf43ee06d10e6f49f5f5282ac1ba265a003b3a1831c79/rock_solid_base-0.0.27-py3-none-any.whl", hash = "sha256:8265b13f4062493e9952c1cdcc4541e376b6acc1868dd688b1f9693be1097e0c", size = 49090 },
 ]
 
 [[package]]

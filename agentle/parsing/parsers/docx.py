@@ -2,7 +2,7 @@ import hashlib
 from pathlib import Path
 from typing import Literal, override
 
-from rsb.functions.ext_to_mime import ext_to_mime
+from rsb.functions.ext2mime import ext2mime
 from rsb.models.field import Field
 
 from agentle.agents.agent import Agent
@@ -78,7 +78,7 @@ class DocxFileParser(DocumentParser):
                     ocr_text = cached_ocr
                 else:
                     agent_input = FilePart(
-                        mime_type=ext_to_mime(extension),
+                        mime_type=ext2mime(extension),
                         data=image_bytes,
                     )
                     agent_response = await self.visual_description_agent.run_async(

@@ -3,7 +3,7 @@ from collections.abc import MutableSequence
 from pathlib import Path
 from typing import Literal, override
 
-from rsb.functions.ext_to_mime import ext_to_mime
+from rsb.functions.ext2mime import ext2mime
 from rsb.models.field import Field
 
 from agentle.agents.agent import Agent
@@ -74,7 +74,7 @@ class PDFFileParser(DocumentParser):
                             ocr_text = cached_ocr
                         else:
                             agent_input = FilePart(
-                                mime_type=ext_to_mime(Path(image.name).suffix),
+                                mime_type=ext2mime(Path(image.name).suffix),
                                 data=image.data,
                             )
 
