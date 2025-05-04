@@ -1,8 +1,9 @@
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import cast, override
+from typing import Self, cast, override
 
 from rsb.models.field import Field
+from rsb.models.model_validator import model_validator
 
 from agentle.agents.agent import Agent
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
@@ -13,11 +14,12 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
     GoogleGenaiGenerationProvider,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.parsers.facade import FileParser
 from agentle.parsing.factories.visual_description_agent_factory import (
     visual_description_agent_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
+from agentle.parsing.parsers.file_parser import FileParser
+from agentle.parsing.parsers.validate_visual_parsers import validate_visual_parsers
 from agentle.parsing.parses import parses
 
 
@@ -46,6 +48,13 @@ class CompressedFileParser(DocumentParser):
     The multi-modal provider to use for generating the visual description of the document.
     Useful when you want us to customize the prompt for the visual description.
     """
+
+    @model_validator(mode="after")
+    def validate_visual_parsers(self) -> Self:
+        validate_visual_parsers(
+            self.visual_description_agent, self.multi_modal_provider
+        )
+        return self
 
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:
