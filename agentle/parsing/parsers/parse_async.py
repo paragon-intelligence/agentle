@@ -32,9 +32,12 @@ async def parse_async(
             strategy=strategy,
             audio_description_agent=audio_description_agent,
         ).parse_async(document_path)
-    else:
-        return await FileParser(
-            strategy=strategy,
-            visual_description_agent=visual_description_agent,
-            audio_description_agent=audio_description_agent,
-        ).parse_async(document_path)
+
+    # At this point, both agents must be non-None
+    assert visual_description_agent is not None
+    assert audio_description_agent is not None
+    return await FileParser(
+        strategy=strategy,
+        visual_description_agent=visual_description_agent,
+        audio_description_agent=audio_description_agent,
+    ).parse_async(document_path)
