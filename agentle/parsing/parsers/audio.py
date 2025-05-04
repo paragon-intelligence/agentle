@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import tempfile
 from pathlib import Path
 from typing import Never
 
@@ -48,20 +49,12 @@ class AudioFileParser(DocumentParser):
 
             self._check_ffmpeg_installed()
 
-            # Generate unique temporary filenames
-            input_temp = os.path.join(
-                tempfile.gettempdir(),
-                f"input_{os.urandom(8).hex()}.{file_extension}",
-            )
+            # Generate unique temporary filename for output
             output_temp = os.path.join(
                 tempfile.gettempdir(), f"output_{os.urandom(8).hex()}.mp3"
             )
 
-            # Write input file asynchronously
-            async with aio_open(input_temp, "wb") as f:
-                await f.write(file_contents)
-
-            # Build FFmpeg command
+            # Build FFmpeg command using original file directly
             command = [
                 "ffmpeg",
                 "-hide_banner",
@@ -69,7 +62,7 @@ class AudioFileParser(DocumentParser):
                 "error",  # Suppress unnecessary logs
                 "-y",  # Overwrite output file if exists
                 "-i",
-                input_temp,
+                document_path,
                 "-codec:a",
                 "libmp3lame",
                 "-q:a",
@@ -86,7 +79,6 @@ class AudioFileParser(DocumentParser):
 
             # Handle conversion errors
             if process.returncode != 0:
-                await aios.remove(input_temp)
                 if await aios.path.exists(output_temp):
                     await aios.remove(output_temp)
                 raise RuntimeError(
@@ -97,8 +89,7 @@ class AudioFileParser(DocumentParser):
             async with aio_open(output_temp, "rb") as f:
                 file_contents = await f.read()
 
-            # Cleanup temporary files
-            await aios.remove(input_temp)
+            # Cleanup temporary file
             await aios.remove(output_temp)
 
         transcription = self.audio_description_agent.run(
