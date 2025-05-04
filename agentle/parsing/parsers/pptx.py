@@ -1,3 +1,11 @@
+"""
+PowerPoint Presentation Parser Module
+
+This module provides functionality for parsing Microsoft PowerPoint presentations
+(.ppt, .pptx, .pptm) into structured representations. It can extract text content,
+process embedded images, and organize the presentation by slides.
+"""
+
 import subprocess
 import os
 import tempfile
@@ -28,6 +36,103 @@ from agentle.parsing.section_content import SectionContent
 
 @parses("ppt", "pptx", "pptm")
 class PptxFileParser(DocumentParser):
+    """
+    Parser for processing Microsoft PowerPoint presentations (.ppt, .pptx, .pptm).
+
+    This parser extracts content from PowerPoint presentations, including text and embedded
+    images. Each slide in the presentation is parsed as a separate section in the resulting
+    ParsedDocument. With the "high" strategy, embedded images are analyzed using a visual
+    description agent to extract text via OCR and generate descriptions.
+
+    The parser supports both modern PowerPoint formats (.pptx, .pptm) and the legacy
+    format (.ppt), converting the latter to .pptx using LibreOffice when necessary.
+
+    **Attributes:**
+
+    *   `strategy` (Literal["high", "low"]):
+        The parsing strategy to use. Defaults to "high".
+        - "high": Performs thorough parsing including OCR and image analysis
+        - "low": Performs basic text extraction without analyzing images
+
+        **Example:**
+        ```python
+        parser = PptxFileParser(strategy="low")  # Use faster, less intensive parsing
+        ```
+
+    *   `visual_description_agent` (Agent[VisualMediaDescription]):
+        The agent used to analyze and describe image content. If provided and
+        strategy is "high", this agent will be used to analyze images embedded
+        in the presentation.
+        Defaults to the agent created by `visual_description_agent_factory()`.
+
+        **Example:**
+        ```python
+        from agentle.agents.agent import Agent
+        from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+
+        custom_agent = Agent(
+            model="gemini-2.0-pro-vision",
+            instructions="Focus on diagram and chart analysis in presentations",
+            response_schema=VisualMediaDescription
+        )
+
+        parser = PptxFileParser(visual_description_agent=custom_agent)
+        ```
+
+    *   `multi_modal_provider` (GenerationProvider):
+        An alternative to using a visual_description_agent. This is a generation
+        provider capable of handling multi-modal content (text and images).
+        Defaults to GoogleGenaiGenerationProvider().
+
+        Note: You cannot use both visual_description_agent and multi_modal_provider
+        at the same time.
+
+    **Usage Examples:**
+
+    Basic parsing of a PowerPoint presentation:
+    ```python
+    from agentle.parsing.parsers.pptx import PptxFileParser
+
+    # Create a parser with default settings
+    parser = PptxFileParser()
+
+    # Parse a PowerPoint file
+    parsed_presentation = parser.parse("presentation.pptx")
+
+    # Access the slides (as sections)
+    for i, section in enumerate(parsed_presentation.sections):
+        print(f"Slide {i+1} content:")
+        print(section.text[:100] + "...")  # Print first 100 chars of each slide
+    ```
+
+    Processing images in a presentation:
+    ```python
+    from agentle.parsing.parsers.pptx import PptxFileParser
+
+    # Create a parser with high-detail strategy
+    parser = PptxFileParser(strategy="high")
+
+    # Parse a presentation with images
+    slide_deck = parser.parse("slide_deck.pptx")
+
+    # Extract and process images
+    for i, section in enumerate(slide_deck.sections):
+        slide_num = i + 1
+        print(f"Slide {slide_num} has {len(section.images)} images")
+
+        for j, image in enumerate(section.images):
+            print(f"  Image {j+1}:")
+            if image.ocr_text:
+                print(f"    OCR text: {image.ocr_text}")
+    ```
+
+    **Requirements:**
+
+    For parsing .ppt (legacy format) files, LibreOffice must be installed on the system
+    to perform the conversion to .pptx. If LibreOffice is not installed, a RuntimeError
+    will be raised when attempting to parse .ppt files.
+    """
+
     strategy: Literal["high", "low"] = Field(default="high")
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
@@ -51,6 +156,57 @@ class PptxFileParser(DocumentParser):
         self,
         document_path: str,
     ) -> ParsedDocument:
+        """
+        Asynchronously parse a PowerPoint presentation and generate a structured representation.
+
+        This method reads a PowerPoint file, extracts text and image content from each slide,
+        and processes embedded images to extract text and generate descriptions when using
+        the "high" strategy.
+
+        For .ppt (legacy format) files, the method first converts them to .pptx format
+        using LibreOffice before processing.
+
+        Args:
+            document_path (str): Path to the PowerPoint file to be parsed
+
+        Returns:
+            ParsedDocument: A structured representation where:
+                - Each slide is a separate section
+                - Text content is extracted from each slide
+                - Images are extracted and (optionally) analyzed
+
+        Raises:
+            RuntimeError: If converting a .ppt file fails (e.g., if LibreOffice is not installed)
+                or if the conversion times out
+
+        Example:
+            ```python
+            import asyncio
+            from agentle.parsing.parsers.pptx import PptxFileParser
+
+            async def process_presentation():
+                parser = PptxFileParser(strategy="high")
+                result = await parser.parse_async("slide_deck.pptx")
+
+                # Print information about the slides
+                print(f"Presentation has {len(result.sections)} slides")
+
+                # Access slide content
+                for i, section in enumerate(result.sections):
+                    print(f"Slide {i+1} content:")
+                    print(section.text[:100] + "...")
+
+                    # Check for images
+                    if section.images:
+                        print(f"  Contains {len(section.images)} images")
+
+            asyncio.run(process_presentation())
+            ```
+
+        Note:
+            This method uses the python-pptx library to read PowerPoint files. For optimal
+            results with legacy .ppt files, ensure LibreOffice is installed on the system.
+        """
         import hashlib
 
         from pptx import Presentation
@@ -145,6 +301,29 @@ class PptxFileParser(DocumentParser):
         )
 
     def _convert_to_pptx(self, document_path: str) -> str:
+        """
+        Convert a legacy PowerPoint file (.ppt or .pptm) to the modern .pptx format.
+
+        This helper method uses LibreOffice to convert legacy PowerPoint files to
+        the modern .pptx format, which can then be processed by the python-pptx library.
+
+        Args:
+            document_path (str): Path to the legacy PowerPoint file (.ppt or .pptm)
+
+        Returns:
+            str: Path to the converted .pptx file
+
+        Raises:
+            RuntimeError: If LibreOffice is not installed, the conversion fails,
+                or the conversion times out
+
+        Note:
+            This method requires LibreOffice to be installed on the system and
+            available in the PATH. The conversion is performed in a temporary
+            directory and the converted file is returned as a temporary file
+            that will be automatically cleaned up when no longer needed.
+        """
+
         def _is_libreoffice_installed() -> bool:
             try:
                 subprocess.run(

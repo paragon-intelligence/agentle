@@ -1,3 +1,11 @@
+"""
+Compressed Archive Parser Module
+
+This module provides functionality for parsing compressed archive files (ZIP, RAR, PKZ) into
+structured representations. It can extract contents from compressed archives and parse the
+contained files using appropriate parsers for each file type.
+"""
+
 from collections.abc import MutableSequence
 from pathlib import Path
 from typing import Self, cast, override
@@ -25,6 +33,96 @@ from agentle.parsing.parses import parses
 
 @parses("zip", "rar", "pkz")
 class CompressedFileParser(DocumentParser):
+    """
+    Parser for processing compressed archive files (ZIP, RAR, PKZ).
+
+    This parser extracts files from compressed archives and processes each file using
+    the appropriate parser for its file type. It acts as a container parser that delegates
+    the actual parsing work to specialized parsers for each contained file type.
+    The results from all contained files are then combined into a single ParsedDocument.
+
+    **Attributes:**
+
+    *   `inner_parser` (DocumentParser):
+        The parser to use for parsing files extracted from the archive. Defaults to
+        FileParser, which automatically selects the appropriate parser based on file extension.
+
+        **Example:**
+        ```python
+        from agentle.parsing.parsers.file_parser import FileParser
+
+        # Create a specialized inner parser with custom settings
+        inner_parser = FileParser(strategy="low")
+
+        # Use it in the compressed file parser
+        parser = CompressedFileParser(inner_parser=inner_parser)
+        ```
+
+    *   `visual_description_agent` (Agent[VisualMediaDescription]):
+        The agent used to analyze and describe visual content. This agent is passed
+        to the inner parsers when processing image files and other visual content.
+        Defaults to the agent created by `visual_description_agent_factory()`.
+
+        Note: You cannot use both visual_description_agent and multi_modal_provider
+        at the same time.
+
+        **Example:**
+        ```python
+        from agentle.agents.agent import Agent
+        from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+
+        custom_agent = Agent(
+            model="gemini-2.0-pro-vision",
+            instructions="Focus on technical content in diagrams and charts",
+            response_schema=VisualMediaDescription
+        )
+
+        parser = CompressedFileParser(visual_description_agent=custom_agent)
+        ```
+
+    *   `multi_modal_provider` (GenerationProvider):
+        An alternative to using a visual_description_agent. This is a generation
+        provider capable of handling multi-modal content (text and images).
+        Defaults to GoogleGenaiGenerationProvider().
+
+        Note: You cannot use both visual_description_agent and multi_modal_provider
+        at the same time.
+
+    **Usage Examples:**
+
+    Basic parsing of a compressed archive:
+    ```python
+    from agentle.parsing.parsers.compressed import CompressedFileParser
+
+    # Create a parser with default settings
+    parser = CompressedFileParser()
+
+    # Parse a ZIP file
+    parsed_archive = parser.parse("documents.zip")
+
+    # Access the combined content from all files
+    print(f"Archive contains {len(parsed_archive.sections)} sections")
+
+    # Iterate through all sections from all files
+    for i, section in enumerate(parsed_archive.sections):
+        print(f"Section {i+1}: {section.text[:100]}...")
+    ```
+
+    Using the generic parse function:
+    ```python
+    from agentle.parsing import parse
+
+    # Parse different archive types
+    zip_result = parse("files.zip")
+    rar_result = parse("documents.rar")
+
+    # Process the results
+    for result in [zip_result, rar_result]:
+        print(f"Archive: {result.name}")
+        print(f"Contains {len(result.sections)} sections")
+    ```
+    """
+
     inner_parser: DocumentParser = Field(
         default_factory=FileParser,
     )
@@ -51,6 +149,19 @@ class CompressedFileParser(DocumentParser):
 
     @model_validator(mode="after")
     def validate_visual_parsers(self) -> Self:
+        """
+        Validate that visual_description_agent and multi_modal_provider are not used together.
+
+        This validator ensures that the parser is not configured with both a visual description
+        agent and a multi-modal provider, as this would create ambiguity about which component
+        should handle visual content analysis.
+
+        Returns:
+            Self: The validated instance
+
+        Raises:
+            ValueError: If both visual_description_agent and multi_modal_provider are provided
+        """
         validate_visual_parsers(
             self.visual_description_agent, self.multi_modal_provider
         )
@@ -58,6 +169,49 @@ class CompressedFileParser(DocumentParser):
 
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:
+        """
+        Asynchronously parse a compressed archive file and process its contents.
+
+        This method extracts files from a compressed archive (ZIP, RAR, or PKZ),
+        processes each file using the appropriate parser for its file type, and
+        combines the results into a single ParsedDocument.
+
+        Args:
+            document_path (str): Path to the compressed archive file to be parsed
+
+        Returns:
+            ParsedDocument: A structured representation combining the parsed content
+                from all files in the archive
+
+        Raises:
+            ValueError: If the file extension is not supported (not ZIP, RAR, or PKZ)
+
+        Example:
+            ```python
+            import asyncio
+            from agentle.parsing.parsers.compressed import CompressedFileParser
+
+            async def process_archive():
+                parser = CompressedFileParser()
+                result = await parser.parse_async("documents.zip")
+
+                # Print information about the contents
+                print(f"Archive contains content from multiple files")
+                print(f"Total sections: {len(result.sections)}")
+
+                # Access the combined content
+                for i, section in enumerate(result.sections):
+                    print(f"Section {i+1} content type: {type(section).__name__}")
+                    if section.images:
+                        print(f"  Contains {len(section.images)} images")
+
+            asyncio.run(process_archive())
+            ```
+
+        Note:
+            This method creates a temporary copy of the archive file for processing.
+            The temporary files are automatically cleaned up after processing.
+        """
         import tempfile
         import zipfile
 

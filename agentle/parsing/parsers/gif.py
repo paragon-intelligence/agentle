@@ -1,3 +1,11 @@
+"""
+GIF Animation Parser Module
+
+This module provides functionality for parsing animated GIF files into structured
+representations. It can extract frames from GIF animations, analyze their content
+using visual description agents, and organize them as sequential sections.
+"""
+
 import io
 from collections.abc import MutableSequence
 from pathlib import Path
@@ -23,6 +31,74 @@ from agentle.parsing.section_content import SectionContent
 
 @parses("gif")
 class GifFileParser(DocumentParser):
+    """
+    Parser for processing animated GIF files.
+
+    This parser extracts frames from GIF animations and processes them as separate images.
+    For larger animations, the parser intelligently selects representative frames (up to 3)
+    spread throughout the animation to provide a comprehensive view of the content.
+    Each selected frame is analyzed using a visual description agent to extract content
+    and text via OCR.
+
+    **Attributes:**
+
+    *   `visual_description_agent` (Agent[VisualMediaDescription]):
+        The agent used to analyze and describe the visual content of GIF frames.
+        This agent is responsible for generating descriptions and extracting text
+        via OCR from the selected frames.
+        Defaults to the agent created by `visual_description_agent_factory()`.
+
+        **Example:**
+        ```python
+        from agentle.agents.agent import Agent
+        from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+
+        custom_agent = Agent(
+            model="gemini-2.0-pro-vision",
+            instructions="Focus on movement and sequential changes in animations",
+            response_schema=VisualMediaDescription
+        )
+
+        parser = GifFileParser(visual_description_agent=custom_agent)
+        ```
+
+    **Usage Examples:**
+
+    Basic parsing of a GIF file:
+    ```python
+    from agentle.parsing.parsers.gif import GifFileParser
+
+    # Create a parser with default settings
+    parser = GifFileParser()
+
+    # Parse a GIF file
+    parsed_gif = parser.parse("animation.gif")
+
+    # Access the frame descriptions
+    for i, section in enumerate(parsed_gif.sections):
+        print(f"Frame {i+1} description:")
+        print(section.text)
+    ```
+
+    Using the generic parse function:
+    ```python
+    from agentle.parsing import parse
+
+    # Parse a GIF file
+    result = parse("reaction.gif")
+
+    # Count the number of frames extracted
+    frame_count = len(result.sections)
+    print(f"Extracted {frame_count} frames from the GIF")
+
+    # Access any OCR text found in the frames
+    for section in result.sections:
+        for image in section.images:
+            if image.ocr_text:
+                print(f"Text found in frame: {image.ocr_text}")
+    ```
+    """
+
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,
     )
@@ -36,6 +112,51 @@ class GifFileParser(DocumentParser):
         self,
         document_path: str,
     ) -> ParsedDocument:
+        """
+        Asynchronously parse a GIF file and generate a structured representation.
+
+        This method extracts frames from a GIF animation, selects representative frames
+        (up to 3 for longer animations), and processes each frame using a visual
+        description agent. Each frame is converted to PNG format for compatibility
+        with the visual description agent.
+
+        Args:
+            document_path (str): Path to the GIF file to be parsed
+
+        Returns:
+            ParsedDocument: A structured representation where:
+                - Each selected frame is represented as a separate section
+                - Frames contain image data and descriptions
+                - OCR text is extracted if text is present in the frames
+
+        Raises:
+            ValueError: If the file is not a GIF file
+
+        Example:
+            ```python
+            import asyncio
+            from agentle.parsing.parsers.gif import GifFileParser
+
+            async def analyze_gif():
+                parser = GifFileParser()
+                result = await parser.parse_async("animation.gif")
+
+                # Print information about the frames
+                print(f"GIF contains {len(result.sections)} analyzed frames")
+
+                # Print descriptions of each frame
+                for i, section in enumerate(result.sections):
+                    print(f"Frame {i+1}:")
+                    print(section.text)
+
+            asyncio.run(analyze_gif())
+            ```
+
+        Note:
+            For GIFs with more than 3 frames, this method selects frames at approximately
+            1/3, 2/3, and the end of the animation to represent the full animation content.
+            For GIFs with 3 or fewer frames, all frames are used.
+        """
         from PIL import Image as PILImage
 
         path = Path(document_path)

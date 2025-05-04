@@ -75,6 +75,58 @@ class Image(BaseModel):
         print(image_with_alt_text.alt) # Output: Company logo
         print(image_no_alt_text.alt) # Output: None
         ```
+
+    **Usage Examples:**
+
+    Creating a basic image with minimal information:
+    ```python
+    from agentle.parsing.image import Image
+
+    # Create an image from bytes
+    with open("example.png", "rb") as f:
+        image_bytes = f.read()
+
+    image = Image(contents=image_bytes)
+    ```
+
+    Creating a fully specified image with metadata:
+    ```python
+    from agentle.parsing.image import Image
+
+    # Create an image with all available metadata
+    detailed_image = Image(
+        contents=image_bytes,
+        name="chart_q2_2023.png",
+        ocr_text="Revenue: $1.2M, Expenses: $0.8M, Profit: $0.4M",
+        height=800.0,
+        width=1200.0,
+        alt="Q2 2023 Financial Performance Chart"
+    )
+
+    # This image can be included in a SectionContent object
+    from agentle.parsing.section_content import SectionContent
+
+    section = SectionContent(
+        number=1,
+        text="Financial Results",
+        images=[detailed_image]
+    )
+    ```
+
+    Accessing image data and properties:
+    ```python
+    # Save the image to a file
+    with open("extracted_image.png", "wb") as f:
+        f.write(image.contents)
+
+    # Access metadata
+    if image.ocr_text:
+        print(f"Text in image: {image.ocr_text}")
+
+    if image.width and image.height:
+        aspect_ratio = image.width / image.height
+        print(f"Image aspect ratio: {aspect_ratio:.2f}")
+    ```
     """
 
     contents: bytes = Field(

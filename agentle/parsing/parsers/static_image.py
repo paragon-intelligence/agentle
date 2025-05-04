@@ -1,3 +1,11 @@
+"""
+Static Image Parser Module
+
+This module provides functionality for parsing static image files (PNG, JPEG, TIFF, BMP, etc.)
+into structured representations. It can extract visual content, perform OCR to identify text,
+and generate detailed descriptions of image content.
+"""
+
 import io
 from pathlib import Path
 from typing import override
@@ -22,6 +30,75 @@ from agentle.parsing.section_content import SectionContent
 
 @parses("png", "jpeg", "tiff", "bmp", "jpg", "jp2")
 class StaticImageParser(DocumentParser):
+    """
+    Parser for processing static image files in various formats.
+
+    This parser handles multiple image formats including PNG, JPEG, TIFF, BMP, and others.
+    It uses a visual description agent to analyze image content, extract text via OCR,
+    and generate descriptive text about the image contents. For certain formats like TIFF,
+    the parser automatically converts the image to a compatible format (PNG) before processing.
+
+    **Attributes:**
+
+    *   `visual_description_agent` (Agent[VisualMediaDescription]):
+        The agent used to analyze and describe the image content. This agent is responsible
+        for generating descriptions and extracting text via OCR from the image.
+        Defaults to the agent created by `visual_description_agent_factory()`.
+
+        **Example:**
+        ```python
+        from agentle.agents.agent import Agent
+        from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+
+        custom_agent = Agent(
+            model="gemini-2.0-pro-vision",
+            instructions="Analyze images with focus on technical diagrams and charts",
+            response_schema=VisualMediaDescription
+        )
+
+        parser = StaticImageParser(visual_description_agent=custom_agent)
+        ```
+
+    **Usage Examples:**
+
+    Basic parsing of an image file:
+    ```python
+    from agentle.parsing.parsers.static_image import StaticImageParser
+
+    # Create a parser with default settings
+    parser = StaticImageParser()
+
+    # Parse an image file
+    parsed_image = parser.parse("photograph.jpg")
+
+    # Access the description and OCR text
+    print(f"Image description: {parsed_image.sections[0].text}")
+
+    if parsed_image.sections[0].images[0].ocr_text:
+        print(f"Text found in image: {parsed_image.sections[0].images[0].ocr_text}")
+    ```
+
+    Using the generic parse function:
+    ```python
+    from agentle.parsing import parse
+
+    # Parse different image formats
+    png_result = parse("diagram.png")
+    jpg_result = parse("photo.jpg")
+    tiff_result = parse("scan.tiff")
+
+    # All results have the same structure regardless of original format
+    for result in [png_result, jpg_result, tiff_result]:
+        print(f"Image file: {result.name}")
+        print(f"Description: {result.sections[0].text[:100]}...")
+
+        # Access the first (and only) image in the first section
+        image = result.sections[0].images[0]
+        if image.ocr_text:
+            print(f"OCR text: {image.ocr_text}")
+    ```
+    """
+
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,
     )
@@ -32,6 +109,46 @@ class StaticImageParser(DocumentParser):
 
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:
+        """
+        Asynchronously parse a static image file and generate a structured representation.
+
+        This method reads an image file, converts it to a compatible format if necessary
+        (e.g., TIFF to PNG), and processes it using a visual description agent to extract
+        content and text via OCR.
+
+        Args:
+            document_path (str): Path to the image file to be parsed
+
+        Returns:
+            ParsedDocument: A structured representation where:
+                - The image is contained in a single section
+                - The section includes the image data and a description
+                - OCR text is extracted if text is present in the image
+
+        Example:
+            ```python
+            import asyncio
+            from agentle.parsing.parsers.static_image import StaticImageParser
+
+            async def analyze_image():
+                parser = StaticImageParser()
+                result = await parser.parse_async("chart.png")
+
+                # Access the image description
+                print(f"Image description: {result.sections[0].text}")
+
+                # Access OCR text if available
+                image = result.sections[0].images[0]
+                if image.ocr_text:
+                    print(f"Text in image: {image.ocr_text}")
+
+            asyncio.run(analyze_image())
+            ```
+
+        Note:
+            For TIFF images, this method automatically converts them to PNG format
+            before processing to ensure compatibility with the visual description agent.
+        """
         from PIL import Image as PILImage
 
         path = Path(document_path)

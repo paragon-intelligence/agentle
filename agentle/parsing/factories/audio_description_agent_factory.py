@@ -8,6 +8,42 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
 
 
 def audio_description_agent_factory() -> Agent[AudioDescription]:
+    """
+    Creates and returns an Agent specialized for processing audio content.
+
+    This factory function instantiates an Agent configured with appropriate models,
+    instructions, and generation providers for analyzing audio files. The agent can
+    transcribe speech, identify sounds, and provide descriptions of audio content.
+
+    The agent is configured with:
+    - Model: gemini-2.0-flash
+    - Provider: GoogleGenaiGenerationProvider
+    - Response schema: AudioDescription
+
+    Returns:
+        Agent[AudioDescription]: An agent configured for audio processing tasks
+
+    Example:
+        ```python
+        from agentle.parsing.factories.audio_description_agent_factory import audio_description_agent_factory
+
+        # Create the audio agent
+        audio_agent = audio_description_agent_factory()
+
+        # Process an audio file
+        from agentle.generations.models.message_parts.file import FilePart
+
+        with open("audio_sample.mp3", "rb") as f:
+            audio_bytes = f.read()
+
+        result = audio_agent.run(
+            FilePart(data=audio_bytes, mime_type="audio/mpeg")
+        )
+
+        # Access the structured description
+        print(result.parsed.overall_description)
+        ```
+    """
     return Agent(
         model="gemini-2.0-flash",
         instructions="You are a helpful assistant that deeply understands audio files.",

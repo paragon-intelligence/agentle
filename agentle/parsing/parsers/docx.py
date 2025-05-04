@@ -1,3 +1,11 @@
+"""
+Microsoft Word Document Parser Module
+
+This module provides functionality for parsing Microsoft Word documents (.doc, .docx) into
+structured representations. It can extract text content, process embedded images, and
+organize the document content.
+"""
+
 import hashlib
 from pathlib import Path
 from typing import Literal, override
@@ -26,6 +34,90 @@ from agentle.parsing.section_content import SectionContent
 
 @parses("doc", "docx")
 class DocxFileParser(DocumentParser):
+    """
+    Parser for processing Microsoft Word documents (.doc, .docx).
+
+    This parser extracts content from Word documents, including text and embedded images.
+    With the "high" strategy, embedded images are analyzed using a visual description
+    agent to extract text via OCR and generate descriptions. The parser represents the
+    entire document as a single section containing all text and image content.
+
+    **Attributes:**
+
+    *   `strategy` (Literal["high", "low"]):
+        The parsing strategy to use. Defaults to "high".
+        - "high": Performs thorough parsing including OCR and image analysis
+        - "low": Performs basic text extraction without analyzing images
+
+        **Example:**
+        ```python
+        parser = DocxFileParser(strategy="low")  # Use faster, less intensive parsing
+        ```
+
+    *   `visual_description_agent` (Agent[VisualMediaDescription]):
+        The agent used to analyze and describe the image content. If provided and
+        strategy is "high", this agent will be used to analyze images embedded
+        in the document.
+        Defaults to the agent created by `visual_description_agent_factory()`.
+
+        **Example:**
+        ```python
+        from agentle.agents.agent import Agent
+        from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+
+        custom_agent = Agent(
+            model="gemini-2.0-pro-vision",
+            instructions="Focus on diagram and chart analysis in technical documents",
+            response_schema=VisualMediaDescription
+        )
+
+        parser = DocxFileParser(visual_description_agent=custom_agent)
+        ```
+
+    *   `multi_modal_provider` (GenerationProvider):
+        An alternative to using a visual_description_agent. This is a generation
+        provider capable of handling multi-modal content (text and images).
+        Defaults to GoogleGenaiGenerationProvider().
+
+        Note: You cannot use both visual_description_agent and multi_modal_provider
+        at the same time.
+
+    **Usage Examples:**
+
+    Basic parsing of a Word document:
+    ```python
+    from agentle.parsing.parsers.docx import DocxFileParser
+
+    # Create a parser with default settings
+    parser = DocxFileParser()
+
+    # Parse a Word document
+    parsed_doc = parser.parse("report.docx")
+
+    # Access the text content
+    print(parsed_doc.sections[0].text)
+
+    # Access embedded images
+    for image in parsed_doc.sections[0].images:
+        print(f"Image: {image.name}")
+        if image.ocr_text:
+            print(f"  OCR text: {image.ocr_text}")
+    ```
+
+    Using the generic parse function:
+    ```python
+    from agentle.parsing import parse
+
+    # Parse a Word document
+    result = parse("document.docx")
+
+    # Access the document content
+    print(f"Document: {result.name}")
+    print(f"Text content: {result.sections[0].text[:100]}...")
+    print(f"Contains {len(result.sections[0].images)} images")
+    ```
+    """
+
     strategy: Literal["high", "low"] = Field(default="high")
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
@@ -49,6 +141,47 @@ class DocxFileParser(DocumentParser):
         self,
         document_path: str,
     ) -> ParsedDocument:
+        """
+        Asynchronously parse a Word document and generate a structured representation.
+
+        This method reads a Word document, extracts its text content, and processes
+        any embedded images. With the "high" strategy, images are analyzed using the
+        visual description agent to extract text and generate descriptions.
+
+        Args:
+            document_path (str): Path to the Word document to be parsed
+
+        Returns:
+            ParsedDocument: A structured representation where:
+                - The document is represented as a single section
+                - The section includes all text content from the document
+                - Embedded images are extracted and (optionally) analyzed
+
+        Example:
+            ```python
+            import asyncio
+            from agentle.parsing.parsers.docx import DocxFileParser
+
+            async def process_document():
+                parser = DocxFileParser(strategy="high")
+                result = await parser.parse_async("report.docx")
+
+                # Access the document content
+                print(f"Document text: {result.sections[0].text[:200]}...")
+
+                # Process images
+                print(f"Document contains {len(result.sections[0].images)} images")
+                for img in result.sections[0].images:
+                    if img.ocr_text:
+                        print(f"Image text: {img.ocr_text}")
+
+            asyncio.run(process_document())
+            ```
+
+        Note:
+            This method uses the python-docx library to read Word documents. For optimal
+            results, use .docx format rather than the older .doc format.
+        """
         from docx import Document
 
         document = Document(document_path)

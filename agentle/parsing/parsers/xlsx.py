@@ -1,3 +1,11 @@
+"""
+Excel Spreadsheet Parser Module
+
+This module provides functionality for parsing Excel spreadsheet files (.xls, .xlsx) into
+structured document representations. It extracts text content, tables, and images from
+spreadsheets while preserving their structure.
+"""
+
 from collections.abc import MutableSequence
 from pathlib import Path
 from typing import Literal, override
@@ -25,6 +33,100 @@ from rsb.models.field import Field
 
 @parses("xls", "xlsx")
 class XlsxFileParser(DocumentParser):
+    """
+    Parser for processing Excel spreadsheet files (.xls, .xlsx).
+
+    This parser extracts content from Excel files, including text data, tables, and
+    embedded images. Each worksheet in the Excel file is parsed as a separate section
+    in the resulting ParsedDocument. The parser preserves the tabular structure of
+    the data by creating TablePageItem objects for each worksheet.
+
+    **Attributes:**
+
+    *   `strategy` (Literal["high", "low"]):
+        The parsing strategy to use. Defaults to "high".
+        - "high": Performs thorough parsing including image analysis
+        - "low": Performs basic parsing without analyzing embedded images
+
+        **Example:**
+        ```python
+        parser = XlsxFileParser(strategy="low")  # Use faster, less intensive parsing
+        ```
+
+    *   `visual_description_agent` (Agent[VisualMediaDescription]):
+        An optional custom agent for visual media description. If provided and strategy
+        is "high", this agent will be used to analyze images embedded in the spreadsheet.
+        Defaults to the agent created by `visual_description_agent_factory()`.
+
+        **Example:**
+        ```python
+        from agentle.agents.agent import Agent
+        from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+
+        custom_agent = Agent(
+            model="gemini-2.0-pro-vision",
+            instructions="Focus on chart and diagram analysis in spreadsheets",
+            response_schema=VisualMediaDescription
+        )
+
+        parser = XlsxFileParser(visual_description_agent=custom_agent)
+        ```
+
+    **Usage Examples:**
+
+    Basic parsing of an Excel file:
+    ```python
+    from agentle.parsing.parsers.xlsx import XlsxFileParser
+
+    # Create a parser with default settings
+    parser = XlsxFileParser()
+
+    # Parse an Excel file
+    parsed_doc = parser.parse("financial_data.xlsx")
+
+    # Access the worksheets (as sections)
+    for section in parsed_doc.sections:
+        print(f"Worksheet: {section.number}")
+
+        # Access table data
+        for item in section.items:
+            if isinstance(item, TablePageItem):
+                print(f"Table with {len(item.rows)} rows")
+                # Get CSV representation
+                print(item.csv)
+    ```
+
+    Parsing with a custom visual description agent:
+    ```python
+    from agentle.agents.agent import Agent
+    from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+
+    # Create a custom agent for chart analysis
+    chart_analysis_agent = Agent(
+        model="gemini-2.0-pro-vision",
+        instructions="Analyze charts and graphs in spreadsheets with focus on trends and insights",
+        generation_provider=GoogleGenaiGenerationProvider(),
+        response_schema=VisualMediaDescription
+    )
+
+    # Create a parser with the custom agent
+    parser = XlsxFileParser(
+        strategy="high",
+        visual_description_agent=chart_analysis_agent
+    )
+
+    # Parse a spreadsheet with charts
+    report = parser.parse("quarterly_report.xlsx")
+
+    # Access chart descriptions
+    for section in report.sections:
+        for image in section.images:
+            if image.ocr_text:
+                print(f"Chart text: {image.ocr_text}")
+    ```
+    """
+
     strategy: Literal["high", "low"] = Field(default="high")
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
@@ -40,6 +142,43 @@ class XlsxFileParser(DocumentParser):
         self,
         document_path: str,
     ) -> ParsedDocument:
+        """
+        Asynchronously parse an Excel spreadsheet file and convert it to a structured representation.
+
+        This method reads an Excel file, extracts each worksheet as a separate section,
+        and processes any embedded images found in the worksheets. For each worksheet,
+        it creates a TablePageItem containing the structured table data and a CSV representation.
+
+        Args:
+            document_path (str): Path to the Excel file to be parsed
+
+        Returns:
+            ParsedDocument: A structured representation of the Excel file where:
+                - Each worksheet is a separate section
+                - Each section contains a TablePageItem with the worksheet data
+                - Images are extracted and (optionally) analyzed
+
+        Example:
+            ```python
+            import asyncio
+            from agentle.parsing.parsers.xlsx import XlsxFileParser
+
+            async def process_excel():
+                parser = XlsxFileParser(strategy="high")
+                result = await parser.parse_async("data.xlsx")
+
+                # Print worksheet names and row counts
+                for i, section in enumerate(result.sections):
+                    print(f"Worksheet {i+1}")
+
+                    # Find table items
+                    for item in section.items:
+                        if hasattr(item, 'rows'):
+                            print(f"  - Contains {len(item.rows)} rows of data")
+
+            asyncio.run(process_excel())
+            ```
+        """
         import csv
         import io
 
