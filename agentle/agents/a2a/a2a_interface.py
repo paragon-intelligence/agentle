@@ -180,11 +180,8 @@ class A2AInterface[T_Schema]:
             agent: The agent to interact with
             task_manager: Optional task manager to use (default: InMemoryTaskManager)
         """
-        if task_manager is None:
-            # Import here to avoid circular import
-            from agentle.agents.a2a.tasks.managment.in_memory import InMemoryTaskManager
-
-            task_manager = InMemoryTaskManager()
+        from agentle.agents.a2a.tasks.managment.in_memory import InMemoryTaskManager
+        task_manager = task_manager or InMemoryTaskManager()
 
         # Create the task resource
         self.agent = agent
