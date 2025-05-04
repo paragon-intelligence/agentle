@@ -1041,13 +1041,8 @@ document_analysis_agent = Agent(
 # Parse a document
 parsed_doc = parse("quarterly_report.pdf")
 
-# Generate a markdown representation of the document
-document_content = parsed_doc.md
-
-# Feed the content to the agent
-analysis = document_analysis_agent.run(
-    f"Analyze this quarterly financial report and highlight key insights:\n\n{document_content}"
-)
+# Directly pass the ParsedDocument to the agent
+analysis = document_analysis_agent.run(parsed_doc)
 
 print(analysis.text)
 ```

@@ -77,6 +77,7 @@ from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+from agentle.parsing.parsed_document import ParsedDocument
 from agentle.prompts.models.prompt import Prompt
 
 if TYPE_CHECKING:
@@ -1163,6 +1164,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
                 ]
             )
+        elif isinstance(input, ParsedDocument):
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=input.md)])
+                ]
+            )
+        
         # Sequence handling: Check for Message sequences or Part sequences
         # Explicitly check for Sequence for MyPy's benefit
         elif isinstance(input, Sequence) and not isinstance(input, (str, bytes)):  # pyright: ignore[reportUnnecessaryIsInstance]
