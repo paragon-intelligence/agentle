@@ -10,17 +10,13 @@ import os
 import tempfile
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import override
+from typing import Literal, override
 
 from rsb.models.field import Field
 
 from agentle.agents.agent import Agent
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
-)
-from agentle.generations.providers.base.generation_provider import GenerationProvider
-from agentle.generations.providers.google.google_genai_generation_provider import (
-    GoogleGenaiGenerationProvider,
 )
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.factories.visual_description_agent_factory import (
@@ -65,14 +61,6 @@ class DWGFileParser(DocumentParser):
         parser = DWGFileParser(visual_description_agent=custom_agent)
         ```
 
-    *   `multi_modal_provider` (GenerationProvider):
-        An alternative to using a visual_description_agent. This is a generation
-        provider capable of handling multi-modal content (text and images).
-        Defaults to GoogleGenaiGenerationProvider().
-
-        Note: You cannot use both visual_description_agent and multi_modal_provider
-        at the same time.
-
     **Usage Examples:**
 
     Basic parsing of a DWG file:
@@ -112,20 +100,14 @@ class DWGFileParser(DocumentParser):
     3. PyMuPDF is required for PDF rendering
     """
 
+    type: Literal["dwg"] = "dwg"
+
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,
     )
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
-    """
-
-    multi_modal_provider: GenerationProvider = Field(
-        default_factory=GoogleGenaiGenerationProvider,
-    )
-    """
-    The multi-modal provider to use for generating the visual description of the document.
-    Useful when you want us to customize the prompt for the visual description.
     """
 
     @override

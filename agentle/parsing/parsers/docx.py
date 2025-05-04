@@ -118,6 +118,8 @@ class DocxFileParser(DocumentParser):
     ```
     """
 
+    type: Literal["docx"] = "docx"
+
     strategy: Literal["high", "low"] = Field(default="high")
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(

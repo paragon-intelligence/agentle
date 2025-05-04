@@ -6,6 +6,7 @@ from their visual content.
 """
 
 from pathlib import Path
+from typing import Literal
 from rsb.functions.ext2mime import ext2mime
 from rsb.models.field import Field
 
@@ -93,6 +94,7 @@ class VideoFileParser(DocumentParser):
     game_analysis = sports_parser.parse("basketball_game.mp4")
     ```
     """
+    type: Literal["video"] = "video"
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,

@@ -11,7 +11,7 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from typing import Never
+from typing import Literal, Never
 
 from rsb.functions.ext2mime import ext2mime
 from rsb.models.field import Field
@@ -101,6 +101,7 @@ class AudioFileParser(DocumentParser):
     various audio formats. If FFmpeg is not installed, an error will be raised when
     trying to process certain audio formats that need conversion.
     """
+    type: Literal["audio"] = "audio"
 
     audio_description_agent: Agent[AudioDescription] = Field(
         default_factory=audio_description_agent_factory,

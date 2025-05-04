@@ -8,7 +8,7 @@ and generate detailed descriptions of image content.
 
 import io
 from pathlib import Path
-from typing import override
+from typing import Literal, override
 
 from rsb.models.field import Field
 
@@ -98,6 +98,8 @@ class StaticImageParser(DocumentParser):
             print(f"OCR text: {image.ocr_text}")
     ```
     """
+
+    type: Literal["static_image"] = "static_image"
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,

@@ -6,7 +6,7 @@ into structured document representations.
 """
 
 from pathlib import Path
-from typing import override
+from typing import Literal, override
 
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.parsed_document import ParsedDocument
@@ -55,6 +55,8 @@ class TxtFileParser(DocumentParser):
     print(f"Algorithm content:\n{content}")
     ```
     """
+
+    type: Literal["txt"] = "txt"
 
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:

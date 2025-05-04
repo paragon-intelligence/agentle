@@ -109,6 +109,7 @@ class PDFFileParser(DocumentParser):
     ```
     """
 
+    type: Literal["pdf"] = "pdf"
     strategy: Literal["high", "low"] = Field(default="high")
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,

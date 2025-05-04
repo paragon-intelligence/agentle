@@ -138,6 +138,7 @@ class FileParser(DocumentParser):
     ```
     """
 
+    type: Literal["file"] = "file"
     strategy: Literal["low", "high"] = Field(default="high")
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,

@@ -8,18 +8,13 @@ contained files using appropriate parsers for each file type.
 
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import Self, cast, override
+from typing import Literal, cast, override
 
 from rsb.models.field import Field
-from rsb.models.model_validator import model_validator
 
 from agentle.agents.agent import Agent
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
-)
-from agentle.generations.providers.base.generation_provider import GenerationProvider
-from agentle.generations.providers.google.google_genai_generation_provider import (
-    GoogleGenaiGenerationProvider,
 )
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.factories.visual_description_agent_factory import (
@@ -27,7 +22,6 @@ from agentle.parsing.factories.visual_description_agent_factory import (
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parsers.file_parser import FileParser
-from agentle.parsing.parsers.validate_visual_parsers import validate_visual_parsers
 from agentle.parsing.parses import parses
 
 
@@ -123,6 +117,8 @@ class CompressedFileParser(DocumentParser):
     ```
     """
 
+    type: Literal["compressed"] = "compressed"
+
     inner_parser: DocumentParser = Field(
         default_factory=FileParser,
     )
@@ -138,34 +134,6 @@ class CompressedFileParser(DocumentParser):
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
     """
-
-    multi_modal_provider: GenerationProvider = Field(
-        default_factory=GoogleGenaiGenerationProvider,
-    )
-    """
-    The multi-modal provider to use for generating the visual description of the document.
-    Useful when you want us to customize the prompt for the visual description.
-    """
-
-    @model_validator(mode="after")
-    def validate_visual_parsers(self) -> Self:
-        """
-        Validate that visual_description_agent and multi_modal_provider are not used together.
-
-        This validator ensures that the parser is not configured with both a visual description
-        agent and a multi-modal provider, as this would create ambiguity about which component
-        should handle visual content analysis.
-
-        Returns:
-            Self: The validated instance
-
-        Raises:
-            ValueError: If both visual_description_agent and multi_modal_provider are provided
-        """
-        validate_visual_parsers(
-            self.visual_description_agent, self.multi_modal_provider
-        )
-        return self
 
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:

@@ -8,7 +8,7 @@ files, making the network topology and configuration data accessible.
 
 import tempfile
 from pathlib import Path
-from typing import override
+from typing import Literal, override
 
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.parsed_document import ParsedDocument
@@ -62,6 +62,7 @@ class PKTFileParser(DocumentParser):
     print(f"Extracted {len(xml_content)} bytes of XML data")
     ```
     """
+    type: Literal["pkt"] = "pkt"
 
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:

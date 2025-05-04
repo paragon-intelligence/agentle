@@ -9,7 +9,7 @@ using visual description agents, and organize them as sequential sections.
 import io
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import override
+from typing import Literal, override
 
 from rsb.functions.bytes2mime import bytes2mime
 from rsb.models.field import Field
@@ -98,6 +98,8 @@ class GifFileParser(DocumentParser):
                 print(f"Text found in frame: {image.ocr_text}")
     ```
     """
+
+    type: Literal["gif"] = "gif"
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,

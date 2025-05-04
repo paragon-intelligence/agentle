@@ -133,6 +133,8 @@ class PptxFileParser(DocumentParser):
     will be raised when attempting to parse .ppt files.
     """
 
+    type: Literal["pptx"] = "pptx"
+    
     strategy: Literal["high", "low"] = Field(default="high")
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
