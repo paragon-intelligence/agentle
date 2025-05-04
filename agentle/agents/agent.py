@@ -77,6 +77,7 @@ from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+from agentle.parsing.factories.file_parser_factory import file_parser_factory
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.prompts.models.prompt import Prompt
 
@@ -185,7 +186,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     # Dear dev,
     # Really sorry to use "Any" here. But if we use DocumentParser, we get an import cycle.
     # No worries, in the model_validator, we check if it's a DocumentParser.
-    document_parser: DocumentParser | None = Field(default=None)
+    document_parser: DocumentParser = Field(default_factory=file_parser_factory)
     """
     A document parser to be used by the agent. This will be used to parse the static
     knowledge documents, if provided.
