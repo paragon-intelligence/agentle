@@ -781,6 +781,38 @@ Agent Cards are particularly useful for:
 
 By following the A2A specification for Agent Cards, Agentle agents can interoperate with any other A2A-compliant system.
 
+#### Creating APIs Directly from Agent Cards
+
+Agentle allows you to instantly create API endpoints directly from agent cards, providing a streamlined path from specification to deployment:
+
+```python
+from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
+
+# Create a BlackSheep API directly from an agent card file
+app = AgentToBlackSheepApplicationAdapter().adapt("path/to/.well-known/agent.json")
+
+# Or from a URL to an agent card
+app_from_url = AgentToBlackSheepApplicationAdapter().adapt("https://example.com/.well-known/agent.json")
+
+# Or even from a raw JSON string
+with open("agent_card.json", "r") as f:
+    agent_card_json = f.read()
+app_from_json = AgentToBlackSheepApplicationAdapter().adapt(agent_card_json)
+
+# Run the API server
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+This powerful feature enables several key workflows:
+- **Rapid Deployment**: Transform any agent card into a functional API with a single line of code
+- **Agent Marketplace Integration**: Easily integrate agents from catalogs or marketplaces into your infrastructure
+- **Dynamic API Creation**: Load agent cards at runtime to create customized APIs based on user configuration
+- **Legacy System Adaptation**: Wrap existing AI systems with A2A-compliant APIs by creating agent cards for them
+
+The automatically created API provides all standard agent endpoints and includes automatically generated API documentation.
+
 #### Advanced A2A Usage
 
 Create collaborative agent ecosystems where specialized agents work together:

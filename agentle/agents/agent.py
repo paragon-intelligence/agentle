@@ -36,7 +36,7 @@ from collections.abc import (
     Sequence,
 )
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any, cast, ClassVar, Mapping
+from typing import TYPE_CHECKING, Any, ClassVar, Mapping, cast
 
 from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
@@ -434,19 +434,19 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         # Map provider class to organization name
         provider_name: str | None = None
-        provider_url = "https://example.com"
+        provider_url = "https://example.com" # just for now.
 
         if hasattr(provider_class, "__module__"):
             module_name = provider_class.__module__.lower()
             if "google" in module_name:
                 provider_name = "Google"
-                provider_url = "https://ai.google.dev/"
+                provider_url = "https://ai.google.dev/" # just for now.
             elif "anthropic" in module_name:
                 provider_name = "Anthropic"
-                provider_url = "https://anthropic.com/"
+                provider_url = "https://anthropic.com/" # just for now.
             elif "openai" in module_name:
                 provider_name = "OpenAI"
-                provider_url = "https://openai.com/"
+                provider_url = "https://openai.com/" # just for now.
 
         if provider_name is not None:
             provider_dict = {"organization": provider_name, "url": provider_url}
