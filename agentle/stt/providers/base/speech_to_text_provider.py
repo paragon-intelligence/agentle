@@ -16,6 +16,6 @@ class SpeechToTextProvider(BaseModel, abc.ABC):
 
     @abc.abstractmethod
     async def transcribe_async(
-        self, audio_file: str| Path, config: TranscriptionConfig | None = None
+        self, audio_file: str | Path, config: TranscriptionConfig | None = None
     ) -> AudioTranscription:
         pass

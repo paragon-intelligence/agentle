@@ -101,6 +101,7 @@ class AudioFileParser(DocumentParser):
     various audio formats. If FFmpeg is not installed, an error will be raised when
     trying to process certain audio formats that need conversion.
     """
+
     type: Literal["audio"] = "audio"
 
     audio_description_agent: Agent[AudioDescription] = Field(

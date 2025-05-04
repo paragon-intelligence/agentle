@@ -181,6 +181,7 @@ class A2AInterface[T_Schema]:
             task_manager: Optional task manager to use (default: InMemoryTaskManager)
         """
         from agentle.agents.a2a.tasks.managment.in_memory import InMemoryTaskManager
+
         task_manager = task_manager or InMemoryTaskManager()
 
         # Create the task resource

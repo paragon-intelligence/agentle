@@ -62,6 +62,7 @@ class PKTFileParser(DocumentParser):
     print(f"Extracted {len(xml_content)} bytes of XML data")
     ```
     """
+
     type: Literal["pkt"] = "pkt"
 
     @override

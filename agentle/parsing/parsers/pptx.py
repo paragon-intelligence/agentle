@@ -134,7 +134,7 @@ class PptxFileParser(DocumentParser):
     """
 
     type: Literal["pptx"] = "pptx"
-    
+
     strategy: Literal["high", "low"] = Field(default="high")
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(

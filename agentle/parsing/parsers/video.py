@@ -94,6 +94,7 @@ class VideoFileParser(DocumentParser):
     game_analysis = sports_parser.parse("basketball_game.mp4")
     ```
     """
+
     type: Literal["video"] = "video"
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(

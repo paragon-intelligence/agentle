@@ -126,6 +126,7 @@ class XlsxFileParser(DocumentParser):
                 print(f"Chart text: {image.ocr_text}")
     ```
     """
+
     type: Literal["xlsx"] = "xlsx"
 
     strategy: Literal["high", "low"] = Field(default="high")

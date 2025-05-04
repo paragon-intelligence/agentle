@@ -289,7 +289,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     # Internal fields
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
-
     @classmethod
     def from_agent_card(cls, agent_card: dict[str, Any]) -> "Agent[Any]":
         """
@@ -1168,10 +1167,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             return Context(
                 messages=[
                     developer_message,
-                    UserMessage(parts=[TextPart(text=input.md)])
+                    UserMessage(parts=[TextPart(text=input.md)]),
                 ]
             )
-        
+
         # Sequence handling: Check for Message sequences or Part sequences
         # Explicitly check for Sequence for MyPy's benefit
         elif isinstance(input, Sequence) and not isinstance(input, (str, bytes)):  # pyright: ignore[reportUnnecessaryIsInstance]
@@ -1201,5 +1200,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 UserMessage(parts=[TextPart(text=str(input))]),
             ]
         )
+
 
 Agent.model_rebuild()
