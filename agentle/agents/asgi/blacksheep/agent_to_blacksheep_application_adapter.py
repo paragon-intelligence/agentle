@@ -30,11 +30,48 @@ class AgentToBlackSheepApplicationAdapter(Adapter[Agent[Any], "Application"]):
         """
         if isinstance(_f, Agent):
             return self._adapt_agent(_f)
-        
+
         return self._adapt_a2a_interface(_f)
 
     def _adapt_a2a_interface(self, _f: A2AInterface[Any]) -> Application:
-        raise NotImplementedError("A2AInterface is not supported yet")
+        """
+        Creates a BlackSheep ASGI application for the A2A interface.
+
+        This creates routes for task management and push notifications.
+        """
+        import blacksheep
+        from blacksheep.server.openapi.ui import ScalarUIProvider
+        from blacksheep.server.openapi.v3 import OpenAPIHandler
+        from openapidocs.v3 import Info
+
+        app = blacksheep.Application()
+
+        # Get agent name safely
+        agent_name = getattr(_f.agent, "name", "Agent")
+
+        # Initialize docs with proper title and description
+        docs = OpenAPIHandler(
+            ui_path="/openapi",
+            info=Info(
+                title=f"{agent_name} A2A Interface",
+                version="1.0.0",
+                description=(
+                    f"A2A Interface for {agent_name}. "
+                    "This API exposes task management and push notification capabilities."
+                ),
+            ),
+        )
+        docs.ui_providers.append(ScalarUIProvider(ui_path="/docs"))
+        docs.bind_app(app)
+
+        # Add routes for A2A interface
+        controllers = [AgentToBlackSheepRouteHandlerAdapter().adapt(_f)] + list(
+            self.extra_routes or []
+        )
+
+        app.register_controllers(controllers)
+
+        return app
 
     def _adapt_agent(self, _f: Agent[Any]) -> Application:
         import blacksheep
@@ -44,15 +81,17 @@ class AgentToBlackSheepApplicationAdapter(Adapter[Agent[Any], "Application"]):
 
         app = blacksheep.Application()
 
-        docs: OpenAPIHandler = OpenAPIHandler(
+        docs = OpenAPIHandler(
             ui_path="/openapi",
-            info=Info(title="Agentle", version="0.0.1", description="Agentle API"),
+            info=Info(title=_f.name, version="1.0.0", description=_f.description),
         )
         docs.ui_providers.append(ScalarUIProvider(ui_path="/docs"))
         docs.bind_app(app)
 
-        _ = [AgentToBlackSheepRouteHandlerAdapter().adapt(_f)] + list(
+        controllers = [AgentToBlackSheepRouteHandlerAdapter().adapt(_f)] + list(
             self.extra_routes or []
         )
+
+        app.register_controllers(controllers)
 
         return app
