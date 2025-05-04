@@ -6,11 +6,11 @@ This creates a RESTful API that allows applications to interact with your agent 
 """
 
 from agentle.agents.agent import Agent
+from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import (
+    AgentToBlackSheepApplicationAdapter,
+)
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
-)
-from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application import (
-    AgentToBlackSheepApplicationAdapter,
 )
 
 # Create a simple agent

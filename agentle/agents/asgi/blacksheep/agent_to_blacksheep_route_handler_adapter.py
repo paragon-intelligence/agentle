@@ -94,7 +94,7 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
             @blacksheep.post(endpoint)
             async def run(
                 self, input: blacksheep.FromJSON[_AgentRunCommand]
-            ) -> AgentRunOutput[Any]:
+            ) -> AgentRunOutput[dict[str, Any]]:
                 async with agent.with_mcp_servers_async():
                     result = await agent.run_async(cast(AgentInput, input.value.input))
                     return result

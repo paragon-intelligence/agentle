@@ -433,7 +433,7 @@ Expose your agent as a RESTful API:
 
 ```python
 from agentle.agents.agent import Agent
-from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application import AgentToBlackSheepApplicationAdapter
+from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
 
 # Create your agent
 code_assistant = Agent(
