@@ -18,8 +18,8 @@ from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.factories.visual_description_agent_factory import (
     visual_description_agent_factory,
 )
-from agentle.parsing.migrate import StaticImageFileParser
 from agentle.parsing.parsed_document import ParsedDocument
+from agentle.parsing.parsers.static_image import StaticImageParser
 from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
@@ -77,8 +77,8 @@ class DWGFileParser(DocumentParser):
             # Convert PDF to images and save them to temp directory
             image_paths = self.__pdf_to_image_paths(output_path, temp_dir)
 
-            parser = StaticImageFileParser(
-                visual_description_agent=self.visual_description_agent,
+            parser = StaticImageParser(
+                visual_description_agent=self.visual_description_agent
             )
 
             parsed_files = [

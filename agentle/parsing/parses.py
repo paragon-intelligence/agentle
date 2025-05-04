@@ -1,46 +1,23 @@
-from collections.abc import Callable
-
+from collections.abc import Callable, MutableMapping
+from typing import TypeVar, Type
 
 from agentle.parsing.document_parser import DocumentParser
 
-_parser_registry: dict[str, type[DocumentParser]] = {}
+_parser_registry: MutableMapping[str, type[DocumentParser]] = {}
+
+# Define a TypeVar constrained to DocumentParser
+ParserT = TypeVar("ParserT", bound=DocumentParser)
 
 
 def parses(
     *extensions: str,
-) -> Callable[[type[DocumentParser]], type[DocumentParser]]:
-    """
-    Decorator to register a file parser class for specific file extensions.
-
-    This decorator is used to register a file parser class for specific file extensions.
-    It adds the parser class to the global parser registry, allowing the `FileParser`
-    to automatically select the correct parser based on the file extension. Should be
-    used internally only by concrete intellibricks parser classes.
-
-    **Parameters:**
-
-    *   `extensions` (str): One or more file extensions that the parser class supports.
-
-    **Returns:**
-
-    *   `Callable[[type[FileParser]], type[FileParser]]`: A decorator function that registers the parser class.
-
-    **Example:**
-
-    ```python
-    from intelliparse.parsers import FileParser, parses
-
-    @_parses("txt")
-    class CustomTxtFileParser(FileParser):
-        async def parse_async(self, file: RawFile) -> ParsedFile:
-            # Add parsing logic here
-            pass
-    ```
-    """
+) -> Callable[[Type[ParserT]], Type[ParserT]]:
+    """Decorator to register DocumentParser subclasses for specific file extensions."""
 
     def decorator(
-        parser_cls: type[DocumentParser],
-    ) -> type[DocumentParser]:
+        parser_cls: Type[ParserT],
+    ) -> Type[ParserT]:
+        # No need for the inner class '_' or functools.wraps as we return the original class.
         for extension in extensions:
             _parser_registry[extension] = parser_cls
         return parser_cls

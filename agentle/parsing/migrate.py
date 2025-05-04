@@ -1,3 +1,6 @@
+from agentle.parsing.parses import parses
+
+
 @_parses("doc", "docx")
 class DocxFileParser(FileParser, frozen=True, tag="docx"):
     @ensure_module_installed("docx", "intellibricks[files]")
@@ -367,85 +370,6 @@ class TxtFileParser(FileParser, frozen=True, tag="txt"):
         )
 
 
-@_parses("png", "jpeg", "tiff", "bmp", "jpg", "jp2")
-class StaticImageFileParser(FileParser, frozen=True, tag="static_image"):
-
-    @override
-    async def parse_async(
-        self,
-        file: RawFile,
-    ) -> ParsedFile:
-        from PIL import Image as PILImage
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = f"{temp_dir}/{file.name}"
-            file.save_to_file(file_path)
-
-            # Determine the extension
-            extension = file.extension
-
-            # Convert to PNG if TIFF
-            if extension in {"tiff", "tif"}:
-                # Use Pillow to open, then convert to PNG in memory
-                with io.BytesIO(file.contents) as input_buffer:
-                    with PILImage.open(input_buffer) as pil_img:
-                        # Convert to RGBA or RGB if needed
-                        if pil_img.mode not in ("RGB", "RGBA"):
-                            pil_img = pil_img.convert("RGBA")
-
-                        # Save as PNG into a new buffer
-                        output_buffer = io.BytesIO()
-                        pil_img.save(output_buffer, format="PNG")
-                        converted_bytes = output_buffer.getvalue()
-
-                # Use the converted PNG bytes
-                image_bytes = converted_bytes
-                current_mime_type = bytes_to_mime(image_bytes)
-            else:
-                # No conversion needed
-                image_bytes = file.contents
-
-                # For demonstration, pick your MIME by extension
-                if extension in {"png", "bmp"}:
-                    current_mime_type = "image/" + extension
-                elif extension in {"jpg", "jpeg"}:
-                    current_mime_type = "image/jpeg"
-                else:
-                    # Fallback to PNG or raise an error if you want
-                    current_mime_type = "image/png"
-
-            # Create an Image object
-
-            image_ocr: str | None = None
-            # Generate a description if we have an agent + HIGH strategy
-            text_content = ""
-            if self.visual_description_agent and self.strategy == "high":
-                agent_input = ImageFilePart(
-                    mime_type=current_mime_type,
-                    data=image_bytes,
-                )
-                agent_response = await self.visual_description_agent.run_async(
-                    agent_input
-                )
-                description_md = agent_response.parsed.final_answer.md
-                image_ocr = agent_response.parsed.final_answer.ocr_text
-                text_content = description_md
-
-            image_obj = Image(name=file.name, contents=image_bytes, ocr_text=image_ocr)
-            # We treat it as a single "page" with one image
-            page_content = SectionContent(
-                number=1,
-                text=text_content,
-                md=text_content,
-                images=[image_obj],
-            )
-
-            return ParsedFile(
-                name=file.name,
-                sections=[page_content],
-            )
-
-
 @_parses("gif")
 class AnimatedImageFileParser(FileParser, frozen=True, tag="animated_image"):
     @override
@@ -657,7 +581,7 @@ class AudioFileParser(FileParser, frozen=True, tag="audio"):
             raise RuntimeError()
 
 
-@_parses("mp4")
+@parses("mp4")
 class VideoFileParser(FileParser, frozen=True, tag="video"):
     async def parse_async(self, file: RawFile) -> ParsedFile:
         if self.visual_description_agent is None:
