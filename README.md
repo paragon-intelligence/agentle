@@ -758,6 +758,33 @@ The framework supports multiple knowledge source types:
 - **URLs**: Web pages and online resources via `UrlKnowledge`
 - **Raw Text**: Direct text snippets as strings
 
+You can also provide knowledge as an array of strings, which can be either URLs or local file paths. The framework will attempt to determine the type automatically:
+
+```python
+# Create an agent with string-based knowledge sources
+agent = Agent(
+    name="Research Assistant",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You help with research tasks.",
+    
+    # Array of string-based knowledge sources
+    static_knowledge=[
+        # URLs as strings
+        "https://example.com/research-paper.html",
+        
+        # Local file paths as strings
+        "data/report.pdf",
+        "references/definitions.txt",
+        
+        # Direct text knowledge
+        "Important concept: Machine learning is a subset of artificial intelligence."
+    ]
+)
+```
+
+> **Note**: The string-based approach is convenient but may change or be deprecated in future versions. For maximum stability and clarity, prefer using the typed knowledge classes (`DocumentKnowledge` and `UrlKnowledge`) when possible.
+
 #### How Knowledge Integration Works
 
 When you provide static knowledge to an agent:
