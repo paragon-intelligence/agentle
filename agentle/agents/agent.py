@@ -662,7 +662,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         Example:
             ```python
             # Asynchronous use
-            result = await agent.run_async("What is the weather in London?")
+            result = await agent.run_async("What's the weather like in London?")
 
             # Processing the response
             response_text = result.artifacts[0].parts[0].text
@@ -675,9 +675,55 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             ```
         """
         static_knowledge_prompt: str | None = None
+        # Process static knowledge if any exists
+        if self.static_knowledge:
+            knowledge_contents: list[str] = []
+            for knowledge_item in self.static_knowledge:
+                if isinstance(knowledge_item, DocumentKnowledge):
+                    # Parse document using the provided document parser
+                    parsed_doc = await self.document_parser.parse_async(
+                        knowledge_item.path
+                    )
+                    knowledge_contents.append(
+                        f"## Document: {parsed_doc.name}\n\n{parsed_doc.sections[0].text}"
+                    )
+                elif isinstance(knowledge_item, UrlKnowledge):
+                    # For URLs, we can use the document parser if it supports URLs, or handle differently
+                    try:
+                        parsed_url = await self.document_parser.parse_async(
+                            str(knowledge_item.url)
+                        )
+                        knowledge_contents.append(
+                            f"## URL: {knowledge_item.url}\n\n{parsed_url.sections[0].text}"
+                        )
+                    except ValueError:
+                        knowledge_contents.append(f"## URL: {knowledge_item.url}")
+                else:  # String or other content
+                    # If it's a string, treat it as a file path and try to parse it
+                    try:
+                        parsed_str = await self.document_parser.parse_async(
+                            str(knowledge_item)
+                        )
+                        knowledge_contents.append(
+                            f"## Source: {parsed_str.name}\n\n{parsed_str.sections[0].text}"
+                        )
+                    except Exception:
+                        # If parsing fails, assume it's direct content
+                        knowledge_contents.append(
+                            f"## Information:\n\n{str(knowledge_item)}"
+                        )
+
+            if knowledge_contents:
+                static_knowledge_prompt = "\n\n# KNOWLEDGE BASE\n\n" + "\n\n".join(
+                    knowledge_contents
+                )
+
+        instructions = self._convert_instructions_to_str(self.instructions)
+        if static_knowledge_prompt:
+            instructions += "\n\n" + static_knowledge_prompt
 
         context: Context = self._convert_input_to_context(
-            input, instructions=self._convert_instructions_to_str(self.instructions)
+            input, instructions=instructions
         )
 
         generation_provider: GenerationProvider = (
