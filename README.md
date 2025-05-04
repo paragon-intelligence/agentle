@@ -776,9 +776,6 @@ agent = Agent(
         # Local file paths as strings
         "data/report.pdf",
         "references/definitions.txt",
-        
-        # Direct text knowledge
-        "Important concept: Machine learning is a subset of artificial intelligence."
     ]
 )
 ```
