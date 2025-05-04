@@ -672,6 +672,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 weather = result.parsed.weather
             ```
         """
+        static_knowledge_prompt: str | None = None
 
         context: Context = self._convert_input_to_context(
             input, instructions=self._convert_instructions_to_str(self.instructions)
