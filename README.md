@@ -912,3 +912,182 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📄 Multi-Modal Document Parsing
+
+Agentle includes a powerful parsing module that can extract structured content from virtually any file type. This enables your agents to work with a wide range of documents and media formats without additional preprocessing.
+
+### Supported File Types
+
+The parsing module supports an extensive range of file formats:
+
+- **Documents**: PDF, DOCX, TXT
+- **Spreadsheets**: XLSX, XLS
+- **Presentations**: PPTX, PPT, PPTM
+- **Images**: PNG, JPG, JPEG, TIFF, BMP, GIF
+- **Audio**: MP3, WAV, FLAC, OGG, MP4A
+- **Video**: MP4
+- **CAD Files**: DWG
+- **Network Simulation**: PKT (Cisco Packet Tracer)
+- **Archives**: ZIP, RAR, PKZ
+- **Markup**: XML
+
+### Basic Usage
+
+Parse any supported file with a single function call:
+
+```python
+from agentle.parsing import parse
+
+# Parse different file types with the same function
+pdf_doc = parse("document.pdf")
+image = parse("diagram.png")
+audio = parse("recording.mp3")
+spreadsheet = parse("data.xlsx")
+
+# Use high or low parsing strategy
+detailed_parse = parse("complex_document.pdf", strategy="high")  # More intensive processing
+fast_parse = parse("simple_document.txt", strategy="low")        # Faster, less intensive
+```
+
+NOTE: We do have an Abstract Base Class that you can use in complex cases to provide better indirection. The "parse" function is the just the easiest way to do it. We have an async version of it as well.
+
+### Extracted Content Structure
+
+All parsed content is returned in a standardized `ParsedDocument` structure:
+
+```python
+# Parse a document
+parsed_doc = parse("presentation.pptx")
+
+# Access document metadata
+print(f"Document name: {parsed_doc.name}")
+print(f"Number of sections: {len(parsed_doc.sections)}")
+
+# Work with sections (slides, pages, etc.)
+for section in parsed_doc.sections:
+    print(f"Section {section.number}:")
+    print(f"Text content: {section.text[:100]}...")
+    
+    # Access images in the section
+    if section.images:
+        print(f"Contains {len(section.images)} images")
+        for image in section.images:
+            if image.ocr_text:
+                print(f"Image text: {image.ocr_text}")
+    
+    # Work with structured content items
+    for item in section.items:
+        if item.type == "heading":
+            print(f"Heading (Level {item.lvl}): {item.heading}")
+        elif item.type == "table":
+            print(f"Table with {len(item.rows)} rows and {len(item.rows[0])} columns")
+```
+
+### Custom Visual and Audio Analysis
+
+Customize how images and audio are analyzed using your own agents:
+
+```python
+from agentle.agents.agent import Agent
+from agentle.parsing import parse
+from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+from agentle.generations.models.structured_outputs_store.audio_description import AudioDescription
+
+# Create custom image analysis agent
+technical_diagram_agent = Agent(
+    model="gemini-2.0-pro-vision",
+    instructions="You analyze technical diagrams and schematics with precision. Focus on component identification, connections, and technical specifications.",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    response_schema=VisualMediaDescription,
+)
+
+# Create custom audio analysis agent
+medical_dictation_agent = Agent(
+    model="gemini-2.0-flash",
+    instructions="You transcribe medical dictations with high accuracy. Focus on medical terminology, drug names, dosages, and diagnostic information.",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    response_schema=AudioDescription,
+)
+
+# Parse with custom agents
+technical_drawing = parse(
+    "circuit_diagram.png",
+    visual_description_agent=technical_diagram_agent
+)
+
+medical_recording = parse(
+    "patient_notes.mp3",
+    audio_description_agent=medical_dictation_agent
+)
+```
+
+### Integration with Agents
+
+Easily feed parsed document content to your agents:
+
+```python
+from agentle.agents.agent import Agent
+from agentle.parsing import parse
+
+# Create an agent
+document_analysis_agent = Agent(
+    name="Document Analyzer",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You analyze document content and provide insights and summaries.",
+)
+
+# Parse a document
+parsed_doc = parse("quarterly_report.pdf")
+
+# Generate a markdown representation of the document
+document_content = parsed_doc.md
+
+# Feed the content to the agent
+analysis = document_analysis_agent.run(
+    f"Analyze this quarterly financial report and highlight key insights:\n\n{document_content}"
+)
+
+print(analysis.text)
+```
+
+### Extensible Parser System
+
+Add support for new file types by creating custom parsers:
+
+```python
+from pathlib import Path
+from typing import override
+from agentle.parsing.document_parser import DocumentParser
+from agentle.parsing.parsed_document import ParsedDocument
+from agentle.parsing.parses import parses
+from agentle.parsing.section_content import SectionContent
+
+@parses("custom", "cst")  # Register for .custom and .cst file extensions
+class CustomFormatParser(DocumentParser):
+    @override
+    async def parse_async(self, document_path: str) -> ParsedDocument:
+        # Custom logic to parse your file format
+        path = Path(document_path)
+        content = path.read_text(encoding="utf-8")
+        
+        # Process the content according to your format's structure
+        processed_content = self._process_custom_format(content)
+        
+        # Return a standardized ParsedDocument
+        return ParsedDocument(
+            name=path.name,
+            sections=[
+                SectionContent(
+                    number=1,
+                    text=processed_content,
+                    md=processed_content
+                )
+            ]
+        )
+        
+    def _process_custom_format(self, content: str) -> str:
+        # Your custom processing logic here
+        return content
+```
