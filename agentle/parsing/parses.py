@@ -1,23 +1,18 @@
 from collections.abc import Callable, MutableMapping
-from typing import TypeVar, Type
 
 from agentle.parsing.document_parser import DocumentParser
 
 _parser_registry: MutableMapping[str, type[DocumentParser]] = {}
 
-# Define a TypeVar constrained to DocumentParser
-ParserT = TypeVar("ParserT", bound=DocumentParser)
 
-
-def parses(
+def parses[ParserT: DocumentParser](
     *extensions: str,
-) -> Callable[[Type[ParserT]], Type[ParserT]]:
+) -> Callable[[type[ParserT]], type[ParserT]]:
     """Decorator to register DocumentParser subclasses for specific file extensions."""
 
     def decorator(
-        parser_cls: Type[ParserT],
-    ) -> Type[ParserT]:
-        # No need for the inner class '_' or functools.wraps as we return the original class.
+        parser_cls: type[ParserT],
+    ) -> type[ParserT]:
         for extension in extensions:
             _parser_registry[extension] = parser_cls
         return parser_cls
