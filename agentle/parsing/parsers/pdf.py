@@ -11,10 +11,6 @@ from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
-from agentle.generations.providers.base.generation_provider import GenerationProvider
-from agentle.generations.providers.google.google_genai_generation_provider import (
-    GoogleGenaiGenerationProvider,
-)
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.factories.visual_description_agent_factory import (
     visual_description_agent_factory,
@@ -34,14 +30,6 @@ class PDFFileParser(DocumentParser):
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
-    """
-
-    multi_modal_provider: GenerationProvider = Field(
-        default_factory=GoogleGenaiGenerationProvider,
-    )
-    """
-    The multi-modal provider to use for generating the visual description of the document.
-    Useful when you want us to customize the prompt for the visual description.
     """
 
     @override

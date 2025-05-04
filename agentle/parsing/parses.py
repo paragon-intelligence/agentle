@@ -2,7 +2,7 @@ from collections.abc import Callable, MutableMapping
 
 from agentle.parsing.document_parser import DocumentParser
 
-_parser_registry: MutableMapping[str, type[DocumentParser]] = {}
+parser_registry: MutableMapping[str, type[DocumentParser]] = {}
 
 
 def parses[ParserT: DocumentParser](
@@ -14,7 +14,7 @@ def parses[ParserT: DocumentParser](
         parser_cls: type[ParserT],
     ) -> type[ParserT]:
         for extension in extensions:
-            _parser_registry[extension] = parser_cls
+            parser_registry[extension] = parser_cls
         return parser_cls
 
     return decorator

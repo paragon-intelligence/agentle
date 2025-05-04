@@ -1,5 +1,6 @@
+import inspect
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal, MutableMapping
 
 from agentle.agents.agent import Agent
 from agentle.generations.models.structured_outputs_store.audio_description import (
@@ -9,12 +10,10 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parsers.parse_async import parse_async
 from agentle.parsing.parses import parser_registry
-from rsb.coroutines.run_sync import run_sync
 
 
-def parse(
+async def parse_async(
     document_path: str,
     strategy: Literal["low", "high"] = "high",
     visual_description_agent: Agent[VisualMediaDescription] | None = None,
@@ -27,10 +26,10 @@ def parse(
     if not parser_cls:
         raise ValueError(f"Unsupported extension: {path.suffix}")
 
-    return run_sync(
-        parse_async,
-        document_path=document_path,
-        strategy=strategy,
-        visual_description_agent=visual_description_agent,
-        audio_description_agent=audio_description_agent,
-    )
+    kwargs: MutableMapping[str, Any] = {"strategy": strategy}
+    if visual_description_agent:
+        kwargs["visual_description_agent"] = visual_description_agent
+    if audio_description_agent:
+        kwargs["audio_description_agent"] = audio_description_agent
+
+    return await parser_cls(**kwargs).parse_async(document_path)
