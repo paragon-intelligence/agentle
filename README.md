@@ -22,6 +22,7 @@ Agentle makes it effortless to create, compose, and deploy intelligent AI agents
 - 🔍 **Built-in Observability** - Automatic tracing via Langfuse with extensible interfaces
 - 🤝 **Agent-to-Agent (A2A)** - Support for Google's standardized A2A protocol
 - 📝 **Prompt Management** - Flexible system for organizing and managing prompts
+- 📚 **Knowledge Integration** - Seamlessly incorporate static knowledge from various sources
 
 ## 📦 Installation
 
@@ -62,6 +63,7 @@ The core building block of Agentle is the `Agent` class. Each agent:
 - Can call tools/functions to perform actions
 - Can generate structured outputs
 - Maintains context through conversations
+- Can incorporate static knowledge from documents, URLs, or text
 
 ```python
 from agentle.agents.agent import Agent
@@ -82,6 +84,40 @@ travel_agent = Agent(
 result = travel_agent.run("What are the must-see attractions in Tokyo?")
 print(result.text)
 ```
+
+### Static Knowledge Integration
+
+Enhance your agents with domain-specific knowledge from various sources like documents, URLs, or raw text. This knowledge is parsed and automatically integrated into the agent's instructions:
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.knowledge.document_knowledge import DocumentKnowledge
+from agentle.agents.knowledge.url_knowledge import UrlKnowledge
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+
+# Create an agent with static knowledge
+travel_expert = Agent(
+    name="Japan Travel Expert",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a Japan travel expert who provides detailed information about Japanese destinations.",
+    # Provide static knowledge from multiple sources
+    static_knowledge=[
+        # Include knowledge from local documents
+        DocumentKnowledge(path="data/japan_travel_guide.pdf"),
+        # Include knowledge from websites
+        UrlKnowledge(url="https://www.japan-guide.com/"),
+        # Include direct text knowledge
+        "Tokyo is the capital of Japan and one of the most populous cities in the world."
+    ]
+)
+
+# The agent will incorporate the knowledge when answering
+response = travel_expert.run("What should I know about visiting Tokyo in cherry blossom season?")
+print(response.text)
+```
+
+The framework automatically parses knowledge sources using appropriate document parsers based on file type or content, making it seamless to include domain expertise in your agents.
 
 ### Tools (Function Calling)
 
@@ -709,6 +745,93 @@ Agentle's A2A implementation handles the complexity of:
 - **Asynchronous Processing**: Transparently converts asynchronous A2A operations into synchronous methods
 
 The `A2AInterface` class acts as the gateway between your application and any A2A-compliant agent, serving as a unified interface for task management, messaging, and notification handling.
+
+### Advanced Knowledge Integration
+
+Agentle provides a powerful knowledge integration system that allows agents to leverage information from various sources when generating responses. This feature is particularly useful for building specialized agents that need domain-specific knowledge beyond their pre-trained capabilities.
+
+#### Knowledge Source Types
+
+The framework supports multiple knowledge source types:
+
+- **Documents**: PDF, DOCX, TXT, PPTX, and other document formats via `DocumentKnowledge`
+- **URLs**: Web pages and online resources via `UrlKnowledge`
+- **Raw Text**: Direct text snippets as strings
+
+#### How Knowledge Integration Works
+
+When you provide static knowledge to an agent:
+
+1. The agent uses appropriate document parsers to extract content from each knowledge source
+2. The parsed content is organized into a structured knowledge base format
+3. This knowledge base is appended to the agent's instructions
+4. When the agent responds to queries, it can leverage this knowledge base
+
+Here's a more comprehensive example showing different ways to use the knowledge integration feature:
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.knowledge.document_knowledge import DocumentKnowledge
+from agentle.agents.knowledge.url_knowledge import UrlKnowledge
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+from agentle.parsing.factories.file_parser_factory import file_parser_factory
+
+# Create a legal assistant with domain-specific knowledge
+legal_assistant = Agent(
+    name="Legal Assistant",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a legal assistant specialized in contract law. Help users understand legal concepts and review contracts.",
+    
+    # Provide multiple knowledge sources
+    static_knowledge=[
+        # Local document sources
+        DocumentKnowledge(path="legal_docs/contract_templates.pdf"),
+        DocumentKnowledge(path="legal_docs/legal_definitions.docx"),
+        
+        # Online resources
+        UrlKnowledge(url="https://www.law.cornell.edu/wex/contract"),
+        
+        # Direct knowledge snippets
+        "Force majeure clauses excuse a party from performance when extraordinary events prevent fulfillment of obligations."
+    ],
+    
+    # Optional: Use a custom document parser for specialized parsing needs
+    document_parser=file_parser_factory(strategy="high")
+)
+
+# The agent will leverage all provided knowledge when responding
+response = legal_assistant.run("What should I look for in a non-disclosure agreement?")
+print(response.text)
+```
+
+#### Custom Document Parsers
+
+For specialized knowledge extraction needs, you can provide a custom document parser to the agent:
+
+```python
+from agentle.agents.agent import Agent
+from agentle.parsing.parsers.file_parser import FileParser
+from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+
+# Create a custom document parser with specialized settings
+custom_parser = FileParser(
+    strategy="high",  # Use high-detail parsing
+    visual_description_agent=your_custom_vision_agent  # Customize image analysis
+)
+
+# Create an agent with the custom parser
+research_agent = Agent(
+    # ... other agent settings ...
+    static_knowledge=[
+        DocumentKnowledge(path="research_papers/paper.pdf"),
+        # ... other knowledge sources ...
+    ],
+    document_parser=custom_parser
+)
+```
+
+The knowledge integration system seamlessly works with the rest of Agentle's features like tool calling, structured outputs, and Agent-to-Agent communication.
 
 #### Agent Cards
 
