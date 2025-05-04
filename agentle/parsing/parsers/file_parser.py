@@ -3,11 +3,15 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.generations.providers.base.generation_provider import GenerationProvider
-from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+from agentle.generations.providers.google.google_genai_generation_provider import (
+    GoogleGenaiGenerationProvider,
+)
 from agentle.parsing.document_parser import DocumentParser
 from rsb.models.field import Field
 
-from agentle.parsing.factories.visual_description_agent_factory import visual_description_agent_factory
+from agentle.parsing.factories.visual_description_agent_factory import (
+    visual_description_agent_factory,
+)
 
 
 class FileParser(DocumentParser):

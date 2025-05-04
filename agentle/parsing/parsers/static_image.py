@@ -15,8 +15,10 @@ from agentle.parsing.factories.visual_description_agent_factory import (
     visual_description_agent_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
+from agentle.parsing.parses import parses
 
 
+@parses("png", "jpeg", "tiff", "bmp", "jpg", "jp2")
 class StaticImageParser(DocumentParser):
     visual_description_agent: Agent[VisualMediaDescription] = Field(
         default_factory=visual_description_agent_factory,
