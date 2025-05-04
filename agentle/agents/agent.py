@@ -1,3 +1,5 @@
+# type: ignore[reportImportCycles]
+
 """
 The main module of the Agentle framework for creating and managing AI agents.
 
@@ -36,7 +38,7 @@ from collections.abc import (
     Sequence,
 )
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
@@ -44,6 +46,7 @@ from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 from rsb.models.mimetype import MimeType
+from rsb.models.model_validator import model_validator
 
 from agentle.agents.a2a.models.agent_skill import AgentSkill
 from agentle.agents.a2a.models.authentication import Authentication
@@ -77,7 +80,6 @@ from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
-from agentle.parsing.document_parser import DocumentParser
 from agentle.prompts.models.prompt import Prompt
 
 if TYPE_CHECKING:
@@ -180,7 +182,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     knowledge base. This will be FULLY (**entire document**) indexed to the conversation.
     """
 
-    document_parser: DocumentParser | None = Field(default=None)
+    document_parser: Any | None = Field(default=None)
     """
     A document parser to be used by the agent. This will be used to parse the static
     knowledge documents, if provided.
@@ -284,6 +286,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
     # Internal fields
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    @model_validator(mode="after")
+    def validate_document_parser(self) -> Self:
+        from agentle.parsing.document_parser import DocumentParser
+
+        if self.document_parser is not None:
+            if not isinstance(self.document_parser, DocumentParser):
+                raise ValueError("document_parser must be a DocumentParser")
+
+        return self
 
     @classmethod
     def from_agent_card(cls, agent_card: dict[str, Any]) -> "Agent[Any]":

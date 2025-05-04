@@ -1,4 +1,5 @@
-from typing import Callable
+from collections.abc import Callable
+
 
 from agentle.parsing.document_parser import DocumentParser
 
