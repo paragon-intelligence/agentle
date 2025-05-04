@@ -36,7 +36,7 @@ from collections.abc import (
     Sequence,
 )
 from contextlib import asynccontextmanager, contextmanager
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, ClassVar, Mapping
 
 from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
@@ -144,6 +144,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         output = weather_agent.run("What is the weather in London?")
         ```
     """
+
+    # Provider mapping for from_agent_card method
+    _PROVIDER_MAPPING: ClassVar[Mapping[str, type[GenerationProvider]]] = {}
 
     uid: uuid.UUID = Field(default_factory=uuid.uuid4)
     """
@@ -267,6 +270,249 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
     # Internal fields
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    @classmethod
+    def from_agent_card(cls, agent_card: dict[str, Any]) -> "Agent[Any]":
+        """
+        Creates an Agent instance from an A2A agent card.
+
+        This method parses an agent card dictionary and creates an Agent instance
+        with the appropriate attributes. It maps the provider organization to a
+        generation provider class if available.
+
+        Args:
+            agent_card: A dictionary representing an A2A agent card
+
+        Returns:
+            Agent[Any]: A new Agent instance based on the agent card
+
+        Raises:
+            KeyError: If a required field is missing from the agent card
+            ValueError: If the provider organization is specified but not supported
+
+        Example:
+            ```python
+            # Load an agent card from a file
+            with open("agent_card.json", "r") as f:
+                agent_card = json.load(f)
+
+            # Create an agent from the card
+            agent = Agent.from_agent_card(agent_card)
+            ```
+        """
+        # Map provider organization to generation provider
+        provider = agent_card.get("provider")
+        generation_provider: Any = None
+
+        if provider is not None:
+            org_name = provider.get("organization", "")
+
+            # Handle each provider type with proper error handling
+            match org_name.lower():
+                case "google":
+                    # Default to Google provider if available
+                    try:
+                        from agentle.generations.providers.google import (
+                            google_generation_provider,
+                        )
+
+                        generation_provider = (
+                            google_generation_provider.GoogleGenerationProvider
+                        )
+                    except ImportError:
+                        # Fail silently and use fallback later
+                        pass
+                case _:
+                    raise ValueError(f"Unsupported (yet) provider organization: {org_name}")
+
+        # Convert skills
+        skills: list[AgentSkill] = []
+        for skill_data in agent_card.get("skills", []):
+            skill = AgentSkill(
+                id=skill_data.get("id", str(uuid.uuid4())),
+                name=skill_data["name"],
+                description=skill_data["description"],
+                tags=skill_data.get("tags", []),
+                examples=skill_data.get("examples"),
+                inputModes=skill_data.get("inputModes"),
+                outputModes=skill_data.get("outputModes"),
+            )
+            skills.append(skill)
+
+        # Create capabilities
+        capabilities_data = agent_card.get("capabilities", {})
+        capabilities = Capabilities(
+            streaming=capabilities_data.get("streaming"),
+            pushNotifications=capabilities_data.get("pushNotifications"),
+            stateTransitionHistory=capabilities_data.get("stateTransitionHistory"),
+        )
+
+        # Create authentication
+        auth_data = agent_card.get("authentication", {})
+        authentication = Authentication(
+            schemes=auth_data.get("schemes", ["basic"]),
+            credentials=auth_data.get("credentials"),
+        )
+
+        # Default generation provider if none specified
+        if generation_provider is None:
+            try:
+                from agentle.generations.providers.google import (
+                    google_generation_provider,
+                )
+
+                generation_provider = (
+                    google_generation_provider.GoogleGenerationProvider
+                )
+            except ImportError:
+                # Create a minimal provider for type checking
+                generation_provider = type("DummyProvider", (GenerationProvider,), {})
+
+        # Convert input/output modes to MimeType if they're strings
+        input_modes = agent_card.get("defaultInputModes", ["text/plain"])
+        output_modes = agent_card.get("defaultOutputModes", ["text/plain"])
+
+        # Create agent instance
+        return cls(
+            name=agent_card["name"],
+            description=agent_card["description"],
+            url=agent_card["url"],
+            generation_provider=generation_provider,
+            version=agent_card["version"],
+            documentationUrl=agent_card.get("documentationUrl"),
+            capabilities=capabilities,
+            authentication=authentication,
+            defaultInputModes=input_modes,
+            defaultOutputModes=output_modes,
+            skills=skills,
+            # Default instructions based on description
+            instructions=agent_card.get("description", "You are a helpful assistant."),
+        )
+
+    def to_agent_card(self) -> dict[str, Any]:
+        """
+        Generates an A2A agent card from this Agent instance.
+
+        This method creates a dictionary representation of the agent in the A2A agent card
+        format, including all relevant attributes such as name, description, capabilities,
+        authentication, and skills.
+
+        Returns:
+            dict[str, Any]: A dictionary representing the A2A agent card
+
+        Example:
+            ```python
+            # Create an agent
+            agent = Agent(
+                name="Weather Agent",
+                description="An agent that provides weather information",
+                generation_provider=GoogleGenerationProvider(),
+                skills=[
+                    AgentSkill(
+                        name="Get Weather",
+                        description="Gets the current weather for a location",
+                        tags=["weather", "forecast"]
+                    )
+                ]
+            )
+
+            # Generate an agent card
+            agent_card = agent.to_agent_card()
+
+            # Save the agent card to a file
+            with open("agent_card.json", "w") as f:
+                json.dump(agent_card, f, indent=2)
+            ```
+        """
+        # Determine provider information
+        provider_dict: dict[str, str] | None = None
+        provider_class = (
+            self.generation_provider.__class__
+            if isinstance(self.generation_provider, GenerationProvider)
+            else self.generation_provider
+        )
+
+        # Map provider class to organization name
+        provider_name: str | None = None
+        provider_url = "https://example.com"
+
+        if hasattr(provider_class, "__module__"):
+            module_name = provider_class.__module__.lower()
+            if "google" in module_name:
+                provider_name = "Google"
+                provider_url = "https://ai.google.dev/"
+            elif "anthropic" in module_name:
+                provider_name = "Anthropic"
+                provider_url = "https://anthropic.com/"
+            elif "openai" in module_name:
+                provider_name = "OpenAI"
+                provider_url = "https://openai.com/"
+
+        if provider_name is not None:
+            provider_dict = {"organization": provider_name, "url": provider_url}
+
+        # Convert skills
+        skills_data: list[dict[str, Any]] = []
+        for skill in self.skills:
+            skill_data: dict[str, Any] = {
+                "id": skill.id,
+                "name": skill.name,
+                "description": skill.description,
+                "tags": list(skill.tags),
+            }
+
+            if skill.examples is not None:
+                skill_data["examples"] = list(skill.examples)
+
+            if skill.inputModes is not None:
+                skill_data["inputModes"] = [str(mode) for mode in skill.inputModes]
+
+            if skill.outputModes is not None:
+                skill_data["outputModes"] = [str(mode) for mode in skill.outputModes]
+
+            skills_data.append(skill_data)
+
+        # Build capabilities dictionary
+        capabilities: dict[str, bool] = {}
+        if self.capabilities.streaming is not None:
+            capabilities["streaming"] = self.capabilities.streaming
+        if self.capabilities.pushNotifications is not None:
+            capabilities["pushNotifications"] = self.capabilities.pushNotifications
+        if self.capabilities.stateTransitionHistory is not None:
+            capabilities["stateTransitionHistory"] = (
+                self.capabilities.stateTransitionHistory
+            )
+
+        # Build authentication dictionary
+        auth_dict: dict[str, Any] = {"schemes": list(self.authentication.schemes)}
+        if self.authentication.credentials is not None:
+            auth_dict["credentials"] = self.authentication.credentials
+
+        # Convert MimeType to string for input/output modes
+        input_modes = [str(mode) for mode in self.defaultInputModes]
+        output_modes = [str(mode) for mode in self.defaultOutputModes]
+
+        # Build agent card
+        agent_card: dict[str, Any] = {
+            "name": self.name,
+            "description": self.description,
+            "url": self.url,
+            "version": self.version,
+            "capabilities": capabilities,
+            "authentication": auth_dict,
+            "defaultInputModes": input_modes,
+            "defaultOutputModes": output_modes,
+            "skills": skills_data,
+        }
+
+        # Add optional fields if they exist
+        if provider_dict is not None:
+            agent_card["provider"] = provider_dict
+
+        if self.documentationUrl is not None:
+            agent_card["documentationUrl"] = self.documentationUrl
+
+        return agent_card
 
     def has_tools(self) -> bool:
         """

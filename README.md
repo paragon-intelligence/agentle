@@ -8,7 +8,7 @@
 
 Agentle makes it effortless to create, compose, and deploy intelligent AI agents - from simple task-focused agents to complex multi-agent systems. Built with developer productivity and type safety in mind, Agentle provides a clean, intuitive API for transforming cutting-edge AI capabilities into production-ready applications.
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/agentle.svg)](https://badge.fury.io/py/agentle)
 
@@ -709,6 +709,77 @@ Agentle's A2A implementation handles the complexity of:
 - **Asynchronous Processing**: Transparently converts asynchronous A2A operations into synchronous methods
 
 The `A2AInterface` class acts as the gateway between your application and any A2A-compliant agent, serving as a unified interface for task management, messaging, and notification handling.
+
+#### Agent Cards
+
+Agentle provides full support for A2A Agent Cards, a standardized JSON format that describes an agent's capabilities, skills, and authentication mechanisms.
+
+Agent Cards are essential for agent discovery and interoperability, making it easy for clients to find the right agent for a specific task. They also provide the information needed to communicate with the agent using the A2A protocol.
+
+**Creating Agent Cards:**
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.a2a.models.agent_skill import AgentSkill
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+
+# Create an agent with defined skills
+travel_agent = Agent(
+    name="Travel Guide",
+    description="A helpful travel guide that answers questions about destinations.",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a knowledgeable travel guide who helps users plan trips.",
+    skills=[
+        AgentSkill(
+            name="Trip Planning",
+            description="Creates personalized travel itineraries",
+            tags=["travel", "planning", "itinerary"],
+            examples=["Plan a 3-day trip to Tokyo", "What should I see in Paris?"]
+        ),
+        AgentSkill(
+            name="Local Tips",
+            description="Provides insider advice for destinations",
+            tags=["travel", "local", "tips", "advice"],
+            examples=["Best local restaurants in Rome", "Hidden gems in Barcelona"]
+        )
+    ]
+)
+
+# Generate the agent card as a JSON dictionary
+agent_card = travel_agent.to_agent_card()
+
+# Save the agent card to a file (as recommended by A2A specification)
+import json
+with open(".well-known/agent.json", "w") as f:
+    json.dump(agent_card, f, indent=2)
+```
+
+**Loading Agents from Agent Cards:**
+
+```python
+from agentle.agents.agent import Agent
+
+# Load an agent card from a remote source
+import requests
+response = requests.get("https://example.com/.well-known/agent.json")
+agent_card = response.json()
+
+# Create an agent from the card
+agent = Agent.from_agent_card(agent_card)
+
+# Use the agent
+result = agent.run("What destinations would you recommend for a family vacation?")
+print(result.text)
+```
+
+Agent Cards are particularly useful for:
+- Publishing agent capabilities on the web for discovery
+- Creating agent catalogs or marketplaces
+- Enabling seamless integration between different agent systems
+- Documenting agent interfaces in a standardized format
+
+By following the A2A specification for Agent Cards, Agentle agents can interoperate with any other A2A-compliant system.
 
 #### Advanced A2A Usage
 
