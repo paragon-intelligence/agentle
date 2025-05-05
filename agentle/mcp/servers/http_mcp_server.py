@@ -12,20 +12,23 @@ asynchronous HTTP communication.
 import logging
 from collections.abc import Sequence
 from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
 
 import httpx
-from mcp.types import (
-    BlobResourceContents,
-    CallToolResult,
-    Resource,
-    TextResourceContents,
-    Tool,
-)
 from rsb.models.any_url import AnyUrl
 from rsb.models.field import Field
 from rsb.models.private_attr import PrivateAttr
 
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+
+if TYPE_CHECKING:
+    from mcp.types import (
+        BlobResourceContents,
+        CallToolResult,
+        Resource,
+        TextResourceContents,
+        Tool,
+    )
 
 
 class HTTPMCPServer(MCPServerProtocol):
@@ -140,7 +143,7 @@ class HTTPMCPServer(MCPServerProtocol):
             self._logger.error(f"Erro na requisição HTTP: {e}")
             raise
 
-    async def list_tools(self) -> Sequence[Tool]:
+    async def list_tools(self) -> Sequence["Tool"]:
         """
         List the tools available on the server.
 
@@ -153,6 +156,8 @@ class HTTPMCPServer(MCPServerProtocol):
             ConnectionError: If the server is not connected
             httpx.RequestError: If there's an error during the HTTP request
         """
+        from mcp.types import Tool
+
         if self._client is None:
             raise ConnectionError("Servidor não conectado")
 
@@ -161,7 +166,7 @@ class HTTPMCPServer(MCPServerProtocol):
             response.raise_for_status()
             return [Tool.model_validate(tool) for tool in response.json()]
 
-    async def list_resources(self) -> Sequence[Resource]:
+    async def list_resources(self) -> Sequence["Resource"]:
         """
         List the resources available on the server.
 
@@ -174,6 +179,8 @@ class HTTPMCPServer(MCPServerProtocol):
             ConnectionError: If the server is not connected
             httpx.RequestError: If there's an error during the HTTP request
         """
+        from mcp.types import Resource
+
         if self._client is None:
             raise ConnectionError("Servidor não conectado")
 
@@ -184,7 +191,7 @@ class HTTPMCPServer(MCPServerProtocol):
 
     async def list_resource_contents(
         self, uri: str
-    ) -> Sequence[TextResourceContents | BlobResourceContents]:
+    ) -> Sequence["TextResourceContents | BlobResourceContents"]:
         """
         List contents of a specific resource.
 
@@ -201,6 +208,8 @@ class HTTPMCPServer(MCPServerProtocol):
             ConnectionError: If the server is not connected
             httpx.RequestError: If there's an error during the HTTP request
         """
+        from mcp.types import BlobResourceContents, TextResourceContents
+
         if self._client is None:
             raise ConnectionError("Servidor não conectado")
 
@@ -216,7 +225,7 @@ class HTTPMCPServer(MCPServerProtocol):
 
     async def call_tool(
         self, tool_name: str, arguments: dict[str, object] | None
-    ) -> CallToolResult:
+    ) -> "CallToolResult":
         """
         Invoke a tool on the server.
 
@@ -234,6 +243,8 @@ class HTTPMCPServer(MCPServerProtocol):
             ConnectionError: If the server is not connected
             httpx.RequestError: If there's an error during the HTTP request
         """
+        from mcp.types import CallToolResult
+
         if self._client is None:
             raise ConnectionError("Servidor não conectado")
 

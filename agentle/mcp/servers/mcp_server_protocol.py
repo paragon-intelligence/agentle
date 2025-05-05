@@ -8,15 +8,18 @@ connect to external resources, list available tools, and invoke tools.
 
 import abc
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from mcp.types import (
-    BlobResourceContents,
-    CallToolResult,
-    Resource,
-    TextResourceContents,
-    Tool,
-)
 from rsb.models.base_model import BaseModel
+
+if TYPE_CHECKING:
+    from mcp.types import (
+        BlobResourceContents,
+        CallToolResult,
+        Resource,
+        TextResourceContents,
+        Tool,
+    )
 
 
 class MCPServerProtocol(BaseModel, abc.ABC):

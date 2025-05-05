@@ -38,7 +38,6 @@ from collections.abc import (
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any, cast
 
-from mcp.types import Tool as MCPTool
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
@@ -85,6 +84,7 @@ from agentle.parsing.document_parser import DocumentParser
 if TYPE_CHECKING:
     from io import BytesIO, StringIO
     from pathlib import Path
+    from mcp.types import Tool as MCPTool
 
     import numpy as np
     import pandas as pd
@@ -684,6 +684,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 weather = result.parsed.weather
             ```
         """
+
         static_knowledge_prompt: str | None = None
         # Process static knowledge if any exists
         if self.static_knowledge:
@@ -783,9 +784,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         )
 
         mcp_tools: MutableSequence[MCPTool] = []
-        for server in self.mcp_servers:
-            tools = await server.list_tools()
-            mcp_tools.extend(tools)
+        if bool(self.mcp_servers):
+            for server in self.mcp_servers:
+                tools = await server.list_tools()
+                mcp_tools.extend(tools)
 
         agent_has_tools = self.has_tools() or len(mcp_tools) > 0
         if not agent_has_tools:
