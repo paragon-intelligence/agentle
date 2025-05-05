@@ -67,13 +67,13 @@ RUN echo 'export ZSH="/root/.oh-my-zsh"' > /root/.zshrc && \
     echo 'alias py="python"' >> /root/.zshrc
 
 # Add custom prompt setting
-RUN echo 'export PS1="🐍 Cortex:%~ $ "' >> /root/.zshrc
+RUN echo 'export PS1="🐍 Agentle:%~ $ "' >> /root/.zshrc
 
 # Adicionar UV path para quando ele for instalado pelo post-create.sh
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Configure bash with nicer prompt (as fallback)
-RUN echo 'export PS1="\[\033[01;32m\]Cortex\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$ "' >> /root/.bashrc
+RUN echo 'export PS1="\[\033[01;32m\]Agentle\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$ "' >> /root/.bashrc
 
 # Stay as root for operations
 USER root

@@ -1,4 +1,4 @@
-# Gitatributes CORTEX
+# Gitatributes 
 
 * text=auto eol=lf
 *.{cmd,[cC][mM][dD]} text eol=crlf
