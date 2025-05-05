@@ -8,7 +8,7 @@ Example 1: Creating Agents
 
 .. code-block:: python
 
-   from agentle.agents import Agent
+   from agentle.agents.agent import Agent
    
    # Example code for creating and configuring agents
 
