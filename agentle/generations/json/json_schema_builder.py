@@ -1,4 +1,3 @@
-# type: ignore
 """
 JSON Schema generation for Python types in the Agentle framework.
 
@@ -1291,9 +1290,6 @@ class JsonSchemaBuilder:
 
             # Determine requirement and default value handling
             is_required = False
-            has_explicit_primitive_default = (
-                False  # Track if default is directly in schema
-            )
 
             if field.default is not dataclasses.MISSING:
                 # Add primitive defaults to the schema
@@ -1301,7 +1297,6 @@ class JsonSchemaBuilder:
                     # Avoid adding default: None explicitly unless it's Literal[None]
                     if field.default is not None:
                         field_schema["default"] = field.default
-                        has_explicit_primitive_default = True
                 # Else: Default is complex (list, dict, instance), not represented in schema 'default'. Field is NOT required.
             elif field.default_factory is not dataclasses.MISSING:
                 # Has a factory, so it's not required. Schema 'default' isn't applicable.
@@ -1514,7 +1509,7 @@ class JsonSchemaBuilder:
 
                         # Normalize properties - remove 'title' from simple property schemas
                         if "properties" in def_schema:
-                            for prop_name, prop_schema in def_schema[
+                            for _, prop_schema in def_schema[
                                 "properties"
                             ].items():
                                 # Process Enum properties - ensure enum field is present
@@ -1617,7 +1612,7 @@ class JsonSchemaBuilder:
 
             # Normalize properties at top level too
             if "properties" in schema_dict:
-                for prop_name, prop_schema in schema_dict["properties"].items():
+                for _, prop_schema in schema_dict["properties"].items():
                     # Process Enum properties
                     if isinstance(prop_schema, dict) and "$ref" in prop_schema:
                         ref_name = prop_schema["$ref"].split("/")[-1]
@@ -1841,7 +1836,7 @@ class JsonSchemaBuilder:
 
                         # Normalize properties - remove 'title' from simple property schemas
                         if "properties" in def_schema:
-                            for prop_name, prop_schema in def_schema[
+                            for _, prop_schema in def_schema[
                                 "properties"
                             ].items():
                                 # Process Enum properties - ensure enum field is present
@@ -1947,7 +1942,7 @@ class JsonSchemaBuilder:
 
             # Normalize properties at top level too
             if "properties" in schema_dict:
-                for prop_name, prop_schema in schema_dict["properties"].items():
+                for _, prop_schema in schema_dict["properties"].items():
                     # Process Enum properties at top level too
                     if isinstance(prop_schema, dict) and "$ref" in prop_schema:
                         ref_name = prop_schema["$ref"].split("/")[-1]
@@ -2121,7 +2116,6 @@ class JsonSchemaBuilder:
 
             param = init_params.get(field_name)
             is_required = False  # Default to not required unless determined otherwise
-            has_explicit_primitive_default = False
 
             # Determine requirement based on __init__ signature and class attributes
             if param:
@@ -2169,7 +2163,6 @@ class JsonSchemaBuilder:
                     )
                     if is_simple_default:
                         field_schema["default"] = class_default
-                        has_explicit_primitive_default = True
                         is_required = False  # Has class default
                     else:
                         # Has class attribute but it's complex/callable - implies not required?
