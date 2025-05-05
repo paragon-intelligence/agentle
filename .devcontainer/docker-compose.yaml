@@ -1,0 +1,17 @@
+services:
+  neocortex:
+    container_name: neocortex-dev
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    # Add environment variables as needed
+    environment:
+      - PYTHONPATH=/workspace
+      - TZ=UTC
+    # Keep container running on restart unless stopped
+    restart: unless-stopped
+    # Run as root to avoid permission issues
+    user: root
