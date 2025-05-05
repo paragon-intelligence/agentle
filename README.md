@@ -606,6 +606,10 @@ response = agent.run(
     }
 )
 ```
+Here is an example of a production environment (that uses Agentle) and how traces show up:
+![Captura de tela 2025-05-05 112808 (1)](https://github.com/user-attachments/assets/94937238-405c-4011-83e2-147cec5cf3e7)
+
+![Captura de tela 2025-05-05 112337 (1)](https://github.com/user-attachments/assets/c38429db-982c-4158-864f-f03e7118618e)
 
 ## 📝 Prompt Management
 
