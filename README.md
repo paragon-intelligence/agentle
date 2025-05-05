@@ -585,12 +585,12 @@ from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.agents.agent import Agent
 
 # Create a tracing client
-tracer = LangfuseObservabilityClient()
+tracing_client = LangfuseObservabilityClient()
 
 # Create an agent with tracing enabled
 agent = Agent(
     name="Traceable Agent",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=GoogleGenaiGenerationProvider(tracing_client=tracing_client),
     model="gemini-2.0-flash",
     instructions="You are a helpful assistant.",
     # Tracing is automatically enabled
