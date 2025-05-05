@@ -73,7 +73,7 @@ RUN echo 'export PS1="🐍 Agentle:%~ $ "' >> /root/.zshrc
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Configure bash with nicer prompt (as fallback)
-RUN echo 'export PS1="\[\033[01;32m\]Agentle\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$ "' >> /root/.bashrc
+RUN echo 'export PS1="\\[\\033[01;32m\\]Agentle\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]$ "' >> /root/.bashrc
 
 # Stay as root for operations
 USER root

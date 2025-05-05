@@ -1,3 +1,18 @@
+#!/bin/bash
+set -e
+
+echo "🔧 Running post-creation setup..."
+
+# Install dependencies with pip
+echo "📦 Installing Python dependencies..."
+pip install --root-user-action=ignore -r requirements.txt 2>/dev/null || echo "No requirements.txt found, skipping pip install"
+
+# Install development tools
+echo "🔨 Installing development tools..."
+pip install --root-user-action=ignore -U ruff mypy pytest
+
+echo "✅ Post-creation setup complete!"
+
 FROM python:3.13.2-bookworm
 
 # Configure apt and install packages
