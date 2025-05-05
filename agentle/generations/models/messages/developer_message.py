@@ -28,5 +28,6 @@ class DeveloperMessage(BaseModel):
     )
 
     parts: Sequence[TextPart | FilePart | Tool] = Field(
-        description="The sequence of message parts that make up this developer message."
+        description="The sequence of message parts that make up this developer message.",
+        discriminator="type",
     )

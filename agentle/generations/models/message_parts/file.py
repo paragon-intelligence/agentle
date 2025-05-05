@@ -17,6 +17,10 @@ class FilePart(BaseModel):
 
     This class handles binary file data with appropriate MIME type validation.
     """
+    type: Literal["file"] = Field(
+        default="file",
+        description="Discriminator field to identify this as a file message part.",
+    )
 
     data: bytes = Field(description="The binary content of the file.")
 
@@ -24,10 +28,6 @@ class FilePart(BaseModel):
         description="The MIME type of the file, must be a valid MIME type from Python's mimetypes module."
     )
 
-    type: Literal["file"] = Field(
-        default="file",
-        description="Discriminator field to identify this as a file message part.",
-    )
 
     @property
     def text(self) -> str:

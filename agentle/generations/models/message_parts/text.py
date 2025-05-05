@@ -16,10 +16,10 @@ class TextPart(BaseModel):
 
     This class is used for textual content within messages in the system.
     """
-
-    text: str = Field(description="The textual content of the message part.")
-
     type: Literal["text"] = Field(
         default="text",
         description="Discriminator field to identify this as a text message part.",
     )
+
+    text: str = Field(description="The textual content of the message part.")
+

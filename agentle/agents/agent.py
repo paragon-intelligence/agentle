@@ -45,6 +45,7 @@ from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 from rsb.models.mimetype import MimeType
 
+
 from agentle.agents.a2a.models.agent_skill import AgentSkill
 from agentle.agents.a2a.models.authentication import Authentication
 from agentle.agents.a2a.models.capabilities import Capabilities

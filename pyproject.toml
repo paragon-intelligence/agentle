@@ -25,6 +25,7 @@ packages = ["agentle"]
 
 [dependency-groups]
 dev = [
+    "aiocache>=0.12.3",
     "aiofiles>=24.1.0",
     "aiohttp>=3.11.18",
     "blacksheep>=2.2.0",
