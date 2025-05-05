@@ -186,7 +186,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     agent = Agent(
         static_knowledge=[
             StaticKnowledge(content="https://example.com/data.pdf", cache=3600),  # Cache for 1 hour
-            StaticKnowledge(content="local_file.txt", cache="INFINITE"),  # Cache indefinitely
+            StaticKnowledge(content="local_file.txt", cache="infinite"),  # Cache indefinitely
             "raw text knowledge"  # No caching (default)
         ]
     )
@@ -712,7 +712,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         # Define a cached version of the parse function
                         @cached(
                             ttl=None
-                            if knowledge_item.cache == "INFINITE"
+                            if knowledge_item.cache == "infinite"
                             else knowledge_item.cache,
                             key=cache_key,
                         )

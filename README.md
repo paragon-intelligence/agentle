@@ -105,7 +105,7 @@ travel_expert = Agent(
         # Include knowledge from local documents - cache for 1 hour (3600 seconds)
         StaticKnowledge(content="data/japan_travel_guide.pdf", cache=3600),
         # Include knowledge from websites - cache indefinitely
-        StaticKnowledge(content="https://www.japan-guide.com/", cache="INFINITE"),
+        StaticKnowledge(content="https://www.japan-guide.com/", cache="infinite"),
         # Include direct text knowledge - no caching (default)
         "Tokyo is the capital of Japan and one of the most populous cities in the world."
     ]
@@ -120,7 +120,7 @@ The framework automatically parses knowledge sources using appropriate document 
 
 - **No caching**: By default, strings and `StaticKnowledge` objects without a specified cache will parse documents every time
 - **Timed caching**: Set `cache=3600` to cache for 3600 seconds (1 hour)
-- **Infinite caching**: Set `cache="INFINITE"` to cache indefinitely (until process restarts)
+- **Infinite caching**: Set `cache="infinite"` to cache indefinitely (until process restarts)
 
 Note: To enable caching, you'll need to install the optional aiocache package: `pip install aiocache`
 
@@ -797,7 +797,7 @@ agent = Agent(
         StaticKnowledge(content="data/report.pdf", cache=3600),
         
         # URL with infinite cache
-        StaticKnowledge(content="https://example.com/api-docs", cache="INFINITE"),
+        StaticKnowledge(content="https://example.com/api-docs", cache="infinite"),
         
         # Raw text with no cache
         StaticKnowledge(content="This is raw knowledge text", cache=None),
@@ -834,7 +834,7 @@ legal_assistant = Agent(
     static_knowledge=[
         # Local document sources with caching
         StaticKnowledge(content="legal_docs/contract_templates.pdf", cache=3600),  # Cache for 1 hour
-        StaticKnowledge(content="legal_docs/legal_definitions.docx", cache="INFINITE"),  # Cache indefinitely
+        StaticKnowledge(content="legal_docs/legal_definitions.docx", cache="infinite"),  # Cache indefinitely
         
         # Online resources with caching
         StaticKnowledge(content="https://www.law.cornell.edu/wex/contract", cache=86400),  # Cache for 1 day
@@ -858,7 +858,7 @@ The caching system works as follows:
 
 1. If `cache` is not specified or is `None`, content is parsed fresh each time
 2. If `cache` is an integer, the content is cached for that many seconds (requires aiocache)
-3. If `cache` is the string "INFINITE", the content is cached indefinitely until the process ends (requires aiocache)
+3. If `cache` is the string "infinite", the content is cached indefinitely until the process ends (requires aiocache)
 
 Caching is particularly useful for large documents or URLs that are expensive to parse repeatedly.
 
@@ -943,7 +943,7 @@ agent = Agent(
     model="gemini-2.0-flash",
     instructions="You analyze documents with precision.",
     static_knowledge=[
-        StaticKnowledge(content="contracts/agreement.pdf", cache="INFINITE")
+        StaticKnowledge(content="contracts/agreement.pdf", cache="infinite")
     ],
     # Pass your custom parser to the agent
     document_parser=LlamaParseParser(api_key="your-api-key-here")

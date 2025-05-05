@@ -19,9 +19,9 @@ class StaticKnowledge(BaseModel):
         can be a url, a local file path, or a string of text."""
     )
 
-    cache: int | NoCache | Literal["INFINITE"] = Field(
+    cache: int | NoCache | Literal["infinite"] = Field(
         default=NO_CACHE,
-        description="The cache time of the knowledge. If None, the knowledge is not cached. If 'INFINITE', the knowledge is cached indefinitely.",
+        description="The cache time of the knowledge. If None, the knowledge is not cached. If 'infinite', the knowledge is cached indefinitely.",
     )
 
     def is_url(self) -> bool:
