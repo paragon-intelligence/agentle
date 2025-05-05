@@ -55,7 +55,7 @@ class XMLFileParser(DocumentParser):
 
     Using the parser through the facade:
     ```python
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     # Parse an XML file
     parsed_doc = parse("data.xml")

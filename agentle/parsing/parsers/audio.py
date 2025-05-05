@@ -82,7 +82,7 @@ class AudioFileParser(DocumentParser):
     Working with different audio formats:
     ```python
     from agentle.parsing.parsers.audio import AudioFileParser
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     # Using the generic parse function (easier)
     wav_result = parse("recording.wav")

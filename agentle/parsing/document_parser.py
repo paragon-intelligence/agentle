@@ -38,7 +38,7 @@ class DocumentParser(BaseModel, abc.ABC):
     parsed_document = pdf_parser.parse("path/to/document.pdf")
 
     # The facade pattern (easier approach)
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     parsed_document = parse("path/to/any_supported_file.ext")
     ```

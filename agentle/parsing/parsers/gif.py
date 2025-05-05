@@ -82,7 +82,7 @@ class GifFileParser(DocumentParser):
 
     Using the generic parse function:
     ```python
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     # Parse a GIF file
     result = parse("reaction.gif")

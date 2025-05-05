@@ -81,7 +81,7 @@ class DWGFileParser(DocumentParser):
 
     Using the generic parse function:
     ```python
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     # Parse a DWG file
     result = parse("mechanical_drawing.dwg")

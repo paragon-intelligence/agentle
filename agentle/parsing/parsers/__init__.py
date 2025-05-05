@@ -25,7 +25,7 @@ correct parser based on the file extension.
 The most convenient way to use these parsers is through the `parse()` function:
 
 ```python
-from agentle.parsing import parse
+from agentle.parsing.parse import parse
 
 # Parse a document with default settings
 parsed_doc = parse("path/to/document.pdf")

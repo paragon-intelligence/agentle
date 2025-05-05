@@ -106,7 +106,7 @@ class DocxFileParser(DocumentParser):
 
     Using the generic parse function:
     ```python
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     # Parse a Word document
     result = parse("document.docx")

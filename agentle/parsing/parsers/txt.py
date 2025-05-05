@@ -45,7 +45,7 @@ class TxtFileParser(DocumentParser):
 
     Using the parser through the facade:
     ```python
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     # Parse a text file using the facade
     parsed_doc = parse("algorithm.alg")

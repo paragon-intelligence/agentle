@@ -58,7 +58,7 @@ def parse(
     Examples:
         Parse a PDF document with default settings:
         ```python
-        from agentle.parsing import parse
+        from agentle.parsing.parse import parse
 
         parsed_doc = parse("document.pdf")
         print(f"Document name: {parsed_doc.name}")

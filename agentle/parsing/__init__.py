@@ -18,7 +18,7 @@ making it easy to add support for new file types.
 
 Basic usage:
 ```python
-from agentle.parsing import parse
+from agentle.parsing.parse import parse
 
 # Parse a document with default settings
 parsed_doc = parse("path/to/document.pdf")
@@ -31,7 +31,3 @@ for section in parsed_doc.sections:
         print(f"Image: {image.name}, OCR text: {image.ocr_text}")
 ```
 """
-
-from .parse import parse
-
-__all__: list[str] = ["parse"]

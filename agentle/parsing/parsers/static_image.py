@@ -80,7 +80,7 @@ class StaticImageParser(DocumentParser):
 
     Using the generic parse function:
     ```python
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     # Parse different image formats
     png_result = parse("diagram.png")

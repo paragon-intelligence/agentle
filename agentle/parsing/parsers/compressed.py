@@ -104,7 +104,7 @@ class CompressedFileParser(DocumentParser):
 
     Using the generic parse function:
     ```python
-    from agentle.parsing import parse
+    from agentle.parsing.parse import parse
 
     # Parse different archive types
     zip_result = parse("files.zip")

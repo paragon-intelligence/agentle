@@ -80,11 +80,11 @@ from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 from agentle.parsing.factories.file_parser_factory import file_parser_factory
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.prompts.models.prompt import Prompt
+from agentle.parsing.document_parser import DocumentParser
 
 if TYPE_CHECKING:
     from io import BytesIO, StringIO
     from pathlib import Path
-    from agentle.parsing.document_parser import DocumentParser
 
     import numpy as np
     import pandas as pd
@@ -1284,6 +1284,3 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 UserMessage(parts=[TextPart(text=str(input))]),
             ]
         )
-
-
-Agent.model_rebuild()
