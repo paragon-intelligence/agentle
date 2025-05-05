@@ -31,5 +31,4 @@ class UserMessage(BaseModel):
 
     parts: Sequence[TextPart | FilePart | Tool[Any] | ToolExecutionSuggestion] = Field(
         description="The sequence of message parts that make up this user message.",
-        discriminator="type",
     )

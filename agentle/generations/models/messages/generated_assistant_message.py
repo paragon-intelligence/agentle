@@ -33,7 +33,6 @@ class GeneratedAssistantMessage[T](BaseModel):
 
     parts: Sequence[TextPart | ToolExecutionSuggestion] = Field(
         description="The sequence of message parts that make up this generated assistant message.",
-        discriminator="type",
     )
 
     parsed: T = Field(
