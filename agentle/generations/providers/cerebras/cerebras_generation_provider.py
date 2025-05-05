@@ -19,7 +19,7 @@ providing a consistent experience regardless of the AI provider being used.
 """
 
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 import httpx
 from rsb.adapters.adapter import Adapter
@@ -228,9 +228,9 @@ class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
                     "json_schema": {
                         "name": "json_schema",
                         "strict": True,
-                        "schema": JsonSchemaBuilder(response_schema).build(
-                            dereference=True
-                        ),
+                        "schema": JsonSchemaBuilder(
+                            cast(type[Any], response_schema)
+                        ).build(dereference=True),
                     },
                 }
                 if bool(response_schema)

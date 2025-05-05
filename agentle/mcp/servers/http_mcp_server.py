@@ -10,7 +10,7 @@ asynchronous HTTP communication.
 """
 
 import logging
-from collections.abc import Sequence
+from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
@@ -127,7 +127,7 @@ class HTTPMCPServer(MCPServerProtocol):
             self._client = None
 
     @asynccontextmanager
-    async def ensure_connection(self):
+    async def ensure_connection(self) -> AsyncGenerator[None, None]:
         """
         Context manager to ensure connection is established before operations.
 

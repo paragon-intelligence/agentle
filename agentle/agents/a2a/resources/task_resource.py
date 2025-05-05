@@ -153,7 +153,7 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
             error_container = []
 
             # Function to run in a separate thread with a new event loop
-            def run_in_thread():
+            def run_in_thread() -> None:
                 try:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
@@ -324,7 +324,7 @@ class TaskResource[T_Schema = WithoutStructuredOutput](BaseModel):
             error_container = []
 
             # Function to run in a separate thread with a new event loop
-            def run_in_thread():
+            def run_in_thread() -> None:
                 try:
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)

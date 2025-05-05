@@ -310,7 +310,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                                     try:
                                                         # Explicitly type k as Any to avoid inference issues
                                                         k_val: Any = k
-                                                        str_key = str(k_val)
+                                                        str_key = str(k_val)  # type: ignore
                                                         args_dict[str_key] = v
                                                     except (ValueError, TypeError):
                                                         pass
@@ -341,7 +341,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                             result_str = (
                                                 ""
                                                 if result_value is None
-                                                else str(result_value)
+                                                else str(result_value)  # type: ignore
                                             )
                                             st.code(result_str, language="python")
 
@@ -362,7 +362,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                 except Exception:
                                     # Get the parsed value and convert to string
                                     parsed_value: Any = metadata.get("parsed", "")
-                                    st.code(str(parsed_value))
+                                    st.code(str(parsed_value))  # type: ignore
 
             # File upload area
             uploaded_file = st.file_uploader(
@@ -502,7 +502,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                 mime_source: Any = file_data.get(
                                     "mime_type", "application/octet-stream"
                                 )
-                                mime_type = str(mime_source)
+                                mime_type = str(mime_source)  # type: ignore
 
                                 try:
                                     file_part = FilePart(

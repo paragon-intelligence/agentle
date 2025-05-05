@@ -11,8 +11,8 @@ from rsb.models.field import Field
 from agentle.agents.a2a.a2a_interface import A2AInterface
 from agentle.agents.a2a.tasks.task import Task
 from agentle.agents.a2a.tasks.task_get_result import TaskGetResult
-from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
 from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
+from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
 from agentle.agents.agent import Agent
 from agentle.agents.agent_input import AgentInput
 from agentle.agents.agent_run_output import AgentRunOutput
@@ -137,7 +137,7 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
         )
 
         class A2A(Controller):
-            @docs(
+            @docs(  # type: ignore
                 responses={
                     200: ResponseInfo(
                         description="Task created successfully",
@@ -163,7 +163,7 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
                     task_params=input.value.task_params, agent=a2a.agent
                 )
 
-            @docs(
+            @docs(  # type: ignore
                 responses={
                     200: ResponseInfo(
                         description="Task retrieved successfully",
@@ -189,7 +189,7 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
                     query_params=input.value.query_params, agent=a2a.agent
                 )
 
-            @docs(
+            @docs(  # type: ignore
                 responses={
                     200: ResponseInfo(
                         description="Task cancellation result",
@@ -257,14 +257,14 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
             )
         )
 
-        agent_return_type = agent.run_async.__annotations__["return"]
-
         class _Run(Controller):
-            @docs(
+            @docs(  # type: ignore
                 responses={
                     200: ResponseInfo(
                         description="The agent run output",
-                        content=[ContentInfo(type=AgentRunOutput[agent_return_type])],
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
                     )
                 }
             )

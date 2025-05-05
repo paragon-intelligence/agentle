@@ -76,4 +76,4 @@ print("-" * 80)
 # Step 4: You can also access the steps to see the pipeline execution
 print("\nPipeline Execution Steps:")
 for i, step in enumerate(result.steps):
-    print(f"Step {i + 1}: {step.type}")
+    print(f"Step {i + 1}: {step}")

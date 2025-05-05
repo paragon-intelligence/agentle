@@ -118,7 +118,7 @@ class InMemoryTaskManager(TaskManager):
         ```
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the in-memory task manager."""
         logger.debug("Initializing InMemoryTaskManager")
         self._tasks: Dict[str, Task] = {}
@@ -134,14 +134,14 @@ class InMemoryTaskManager(TaskManager):
         task_id: str,
         message: str,
         asyncio_task: Optional[asyncio.Task[Any]] = None,
-    ):
+    ) -> None:
         """Helper to log task status with detailed information."""
         with self._lock:
             if task_id in self._tasks:
                 task = self._tasks[task_id]
                 task_status = task.status
             else:
-                task_status = "NOT_FOUND"
+                raise ValueError(f"Task {task_id} not found")
 
             if task_id in self._running_tasks:
                 asyncio_task = self._running_tasks[task_id]
@@ -209,7 +209,7 @@ class InMemoryTaskManager(TaskManager):
         # Create a thread to run the task in the background
         import threading
 
-        def run_task_thread():
+        def run_task_thread() -> None:
             """Run the task in a dedicated thread with its own event loop."""
             try:
                 # Create a new event loop for this thread
@@ -433,6 +433,7 @@ class InMemoryTaskManager(TaskManager):
                 logger.warning(f"Task {task_id} no longer exists, aborting execution")
                 return
 
+            prev_status: TaskState | None = None
             # Ensure the task is marked as WORKING
             task = self._tasks[task_id]
             if task.status != TaskState.WORKING:
@@ -522,10 +523,10 @@ class InMemoryTaskManager(TaskManager):
                         f"Task {task_id} - Using generation.text for default message"
                     )
 
-                assistant_message = Message(
+                agent_message = Message(
                     role="agent", parts=[TextPart(text=default_text)]
                 )
-                history.append(assistant_message)
+                history.append(agent_message)
                 with self._lock:
                     self._task_histories[task_id] = history
                     logger.debug(f"Task {task_id} - Added default message to history")

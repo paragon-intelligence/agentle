@@ -1,8 +1,9 @@
 import inspect
 from pathlib import Path
-from typing import Any, Literal, MutableMapping, override
+from typing import Any, Literal, MutableMapping, cast, override
 from urllib.parse import urlparse
 
+from rsb.functions.create_instance_dynamically import create_instance_dynamically
 from rsb.models.field import Field
 
 from agentle.agents.agent import Agent
@@ -199,18 +200,23 @@ class FileParser(DocumentParser):
             ```
         """
         path = Path(document_path)
-        parser_cls = parser_registry.get(path.suffix)
+        parser_cls: type[DocumentParser] | None = parser_registry.get(path.suffix)
 
         if not parser_cls:
             parsed_url = urlparse(document_path)
             is_url = parsed_url.scheme in ["http", "https"]
 
             if is_url:
-                parser_cls = LinkParser(
+                parser_cls = cast(
+                    type[DocumentParser],
+                    LinkParser,
+                )
+
+                return await create_instance_dynamically( # used because mypy complained about the type of the parser_cls
+                    parser_cls,
                     visual_description_agent=self.visual_description_agent,
                     audio_description_agent=self.audio_description_agent,
-                )
-                return await parser_cls.parse_async(document_path)
+                ).parse_async(document_path=document_path)
             else:
                 raise ValueError(f"Unsupported extension: {path.suffix}")
 

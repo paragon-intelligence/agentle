@@ -199,7 +199,7 @@ class PDFFileParser(DocumentParser):
                             )
 
                             image_md = agent_response.parsed.md
-                            ocr_text = agent_response.parsed.ocr_text
+                            ocr_text = agent_response.parsed.ocr_text or ""
                             image_cache[image_hash] = (image_md, ocr_text or "")
 
                         image_descriptions.append(

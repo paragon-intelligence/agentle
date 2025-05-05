@@ -423,7 +423,7 @@ class StatefulObservabilityClient(abc.ABC):
             error_output: dict[str, object] = {"error": str(error)}
         else:
             complete_metadata["error_type"] = error_type or "Error"
-            error_output: dict[str, object] = {"error": error}
+            error_output = {"error": error}
 
         if start_time:
             # Convert float to object type for dictionary

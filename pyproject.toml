@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "mcp[cli]>=1.6.0",
-    "rock-solid-base>=0.0.27",
+    "rock-solid-base>=0.0.28",
 ]
 
 [[project.authors]]

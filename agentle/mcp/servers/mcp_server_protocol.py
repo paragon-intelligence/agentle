@@ -5,6 +5,7 @@ This module defines the abstract base class for Model Context Protocol servers.
 It provides a standardized interface for different server implementations to
 connect to external resources, list available tools, and invoke tools.
 """
+from __future__ import annotations
 
 import abc
 from collections.abc import Sequence

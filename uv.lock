@@ -2238,14 +2238,14 @@ wheels = [
 
 [[package]]
 name = "rock-solid-base"
-version = "0.0.27"
+version = "0.0.28"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a5/da/f8dfbed2e549ea6e232a51f6fbc8674ec81907f86f78d9df8ea02704f4a2/rock_solid_base-0.0.27.tar.gz", hash = "sha256:2b40d1d30929a2818f19e4e1ea56bb106a85e1310462eabf9fc41d44dd12496f", size = 59285 }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/d2/d05b9ef3951d71a5294b297f847bf84e16ef952269e363f6be70e31c23b6/rock_solid_base-0.0.28.tar.gz", hash = "sha256:5e8cab1b3c36dda102f2c5f2807e601fc41491c8c909e194090d3e734b4363b0", size = 59698 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/32/7d/ec25c51707e9962cf43ee06d10e6f49f5f5282ac1ba265a003b3a1831c79/rock_solid_base-0.0.27-py3-none-any.whl", hash = "sha256:8265b13f4062493e9952c1cdcc4541e376b6acc1868dd688b1f9693be1097e0c", size = 49090 },
+    { url = "https://files.pythonhosted.org/packages/4a/9c/7ddb01eee83d1ea9c6f1d264516e2d11364c1b02d25e6325c20f1c00e001/rock_solid_base-0.0.28-py3-none-any.whl", hash = "sha256:62235d1984b832ec3ccf142b0a8f765ceacf73612308201e5be1b4345209f005", size = 49820 },
 ]
 
 [[package]]
