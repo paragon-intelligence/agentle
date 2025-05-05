@@ -143,22 +143,16 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                             if not isinstance(raw_item, tuple):
                                 continue
 
-                            # Safely cast to a tuple of unknown objects for further checks
-                            item_tuple = cast(tuple[Any, ...], raw_item)
-
-                            if len(item_tuple) < 2:
-                                continue
-
                             # Convert the first two positions to integers (prompt and completion tokens)
                             try:
                                 prompt_tok = (
-                                    int(item_tuple[0])
-                                    if isinstance(item_tuple[0], (int, float))
+                                    int(raw_item[0])
+                                    if isinstance(raw_item[0], (int, float))
                                     else 0
                                 )
                                 completion_tok = (
-                                    int(item_tuple[1])
-                                    if isinstance(item_tuple[1], (int, float))
+                                    int(raw_item[1])
+                                    if isinstance(raw_item[1], (int, float))
                                     else 0
                                 )
                                 token_usage_list.append((prompt_tok, completion_tok))
@@ -305,23 +299,26 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                         call_id = id_value
 
                                         # Convert args to a safe dictionary with explicit type checking
-                                        args_dict: dict[str, object] = {}
+                                        args_dict: dict[str, Any] = {}
                                         args_value = tool_call.get("args")
                                         if isinstance(args_value, dict):
                                             for k, v in args_value.items():
                                                 if isinstance(k, str):
-                                                    args_dict[k] = cast(object, v)
+                                                    args_dict[k] = v
                                                 else:
                                                     # Convert non-string keys to strings
                                                     try:
-                                                        args_dict[
-                                                            str(cast(object, k))
-                                                        ] = v
+                                                        # Explicitly type k as Any to avoid inference issues
+                                                        k_val: Any = k
+                                                        str_key = str(k_val)
+                                                        args_dict[str_key] = v
                                                     except (ValueError, TypeError):
                                                         pass
 
                                         # Create a properly typed tool execution suggestion
                                         try:
+                                            # Ensure args_dict is correctly populated before use
+                                            # (The previous logic for args_dict seems correct, let's verify)
                                             tc_obj = ToolExecutionSuggestion(
                                                 tool_name=tool_name,
                                                 args=args_dict,
@@ -336,13 +333,15 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                         # If we have a result, display it
                                         if "result" in tool_call:
                                             st.write("**Result:**")
-                                            result_value: object = tool_call.get(
+                                            # Explicitly type the result value as Any
+                                            result_value: Any = tool_call.get(
                                                 "result", ""
                                             )
-                                            result_str: str = (
-                                                str(cast(object, result_value))
-                                                if result_value is not None
-                                                else ""
+                                            # Explicitly convert to string
+                                            result_str = (
+                                                ""
+                                                if result_value is None
+                                                else str(result_value)
                                             )
                                             st.code(result_str, language="python")
 
@@ -356,14 +355,14 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                 st.write("**Parsed Output:**")
                                 try:
                                     parsed_json = json.dumps(
-                                        cast(object, metadata.get("parsed", {})),
+                                        metadata.get("parsed", {}),
                                         default=str,
                                     )
                                     st.json(parsed_json)
                                 except Exception:
-                                    st.code(
-                                        str(cast(object, metadata.get("parsed", "")))
-                                    )
+                                    # Get the parsed value and convert to string
+                                    parsed_value: Any = metadata.get("parsed", "")
+                                    st.code(str(parsed_value))
 
             # File upload area
             uploaded_file = st.file_uploader(
@@ -373,11 +372,10 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                 accept_multiple_files=False,
             )
             if uploaded_file is not None:
+                # Only add if we have file bytes
                 file_bytes = uploaded_file.getvalue()
-                mime_type = uploaded_file.type or "application/octet-stream"
-
-                # Only add if it's valid bytes
-                if not isinstance(file_bytes, (bytearray, memoryview)):
+                if file_bytes:  # This checks for non-empty bytes
+                    mime_type = uploaded_file.type or "application/octet-stream"
                     st.session_state.uploaded_files.append(
                         {
                             "name": uploaded_file.name,
@@ -495,19 +493,16 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
 
                             # Add file parts
                             for file_data in metadata["files"]:
-                                if not isinstance(file_data, dict):
-                                    continue
-
                                 # Get data with type checking
                                 file_bytes = file_data.get("data", b"")
                                 if not isinstance(file_bytes, bytes):
                                     continue
 
-                                mime_type = str(
-                                    file_data.get(
-                                        "mime_type", "application/octet-stream"
-                                    )
+                                # Get mime type with proper typing
+                                mime_source: Any = file_data.get(
+                                    "mime_type", "application/octet-stream"
                                 )
+                                mime_type = str(mime_source)
 
                                 try:
                                     file_part = FilePart(
@@ -536,12 +531,11 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                 # Extract information from the result
                                 generation = result.generation
                                 response_text = generation.text
-                                tool_calls = (
-                                    generation.tool_calls
-                                    if hasattr(generation, "tool_calls")
-                                    else []
-                                )
-                                parsed = result.parsed
+                                tool_calls: list[ToolExecutionSuggestion] = []
+
+                                # Get tool calls if available
+                                if hasattr(generation, "tool_calls"):
+                                    tool_calls = list(generation.tool_calls)
 
                                 # Update token usage stats
                                 if hasattr(generation, "usage"):
@@ -553,7 +547,9 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                     )
 
                                 # Prepare metadata for storage
-                                response_metadata = {}
+                                response_metadata: dict[str, Any] = {}
+
+                                # Store tool call data
                                 if tool_calls:
                                     tool_call_data = []
                                     for tc in tool_calls:
@@ -565,30 +561,44 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                         tool_call_data.append(tc_data)
                                     response_metadata["tool_calls"] = tool_call_data
 
-                                if parsed is not None:
+                                # Get, process, and store parsed result directly if available
+                                parsed_value = None  # Initialize a variable to hold the potential parsed value
+                                if hasattr(result, "parsed"):
+                                    parsed_value = (
+                                        result.parsed
+                                    )  # Assign if attribute exists
+
+                                if (
+                                    parsed_value is not None
+                                ):  # Check if we got a non-None value
                                     try:
-                                        # Try to convert to a dict for storage
-                                        if hasattr(parsed, "model_dump") and callable(
-                                            getattr(parsed, "model_dump")
+                                        # Attempt to extract and store the parsed data directly in metadata
+                                        if hasattr(
+                                            parsed_value, "model_dump"
+                                        ) and callable(
+                                            getattr(parsed_value, "model_dump")
                                         ):
                                             response_metadata["parsed"] = getattr(
-                                                parsed, "model_dump"
+                                                parsed_value, "model_dump"
                                             )()
-                                        elif hasattr(parsed, "__dict__"):
+                                        elif hasattr(parsed_value, "__dict__"):
                                             response_metadata["parsed"] = (
-                                                parsed.__dict__
+                                                parsed_value.__dict__
                                             )
                                         else:
-                                            response_metadata["parsed"] = str(parsed)
+                                            response_metadata["parsed"] = str(
+                                                parsed_value
+                                            )
                                     except Exception:
-                                        response_metadata["parsed"] = str(parsed)
+                                        # Fallback: store the string representation on error
+                                        response_metadata["parsed"] = str(parsed_value)
 
                                 # Store the message and metadata
                                 st.session_state.messages.append(
                                     {
                                         "role": "assistant",
                                         "content": response_text,
-                                        "metadata": response_metadata,
+                                        "metadata": response_metadata,  # Contains 'parsed' if processed
                                     }
                                 )
 
@@ -597,22 +607,25 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
 
                                 # In dev mode, show tool calls and parsed data
                                 if st.session_state.display_mode == "dev":
+                                    # Show tool calls
                                     for tc in tool_calls:
-                                        # Ensure tc is a ToolExecutionSuggestion before formatting
-                                        if isinstance(tc, ToolExecutionSuggestion):
-                                            st.markdown(_format_tool_call(tc))
+                                        # Display all tool calls
+                                        st.markdown(_format_tool_call(tc))
 
-                                    if parsed is not None:
+                                    # Show parsed data when available (checking the metadata dict)
+                                    if "parsed" in response_metadata:
                                         st.write("**Parsed Output:**")
                                         try:
                                             parsed_json = json.dumps(
-                                                response_metadata.get("parsed", {}),
+                                                response_metadata["parsed"],
                                                 default=str,
                                             )
                                             st.json(parsed_json)
                                         except Exception:
-                                            st.code(str(parsed))
-
+                                            # Display string representation as fallback
+                                            st.code(
+                                                str(response_metadata["parsed"])
+                                            )  # Use data from metadata
                         except Exception as e:
                             error_msg = f"Error: {str(e)}"
                             st.error(error_msg)
