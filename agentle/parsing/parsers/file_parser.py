@@ -21,7 +21,6 @@ from agentle.parsing.factories.visual_description_agent_factory import (
     visual_description_agent_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parsers.link import LinkParser
 from agentle.parsing.parses import parser_registry
 
 
@@ -199,6 +198,8 @@ class FileParser(DocumentParser):
             asyncio.run(process_documents())
             ```
         """
+        from agentle.parsing.parsers.link import LinkParser
+
         path = Path(document_path)
         parser_cls: type[DocumentParser] | None = parser_registry.get(path.suffix)
 
@@ -212,7 +213,7 @@ class FileParser(DocumentParser):
                     LinkParser,
                 )
 
-                return await create_instance_dynamically( # used because mypy complained about the type of the parser_cls
+                return await create_instance_dynamically(  # used because mypy complained about the type of the parser_cls
                     parser_cls,
                     visual_description_agent=self.visual_description_agent,
                     audio_description_agent=self.audio_description_agent,
