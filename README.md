@@ -91,8 +91,7 @@ Enhance your agents with domain-specific knowledge from various sources like doc
 
 ```python
 from agentle.agents.agent import Agent
-from agentle.agents.knowledge.document_knowledge import DocumentKnowledge
-from agentle.agents.knowledge.url_knowledge import UrlKnowledge
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge
 from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
 
 # Create an agent with static knowledge
@@ -103,11 +102,11 @@ travel_expert = Agent(
     instructions="You are a Japan travel expert who provides detailed information about Japanese destinations.",
     # Provide static knowledge from multiple sources
     static_knowledge=[
-        # Include knowledge from local documents
-        DocumentKnowledge(path="data/japan_travel_guide.pdf"),
-        # Include knowledge from websites
-        UrlKnowledge(url="https://www.japan-guide.com/"),
-        # Include direct text knowledge
+        # Include knowledge from local documents - cache for 1 hour (3600 seconds)
+        StaticKnowledge(content="data/japan_travel_guide.pdf", cache=3600),
+        # Include knowledge from websites - cache indefinitely
+        StaticKnowledge(content="https://www.japan-guide.com/", cache="INFINITE"),
+        # Include direct text knowledge - no caching (default)
         "Tokyo is the capital of Japan and one of the most populous cities in the world."
     ]
 )
@@ -117,7 +116,13 @@ response = travel_expert.run("What should I know about visiting Tokyo in cherry 
 print(response.text)
 ```
 
-The framework automatically parses knowledge sources using appropriate document parsers based on file type or content, making it seamless to include domain expertise in your agents.
+The framework automatically parses knowledge sources using appropriate document parsers based on file type or content, making it seamless to include domain expertise in your agents. The caching system (using `aiocache` if installed) allows you to optimize performance by caching parsed content:
+
+- **No caching**: By default, strings and `StaticKnowledge` objects without a specified cache will parse documents every time
+- **Timed caching**: Set `cache=3600` to cache for 3600 seconds (1 hour)
+- **Infinite caching**: Set `cache="INFINITE"` to cache indefinitely (until process restarts)
+
+Note: To enable caching, you'll need to install the optional aiocache package: `pip install aiocache`
 
 ### Tools (Function Calling)
 
@@ -752,13 +757,13 @@ Agentle provides a powerful knowledge integration system that allows agents to l
 
 #### Knowledge Source Types
 
-The framework supports multiple knowledge source types:
+The framework supports multiple knowledge source types through the `StaticKnowledge` class:
 
-- **Documents**: PDF, DOCX, TXT, PPTX, and other document formats via `DocumentKnowledge`
-- **URLs**: Web pages and online resources via `UrlKnowledge`
-- **Raw Text**: Direct text snippets as strings
+- **Documents**: PDF, DOCX, TXT, PPTX, and other document formats
+- **URLs**: Web pages and online resources
+- **Raw Text**: Direct text snippets
 
-You can also provide knowledge as an array of strings, which can be either URLs or local file paths. The framework will attempt to determine the type automatically:
+You can also provide knowledge as an array of strings, which will be automatically converted to `StaticKnowledge` objects with no caching:
 
 ```python
 # Create an agent with string-based knowledge sources
@@ -768,7 +773,7 @@ agent = Agent(
     model="gemini-2.0-flash",
     instructions="You help with research tasks.",
     
-    # Array of string-based knowledge sources
+    # Array of string-based knowledge sources (no caching)
     static_knowledge=[
         # URLs as strings
         "https://example.com/research-paper.html",
@@ -780,23 +785,41 @@ agent = Agent(
 )
 ```
 
-> **Note**: The string-based approach is convenient but may change or be deprecated in future versions. For maximum stability and clarity, prefer using the typed knowledge classes (`DocumentKnowledge` and `UrlKnowledge`) when possible.
+For maximum control, use the `StaticKnowledge` class directly:
+
+```python
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge
+
+agent = Agent(
+    # ... other agent settings ...
+    static_knowledge=[
+        # Document with 1 hour cache
+        StaticKnowledge(content="data/report.pdf", cache=3600),
+        
+        # URL with infinite cache
+        StaticKnowledge(content="https://example.com/api-docs", cache="INFINITE"),
+        
+        # Raw text with no cache
+        StaticKnowledge(content="This is raw knowledge text", cache=None),
+    ]
+)
+```
 
 #### How Knowledge Integration Works
 
 When you provide static knowledge to an agent:
 
 1. The agent uses appropriate document parsers to extract content from each knowledge source
-2. The parsed content is organized into a structured knowledge base format
-3. This knowledge base is appended to the agent's instructions
-4. When the agent responds to queries, it can leverage this knowledge base
+2. If caching is enabled and the aiocache package is installed, parsed content is cached for the specified duration
+3. The parsed content is organized into a structured knowledge base format
+4. This knowledge base is appended to the agent's instructions
+5. When the agent responds to queries, it can leverage this knowledge base
 
 Here's a more comprehensive example showing different ways to use the knowledge integration feature:
 
 ```python
 from agentle.agents.agent import Agent
-from agentle.agents.knowledge.document_knowledge import DocumentKnowledge
-from agentle.agents.knowledge.url_knowledge import UrlKnowledge
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge
 from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
 from agentle.parsing.factories.file_parser_factory import file_parser_factory
 
@@ -807,16 +830,16 @@ legal_assistant = Agent(
     model="gemini-2.0-flash",
     instructions="You are a legal assistant specialized in contract law. Help users understand legal concepts and review contracts.",
     
-    # Provide multiple knowledge sources
+    # Provide multiple knowledge sources with different caching strategies
     static_knowledge=[
-        # Local document sources
-        DocumentKnowledge(path="legal_docs/contract_templates.pdf"),
-        DocumentKnowledge(path="legal_docs/legal_definitions.docx"),
+        # Local document sources with caching
+        StaticKnowledge(content="legal_docs/contract_templates.pdf", cache=3600),  # Cache for 1 hour
+        StaticKnowledge(content="legal_docs/legal_definitions.docx", cache="INFINITE"),  # Cache indefinitely
         
-        # Online resources
-        UrlKnowledge(url="https://www.law.cornell.edu/wex/contract"),
+        # Online resources with caching
+        StaticKnowledge(content="https://www.law.cornell.edu/wex/contract", cache=86400),  # Cache for 1 day
         
-        # Direct knowledge snippets
+        # Direct knowledge snippets (no need for caching)
         "Force majeure clauses excuse a party from performance when extraordinary events prevent fulfillment of obligations."
     ],
     
@@ -829,12 +852,23 @@ response = legal_assistant.run("What should I look for in a non-disclosure agree
 print(response.text)
 ```
 
+#### Caching Behavior
+
+The caching system works as follows:
+
+1. If `cache` is not specified or is `None`, content is parsed fresh each time
+2. If `cache` is an integer, the content is cached for that many seconds (requires aiocache)
+3. If `cache` is the string "INFINITE", the content is cached indefinitely until the process ends (requires aiocache)
+
+Caching is particularly useful for large documents or URLs that are expensive to parse repeatedly.
+
 #### Custom Document Parsers
 
 For specialized knowledge extraction needs, you can provide a custom document parser to the agent:
 
 ```python
 from agentle.agents.agent import Agent
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge
 from agentle.parsing.parsers.file_parser import FileParser
 from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
 
@@ -848,7 +882,7 @@ custom_parser = FileParser(
 research_agent = Agent(
     # ... other agent settings ...
     static_knowledge=[
-        DocumentKnowledge(path="research_papers/paper.pdf"),
+        StaticKnowledge(content="research_papers/paper.pdf", cache=3600),
         # ... other knowledge sources ...
     ],
     document_parser=custom_parser
@@ -901,6 +935,7 @@ class LlamaParseParser(DocumentParser):
 
 # Use the custom parser with an agent
 from agentle.agents.agent import Agent
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge
 
 agent = Agent(
     name="Document Expert",
@@ -908,7 +943,7 @@ agent = Agent(
     model="gemini-2.0-flash",
     instructions="You analyze documents with precision.",
     static_knowledge=[
-        DocumentKnowledge(path="contracts/agreement.pdf")
+        StaticKnowledge(content="contracts/agreement.pdf", cache="INFINITE")
     ],
     # Pass your custom parser to the agent
     document_parser=LlamaParseParser(api_key="your-api-key-here")
@@ -918,379 +953,3 @@ agent = Agent(
 This approach gives you complete flexibility to integrate any document processing system while maintaining compatibility with Agentle's knowledge integration framework.
 
 The knowledge integration system seamlessly works with the rest of Agentle's features like tool calling, structured outputs, and Agent-to-Agent communication.
-
-#### Agent Cards
-
-Agentle provides full support for A2A Agent Cards, a standardized JSON format that describes an agent's capabilities, skills, and authentication mechanisms.
-
-Agent Cards are essential for agent discovery and interoperability, making it easy for clients to find the right agent for a specific task. They also provide the information needed to communicate with the agent using the A2A protocol.
-
-**Creating Agent Cards:**
-
-```python
-from agentle.agents.agent import Agent
-from agentle.agents.a2a.models.agent_skill import AgentSkill
-from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
-
-# Create an agent with defined skills
-travel_agent = Agent(
-    name="Travel Guide",
-    description="A helpful travel guide that answers questions about destinations.",
-    generation_provider=GoogleGenaiGenerationProvider(),
-    model="gemini-2.0-flash",
-    instructions="You are a knowledgeable travel guide who helps users plan trips.",
-    skills=[
-        AgentSkill(
-            name="Trip Planning",
-            description="Creates personalized travel itineraries",
-            tags=["travel", "planning", "itinerary"],
-            examples=["Plan a 3-day trip to Tokyo", "What should I see in Paris?"]
-        ),
-        AgentSkill(
-            name="Local Tips",
-            description="Provides insider advice for destinations",
-            tags=["travel", "local", "tips", "advice"],
-            examples=["Best local restaurants in Rome", "Hidden gems in Barcelona"]
-        )
-    ]
-)
-
-# Generate the agent card as a JSON dictionary
-agent_card = travel_agent.to_agent_card()
-
-# Save the agent card to a file (as recommended by A2A specification)
-import json
-with open(".well-known/agent.json", "w") as f:
-    json.dump(agent_card, f, indent=2)
-```
-
-**Loading Agents from Agent Cards:**
-
-```python
-from agentle.agents.agent import Agent
-
-# Load an agent card from a remote source
-import requests
-response = requests.get("https://example.com/.well-known/agent.json")
-agent_card = response.json()
-
-# Create an agent from the card
-agent = Agent.from_agent_card(agent_card)
-
-# Use the agent
-result = agent.run("What destinations would you recommend for a family vacation?")
-print(result.text)
-```
-
-Agent Cards are particularly useful for:
-- Publishing agent capabilities on the web for discovery
-- Creating agent catalogs or marketplaces
-- Enabling seamless integration between different agent systems
-- Documenting agent interfaces in a standardized format
-
-By following the A2A specification for Agent Cards, Agentle agents can interoperate with any other A2A-compliant system.
-
-#### Creating APIs Directly from Agent Cards
-
-Agentle allows you to instantly create API endpoints directly from agent cards, providing a streamlined path from specification to deployment:
-
-```python
-from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
-
-# Create a BlackSheep API directly from an agent card file
-app = AgentToBlackSheepApplicationAdapter().adapt("path/to/.well-known/agent.json")
-
-# Or from a URL to an agent card
-app_from_url = AgentToBlackSheepApplicationAdapter().adapt("https://example.com/.well-known/agent.json")
-
-# Or even from a raw JSON string
-with open("agent_card.json", "r") as f:
-    agent_card_json = f.read()
-app_from_json = AgentToBlackSheepApplicationAdapter().adapt(agent_card_json)
-
-# Run the API server
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-```
-
-This powerful feature enables several key workflows:
-- **Rapid Deployment**: Transform any agent card into a functional API with a single line of code
-- **Agent Marketplace Integration**: Easily integrate agents from catalogs or marketplaces into your infrastructure
-- **Dynamic API Creation**: Load agent cards at runtime to create customized APIs based on user configuration
-- **Legacy System Adaptation**: Wrap existing AI systems with A2A-compliant APIs by creating agent cards for them
-
-The automatically created API provides all standard agent endpoints and includes automatically generated API documentation.
-
-#### Advanced A2A Usage
-
-Create collaborative agent ecosystems where specialized agents work together:
-
-```python
-import os
-import time
-
-from agentle.agents.a2a.a2a_interface import A2AInterface
-from agentle.agents.a2a.message_parts.text_part import TextPart
-from agentle.agents.a2a.messages.message import Message
-from agentle.agents.a2a.tasks.task_query_params import TaskQueryParams
-from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
-from agentle.agents.a2a.tasks.task_state import TaskState
-from agentle.agents.agent import Agent
-from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
-
-# Create specialized agents
-provider = GoogleGenaiGenerationProvider(api_key=os.environ.get("GOOGLE_API_KEY"))
-research_agent = Agent(
-    name="Research Agent",
-    generation_provider=provider,
-    model="gemini-2.0-flash",
-    instructions="You are a research agent. Find relevant information on topics."
-)
-
-writing_agent = Agent(
-    name="Writing Agent",
-    generation_provider=provider,
-    model="gemini-2.0-flash", 
-    instructions="You are a writing agent. Craft engaging content from research."
-)
-
-# Create A2A interfaces for each agent
-research_interface = A2AInterface(agent=research_agent)
-writing_interface = A2AInterface(agent=writing_agent)
-
-# Step 1: Send research task to the research agent
-research_message = Message(
-    role="user", 
-    parts=[TextPart(text="Research key innovations in quantum computing")]
-)
-research_task = research_interface.tasks.send(TaskSendParams(message=research_message))
-print(f"Research task created with ID: {research_task.id}")
-
-# Step 2: Wait for research to complete
-while True:
-    research_result = research_interface.tasks.get(TaskQueryParams(id=research_task.id))
-    status = research_result.result.status
-    
-    if status == TaskState.COMPLETED:
-        print("\nResearch completed!")
-        research_content = research_result.result.history[1].parts[0].text
-        break
-    elif status == TaskState.FAILED:
-        print(f"Research task failed: {research_result.result.error}")
-        exit(1)
-    print(f"Research status: {status}")
-    time.sleep(1)
-
-# Step 3: Pass research results to writing agent
-writing_message = Message(
-    role="user",
-    parts=[TextPart(text=f"Create an engaging blog post based on this research: {research_content}")]
-)
-writing_task = writing_interface.tasks.send(TaskSendParams(message=writing_message))
-print(f"Writing task created with ID: {writing_task.id}")
-
-# Step 4: Wait for writing to complete
-while True:
-    writing_result = writing_interface.tasks.get(TaskQueryParams(id=writing_task.id))
-    status = writing_result.result.status
-    
-    if status == TaskState.COMPLETED:
-        print("\nBlog post completed!")
-        blog_post = writing_result.result.history[1].parts[0].text
-        print(f"\nFinal blog post:\n{blog_post}")
-        break
-    elif status == TaskState.FAILED:
-        print(f"Writing task failed: {writing_result.result.error}")
-        exit(1)
-    print(f"Writing status: {status}")
-    time.sleep(1)
-```
-
-## 🗓️ Roadmap
-
-- 🗣️ Speech-to-Text and Text-to-Speech modules for voice-enabled agents
-- 📚 RAG module for integration with knowledge sources and vector databases
-- 🔗 More provider integrations
-- 📱 Mobile SDK support
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 📄 Multi-Modal Document Parsing
-
-Agentle includes a powerful parsing module that can extract structured content from virtually any file type. This enables your agents to work with a wide range of documents and media formats without additional preprocessing.
-
-### Supported File Types
-
-The parsing module supports an extensive range of file formats:
-
-- **Documents**: PDF, DOCX, TXT
-- **Spreadsheets**: XLSX, XLS
-- **Presentations**: PPTX, PPT, PPTM
-- **Images**: PNG, JPG, JPEG, TIFF, BMP, GIF
-- **Audio**: MP3, WAV, FLAC, OGG, MP4A
-- **Video**: MP4
-- **CAD Files**: DWG
-- **Network Simulation**: PKT (Cisco Packet Tracer)
-- **Archives**: ZIP, RAR, PKZ
-- **Markup**: XML
-
-### Basic Usage
-
-Parse any supported file with a single function call:
-
-```python
-from agentle.parsing import parse
-
-# Parse different file types with the same function
-pdf_doc = parse("document.pdf")
-image = parse("diagram.png")
-audio = parse("recording.mp3")
-spreadsheet = parse("data.xlsx")
-
-# Use high or low parsing strategy
-detailed_parse = parse("complex_document.pdf", strategy="high")  # More intensive processing
-fast_parse = parse("simple_document.txt", strategy="low")        # Faster, less intensive
-```
-
-NOTE: We do have an Abstract Base Class that you can use in complex cases to provide better indirection. The "parse" function is the just the easiest way to do it. We have an async version of it as well.
-
-### Extracted Content Structure
-
-All parsed content is returned in a standardized `ParsedDocument` structure:
-
-```python
-# Parse a document
-parsed_doc = parse("presentation.pptx")
-
-# Access document metadata
-print(f"Document name: {parsed_doc.name}")
-print(f"Number of sections: {len(parsed_doc.sections)}")
-
-# Work with sections (slides, pages, etc.)
-for section in parsed_doc.sections:
-    print(f"Section {section.number}:")
-    print(f"Text content: {section.text[:100]}...")
-    
-    # Access images in the section
-    if section.images:
-        print(f"Contains {len(section.images)} images")
-        for image in section.images:
-            if image.ocr_text:
-                print(f"Image text: {image.ocr_text}")
-    
-    # Work with structured content items
-    for item in section.items:
-        if item.type == "heading":
-            print(f"Heading (Level {item.lvl}): {item.heading}")
-        elif item.type == "table":
-            print(f"Table with {len(item.rows)} rows and {len(item.rows[0])} columns")
-```
-
-### Custom Visual and Audio Analysis
-
-Customize how images and audio are analyzed using your own agents:
-
-```python
-from agentle.agents.agent import Agent
-from agentle.parsing import parse
-from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
-from agentle.generations.models.structured_outputs_store.audio_description import AudioDescription
-
-# Create custom image analysis agent
-technical_diagram_agent = Agent(
-    model="gemini-2.0-pro-vision",
-    instructions="You analyze technical diagrams and schematics with precision. Focus on component identification, connections, and technical specifications.",
-    generation_provider=GoogleGenaiGenerationProvider(),
-    response_schema=VisualMediaDescription,
-)
-
-# Create custom audio analysis agent
-medical_dictation_agent = Agent(
-    model="gemini-2.0-flash",
-    instructions="You transcribe medical dictations with high accuracy. Focus on medical terminology, drug names, dosages, and diagnostic information.",
-    generation_provider=GoogleGenaiGenerationProvider(),
-    response_schema=AudioDescription,
-)
-
-# Parse with custom agents
-technical_drawing = parse(
-    "circuit_diagram.png",
-    visual_description_agent=technical_diagram_agent
-)
-
-medical_recording = parse(
-    "patient_notes.mp3",
-    audio_description_agent=medical_dictation_agent
-)
-```
-
-### Integration with Agents
-
-Easily feed parsed document content to your agents:
-
-```python
-from agentle.agents.agent import Agent
-from agentle.parsing import parse
-
-# Create an agent
-document_analysis_agent = Agent(
-    name="Document Analyzer",
-    generation_provider=GoogleGenaiGenerationProvider(),
-    model="gemini-2.0-flash",
-    instructions="You analyze document content and provide insights and summaries.",
-)
-
-# Parse a document
-parsed_doc = parse("quarterly_report.pdf")
-
-# Directly pass the ParsedDocument to the agent
-analysis = document_analysis_agent.run(parsed_doc)
-
-print(analysis.text)
-```
-
-### Extensible Parser System
-
-Add support for new file types by creating custom parsers:
-
-```python
-from pathlib import Path
-from typing import override
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.section_content import SectionContent
-
-@parses("custom", "cst")  # Register for .custom and .cst file extensions
-class CustomFormatParser(DocumentParser):
-    @override
-    async def parse_async(self, document_path: str) -> ParsedDocument:
-        # Custom logic to parse your file format
-        path = Path(document_path)
-        content = path.read_text(encoding="utf-8")
-        
-        # Process the content according to your format's structure
-        processed_content = self._process_custom_format(content)
-        
-        # Return a standardized ParsedDocument
-        return ParsedDocument(
-            name=path.name,
-            sections=[
-                SectionContent(
-                    number=1,
-                    text=processed_content,
-                    md=processed_content
-                )
-            ]
-        )
-        
-    def _process_custom_format(self, content: str) -> str:
-        # Your custom processing logic here
-        return content
-```

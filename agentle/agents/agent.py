@@ -57,8 +57,7 @@ from agentle.agents.context import Context
 from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
-from agentle.agents.knowledge.document_knowledge import DocumentKnowledge
-from agentle.agents.knowledge.url_knowledge import UrlKnowledge
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge, NO_CACHE
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.trace_params import TraceParams
@@ -175,13 +174,23 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     A URL to the address the agent is hosted at.
     """
 
-    static_knowledge: Sequence[UrlKnowledge | DocumentKnowledge | str] = Field(
-        default_factory=list
-    )
+    static_knowledge: Sequence[StaticKnowledge | str] = Field(default_factory=list)
     """
     Static knowledge to be used by the agent. This will be used to enrich the agent's
     knowledge base. This will be FULLY (**entire document**) indexed to the conversation.
     This can be any url or a local file path.
+    
+    You can provide a cache duration (in seconds) to cache the parsed content for subsequent calls.
+    Example:
+    ```python
+    agent = Agent(
+        static_knowledge=[
+            StaticKnowledge(content="https://example.com/data.pdf", cache=3600),  # Cache for 1 hour
+            StaticKnowledge(content="local_file.txt", cache="INFINITE"),  # Cache indefinitely
+            "raw text knowledge"  # No caching (default)
+        ]
+    )
+    ```
     """
 
     # Dear dev,
@@ -680,39 +689,79 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         if self.static_knowledge:
             knowledge_contents: list[str] = []
             for knowledge_item in self.static_knowledge:
-                if isinstance(knowledge_item, DocumentKnowledge):
-                    # Parse document using the provided document parser
-                    parsed_doc = await self.document_parser.parse_async(
-                        knowledge_item.path
+                # Convert string to StaticKnowledge with NO_CACHE
+                if isinstance(knowledge_item, str):
+                    knowledge_item = StaticKnowledge(
+                        content=knowledge_item, cache=NO_CACHE
+                    )
+
+                # Process the knowledge item based on its content type
+                content_to_parse = knowledge_item.content
+                parsed_content = None
+                cache_key = None
+
+                # Check if caching is enabled
+                if knowledge_item.cache is not NO_CACHE:
+                    try:
+                        # Import aiocache only when needed
+                        from aiocache import cached
+
+                        # Create a cache key based on the content
+                        cache_key = f"static_knowledge_{hash(content_to_parse)}"
+
+                        # Define a cached version of the parse function
+                        @cached(
+                            ttl=None
+                            if knowledge_item.cache == "INFINITE"
+                            else knowledge_item.cache,
+                            key=cache_key,
+                        )
+                        async def get_cached_parsed_content(content_path: str):
+                            return await self.document_parser.parse_async(content_path)
+
+                        # Get parsed content, either from cache or newly parsed
+                        parsed_content = await get_cached_parsed_content(
+                            content_to_parse
+                        )
+                    except ImportError:
+                        # If aiocache is not installed, just parse normally
+                        parsed_content = None
+
+                # If no cached content (either cache not enabled or cache miss), parse directly
+                if parsed_content is None:
+                    if knowledge_item.is_url():
+                        try:
+                            parsed_content = await self.document_parser.parse_async(
+                                content_to_parse
+                            )
+                            knowledge_contents.append(
+                                f"## URL: {content_to_parse}\n\n{parsed_content.sections[0].text}"
+                            )
+                        except ValueError:
+                            knowledge_contents.append(f"## URL: {content_to_parse}")
+                    elif knowledge_item.is_file_path():
+                        parsed_content = await self.document_parser.parse_async(
+                            content_to_parse
+                        )
+                        knowledge_contents.append(
+                            f"## Document: {parsed_content.name}\n\n{parsed_content.sections[0].text}"
+                        )
+                    else:  # Raw text
+                        knowledge_contents.append(
+                            f"## Information:\n\n{content_to_parse}"
+                        )
+                else:
+                    # Use the cached content
+                    source_label = (
+                        "URL"
+                        if knowledge_item.is_url()
+                        else "Document"
+                        if knowledge_item.is_file_path()
+                        else "Information"
                     )
                     knowledge_contents.append(
-                        f"## Document: {parsed_doc.name}\n\n{parsed_doc.sections[0].text}"
+                        f"## {source_label}: {content_to_parse}\n\n{parsed_content.sections[0].text}"
                     )
-                elif isinstance(knowledge_item, UrlKnowledge):
-                    # For URLs, we can use the document parser if it supports URLs, or handle differently
-                    try:
-                        parsed_url = await self.document_parser.parse_async(
-                            str(knowledge_item.url)
-                        )
-                        knowledge_contents.append(
-                            f"## URL: {knowledge_item.url}\n\n{parsed_url.sections[0].text}"
-                        )
-                    except ValueError:
-                        knowledge_contents.append(f"## URL: {knowledge_item.url}")
-                else:  # String or other content
-                    # If it's a string, treat it as a file path and try to parse it
-                    try:
-                        parsed_str = await self.document_parser.parse_async(
-                            str(knowledge_item)
-                        )
-                        knowledge_contents.append(
-                            f"## Source: {parsed_str.name}\n\n{parsed_str.sections[0].text}"
-                        )
-                    except Exception:
-                        # If parsing fails, assume it's direct content
-                        knowledge_contents.append(
-                            f"## Information:\n\n{str(knowledge_item)}"
-                        )
 
             if knowledge_contents:
                 static_knowledge_prompt = "\n\n# KNOWLEDGE BASE\n\n" + "\n\n".join(
