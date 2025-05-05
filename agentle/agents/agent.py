@@ -711,13 +711,15 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         cache_key = f"static_knowledge_{hash(content_to_parse)}"
 
                         # Define a cached version of the parse function
-                        @cached(
+                        @cached(  # type: ignore
                             ttl=None
                             if knowledge_item.cache == "infinite"
                             else knowledge_item.cache,
                             key=cache_key,
                         )
-                        async def get_cached_parsed_content(content_path: str):
+                        async def get_cached_parsed_content(
+                            content_path: str,
+                        ) -> ParsedDocument:
                             return await self.document_parser.parse_async(content_path)
 
                         # Get parsed content, either from cache or newly parsed
@@ -824,13 +826,8 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         # Convert all tools in the array to Tool objects
         called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]] = {}
         while state.iteration < self.config.maxIterations:
-            # Filter out tools that have already been called
-            filtered_tools = [
-                tool
-                for tool in all_tools
-                if tool.name
-                not in {suggestion.tool_name for suggestion, _ in called_tools.values()}
-            ]
+            # Remove the filtering of tools that have already been called
+            # since we want to allow calling the same tool multiple times
 
             called_tools_prompt: str = (
                 (
@@ -853,29 +850,15 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 else ""
             )
 
-            no_more_tools = len(filtered_tools) == 0
-            if no_more_tools:
-                generation = await generation_provider.create_generation_async(
-                    model=self.model,
-                    messages=MessageSequence(context.messages)
-                    .append_before_last_message(called_tools_prompt)
-                    .elements,
-                    generation_config=self.config.generationConfig,
-                    response_schema=self.response_schema,
-                )
-
-                return self._build_agent_run_output(
-                    context=context,
-                    generation=generation,
-                )
-
+            # We no longer decide if there are no more tools since we allow repeated tool calls
+            # Instead, we'll rely on the agent to stop calling tools when it has all needed information
             tool_call_generation = await generation_provider.create_generation_async(
                 model=self.model,
                 messages=MessageSequence(context.messages)
                 .append_before_last_message(called_tools_prompt)
                 .elements,
                 generation_config=self.config.generationConfig,
-                tools=filtered_tools,
+                tools=all_tools,  # Use all tools in every iteration
             )
 
             agent_didnt_call_any_tool = tool_call_generation.tool_calls_amount() == 0
@@ -1240,6 +1223,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     UserMessage(parts=[TextPart(text=text)]),
                 ]
             )
+        elif isinstance(input, ParsedDocument):
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=input.md)]),
+                ]
+            )
         elif isinstance(input, PydanticBaseModel):
             # Convert Pydantic model to JSON string
             text = input.model_dump_json(indent=2)
@@ -1249,14 +1239,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
                 ]
             )
-        elif isinstance(input, ParsedDocument):
-            return Context(
-                messages=[
-                    developer_message,
-                    UserMessage(parts=[TextPart(text=input.md)]),
-                ]
-            )
-
         # Sequence handling: Check for Message sequences or Part sequences
         # Explicitly check for Sequence for MyPy's benefit
         elif isinstance(input, Sequence) and not isinstance(input, (str, bytes)):  # pyright: ignore[reportUnnecessaryIsInstance]
