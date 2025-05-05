@@ -1,10 +1,12 @@
-from agentle.agents.agent import Agent
-from agentle.generations.models.structured_outputs_store.visual_media_description import (
-    VisualMediaDescription,
-)
-from agentle.generations.providers.google.google_genai_generation_provider import (
-    GoogleGenaiGenerationProvider,
-)
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from agentle.agents.agent import Agent
+    from agentle.generations.models.structured_outputs_store.visual_media_description import (
+        VisualMediaDescription,
+    )
 
 
 def visual_description_agent_factory() -> Agent[VisualMediaDescription]:
@@ -46,6 +48,14 @@ def visual_description_agent_factory() -> Agent[VisualMediaDescription]:
         print(result.parsed.ocr_text)
         ```
     """
+    from agentle.agents.agent import Agent
+    from agentle.generations.models.structured_outputs_store.visual_media_description import (
+        VisualMediaDescription,
+    )
+    from agentle.generations.providers.google.google_genai_generation_provider import (
+        GoogleGenaiGenerationProvider,
+    )
+
     return Agent(
         model="gemini-2.0-pro-vision",
         instructions="You are a helpful assistant that deeply understands visual media.",

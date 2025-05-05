@@ -1,10 +1,13 @@
-from agentle.agents.agent import Agent
-from agentle.generations.models.structured_outputs_store.audio_description import (
-    AudioDescription,
-)
-from agentle.generations.providers.google.google_genai_generation_provider import (
-    GoogleGenaiGenerationProvider,
-)
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from agentle.agents.agent import Agent
+    from agentle.generations.models.structured_outputs_store.audio_description import (
+        AudioDescription,
+    )
 
 
 def audio_description_agent_factory() -> Agent[AudioDescription]:
@@ -44,6 +47,14 @@ def audio_description_agent_factory() -> Agent[AudioDescription]:
         print(result.parsed.overall_description)
         ```
     """
+    from agentle.agents.agent import Agent
+    from agentle.generations.models.structured_outputs_store.audio_description import (
+        AudioDescription,
+    )
+    from agentle.generations.providers.google.google_genai_generation_provider import (
+        GoogleGenaiGenerationProvider,
+    )
+
     return Agent(
         model="gemini-2.0-flash",
         instructions="You are a helpful assistant that deeply understands audio files.",
