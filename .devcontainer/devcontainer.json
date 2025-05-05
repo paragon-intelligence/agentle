@@ -1,7 +1,7 @@
 {
-    "name": "NEO Cortex",
+    "name": "Agentle",
     "dockerComposeFile": "docker-compose.yml",
-    "service": "neocortex",
+    "service": "agentle",
     "workspaceFolder": "/workspace",
     
     // Run as root

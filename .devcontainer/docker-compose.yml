@@ -1,6 +1,6 @@
 services:
-  neocortex:
-    container_name: neocortex-dev
+  agentle:
+    container_name: agentle
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
