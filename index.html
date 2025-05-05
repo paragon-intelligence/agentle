@@ -3,431 +3,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentle - Python Toolkit for Intelligent Applications</title>
+    <title>Agentle - A powerful yet elegant framework for AI agents</title>
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #6366F1;
-            --primary-dark: #4F46E5;
-            --secondary: #14B8A6;
-            --dark: #1E293B;
-            --light: #F8FAFC;
-            --gray: #64748B;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: var(--dark);
-            background-color: var(--light);
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-        header {
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 100;
-        }
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-        }
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-decoration: none;
-        }
-        .logo span {
-            color: var(--secondary);
-        }
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-        nav a {
-            text-decoration: none;
-            color: var(--dark);
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        nav a:hover {
-            color: var(--primary);
-        }
-        .hero {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 8rem 0 6rem;
-            margin-top: 4rem;
-        }
-        .hero-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-        }
-        .hero-text h1 {
-            font-size: 3.5rem;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-        }
-        .hero-text p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        .buttons {
-            display: flex;
-            gap: 1rem;
-        }
-        .btn {
-            display: inline-block;
-            padding: 0.8rem 1.8rem;
-            border-radius: 0.4rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        .btn-primary {
-            background-color: white;
-            color: var(--primary);
-        }
-        .btn-primary:hover {
-            background-color: rgba(255,255,255,0.9);
-            transform: translateY(-2px);
-        }
-        .btn-secondary {
-            background-color: transparent;
-            border: 2px solid white;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: rgba(255,255,255,0.1);
-            transform: translateY(-2px);
-        }
-        .hero-image img {
-            width: 100%;
-            border-radius: 0.5rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-        .features {
-            padding: 6rem 0;
-        }
-        .section-title {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-        .section-title h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: var(--dark);
-        }
-        .section-title p {
-            font-size: 1.2rem;
-            color: var(--gray);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-        .feature-card {
-            background-color: white;
-            border-radius: 0.5rem;
-            padding: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-        }
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background-color: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            color: white;
-            font-size: 1.5rem;
-        }
-        .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: var(--dark);
-        }
-        .feature-card p {
-            color: var(--gray);
-        }
-        .cta {
-            background-color: var(--primary);
-            color: white;
-            padding: 6rem 0;
-            text-align: center;
-        }
-        .cta h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .cta p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .footer {
-            background-color: var(--dark);
-            color: white;
-            padding: 4rem 0 2rem;
-        }
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 3rem;
-            margin-bottom: 3rem;
-        }
-        .footer-column h3 {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-            color: white;
-        }
-        .footer-column ul {
-            list-style: none;
-        }
-        .footer-column ul li {
-            margin-bottom: 0.8rem;
-        }
-        .footer-column a {
-            color: rgba(255,255,255,0.7);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        .footer-column a:hover {
-            color: white;
-        }
-        .footer-bottom {
-            border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 2rem;
-            text-align: center;
-            color: rgba(255,255,255,0.7);
-            font-size: 0.9rem;
-        }
-        @media (max-width: 900px) {
-            .hero-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            .hero-text h1 {
-                font-size: 2.8rem;
-            }
-            .buttons {
-                justify-content: center;
-            }
-            .hero-image {
-                grid-row: 1;
-                margin-bottom: 2rem;
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                            950: '#2e1065',
+                        }
+                    }
+                }
             }
         }
-        @media (max-width: 600px) {
-            header {
-                position: relative;
-            }
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            nav ul {
-                gap: 1rem;
-            }
-            .hero {
-                margin-top: 0;
-                padding: 4rem 0;
-            }
-            .hero-text h1 {
-                font-size: 2.2rem;
-            }
-            .section-title h2 {
-                font-size: 2rem;
-            }
-        }
-        .code-block {
-            background-color: #1a1a1a;
-            color: #f8f8f2;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            font-family: 'Courier New', monospace;
-            overflow-x: auto;
-            margin: 2rem 0;
-        }
-        .code-block .comment {
-            color: #6272a4;
-        }
-        .code-block .keyword {
-            color: #ff79c6;
-        }
-        .code-block .string {
-            color: #f1fa8c;
-        }
-        .code-block .function {
-            color: #50fa7b;
-        }
-    </style>
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <!-- AOS - Animate On Scroll -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
-<body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <a href="#" class="logo">Agent<span>le</span></a>
-                <nav>
-                    <ul>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#examples">Examples</a></li>
-                        <li><a href="build/html/index.html">Documentation</a></li>
-                        <li><a href="https://github.com/arthurbrenno/agentle" target="_blank">GitHub</a></li>
-                    </ul>
-                </nav>
+<body class="bg-gray-50 font-sans">
+    <!-- Navbar -->
+    <header class="bg-white shadow-sm sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="#" class="flex-shrink-0 flex items-center">
+                        <img class="h-10 w-auto" src="logo.png" alt="Agentle Logo">
+                        <span class="ml-2 text-xl font-bold text-primary-700">Agentle</span>
+                    </a>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-8">
+                    <a href="#features" class="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">Features</a>
+                    <a href="#examples" class="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">Examples</a>
+                    <a href="build/html/index.html" class="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium">Documentation</a>
+                    <a href="https://github.com/arthurbrenno/agentle" class="text-gray-700 hover:text-primary-600 px-3 py-2 text-sm font-medium flex items-center" target="_blank">
+                        <svg class="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+                        </svg>
+                        GitHub
+                    </a>
+                    <a href="https://pypi.org/project/agentle/" class="bg-primary-600 text-white hover:bg-primary-700 px-4 py-2 text-sm font-medium rounded-md" target="_blank">
+                        Install
+                    </a>
+                </div>
+                <div class="-mr-2 flex items-center sm:hidden">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500" aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu, show/hide based on menu state. -->
+        <div class="sm:hidden" x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#features" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Features</a>
+                <a href="#examples" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Examples</a>
+                <a href="build/html/index.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50">Documentation</a>
+                <a href="https://github.com/arthurbrenno/agentle" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50" target="_blank">GitHub</a>
+                <a href="https://pypi.org/project/agentle/" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-primary-600 hover:bg-primary-700" target="_blank">Install</a>
             </div>
         </div>
     </header>
 
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1>Build Intelligent AI Agents with Python</h1>
-                    <p>Agentle is a comprehensive toolkit for creating, deploying, and managing AI agents with built-in RAG, guardrails, and speech capabilities.</p>
-                    <div class="buttons">
-                        <a href="build/html/index.html" class="btn btn-primary">Get Started</a>
-                        <a href="https://github.com/arthurbrenno/agentle" class="btn btn-secondary">View on GitHub</a>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-primary-700 to-purple-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+            <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+                <div class="sm:text-center md:mx-auto lg:col-span-6 lg:text-left lg:flex lg:items-center" data-aos="fade-right" data-aos-duration="1000">
+                    <div>
+                        <h1 class="text-4xl tracking-tight font-extrabold sm:text-5xl xl:text-6xl">
+                            <span class="block">A powerful yet elegant</span>
+                            <span class="block text-primary-200">framework for AI agents</span>
+                        </h1>
+                        <p class="mt-3 text-lg text-gray-200 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
+                            Agentle makes it effortless to create, compose, and deploy intelligent AI agents - from simple task-focused agents to complex multi-agent systems.
+                        </p>
+                        <div class="mt-8 sm:flex sm:justify-center lg:justify-start">
+                            <div class="rounded-md shadow">
+                                <a href="build/html/index.html" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary-700 bg-white hover:bg-gray-100 md:py-4 md:text-lg md:px-10">
+                                    Get Started
+                                </a>
+                            </div>
+                            <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
+                                <a href="https://github.com/arthurbrenno/agentle" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-500 md:py-4 md:text-lg md:px-10" target="_blank">
+                                    View on GitHub
+                                </a>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex items-center">
+                            <div class="flex-shrink-0 flex">
+                                <img src="https://img.shields.io/badge/python-3.13+-blue.svg" alt="Python 3.13+" class="h-6">
+                                <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License" class="h-6 ml-2">
+                                <img src="https://badge.fury.io/py/agentle.svg" alt="PyPI version" class="h-6 ml-2">
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="hero-image">
-                    <div class="code-block">
-                        <span class="comment"># Create an intelligent agent in just a few lines</span><br>
-                        <span class="keyword">from</span> agentle.agents <span class="keyword">import</span> Agent<br>
-                        <span class="keyword">from</span> agentle.rag <span class="keyword">import</span> RAGSystem<br>
-                        <span class="keyword">from</span> agentle.guardrails <span class="keyword">import</span> GuardrailConfig<br><br>
-                        
-                        <span class="comment"># Configure your agent</span><br>
-                        rag = RAGSystem(documents=["knowledge.pdf"])<br>
-                        guardrails = GuardrailConfig(content_safety=<span class="keyword">True</span>)<br><br>
-                        
-                        <span class="comment"># Initialize and run</span><br>
-                        agent = Agent(name="assistant", rag=rag, guardrails=guardrails)<br>
-                        response = agent.<span class="function">run</span>("How can I help you today?")
+                <div class="mt-12 relative sm:mx-auto lg:mt-0 lg:col-span-6" data-aos="fade-left" data-aos-duration="1000">
+                    <div class="bg-gray-900 rounded-xl shadow-xl overflow-hidden">
+                        <pre class="language-python"><code class="text-sm sm:text-base">from agentle.agents.agent import Agent
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+
+# Create a simple agent
+agent = Agent(
+    name="Quick Start Agent",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a helpful assistant who provides concise, accurate information."
+)
+
+# Run the agent
+response = agent.run("What are the three laws of robotics?")
+
+# Print the response
+print(response.text)</code></pre>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="features" id="features">
-        <div class="container">
-            <div class="section-title">
-                <h2>Key Features</h2>
-                <p>Everything you need to build powerful AI agents in one toolkit</p>
+    <!-- Features Section -->
+    <section id="features" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center mb-16" data-aos="fade-up">
+                <h2 class="text-base text-primary-600 font-semibold tracking-wide uppercase">Features</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Everything you need for AI agents
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    Built with developer productivity and type safety in mind, Agentle provides a clean, intuitive API.
+                </p>
             </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3>Agent Framework</h3>
-                    <p>Create customizable AI agents with different personalities, capabilities, and knowledge bases.</p>
+
+            <div class="mt-10">
+                <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-x-8 md:gap-y-10">
+                    <!-- Feature 1 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="100">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Simple Agent Creation</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Build powerful AI agents with minimal code using a clean, intuitive API.
+                        </dd>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="200">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Composable Architecture</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Create sequential pipelines or dynamic teams of specialized agents for complex tasks.
+                        </dd>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="300">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Tool Integration</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Seamlessly connect agents to external tools and functions to perform actions beyond text generation.
+                        </dd>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="400">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Structured Outputs</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Get strongly-typed responses with Pydantic integration for predictable data handling.
+                        </dd>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="500">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Built-in Observability</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Automatic tracing via Langfuse with extensible interfaces for monitoring agent performance.
+                        </dd>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="600">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Ready for Production</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Deploy as APIs (BlackSheep), UIs (Streamlit), or embedded in applications.
+                        </dd>
+                    </div>
+
+                    <!-- Feature 7 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="700">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Agent-to-Agent (A2A)</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Support for Google's standardized A2A protocol for seamless agent communication.
+                        </dd>
+                    </div>
+
+                    <!-- Feature 8 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="800">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Prompt Management</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Flexible system for organizing and managing prompts for consistent agent behavior.
+                        </dd>
+                    </div>
+
+                    <!-- Feature 9 -->
+                    <div class="relative" data-aos="fade-up" data-aos-delay="900">
+                        <dt>
+                            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-600 text-white">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                            </div>
+                            <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Knowledge Integration</p>
+                        </dt>
+                        <dd class="mt-2 ml-16 text-base text-gray-500">
+                            Seamlessly incorporate static knowledge from documents, URLs, or text.
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Example Section -->
+    <section id="examples" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center mb-16" data-aos="fade-up">
+                <h2 class="text-base text-primary-600 font-semibold tracking-wide uppercase">Examples</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    See Agentle in action
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    Here are some examples of what you can build with Agentle.
+                </p>
+            </div>
+
+            <div class="mt-10 space-y-10" data-aos="fade-up">
+                <!-- Example 1 -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Tool Integration</h3>
+                        <div class="mt-4 bg-gray-900 rounded-lg overflow-hidden">
+                            <pre class="language-python"><code class="text-sm sm:text-base">def get_weather(location: str) -> str:
+    """
+    Get the current weather for a location.
+
+    Args:
+        location: The city or location to get weather for
+
+    Returns:
+        A string describing the weather
+    """
+    weather_data = {
+        "New York": "Sunny, 75°F",
+        "London": "Rainy, 60°F",
+        "Tokyo": "Cloudy, 65°F",
+        "Sydney": "Clear, 80°F",
+    }
+    return weather_data.get(location, f"Weather data not available for {location}")
+
+# Create an agent with a tool
+weather_agent = Agent(
+    name="Weather Assistant",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a helpful assistant that can answer questions about the weather.",
+    tools=[get_weather]  # Pass the function as a tool
+)
+
+# The agent will automatically use the tool when appropriate
+response = weather_agent.run("What's the weather like in Tokyo?")</code></pre>
+                        </div>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📚</div>
-                    <h3>RAG System</h3>
-                    <p>Enhance your agents with Retrieval Augmented Generation for accurate, grounded responses.</p>
+
+                <!-- Example 2 -->
+                <div class="bg-white overflow-hidden shadow rounded-lg" data-aos="fade-up">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Structured Outputs</h3>
+                        <div class="mt-4 bg-gray-900 rounded-lg overflow-hidden">
+                            <pre class="language-python"><code class="text-sm sm:text-base">from pydantic import BaseModel
+from typing import List, Optional
+
+# Define your output schema
+class WeatherForecast(BaseModel):
+    location: str
+    current_temperature: float
+    conditions: str
+    forecast: List[str]
+    humidity: Optional[int] = None
+
+# Create an agent with structured output
+structured_agent = Agent(
+    name="Weather Agent",
+    generation_provider=GoogleGenaiGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
+    response_schema=WeatherForecast  # Define the expected response structure
+)
+
+# Run the agent
+response = structured_agent.run("What's the weather like in San Francisco?")
+
+# Access structured data with type hints
+weather = response.parsed
+print(f"Weather for: {weather.location}")
+print(f"Temperature: {weather.current_temperature}°C")
+print(f"Conditions: {weather.conditions}")</code></pre>
+                        </div>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🛡️</div>
-                    <h3>Guardrails</h3>
-                    <p>Implement safety measures and content filtering to ensure responsible AI outputs.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🗣️</div>
-                    <h3>Speech Integration</h3>
-                    <p>Seamlessly convert between text and speech with high-quality TTS and STT components.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔌</div>
-                    <h3>Extensible</h3>
-                    <p>Easily integrate with your existing Python stack and extend with custom components.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Analytics</h3>
-                    <p>Track agent performance and user interactions to continuously improve your AI systems.</p>
+
+                <!-- Example 3 -->
+                <div class="bg-white overflow-hidden shadow rounded-lg" data-aos="fade-up">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Agent Pipelines</h3>
+                        <div class="mt-4 bg-gray-900 rounded-lg overflow-hidden">
+                            <pre class="language-python"><code class="text-sm sm:text-base">from agentle.agents.agent import Agent
+from agentle.agents.agent_pipeline import AgentPipeline
+
+# Create specialized agents
+research_agent = Agent(
+    name="Research Agent",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="""You are a research agent focused on gathering information.
+    Be thorough and prioritize accuracy over speculation."""
+)
+
+analysis_agent = Agent(
+    name="Analysis Agent",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="""You are an analysis agent that identifies patterns.
+    Highlight meaningful relationships and insights from the data."""
+)
+
+summary_agent = Agent(
+    name="Summary Agent",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="""You are a summary agent that creates concise summaries.
+    Present key findings in a logical order with accessible language."""
+)
+
+# Create a pipeline
+pipeline = AgentPipeline(
+    agents=[research_agent, analysis_agent, summary_agent],
+    debug_mode=True  # Enable to see intermediate steps
+)
+
+# Run the pipeline
+result = pipeline.run("Research the impact of artificial intelligence on healthcare")</code></pre>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="cta">
-        <div class="container">
-            <h2>Ready to Build Your AI Agent?</h2>
-            <p>Get started with Agentle today and join the community of developers building the next generation of AI assistants.</p>
-            <div class="buttons">
-                <a href="build/html/index.html" class="btn btn-primary">Read the Docs</a>
-                <a href="https://github.com/arthurbrenno/agentle" class="btn btn-secondary">Star on GitHub</a>
+    <!-- CTA Section -->
+    <section class="bg-primary-700 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center" data-aos="fade-up">
+                <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+                    Ready to build with Agentle?
+                </h2>
+                <p class="mt-4 text-xl text-primary-100 max-w-2xl lg:mx-auto">
+                    Join the community of developers building the next generation of AI agents.
+                </p>
+                <div class="mt-10 flex justify-center">
+                    <div class="inline-flex rounded-md shadow">
+                        <a href="build/html/index.html" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary-700 bg-white hover:bg-gray-50">
+                            Read the docs
+                        </a>
+                    </div>
+                    <div class="ml-3 inline-flex">
+                        <a href="https://github.com/arthurbrenno/agentle" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-500" target="_blank">
+                            Star on GitHub
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Documentation</h3>
-                    <ul>
-                        <li><a href="build/html/index.html">Getting Started</a></li>
-                        <li><a href="build/html/api/index.html">API Reference</a></li>
-                        <li><a href="build/html/examples.html">Examples</a></li>
-                        <li><a href="build/html/contributing.html">Contributing</a></li>
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-300 tracking-wider uppercase">Documentation</h3>
+                    <ul class="mt-4 space-y-4">
+                        <li><a href="build/html/index.html" class="text-base text-gray-400 hover:text-white">Getting Started</a></li>
+                        <li><a href="build/html/api/index.html" class="text-base text-gray-400 hover:text-white">API Reference</a></li>
+                        <li><a href="build/html/examples.html" class="text-base text-gray-400 hover:text-white">Examples</a></li>
+                        <li><a href="build/html/contributing.html" class="text-base text-gray-400 hover:text-white">Contributing</a></li>
                     </ul>
                 </div>
-                <div class="footer-column">
-                    <h3>Community</h3>
-                    <ul>
-                        <li><a href="https://github.com/arthurbrenno/agentle">GitHub</a></li>
-                        <li><a href="https://github.com/arthurbrenno/agentle/issues">Issues</a></li>
-                        <li><a href="https://github.com/arthurbrenno/agentle/discussions">Discussions</a></li>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-300 tracking-wider uppercase">Community</h3>
+                    <ul class="mt-4 space-y-4">
+                        <li><a href="https://github.com/arthurbrenno/agentle" class="text-base text-gray-400 hover:text-white">GitHub</a></li>
+                        <li><a href="https://github.com/arthurbrenno/agentle/issues" class="text-base text-gray-400 hover:text-white">Issues</a></li>
+                        <li><a href="https://github.com/arthurbrenno/agentle/discussions" class="text-base text-gray-400 hover:text-white">Discussions</a></li>
                     </ul>
                 </div>
-                <div class="footer-column">
-                    <h3>Resources</h3>
-                    <ul>
-                        <li><a href="build/html/examples.html">Code Examples</a></li>
-                        <li><a href="https://github.com/arthurbrenno/agentle/releases">Releases</a></li>
-                        <li><a href="https://pypi.org/project/agentle/">PyPI Package</a></li>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-300 tracking-wider uppercase">Resources</h3>
+                    <ul class="mt-4 space-y-4">
+                        <li><a href="build/html/examples.html" class="text-base text-gray-400 hover:text-white">Code Examples</a></li>
+                        <li><a href="https://github.com/arthurbrenno/agentle/releases" class="text-base text-gray-400 hover:text-white">Releases</a></li>
+                        <li><a href="https://pypi.org/project/agentle/" class="text-base text-gray-400 hover:text-white">PyPI Package</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 Arthur Brenno. All rights reserved. Agentle is released under the MIT License.</p>
+            <div class="mt-12 border-t border-gray-700 pt-8">
+                <p class="text-base text-gray-400 text-center">&copy; 2025 Arthur Brenno. All rights reserved. Agentle is released under the MIT License.</p>
             </div>
         </div>
     </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            once: true,
+            duration: 800,
+            easing: 'ease-out-cubic',
+        });
+    </script>
 </body>
 </html>

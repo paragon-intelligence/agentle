@@ -261,7 +261,8 @@
         <article role="main" id="furo-main-content">
           <section id="agentle-documentation">
 <h1>Agentle Documentation<a class="headerlink" href="#agentle-documentation" title="Link to this heading">¶</a></h1>
-<p><strong>Agentle</strong>: A Python toolkit for working with AI agents.</p>
+<p><strong>Agentle</strong>: A powerful yet elegant framework for building the next generation of AI agents.</p>
+<p>Agentle makes it effortless to create, compose, and deploy intelligent AI agents - from simple task-focused agents to complex multi-agent systems. Built with developer productivity and type safety in mind, Agentle provides a clean, intuitive API for transforming cutting-edge AI capabilities into production-ready applications.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -274,7 +275,9 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#basic-usage">Basic Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#core-concepts">Core Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#agent-composition">Agent Composition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#deployment-options">Deployment Options</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
@@ -289,10 +292,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#example-1-creating-agents">Example 1: Creating Agents</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#example-2-working-with-rag">Example 2: Working with RAG</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#example-3-using-guardrails">Example 3: Using Guardrails</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples.html#example-4-speech-integration">Example 4: Speech Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#agent-creation">Agent Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#static-knowledge-integration">Static Knowledge Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#tool-integration">Tool Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#structured-outputs">Structured Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#agent-pipelines">Agent Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#agent-teams">Agent Teams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#web-api-with-blacksheep">Web API with BlackSheep</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
@@ -313,11 +320,38 @@
 </section>
 <section id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">agentle</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
 
-<span class="c1"># Your code examples here</span>
+<span class="c1"># Create a simple agent</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Quick Start Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant who provides concise, accurate information.&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the agent</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What are the three laws of robotics?&quot;</span><span class="p">)</span>
+
+<span class="c1"># Print the response</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Simple Agent Creation</strong> - Build powerful AI agents with minimal code</p></li>
+<li><p><strong>Composable Architecture</strong> - Create sequential pipelines or dynamic teams of specialized agents</p></li>
+<li><p><strong>Tool Integration</strong> - Seamlessly connect agents to external tools and functions</p></li>
+<li><p><strong>Structured Outputs</strong> - Get strongly-typed responses with Pydantic integration</p></li>
+<li><p><strong>Ready for Production</strong> - Deploy as APIs (BlackSheep), UIs (Streamlit), or embedded in apps</p></li>
+<li><p><strong>Built-in Observability</strong> - Automatic tracing via Langfuse with extensible interfaces</p></li>
+<li><p><strong>Agent-to-Agent (A2A)</strong> - Support for Google’s standardized A2A protocol</p></li>
+<li><p><strong>Prompt Management</strong> - Flexible system for organizing and managing prompts</p></li>
+<li><p><strong>Knowledge Integration</strong> - Seamlessly incorporate static knowledge from various sources</p></li>
+</ul>
 </section>
 </section>
 <section id="indices-and-tables">
@@ -377,6 +411,7 @@
 <li><a class="reference internal" href="#">Agentle Documentation</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#quick-start">Quick Start</a></li>
+<li><a class="reference internal" href="#key-features">Key Features</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
