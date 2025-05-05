@@ -14,11 +14,11 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.audio_description_agent_factory import (
-    audio_description_agent_factory,
+from agentle.parsing.factories.audio_description_agent_default_factory import (
+    audio_description_agent_default_factory,
 )
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parses import parser_registry
@@ -143,7 +143,7 @@ class FileParser(DocumentParser):
     type: Literal["file"] = "file"
     strategy: Literal["low", "high"] = Field(default="high")
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory,
+        default_factory=visual_description_agent_default_factory,
     )
     """
     The agent to use for generating the visual description of the document.
@@ -151,7 +151,7 @@ class FileParser(DocumentParser):
     """
 
     audio_description_agent: Agent[AudioDescription] = Field(
-        default_factory=audio_description_agent_factory,
+        default_factory=audio_description_agent_default_factory,
     )
     """
     The agent to use for generating the audio description of the document.

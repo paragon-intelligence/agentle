@@ -22,8 +22,8 @@ from agentle.generations.models.structured_outputs_store.audio_description impor
     AudioDescription,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.audio_description_agent_factory import (
-    audio_description_agent_factory,
+from agentle.parsing.factories.audio_description_agent_default_factory import (
+    audio_description_agent_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parses import parses
@@ -47,7 +47,7 @@ class AudioFileParser(DocumentParser):
     *   `audio_description_agent` (Agent[AudioDescription]):
         The agent used to analyze and transcribe the audio content. This agent is
         responsible for converting audio to text and generating descriptions.
-        Defaults to the agent created by `audio_description_agent_factory()`.
+        Defaults to the agent created by `audio_description_agent_default_factory()`.
 
         **Example:**
         ```python
@@ -105,7 +105,7 @@ class AudioFileParser(DocumentParser):
     type: Literal["audio"] = "audio"
 
     audio_description_agent: Agent[AudioDescription] = Field(
-        default_factory=audio_description_agent_factory,
+        default_factory=audio_description_agent_default_factory,
     )
 
     async def parse_async(self, document_path: str) -> ParsedDocument:

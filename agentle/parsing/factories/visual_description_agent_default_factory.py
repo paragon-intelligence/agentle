@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     )
 
 
-def visual_description_agent_factory() -> Agent[VisualMediaDescription]:
+def visual_description_agent_default_factory() -> Agent[VisualMediaDescription]:
     """
     Creates and returns an Agent specialized for processing visual media content.
 
@@ -28,10 +28,10 @@ def visual_description_agent_factory() -> Agent[VisualMediaDescription]:
 
     Example:
         ```python
-        from agentle.parsing.factories.visual_description_agent_factory import visual_description_agent_factory
+        from agentle.parsing.factories.visual_description_agent_default_factory import visual_description_agent_default_factory
 
         # Create the visual media agent
-        visual_agent = visual_description_agent_factory()
+        visual_agent = visual_description_agent_default_factory()
 
         # Process an image file
         from agentle.generations.models.message_parts.file import FilePart

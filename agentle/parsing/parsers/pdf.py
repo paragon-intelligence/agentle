@@ -19,8 +19,8 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_document import ParsedDocument
@@ -53,7 +53,7 @@ class PDFFileParser(DocumentParser):
     *   `visual_description_agent` (Agent[VisualMediaDescription]):
         An optional custom agent for visual media description. If provided and strategy
         is "high", this agent will be used to analyze images embedded in the PDF.
-        Defaults to the agent created by `visual_description_agent_factory()`.
+        Defaults to the agent created by `visual_description_agent_default_factory()`.
 
         **Example:**
         ```python
@@ -112,7 +112,7 @@ class PDFFileParser(DocumentParser):
     type: Literal["pdf"] = "pdf"
     strategy: Literal["high", "low"] = Field(default="high")
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory,
+        default_factory=visual_description_agent_default_factory,
     )
     """
     The agent to use for generating the visual description of the document.

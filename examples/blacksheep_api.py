@@ -13,11 +13,13 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
     GoogleGenaiGenerationProvider,
 )
 
+generation_provider = GoogleGenaiGenerationProvider()
+
 # Create a simple agent
 code_assistant = Agent(
     name="Code Assistant",
     description="An AI assistant specialized in helping with programming tasks.",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=generation_provider,
     model="gemini-2.0-flash",
     instructions="""You are a helpful programming assistant.
     You can answer questions about programming languages, help debug code,

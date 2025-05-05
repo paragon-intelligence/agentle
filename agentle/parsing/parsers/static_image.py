@@ -19,8 +19,8 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
 )
 from rsb.functions.ext2mime import ext2mime
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_document import ParsedDocument
@@ -43,7 +43,7 @@ class StaticImageParser(DocumentParser):
     *   `visual_description_agent` (Agent[VisualMediaDescription]):
         The agent used to analyze and describe the image content. This agent is responsible
         for generating descriptions and extracting text via OCR from the image.
-        Defaults to the agent created by `visual_description_agent_factory()`.
+        Defaults to the agent created by `visual_description_agent_default_factory()`.
 
         **Example:**
         ```python
@@ -102,7 +102,7 @@ class StaticImageParser(DocumentParser):
     type: Literal["static_image"] = "static_image"
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory,
+        default_factory=visual_description_agent_default_factory,
     )
     """
     The agent to use for generating the visual description of the document.

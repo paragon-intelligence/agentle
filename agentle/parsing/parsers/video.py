@@ -16,8 +16,8 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parses import parses
@@ -41,7 +41,7 @@ class VideoFileParser(DocumentParser):
     *   `visual_description_agent` (Agent[VisualMediaDescription]):
         The agent used to analyze and describe the video content. This agent should be
         capable of processing video data and generating structured descriptions.
-        Defaults to the agent created by `visual_description_agent_factory()`.
+        Defaults to the agent created by `visual_description_agent_default_factory()`.
 
         **Example:**
         ```python
@@ -98,7 +98,7 @@ class VideoFileParser(DocumentParser):
     type: Literal["video"] = "video"
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory,
+        default_factory=visual_description_agent_default_factory,
     )
     """
     The agent to use for generating the visual description of the document.

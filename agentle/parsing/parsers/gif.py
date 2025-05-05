@@ -20,8 +20,8 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_document import ParsedDocument
@@ -46,7 +46,7 @@ class GifFileParser(DocumentParser):
         The agent used to analyze and describe the visual content of GIF frames.
         This agent is responsible for generating descriptions and extracting text
         via OCR from the selected frames.
-        Defaults to the agent created by `visual_description_agent_factory()`.
+        Defaults to the agent created by `visual_description_agent_default_factory()`.
 
         **Example:**
         ```python
@@ -102,7 +102,7 @@ class GifFileParser(DocumentParser):
     type: Literal["gif"] = "gif"
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory,
+        default_factory=visual_description_agent_default_factory,
     )
     """
     The agent to use for generating the visual description of the document.

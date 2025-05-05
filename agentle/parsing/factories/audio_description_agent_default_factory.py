@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     )
 
 
-def audio_description_agent_factory() -> Agent[AudioDescription]:
+def audio_description_agent_default_factory() -> Agent[AudioDescription]:
     """
     Creates and returns an Agent specialized for processing audio content.
 
@@ -28,10 +28,10 @@ def audio_description_agent_factory() -> Agent[AudioDescription]:
 
     Example:
         ```python
-        from agentle.parsing.factories.audio_description_agent_factory import audio_description_agent_factory
+        from agentle.parsing.factories.audio_description_agent_default_factory import audio_description_agent_default_factory
 
         # Create the audio agent
-        audio_agent = audio_description_agent_factory()
+        audio_agent = audio_description_agent_default_factory()
 
         # Process an audio file
         from agentle.generations.models.message_parts.file import FilePart

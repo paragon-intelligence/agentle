@@ -17,8 +17,8 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parsers.file_parser import FileParser
@@ -55,7 +55,7 @@ class CompressedFileParser(DocumentParser):
     *   `visual_description_agent` (Agent[VisualMediaDescription]):
         The agent used to analyze and describe visual content. This agent is passed
         to the inner parsers when processing image files and other visual content.
-        Defaults to the agent created by `visual_description_agent_factory()`.
+        Defaults to the agent created by `visual_description_agent_default_factory()`.
 
         Note: You cannot use both visual_description_agent and multi_modal_provider
         at the same time.
@@ -128,7 +128,7 @@ class CompressedFileParser(DocumentParser):
     """
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory,
+        default_factory=visual_description_agent_default_factory,
     )
     """
     The agent to use for generating the visual description of the document.

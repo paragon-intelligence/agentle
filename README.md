@@ -825,7 +825,7 @@ Here's a more comprehensive example showing different ways to use the knowledge 
 from agentle.agents.agent import Agent
 from agentle.agents.knowledge.static_knowledge import StaticKnowledge
 from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
-from agentle.parsing.factories.file_parser_factory import file_parser_factory
+from agentle.parsing.factories.file_parser_default_factory import file_parser_default_factory
 
 # Create a legal assistant with domain-specific knowledge
 legal_assistant = Agent(
@@ -848,7 +848,7 @@ legal_assistant = Agent(
     ],
     
     # Optional: Use a custom document parser for specialized parsing needs
-    document_parser=file_parser_factory(strategy="high")
+    document_parser=file_parser_default_factory(strategy="high")
 )
 
 # The agent will leverage all provided knowledge when responding

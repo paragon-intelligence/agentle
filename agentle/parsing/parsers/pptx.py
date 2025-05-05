@@ -25,8 +25,8 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
     GoogleGenaiGenerationProvider,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_document import ParsedDocument
@@ -63,7 +63,7 @@ class PptxFileParser(DocumentParser):
         The agent used to analyze and describe image content. If provided and
         strategy is "high", this agent will be used to analyze images embedded
         in the presentation.
-        Defaults to the agent created by `visual_description_agent_factory()`.
+        Defaults to the agent created by `visual_description_agent_default_factory()`.
 
         **Example:**
         ```python
@@ -138,7 +138,7 @@ class PptxFileParser(DocumentParser):
     strategy: Literal["high", "low"] = Field(default="high")
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory,
+        default_factory=visual_description_agent_default_factory,
     )
     """
     The agent to use for generating the visual description of the document.

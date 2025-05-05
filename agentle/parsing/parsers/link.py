@@ -5,11 +5,19 @@ from pathlib import Path
 from urllib.parse import urlparse
 from rsb.models.field import Field
 from agentle.agents.agent import Agent
-from agentle.generations.models.structured_outputs_store.audio_description import AudioDescription
-from agentle.generations.models.structured_outputs_store.visual_media_description import VisualMediaDescription
+from agentle.generations.models.structured_outputs_store.audio_description import (
+    AudioDescription,
+)
+from agentle.generations.models.structured_outputs_store.visual_media_description import (
+    VisualMediaDescription,
+)
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.audio_description_agent_factory import audio_description_agent_factory
-from agentle.parsing.factories.visual_description_agent_factory import visual_description_agent_factory
+from agentle.parsing.factories.audio_description_agent_default_factory import (
+    audio_description_agent_default_factory,
+)
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
+)
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parsers.file_parser import FileParser
 from agentle.parsing.section_content import SectionContent
@@ -26,10 +34,10 @@ class LinkParser(DocumentParser):
 
     type: Literal["link"] = "link"
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory
+        default_factory=visual_description_agent_default_factory
     )
     audio_description_agent: Agent[AudioDescription] = Field(
-        default_factory=audio_description_agent_factory
+        default_factory=audio_description_agent_default_factory
     )
 
     @override

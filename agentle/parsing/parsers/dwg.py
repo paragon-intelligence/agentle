@@ -19,8 +19,8 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parsers.static_image import StaticImageParser
@@ -45,7 +45,7 @@ class DWGFileParser(DocumentParser):
         The agent used to analyze and describe the visual content of the CAD drawings.
         This agent is responsible for generating descriptions that capture the technical
         details of the drawings.
-        Defaults to the agent created by `visual_description_agent_factory()`.
+        Defaults to the agent created by `visual_description_agent_default_factory()`.
 
         **Example:**
         ```python
@@ -103,7 +103,7 @@ class DWGFileParser(DocumentParser):
     type: Literal["dwg"] = "dwg"
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory,
+        default_factory=visual_description_agent_default_factory,
     )
     """
     The agent to use for generating the visual description of the document.

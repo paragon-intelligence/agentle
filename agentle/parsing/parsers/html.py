@@ -22,8 +22,8 @@ from agentle.generations.models.structured_outputs_store.visual_media_descriptio
     VisualMediaDescription,
 )
 from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_factory import (
-    visual_description_agent_factory,
+from agentle.parsing.factories.visual_description_agent_default_factory import (
+    visual_description_agent_default_factory,
 )
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_document import ParsedDocument
@@ -56,7 +56,7 @@ class HTMLParser(DocumentParser):
         The agent used to analyze and describe image content. If provided and
         strategy is "high", this agent will be used to analyze images embedded
         in the HTML document.
-        Defaults to the agent created by `visual_description_agent_factory()`.
+        Defaults to the agent created by `visual_description_agent_default_factory()`.
 
         **Example:**
         ```python
@@ -113,7 +113,7 @@ class HTMLParser(DocumentParser):
     describe the images present in the html"""
 
     visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_factory
+        default_factory=visual_description_agent_default_factory
     )
 
     @override
