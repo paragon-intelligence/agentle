@@ -424,7 +424,7 @@ class JsonSchemaBuilder:
         # Use isinstance checks carefully with types module for NoneType
         if cls_type in (str, int, float, bool, bytes, type(None), types.NoneType):
             return False
-        if isinstance(cls_type, type):
+        if isinstance(cls_type, type):  # type: ignore
             if issubclass(cls_type, SIMPLE_TYPES):  # type: ignore
                 return False
             # Keep Enums inline based on test requirements
@@ -473,7 +473,7 @@ class JsonSchemaBuilder:
             )
 
         # 2. Handle Forward References
-        if isinstance(cls_type, ForwardRef):
+        if isinstance(cls_type, ForwardRef):  # type: ignore
             forward_arg = cls_type.__forward_arg__  # type: ignore
             try:
                 # Combine global and local namespaces, potentially adding builtins
@@ -982,8 +982,8 @@ class JsonSchemaBuilder:
             if not args:
                 return {}  # Literal without args is unusual, return empty
             none_type = type(None)
-            primitive_args = [arg for arg in args if not isinstance(arg, none_type)]
-            has_none = any(isinstance(arg, none_type) for arg in args)
+            primitive_args = [arg for arg in args if not isinstance(arg, none_type)]  # type: ignore
+            has_none = any(isinstance(arg, none_type) for arg in args)  # type: ignore
             # Use only primitive args to determine potential common type
             types_in_literal = {type(arg) for arg in primitive_args}
 
