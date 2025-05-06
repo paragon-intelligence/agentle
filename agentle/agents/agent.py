@@ -39,6 +39,7 @@ from collections.abc import (
 from contextlib import asynccontextmanager, contextmanager
 from typing import TYPE_CHECKING, Any, cast
 
+from rsb.containers.maybe import Maybe
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
@@ -300,6 +301,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     config: AgentConfig = Field(default_factory=AgentConfig)
     """
     The configuration for the agent.
+    """
+
+    debug: bool = Field(default=False)
+    """
+    Whether to debug each agent step using the logger.
     """
 
     # Internal fields
@@ -688,6 +694,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 weather = result.parsed.weather
             ```
         """
+        _logger = (
+            Maybe(logger) if self.debug else Maybe(None)
+        )
 
         static_knowledge_prompt: str | None = None
         # Process static knowledge if any exists
