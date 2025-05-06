@@ -50,7 +50,7 @@ print(result.generation.text)
 ```
 """
 
-from collections.abc import Sequence
+from collections.abc import MutableSequence, Sequence
 import logging
 from typing import Any, Optional
 
@@ -215,7 +215,7 @@ class AgentPipeline(BaseModel):
             raise ValueError("Pipeline must contain at least one agent")
 
         # Store all intermediate outputs if in debug mode
-        intermediate_outputs: list[tuple[str, AgentRunOutput[Any]]] = []
+        intermediate_outputs: MutableSequence[tuple[str, AgentRunOutput[Any]]] = []
 
         # Initialize with the first input
         current_input = input

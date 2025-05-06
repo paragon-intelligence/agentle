@@ -66,7 +66,7 @@ print(result.generation.text)
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import MutableSequence, Sequence
 from typing import Any, Optional, Self, cast
 from uuid import UUID
 
@@ -305,7 +305,7 @@ class AgentTeam(BaseModel):
             raise ValueError("AgentTeam must have at least one agent")
 
         # Build a detailed description of available agents for the orchestrator
-        agent_descriptions: list[str] = []
+        agent_descriptions: MutableSequence[str] = []
         for agent in self.agents:
             # Create a description of each agent's capabilities
             skills_desc = (
@@ -363,7 +363,7 @@ class AgentTeam(BaseModel):
         max_iterations = self.team_config.maxIterations
 
         # Keep track of the conversation history for context
-        conversation_history: list[str] = []
+        conversation_history: MutableSequence[str] = []
 
         # Iterate until the task is done or max iterations is reached
         while not task_done and iteration_count < max_iterations:

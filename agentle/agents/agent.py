@@ -378,7 +378,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     )
 
         # Convert skills
-        skills: list[AgentSkill] = []
+        skills: MutableSequence[AgentSkill] = []
         for skill_data in agent_card.get("skills", []):
             skill = AgentSkill(
                 id=skill_data.get("id", str(uuid.uuid4())),
@@ -504,7 +504,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             provider_dict = {"organization": provider_name, "url": provider_url}
 
         # Convert skills
-        skills_data: list[dict[str, Any]] = []
+        skills_data: MutableSequence[dict[str, Any]] = []
         for skill in self.skills:
             skill_data: dict[str, Any] = {
                 "id": skill.id,
@@ -719,7 +719,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         # Process static knowledge if any exists
         if self.static_knowledge:
             _logger.bind_optional(lambda log: log.debug("Processing static knowledge"))
-            knowledge_contents: list[str] = []
+            knowledge_contents: MutableSequence[str] = []
             for knowledge_item in self.static_knowledge:
                 # Convert string to StaticKnowledge with NO_CACHE
                 if isinstance(knowledge_item, str):
@@ -879,7 +879,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         # Agent has tools. We must iterate until generate the final answer.
 
-        all_tools: list[Tool[Any]] = [
+        all_tools: MutableSequence[Tool[Any]] = [
             Tool.from_mcp_tool(tool) for tool in mcp_tools
         ] + [
             Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
