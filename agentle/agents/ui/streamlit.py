@@ -343,12 +343,44 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
             if app_description:
                 st.caption(app_description)
 
+            # Add custom CSS for chat layout
+            st.markdown(
+                """
+            <style>
+            .chat-container {
+                display: flex;
+                flex-direction: column;
+                height: 70vh;
+                margin-bottom: 120px;
+            }
+            .chat-messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            .input-area {
+                position: fixed;
+                bottom: 0;
+                left: 25%; /* Adjust based on sidebar width */
+                right: 0;
+                background-color: white;
+                padding: 10px 30px 20px 10px;
+                border-top: 1px solid #ddd;
+                z-index: 1000;
+            }
+            </style>
+            """,
+                unsafe_allow_html=True,
+            )
+
+            # Create container structure
+            st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+            st.markdown('<div class="chat-messages">', unsafe_allow_html=True)
+
             # 1. Chat Message Display Area
             chat_message_container = st.container()
             with chat_message_container:
-                # Make it scrollable by setting a height
-                # st.markdown("<div style='height: 500px; overflow-y: scroll;'>", unsafe_allow_html=True) # One way
-
                 current_messages_main: List[Dict[str, Any]] = st.session_state.messages  # type: ignore
                 if not current_messages_main:
                     st.info("Conversation will appear here. Send a message to start!")
@@ -468,29 +500,29 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                             )
                                         except:
                                             st.text(str(parsed_data_md))
-                # st.markdown("</div>", unsafe_allow_html=True) # Close scroll div
+            st.markdown("</div>", unsafe_allow_html=True)  # Close chat-messages div
 
-            # 2. Input Controls Area (will appear below messages)
+            # 2. Input Controls Area (fixed at bottom)
+            st.markdown('<div class="input-area">', unsafe_allow_html=True)
             input_controls_container = st.container()
             with input_controls_container:
-                st.markdown("---")  # Visual separator
                 # Using columns for file uploader and its preview
-                uploader_col, preview_col = st.columns([0.7, 0.3])
+                uploader_col, preview_col, input_col = st.columns([0.3, 0.2, 0.5])
 
                 with uploader_col:
                     # Ensure unique key for file_uploader if it needs to reset
-                    # A simple way is to use a counter or a random element if not tied to messages list length
                     messages_for_key_len = 0
                     if isinstance(st.session_state.messages, list):
                         messages_for_key_len = len(st.session_state.messages)
                     uploader_key = f"main_file_uploader_{messages_for_key_len}"
 
                     uploaded_file_obj = st.file_uploader(
-                        "Attach a file (image, text, etc.)",
+                        "Attach file",
                         type=None,
                         key=uploader_key,
-                        accept_multiple_files=False,  # Handling one file at a time is simpler
+                        accept_multiple_files=False,
                         help="The file will be attached to your next message.",
+                        label_visibility="collapsed",
                     )
                     if uploaded_file_obj is not None:
                         # Store this file in session state to be picked up by chat_input
@@ -508,7 +540,6 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                         st.session_state.uploaded_file_for_next_message
                     )  # type: ignore
                     if staged_file_info:
-                        st.caption("File to send:")
                         fname = str(staged_file_info.get("name", "file"))
                         fmime = str(
                             staged_file_info.get(
@@ -521,22 +552,28 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                             if fmime.startswith("image/"):
                                 st.image(fdata, caption=f"{fname}", width=70)
                             else:
-                                st.info(f"📎 {fname} ({len(fdata)} bytes)")
+                                st.info(
+                                    f"📎 {fname[:10]}..."
+                                    if len(fname) > 10
+                                    else f"📎 {fname}"
+                                )
                             if st.button(
-                                f"Remove",
+                                f"❌",
                                 key=f"remove_staged_file_btn",
                                 help="Clear attached file",
-                                use_container_width=True,
                             ):
                                 st.session_state.uploaded_file_for_next_message = None
                                 st.rerun()
-                    else:
-                        st.caption(" ")  # Placeholder to maintain layout if no file
 
-                # Chat input bar
-                user_prompt = st.chat_input(
-                    "Type your message here...", key="main_chat_input"
-                )
+                # Chat input in the last column
+                with input_col:
+                    # Chat input bar
+                    user_prompt = st.chat_input(
+                        "Type your message here...", key="main_chat_input"
+                    )
+
+            st.markdown("</div>", unsafe_allow_html=True)  # Close input-area div
+            st.markdown("</div>", unsafe_allow_html=True)  # Close chat-container div
 
             # --- Handle New User Input Processing ---
             if user_prompt:
