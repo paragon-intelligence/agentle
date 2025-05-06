@@ -195,10 +195,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     ```
     """
 
-    # Dear dev,
+    # Dear dev
     # Really sorry to use "Any" here. But if we use DocumentParser, we get an import cycle.
     # No worries, in the model_validator, we check if it's a DocumentParser.
-    document_parser: DocumentParser = Field(default_factory=file_parser_default_factory)
+    document_parser: DocumentParser | None= Field(default=None)
     """
     A document parser to be used by the agent. This will be used to parse the static
     knowledge documents, if provided.
@@ -702,6 +702,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 content_to_parse = knowledge_item.content
                 parsed_content = None
                 cache_key = None
+                parser = self.document_parser or file_parser_default_factory()
 
                 # Check if caching is enabled
                 if knowledge_item.cache is not NO_CACHE:
@@ -722,7 +723,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         async def get_cached_parsed_content(
                             content_path: str,
                         ) -> ParsedDocument:
-                            return await self.document_parser.parse_async(content_path)
+                            return await parser.parse_async(content_path)
 
                         # Get parsed content, either from cache or newly parsed
                         parsed_content = await get_cached_parsed_content(
@@ -736,7 +737,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 if parsed_content is None:
                     if knowledge_item.is_url():
                         try:
-                            parsed_content = await self.document_parser.parse_async(
+                            parsed_content = await parser.parse_async(
                                 content_to_parse
                             )
                             knowledge_contents.append(
@@ -745,7 +746,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         except ValueError:
                             knowledge_contents.append(f"## URL: {content_to_parse}")
                     elif knowledge_item.is_file_path():
-                        parsed_content = await self.document_parser.parse_async(
+                        parsed_content = await parser.parse_async(
                             content_to_parse
                         )
                         knowledge_contents.append(
