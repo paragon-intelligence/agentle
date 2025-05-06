@@ -1,17 +1,25 @@
 import json
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any, Literal, cast, List, Tuple, Dict, Union
 import uuid
 
 from rsb.adapters.adapter import Adapter
 
 from agentle.agents.agent import Agent
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
 )
 from agentle.generations.models.messages.user_message import UserMessage
+from agentle.generations.models.messages.message import Message
+from agentle.generations.models.messages.developer_message import DeveloperMessage
+
+# Define a type for session-added knowledge items for clarity
+SessionKnowledgeItem = Dict[
+    str, Any
+]  # Keys: "type", "name", "content", "data_bytes", "mime_type"
 
 
 class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
@@ -38,8 +46,8 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
         view the conversation history, and switch between development and presentation modes.
 
         Dev mode shows detailed information useful for developers, including raw response data,
-        token usage, and parsed outputs. Presentation mode provides a clean interface for
-        demonstrating the agent's capabilities.
+        token usage, static knowledge, and parsed outputs. Presentation mode provides a clean
+        interface for demonstrating the agent's capabilities.
 
         The interface supports both text and file inputs, including images.
 
@@ -54,11 +62,11 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
         Example:
             ```python
             from agentle.agents.agent import Agent
-            from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+            from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
 
             # Create an agent
             agent = Agent(
-                generation_provider=GoogleGenerationProvider(),
+                generation_provider=GoogleGenaiGenerationProvider(),
                 model="gemini-2.0-flash",
                 instructions="You are a helpful assistant."
             )
@@ -71,28 +79,27 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
             ```
         """
         agent = _f
-
         app_title = self.title or f"{agent.name} Agent"
-        app_description = self.description or agent.description
+        app_description = self.description or (
+            agent.description
+            if agent.description and agent.description != "An AI agent"
+            else None
+        )
 
-        def _format_tool_call(tool_call: ToolExecutionSuggestion) -> str:
-            """Format a tool call for display in the UI."""
-            args_str = json.dumps(tool_call.args, indent=2)
-            return f"**Tool Call:** `{tool_call.tool_name}`\n```json\n{args_str}\n```"
+        def _format_tool_call_display(tool_call: ToolExecutionSuggestion) -> str:
+            args_str = json.dumps(tool_call.args, indent=2, default=str)
+            return f"**Tool Executed:** `{tool_call.tool_name}`\n**Arguments:**\n```json\n{args_str}\n```"
 
         def _streamlit_app() -> None:
-            from typing import cast
-
             try:
                 import streamlit as st
             except ImportError:
                 print(
-                    "Error: Streamlit is required for this feature. "
+                    "CRITICAL ERROR: Streamlit is not installed or cannot be imported. "
                     + "Please install it with: pip install streamlit"
                 )
                 return
 
-            # Setup page config
             st.set_page_config(
                 page_title=app_title,
                 page_icon="🤖",
@@ -100,541 +107,626 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                 initial_sidebar_state="expanded",
             )
 
-            # Initialize session state
+            # Initialize session state variables (plain assignment, types managed via casting or context)
             if "messages" not in st.session_state:
-                st.session_state.messages = []  # List of message dictionaries
+                st.session_state.messages = []
             if "display_mode" not in st.session_state:
-                st.session_state.display_mode = self.initial_mode  # str
+                st.session_state.display_mode = self.initial_mode
             if "token_usage" not in st.session_state:
-                st.session_state.token_usage = []  # List of tuples (prompt_tokens, completion_tokens)
-            if "uploaded_files" not in st.session_state:
-                st.session_state.uploaded_files = []  # List of file dictionaries
+                st.session_state.token_usage = []
+            if (
+                "uploaded_file_for_next_message" not in st.session_state
+            ):  # Simplified for single file
+                st.session_state.uploaded_file_for_next_message = (
+                    None  # Stores a single file dict or None
+                )
+            if "session_added_knowledge" not in st.session_state:
+                st.session_state.session_added_knowledge = []
 
-            # Sidebar for settings and developer tools
+            # --- Sidebar ---
             with st.sidebar:
-                st.title("⚙️ Settings")
+                st.title("⚙️ Settings & Info")
+                st.divider()
 
-                # Display mode selector
-                st.session_state.display_mode = st.selectbox(
+                st.selectbox(
                     "Display Mode",
                     ["presentation", "dev"],
-                    index=0 if st.session_state.display_mode == "presentation" else 1,
+                    key="display_mode",  # Direct binding
+                    help="Switch between presentation view and developer view with more details.",
                 )
+                st.divider()
 
-                # Agent information
-                st.subheader("Agent Info")
+                st.header("Agent Details")
                 st.write(f"**Name:** {agent.name}")
-                st.write(f"**Model:** {agent.model or 'Not specified'}")
+                if agent.description and agent.description != "An AI agent":
+                    st.caption(f"{agent.description}")
+                st.write(f"**Model:** `{agent.model or 'Not specified'}`")
 
                 if agent.has_tools():
-                    st.subheader("Available Tools")
-                    for tool in agent.tools:
-                        tool_name = getattr(tool, "name", str(tool))
-                        st.write(f"- {tool_name}")
+                    with st.expander("Available Tools", expanded=False):
+                        tools_list: List[Any] = list(agent.tools)
+                        if not tools_list:
+                            st.caption("No tools configured.")
+                        for _, tool_item in enumerate(tools_list):
+                            tool_name = getattr(tool_item, "name", str(tool_item))
+                            st.markdown(f"- `{tool_name}`")
 
-                # In dev mode, show more details
-                if st.session_state.display_mode == "dev":
-                    st.subheader("Usage Statistics")
-                    if st.session_state.token_usage:
-                        # Extract token usage from session state with proper type safety
-                        token_usage_list: list[tuple[int, int]] = []
-                        for raw_item in st.session_state.token_usage:
-                            # Ensure we are working with tuples coming from the usage list
-                            if not isinstance(raw_item, tuple):
-                                continue
+                # Display Agent's Original Static Knowledge
+                if agent.static_knowledge:
+                    with st.expander("Initial Knowledge Base (Agent)", expanded=False):
+                        knowledge_list_agent: List[Union[StaticKnowledge, str]] = list(
+                            agent.static_knowledge
+                        )
+                        if not knowledge_list_agent:
+                            st.caption("No initial knowledge items.")
+                        for i, item in enumerate(knowledge_list_agent):
+                            source_text, cache_text = "", "Cache: N/A"
+                            if isinstance(item, StaticKnowledge):
+                                source_text = (
+                                    f"**Source {i + 1} (Static):** `{item.content}`"
+                                )
+                                cache_info = item.cache
+                                if cache_info == "infinite":
+                                    cache_text = "Cache: Infinite"
+                                elif isinstance(cache_info, int) and cache_info > 0:
+                                    cache_text = f"Cache: {cache_info}s"
+                                elif cache_info == 0 or cache_info is None:
+                                    cache_text = "Cache: Disabled/Default"
+                                else:
+                                    cache_text = f"Cache: {str(cache_info)}"
+                            elif isinstance(item, str):
+                                source_text = (
+                                    f"**Source {i + 1} (Static Text):** `{item}`"
+                                )
+                            else:  # Should not happen with correct Agent typing
+                                source_text = (
+                                    f"**Source {i + 1} (Unknown):** `{str(item)}`"
+                                )
+                            st.markdown(source_text)
+                            st.caption(cache_text)
+                            if i < len(knowledge_list_agent) - 1:
+                                st.markdown("---")
 
-                            # Convert the first two positions to integers (prompt and completion tokens)
+                # Add new knowledge (Session Only)
+                with st.expander("➕ Add Knowledge (Session Only)", expanded=False):
+                    new_knowledge_text = st.text_area(
+                        "Enter URL or paste raw text:",
+                        key="new_knowledge_text_url_input",
+                        height=100,
+                    )
+                    new_knowledge_file = st.file_uploader(
+                        "Upload knowledge file (.txt, .md)",  # Simplified types for now
+                        type=["txt", "md"],
+                        key="new_knowledge_file_input",
+                    )
+                    if st.button(
+                        "Add to Session Knowledge",
+                        key="add_session_knowledge_button_main",
+                    ):
+                        session_knowledge_list: List[SessionKnowledgeItem] = (
+                            st.session_state.session_added_knowledge
+                        )  # type: ignore
+                        added_something = False
+                        if new_knowledge_text:
+                            session_knowledge_list.append(
+                                {
+                                    "type": "text_or_url",
+                                    "name": "Text/URL Snippet",
+                                    "content": new_knowledge_text,
+                                    "data_bytes": None,
+                                    "mime_type": "text/plain",
+                                }
+                            )
+                            st.success(f"Added text/URL snippet to session knowledge.")
+                            st.session_state.new_knowledge_text_url_input = (
+                                ""  # Clear input
+                            )
+                            added_something = True
+                        if new_knowledge_file is not None:
+                            file_bytes = new_knowledge_file.getvalue()
                             try:
-                                prompt_tok = (
-                                    int(raw_item[0])
-                                    if isinstance(raw_item[0], (int, float))
-                                    else 0
+                                # For txt/md, decode to string
+                                file_content_str = file_bytes.decode("utf-8")
+                                session_knowledge_list.append(
+                                    {
+                                        "type": "file",
+                                        "name": new_knowledge_file.name,
+                                        "content": file_content_str,  # Store decoded content
+                                        "data_bytes": file_bytes,  # Store raw bytes too if needed later
+                                        "mime_type": new_knowledge_file.type
+                                        or "text/plain",
+                                    }
                                 )
-                                completion_tok = (
-                                    int(raw_item[1])
-                                    if isinstance(raw_item[1], (int, float))
-                                    else 0
+                                st.success(
+                                    f"Added file '{new_knowledge_file.name}' to session knowledge."
                                 )
-                                token_usage_list.append((prompt_tok, completion_tok))
-                            except (IndexError, TypeError):
-                                # Skip malformed usage tuples
-                                continue
+                                added_something = True
+                            except UnicodeDecodeError:
+                                st.error(
+                                    f"Could not decode file '{new_knowledge_file.name}' as UTF-8 text. Please upload plain text files (.txt, .md)."
+                                )
+                            # No easy way to clear file_uploader state reliably without complex keying/callbacks,
+                            # user will have to manually clear/change it or it will re-submit if not careful.
 
-                        # Calculate totals with explicit typing
-                        total_prompt = 0
-                        total_completion = 0
-                        for prompt_tok, completion_tok in token_usage_list:
-                            total_prompt += prompt_tok
-                            total_completion += completion_tok
+                        if added_something:
+                            st.session_state.session_added_knowledge = (
+                                session_knowledge_list
+                            )
+                            st.rerun()
+                        elif not new_knowledge_text and new_knowledge_file is None:
+                            st.warning(
+                                "Please provide text/URL or upload a file to add knowledge."
+                            )
 
-                        total = total_prompt + total_completion
+                # Display Session-Added Knowledge
+                session_knowledge_to_display: List[SessionKnowledgeItem] = (
+                    st.session_state.session_added_knowledge
+                )  # type: ignore
+                if session_knowledge_to_display:
+                    with st.expander("Session-Added Knowledge", expanded=True):
+                        for i, item_dict in enumerate(session_knowledge_to_display):
+                            item_name = cast(str, item_dict.get("name", "Unknown Item"))
+                            item_type = cast(str, item_dict.get("type", "unknown"))
+                            item_content_preview = cast(
+                                str, item_dict.get("content", "")
+                            )
+                            if len(item_content_preview) > 70:
+                                item_content_preview = item_content_preview[:70] + "..."
+                            st.markdown(f"**{i + 1}. {item_name}** ({item_type})")
+                            st.caption(f"`{item_content_preview}`")
+                            if i < len(session_knowledge_to_display) - 1:
+                                st.markdown("---")
+                st.divider()
 
-                        st.write(f"**Total Prompt Tokens:** {total_prompt}")
-                        st.write(f"**Total Completion Tokens:** {total_completion}")
-                        st.write(f"**Total Tokens:** {total}")
-                    else:
-                        st.write("No usage data yet.")
+                # Developer Zone
+                current_display_mode_sidebar = cast(
+                    Literal["dev", "presentation"], st.session_state.display_mode
+                )
+                if current_display_mode_sidebar == "dev":
+                    st.header("Developer Zone")
+                    with st.expander("📈 Usage Statistics", expanded=False):
+                        current_token_usage_dev: List[Tuple[int, int]] = (
+                            st.session_state.token_usage
+                        )  # type: ignore
+                        if current_token_usage_dev:
+                            total_prompt = sum(p for p, _ in current_token_usage_dev)
+                            total_completion = sum(
+                                c for _, c in current_token_usage_dev
+                            )
+                            st.metric("Total Prompt Tokens", total_prompt)
+                            st.metric("Total Completion Tokens", total_completion)
+                            st.metric(
+                                "Total Tokens Used", total_prompt + total_completion
+                            )
+                        else:
+                            st.info("No token usage data recorded yet.")
 
                     if hasattr(agent, "config"):
-                        st.subheader("Configuration")
-                        try:
-                            if hasattr(agent.config, "model_dump") and callable(
-                                getattr(agent.config, "model_dump")
-                            ):
-                                config_data = getattr(agent.config, "model_dump")()
-                                st.json(json.dumps(config_data))
-                            elif hasattr(agent.config, "__dict__"):
-                                st.json(json.dumps(agent.config.__dict__, default=str))
-                            else:
-                                st.json(
-                                    json.dumps(
-                                        {"config": str(agent.config)}, default=str
+                        with st.expander("🔧 Agent Configuration", expanded=False):
+                            try:
+                                config_obj = agent.config
+                                if hasattr(config_obj, "model_dump") and callable(
+                                    getattr(config_obj, "model_dump")
+                                ):
+                                    st.json(
+                                        json.dumps(
+                                            getattr(config_obj, "model_dump")(),
+                                            indent=2,
+                                            default=str,
+                                        )
                                     )
-                                )
-                        except Exception:
-                            st.write(f"Config: {str(agent.config)}")
+                                elif hasattr(config_obj, "__dict__"):
+                                    st.json(
+                                        json.dumps(
+                                            config_obj.__dict__, default=str, indent=2
+                                        )
+                                    )
+                                else:
+                                    st.text(str(config_obj))
+                            except Exception as e_conf:
+                                st.error(f"Could not display agent config: {e_conf}")
+                    st.divider()
 
-                # Add a clear button
-                if st.button("Clear Conversation"):
+                if st.button(
+                    "🗑️ Clear Conversation",
+                    use_container_width=True,
+                    key="clear_conversation_button_main",
+                ):
                     st.session_state.messages = []
                     st.session_state.token_usage = []
-                    st.session_state.uploaded_files = []
+                    st.session_state.uploaded_file_for_next_message = None
+                    st.session_state.session_added_knowledge = []  # Clear session knowledge too
                     st.rerun()
 
-            # Main chat interface
+            # --- Main Application Layout ---
             st.title(app_title)
-            st.write(app_description)
+            if app_description:
+                st.caption(app_description)
 
-            # Display chat messages
-            message_container = st.container()
-            with message_container:
-                for message in st.session_state.messages:
-                    if not isinstance(message, dict):
-                        continue
+            # 1. Chat Message Display Area
+            chat_message_container = st.container()
+            with chat_message_container:
+                # Make it scrollable by setting a height
+                # st.markdown("<div style='height: 500px; overflow-y: scroll;'>", unsafe_allow_html=True) # One way
 
-                    role = message.get("role", "")
-                    content = message.get("content", "")
-                    metadata = message.get("metadata", {})
+                current_messages_main: List[Dict[str, Any]] = st.session_state.messages  # type: ignore
+                if not current_messages_main:
+                    st.info("Conversation will appear here. Send a message to start!")
+
+                for msg_idx, message_data in enumerate(current_messages_main):
+                    role = str(message_data.get("role", "unknown"))
+                    content = str(message_data.get("content", ""))
+                    metadata: Dict[str, Any] = cast(
+                        Dict[str, Any], message_data.get("metadata", {})
+                    )
 
                     if role == "user":
                         with st.chat_message("user", avatar="👤"):
-                            st.write(content)
-                            # Display file attachments if any
-                            if (
-                                isinstance(metadata, dict)
-                                and "files" in metadata
-                                and isinstance(metadata["files"], list)
-                            ):
-                                for _file_data_any in metadata["files"]:
-                                    if not isinstance(_file_data_any, dict):
-                                        continue
-
-                                    file_data: dict[str, Any] = cast(
-                                        dict[str, Any], _file_data_any
-                                    )
-
-                                    mime_type = str(file_data.get("mime_type", ""))
-                                    if mime_type.startswith("image/"):
-                                        # Handle image data safely
-                                        image_data = file_data.get("data", b"")
-                                        if isinstance(image_data, bytes) and image_data:
-                                            st.image(image_data)
-                                    else:
-                                        # Get file data with proper type checking
-                                        file_bytes = file_data.get("data", b"")
-                                        if not isinstance(file_bytes, bytes):
-                                            file_bytes = b""
-
-                                        # Use explicit type checking for strings
-                                        name_value = file_data.get("name", "file")
-                                        file_name = (
-                                            name_value
-                                            if isinstance(name_value, str)
-                                            else "file"
+                            st.markdown(content)
+                            files_metadata: Union[List[Dict[str, Any]], None] = (
+                                metadata.get("files")
+                            )  # type: ignore
+                            if isinstance(files_metadata, list):
+                                with st.container():
+                                    for file_idx, file_info in enumerate(
+                                        files_metadata
+                                    ):
+                                        file_name = str(file_info.get("name", "file"))
+                                        file_data_bytes = cast(
+                                            bytes, file_info.get("data", b"")
                                         )
-
-                                        mime_value = file_data.get(
-                                            "mime_type", "application/octet-stream"
+                                        mime_type = str(
+                                            file_info.get(
+                                                "mime_type",
+                                                "application/octet-stream",
+                                            )
                                         )
-                                        file_mime = (
-                                            mime_value
-                                            if isinstance(mime_value, str)
-                                            else "application/octet-stream"
-                                        )
-
-                                        st.download_button(
-                                            label=f"📎 {file_name}",
-                                            data=file_bytes,
-                                            file_name=file_name,
-                                            mime=file_mime,
-                                        )
+                                        if file_data_bytes:
+                                            if mime_type.startswith("image/"):
+                                                st.image(
+                                                    file_data_bytes,
+                                                    caption=f"Sent: {file_name}",
+                                                    width=100,
+                                                )  # Smaller preview
+                                            else:
+                                                st.download_button(
+                                                    f"📎 {file_name}",
+                                                    file_data_bytes,
+                                                    file_name=file_name,
+                                                    mime=mime_type,
+                                                    key=f"user_file_dl_{msg_idx}_{file_idx}_{file_name}",
+                                                )
                     elif role == "assistant":
                         with st.chat_message("assistant", avatar="🤖"):
-                            st.write(content)
+                            st.markdown(content)
+                            # Dev mode details
+                            current_display_mode_chat = cast(
+                                Literal["dev", "presentation"],
+                                st.session_state.display_mode,
+                            )
+                            if current_display_mode_chat == "dev":
+                                tool_calls_md: Union[List[Dict[str, Any]], None] = (
+                                    metadata.get("tool_calls")
+                                )  # type: ignore
+                                parsed_data_md: Any = metadata.get("parsed")
 
-                            # Show tool calls if available and in dev mode
-                            if (
-                                st.session_state.display_mode == "dev"
-                                and isinstance(metadata, dict)
-                                and "tool_calls" in metadata
-                                and isinstance(metadata["tool_calls"], list)
-                            ):
-                                for tool_call in metadata["tool_calls"]:
-                                    if not isinstance(tool_call, dict):
-                                        continue
+                                if isinstance(tool_calls_md, list) and tool_calls_md:
+                                    with st.expander(
+                                        "🛠️ Tool Calls Executed", expanded=False
+                                    ):
+                                        for tc_idx, tc_data in enumerate(tool_calls_md):
+                                            if (
+                                                "tool_name" in tc_data
+                                                and "args" in tc_data
+                                            ):
+                                                tool_name_disp = str(
+                                                    tc_data.get(
+                                                        "tool_name", "Unknown Tool"
+                                                    )
+                                                )
+                                                args_disp = cast(
+                                                    Dict[str, Any],
+                                                    tc_data.get("args", {}),
+                                                )
+                                                id_disp = str(
+                                                    tc_data.get("id", uuid.uuid4())
+                                                )
+                                                tc_obj_disp = ToolExecutionSuggestion(
+                                                    tool_name=tool_name_disp,
+                                                    args=args_disp,
+                                                    id=id_disp,
+                                                )
+                                                st.markdown(
+                                                    _format_tool_call_display(
+                                                        tc_obj_disp
+                                                    )
+                                                )
+                                                if "result" in tc_data:
+                                                    st.markdown("**Result:**")
+                                                    st.code(
+                                                        str(
+                                                            tc_data.get("result", "")
+                                                            or ""
+                                                        ),
+                                                        language="json",
+                                                        line_numbers=False,
+                                                    )  # type: ignore
+                                                if tc_idx < len(tool_calls_md) - 1:
+                                                    st.divider()
 
-                                    if "tool_name" in tool_call and "args" in tool_call:
-                                        # Create safe versions of all parameters with proper type checking
-                                        tool_name_value = tool_call.get("tool_name", "")
-                                        tool_name = (
-                                            tool_name_value
-                                            if isinstance(tool_name_value, str)
-                                            else ""
-                                        )
-
-                                        # Get ID with type safety
-                                        id_value = tool_call.get("id", None)
-                                        if not isinstance(id_value, str):
-                                            id_value = str(uuid.uuid4())
-                                        call_id = id_value
-
-                                        # Convert args to a safe dictionary with explicit type checking
-                                        args_dict: dict[str, Any] = {}
-                                        args_value = tool_call.get("args")
-                                        if isinstance(args_value, dict):
-                                            for k, v in args_value.items():
-                                                if isinstance(k, str):
-                                                    args_dict[k] = v
-                                                else:
-                                                    # Convert non-string keys to strings
-                                                    try:
-                                                        # Explicitly type k as Any to avoid inference issues
-                                                        k_val: Any = k
-                                                        str_key = str(k_val)  # type: ignore
-                                                        args_dict[str_key] = v
-                                                    except (ValueError, TypeError):
-                                                        pass
-
-                                        # Create a properly typed tool execution suggestion
+                                if parsed_data_md is not None:
+                                    with st.expander(
+                                        "🧩 Parsed Output", expanded=False
+                                    ):
                                         try:
-                                            # Ensure args_dict is correctly populated before use
-                                            # (The previous logic for args_dict seems correct, let's verify)
-                                            tc_obj = ToolExecutionSuggestion(
-                                                tool_name=tool_name,
-                                                args=args_dict,
-                                                id=call_id,
+                                            st.json(
+                                                json.dumps(
+                                                    parsed_data_md,
+                                                    default=str,
+                                                    indent=2,
+                                                )
                                             )
-                                            st.markdown(_format_tool_call(tc_obj))
-                                        except (ValueError, TypeError) as e:
-                                            st.warning(
-                                                f"Could not format tool call: {e}"
-                                            )
+                                        except:
+                                            st.text(str(parsed_data_md))
+                # st.markdown("</div>", unsafe_allow_html=True) # Close scroll div
 
-                                        # If we have a result, display it
-                                        if "result" in tool_call:
-                                            st.write("**Result:**")
-                                            # Explicitly type the result value as Any
-                                            result_value: Any = tool_call.get(
-                                                "result", ""
-                                            )
-                                            # Explicitly convert to string
-                                            result_str = (
-                                                ""
-                                                if result_value is None
-                                                else str(result_value)  # type: ignore
-                                            )
-                                            st.code(result_str, language="python")
+            # 2. Input Controls Area (will appear below messages)
+            input_controls_container = st.container()
+            with input_controls_container:
+                st.markdown("---")  # Visual separator
+                # Using columns for file uploader and its preview
+                uploader_col, preview_col = st.columns([0.7, 0.3])
 
-                            # Show parsed data if available and in dev mode
-                            if (
-                                st.session_state.display_mode == "dev"
-                                and isinstance(metadata, dict)
-                                and "parsed" in metadata
-                                and metadata["parsed"] is not None
-                            ):
-                                st.write("**Parsed Output:**")
-                                try:
-                                    parsed_json = json.dumps(
-                                        metadata.get("parsed", {}),
-                                        default=str,
-                                    )
-                                    st.json(parsed_json)
-                                except Exception:
-                                    # Get the parsed value and convert to string
-                                    parsed_value: Any = metadata.get("parsed", "")
-                                    st.code(str(parsed_value))  # type: ignore
+                with uploader_col:
+                    # Ensure unique key for file_uploader if it needs to reset
+                    # A simple way is to use a counter or a random element if not tied to messages list length
+                    messages_for_key_len = 0
+                    if isinstance(st.session_state.messages, list):
+                        messages_for_key_len = len(st.session_state.messages)
+                    uploader_key = f"main_file_uploader_{messages_for_key_len}"
 
-            # File upload area
-            uploaded_file = st.file_uploader(
-                "Upload a file or image",
-                type=None,
-                key="file_uploader",
-                accept_multiple_files=False,
-            )
-            if uploaded_file is not None:
-                # Only add if we have file bytes
-                file_bytes = uploaded_file.getvalue()
-                if file_bytes:  # This checks for non-empty bytes
-                    mime_type = uploaded_file.type or "application/octet-stream"
-                    st.session_state.uploaded_files.append(
-                        {
-                            "name": uploaded_file.name,
-                            "data": file_bytes,
-                            "mime_type": mime_type,
-                        }
+                    uploaded_file_obj = st.file_uploader(
+                        "Attach a file (image, text, etc.)",
+                        type=None,
+                        key=uploader_key,
+                        accept_multiple_files=False,  # Handling one file at a time is simpler
+                        help="The file will be attached to your next message.",
                     )
-
-                    # Preview file if it's an image
-                    if mime_type.startswith("image/"):
-                        st.image(file_bytes, caption=f"Uploaded: {uploaded_file.name}")
-                    else:
-                        st.success(
-                            f"File uploaded: {uploaded_file.name} ({len(file_bytes)} bytes)"
-                        )
-
-                # Clear the uploader
-                st.session_state["file_uploader"] = None
-
-            # Input area
-            user_input = st.chat_input("Type your message here...")
-
-            if user_input:
-                # Prepare message metadata
-                metadata = {}
-
-                # Include uploaded files if any
-                if st.session_state.uploaded_files:
-                    # Make a deep copy to avoid reference issues
-                    metadata["files"] = []
-
-                    for _upload_file_any in st.session_state.uploaded_files:
-                        if not isinstance(_upload_file_any, dict):
-                            continue
-
-                        upload_file: dict[str, Any] = cast(
-                            dict[str, Any], _upload_file_any
-                        )
-
-                        # Create a new dictionary with valid types
-                        safe_file_data = {
-                            "name": str(upload_file.get("name", "file")),
-                            "data": upload_file.get("data", b"")
-                            if isinstance(upload_file.get("data"), bytes)
-                            else b"",
-                            "mime_type": str(
-                                upload_file.get("mime_type", "application/octet-stream")
-                            ),
+                    if uploaded_file_obj is not None:
+                        # Store this file in session state to be picked up by chat_input
+                        st.session_state.uploaded_file_for_next_message = {
+                            "name": uploaded_file_obj.name,
+                            "data": uploaded_file_obj.getvalue(),
+                            "mime_type": uploaded_file_obj.type
+                            or "application/octet-stream",
                         }
-                        metadata["files"].append(safe_file_data)
-                    # Clear the files after adding them to the message
-                    st.session_state.uploaded_files = []
+                        # Rerun to show preview, chat_input will handle clearing it after send
+                        st.rerun()
 
-                # Add user message to chat
-                st.session_state.messages.append(
-                    {"role": "user", "content": user_input, "metadata": metadata}
-                )
-
-                # Display user message immediately
-                with st.chat_message("user", avatar="👤"):
-                    st.write(user_input)
-                    # Display files if present
-                    if "files" in metadata and isinstance(metadata["files"], list):
-                        for _meta_file_any in metadata["files"]:
-                            if not isinstance(_meta_file_any, dict):
-                                continue
-
-                            meta_file: dict[str, Any] = cast(
-                                dict[str, Any], _meta_file_any
-                            )
-
-                            # Get data with type checking
-                            file_bytes = meta_file.get("data", b"")
-                            if not isinstance(file_bytes, bytes):
-                                continue
-
-                            mime_type = str(
-                                meta_file.get("mime_type", "application/octet-stream")
-                            )
-
-                            # Use explicit type checking for strings
-                            name_value = meta_file.get("name", "file")
-                            file_name = (
-                                name_value if isinstance(name_value, str) else "file"
-                            )
-
-                            mime_value = meta_file.get(
+                with preview_col:
+                    staged_file_info: Union[Dict[str, Any], None] = (
+                        st.session_state.uploaded_file_for_next_message
+                    )  # type: ignore
+                    if staged_file_info:
+                        st.caption("File to send:")
+                        fname = str(staged_file_info.get("name", "file"))
+                        fmime = str(
+                            staged_file_info.get(
                                 "mime_type", "application/octet-stream"
                             )
-                            file_mime = (
-                                mime_value
-                                if isinstance(mime_value, str)
-                                else "application/octet-stream"
+                        )
+                        fdata = cast(bytes, staged_file_info.get("data", b""))
+
+                        if fdata:
+                            if fmime.startswith("image/"):
+                                st.image(fdata, caption=f"{fname}", width=70)
+                            else:
+                                st.info(f"📎 {fname} ({len(fdata)} bytes)")
+                            if st.button(
+                                f"Remove",
+                                key=f"remove_staged_file_btn",
+                                help="Clear attached file",
+                                use_container_width=True,
+                            ):
+                                st.session_state.uploaded_file_for_next_message = None
+                                st.rerun()
+                    else:
+                        st.caption(" ")  # Placeholder to maintain layout if no file
+
+                # Chat input bar
+                user_prompt = st.chat_input(
+                    "Type your message here...", key="main_chat_input"
+                )
+
+            # --- Handle New User Input Processing ---
+            if user_prompt:
+                new_user_message_metadata: Dict[str, Any] = {}
+
+                # Attach file from the staging area if it exists
+                staged_file_to_send: Union[Dict[str, Any], None] = (
+                    st.session_state.uploaded_file_for_next_message
+                )  # type: ignore
+                if staged_file_to_send:
+                    new_user_message_metadata["files"] = [
+                        staged_file_to_send
+                    ]  # Agent expects a list of files
+                    st.session_state.uploaded_file_for_next_message = (
+                        None  # Clear after attaching
+                    )
+
+                # Add user message to chat history
+                current_messages_processing: List[Dict[str, Any]] = (
+                    st.session_state.messages
+                )  # type: ignore
+                current_messages_processing.append(
+                    {
+                        "role": "user",
+                        "content": user_prompt,
+                        "metadata": new_user_message_metadata,
+                    }
+                )
+                st.session_state.messages = current_messages_processing
+
+                # Prepare instructions including session-added knowledge
+                original_instructions = ""
+                if isinstance(agent.instructions, str):
+                    original_instructions = agent.instructions
+                elif callable(agent.instructions):
+                    original_instructions = agent.instructions()
+                elif isinstance(agent.instructions, list):
+                    original_instructions = "\n".join(agent.instructions)
+
+                session_knowledge_prompt_parts: List[str] = []
+                session_knowledge_items_proc: List[SessionKnowledgeItem] = (
+                    st.session_state.session_added_knowledge
+                )  # type: ignore
+                if session_knowledge_items_proc:
+                    session_knowledge_prompt_parts.append(
+                        "\n\n--- SESSION-ADDED KNOWLEDGE START ---"
+                    )
+                    for item in session_knowledge_items_proc:
+                        item_name = cast(str, item.get("name", "Item"))
+                        item_content = cast(str, item.get("content", ""))
+                        session_knowledge_prompt_parts.append(
+                            f"Knowledge Item: {item_name}\nContent:\n{item_content}"
+                        )
+                    session_knowledge_prompt_parts.append(
+                        "--- SESSION-ADDED KNOWLEDGE END ---"
+                    )
+
+                final_instructions_for_run = original_instructions + "\n".join(
+                    session_knowledge_prompt_parts
+                )
+
+                # Agent Processing
+                with st.spinner("🤖 Agent is thinking..."):
+                    agent_input_parts: List[Union[TextPart, FilePart]] = [
+                        TextPart(text=user_prompt)
+                    ]  # type: ignore
+
+                    files_to_process_agent = new_user_message_metadata.get("files")
+                    if isinstance(files_to_process_agent, list):
+                        for file_info_agent in files_to_process_agent:
+                            file_data_bytes_agent = cast(
+                                bytes, file_info_agent.get("data", b"")
                             )
-
-                            st.download_button(
-                                label=f"📎 {file_name}",
-                                data=file_bytes,
-                                file_name=file_name,
-                                mime=file_mime,
+                            file_mime_type_agent = str(
+                                file_info_agent.get("mime_type")
+                                or "application/octet-stream"
                             )
-
-                # Display a spinner while waiting for the agent's response
-                with st.chat_message("assistant", avatar="🤖"):
-                    with st.spinner("Thinking..."):
-                        # Prepare input for the agent
-                        agent_input: UserMessage | str
-                        if (
-                            "files" in metadata
-                            and isinstance(metadata["files"], list)
-                            and metadata["files"]
-                        ):
-                            # Create parts for the user message
-                            parts = [TextPart(text=user_input)]
-
-                            # Add file parts
-                            for file_data in metadata["files"]:
-                                # Get data with type checking
-                                file_bytes = file_data.get("data", b"")
-                                if not isinstance(file_bytes, bytes):
-                                    continue
-
-                                # Get mime type with proper typing
-                                mime_source: Any = file_data.get(
-                                    "mime_type", "application/octet-stream"
-                                )
-                                mime_type = str(mime_source)  # type: ignore
-
+                            if file_data_bytes_agent:
                                 try:
-                                    file_part = FilePart(
-                                        data=file_bytes, mime_type=mime_type
-                                    )
-                                    # Create a new list with the correct types
-                                    # This is safer than using append which can cause type issues
-                                    parts = parts + [file_part]  # type: ignore
-                                except ValueError:
-                                    # If mime type is not valid, skip this file
-                                    st.warning(
-                                        f"Skipping file with invalid MIME type: {mime_type}"
-                                    )
-                                    continue
-
-                            agent_input = UserMessage(parts=parts)
-                        else:
-                            # Simple text input
-                            agent_input = user_input
-
-                        # Run the agent
-                        try:
-                            with agent.with_mcp_servers():
-                                result = agent.run(agent_input)
-
-                                # Extract information from the result
-                                generation = result.generation
-                                response_text = generation.text
-                                tool_calls: list[ToolExecutionSuggestion] = []
-
-                                # Get tool calls if available
-                                if hasattr(generation, "tool_calls"):
-                                    tool_calls = list(generation.tool_calls)
-
-                                # Update token usage stats
-                                if hasattr(generation, "usage"):
-                                    st.session_state.token_usage.append(
-                                        (
-                                            generation.usage.prompt_tokens,
-                                            generation.usage.completion_tokens,
+                                    agent_input_parts.append(
+                                        FilePart(
+                                            data=file_data_bytes_agent,
+                                            mime_type=file_mime_type_agent,
                                         )
                                     )
+                                except ValueError as ve_filepart:
+                                    st.warning(
+                                        f"Skipping file for agent (invalid MIME: {file_mime_type_agent}). Error: {ve_filepart}"
+                                    )
 
-                                # Prepare metadata for storage
-                                response_metadata: dict[str, Any] = {}
+                    final_agent_input: Union[UserMessage, str]
+                    if len(agent_input_parts) > 1 or any(
+                        isinstance(p, FilePart) for p in agent_input_parts
+                    ):  # type: ignore
+                        final_agent_input = UserMessage(parts=agent_input_parts)  # type: ignore
+                    else:
+                        final_agent_input = user_prompt
 
-                                # Store tool call data
-                                if tool_calls:
-                                    tool_call_data = []
-                                    for tc in tool_calls:
-                                        tc_data = {
-                                            "tool_name": tc.tool_name,
-                                            "args": tc.args,
-                                            "id": tc.id,
-                                        }
-                                        tool_call_data.append(tc_data)
-                                    response_metadata["tool_calls"] = tool_call_data
+                    try:
+                        # Cloning the agent with modified instructions is the cleaner approach for this specific run.
+                        temp_agent_for_run = agent.clone(
+                            new_instructions=final_instructions_for_run
+                        )
 
-                                # Get, process, and store parsed result directly if available
-                                parsed_value = None  # Initialize a variable to hold the potential parsed value
-                                if hasattr(result, "parsed"):
-                                    parsed_value = (
-                                        result.parsed
-                                    )  # Assign if attribute exists
+                        with temp_agent_for_run.with_mcp_servers():
+                            result = temp_agent_for_run.run(final_agent_input)
 
-                                if (
-                                    parsed_value is not None
-                                ):  # Check if we got a non-None value
-                                    try:
-                                        # Attempt to extract and store the parsed data directly in metadata
-                                        if hasattr(
-                                            parsed_value, "model_dump"
-                                        ) and callable(
-                                            getattr(parsed_value, "model_dump")
-                                        ):
-                                            response_metadata["parsed"] = getattr(
-                                                parsed_value, "model_dump"
-                                            )()
-                                        elif hasattr(parsed_value, "__dict__"):
-                                            response_metadata["parsed"] = (
-                                                parsed_value.__dict__
-                                            )
-                                        else:
-                                            response_metadata["parsed"] = str(
-                                                parsed_value
-                                            )
-                                    except Exception:
-                                        # Fallback: store the string representation on error
-                                        response_metadata["parsed"] = str(parsed_value)
+                        generation = result.generation
+                        response_text = generation.text or "..."
 
-                                # Store the message and metadata
-                                st.session_state.messages.append(
-                                    {
-                                        "role": "assistant",
-                                        "content": response_text,
-                                        "metadata": response_metadata,  # Contains 'parsed' if processed
-                                    }
+                        response_metadata_agent: Dict[str, Any] = {}
+                        if hasattr(generation, "tool_calls") and generation.tool_calls:
+                            tool_calls_list_agent_resp: List[
+                                ToolExecutionSuggestion
+                            ] = list(generation.tool_calls)
+                            response_metadata_agent["tool_calls"] = [
+                                {
+                                    "tool_name": tc.tool_name,
+                                    "args": tc.args,
+                                    "id": tc.id,
+                                    "result": getattr(tc, "_result", None),
+                                }
+                                for tc in tool_calls_list_agent_resp
+                            ]
+
+                        parsed_result_data_agent_resp: Any = result.parsed
+                        if parsed_result_data_agent_resp is not None:
+                            try:
+                                if hasattr(
+                                    parsed_result_data_agent_resp, "model_dump"
+                                ) and callable(
+                                    getattr(parsed_result_data_agent_resp, "model_dump")
+                                ):
+                                    response_metadata_agent["parsed"] = getattr(
+                                        parsed_result_data_agent_resp, "model_dump"
+                                    )()
+                                elif hasattr(parsed_result_data_agent_resp, "__dict__"):
+                                    response_metadata_agent["parsed"] = (
+                                        parsed_result_data_agent_resp.__dict__
+                                    )
+                                else:
+                                    response_metadata_agent["parsed"] = (
+                                        parsed_result_data_agent_resp
+                                    )
+                            except Exception:
+                                response_metadata_agent["parsed"] = str(
+                                    parsed_result_data_agent_resp
                                 )
 
-                                # Display the response
-                                st.write(response_text)
+                        # Append assistant's response to session_state.messages
+                        assistant_response_messages: List[Dict[str, Any]] = (
+                            st.session_state.messages
+                        )  # type: ignore
+                        assistant_response_messages.append(
+                            {
+                                "role": "assistant",
+                                "content": response_text,
+                                "metadata": response_metadata_agent,
+                            }
+                        )
+                        st.session_state.messages = assistant_response_messages
 
-                                # In dev mode, show tool calls and parsed data
-                                if st.session_state.display_mode == "dev":
-                                    # Show tool calls
-                                    for tc in tool_calls:
-                                        # Display all tool calls
-                                        st.markdown(_format_tool_call(tc))
-
-                                    # Show parsed data when available (checking the metadata dict)
-                                    if "parsed" in response_metadata:
-                                        st.write("**Parsed Output:**")
-                                        try:
-                                            parsed_json = json.dumps(
-                                                response_metadata["parsed"],
-                                                default=str,
-                                            )
-                                            st.json(parsed_json)
-                                        except Exception:
-                                            # Display string representation as fallback
-                                            st.code(
-                                                str(response_metadata["parsed"])
-                                            )  # Use data from metadata
-                        except Exception as e:
-                            error_msg = f"Error: {str(e)}"
-                            st.error(error_msg)
-                            st.session_state.messages.append(
-                                {
-                                    "role": "assistant",
-                                    "content": error_msg,
-                                    "metadata": {},
-                                }
+                        # Update token usage
+                        token_usage_update_list: List[Tuple[int, int]] = (
+                            st.session_state.token_usage
+                        )  # type: ignore
+                        if hasattr(generation, "usage") and generation.usage:
+                            token_usage_update_list.append(
+                                (
+                                    generation.usage.prompt_tokens,
+                                    generation.usage.completion_tokens,
+                                )
                             )
+                            st.session_state.token_usage = token_usage_update_list
+
+                    except Exception as e_agent_run_main:
+                        error_msg = f"Agent error: {str(e_agent_run_main)}"
+                        st.error(error_msg)
+                        # Append error message to chat
+                        error_handling_messages: List[Dict[str, Any]] = (
+                            st.session_state.messages
+                        )  # type: ignore
+                        error_handling_messages.append(
+                            {
+                                "role": "assistant",
+                                "content": f"⚠️ Error: {error_msg}",
+                                "metadata": {"error": True},
+                            }
+                        )
+                        st.session_state.messages = error_handling_messages
+                st.rerun()
 
         return _streamlit_app

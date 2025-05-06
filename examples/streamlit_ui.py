@@ -35,17 +35,3 @@ streamlit_app = AgentToStreamlit(
 if __name__ == "__main__":
     # This will start the Streamlit app
     streamlit_app()
-
-"""
-To run this example:
-1. Install Streamlit: pip install streamlit
-2. Save this file as app.py
-3. Run: streamlit run app.py
-4. A browser window will open with your agent's chat interface
-
-Features:
-- Chat with your agent in a nice UI
-- Upload files (including images) if your agent supports them
-- Switch between presentation mode (clean UI) and dev mode (with debugging info)
-- View token usage and other developer information in dev mode
-"""
