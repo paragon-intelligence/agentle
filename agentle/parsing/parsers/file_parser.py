@@ -21,7 +21,6 @@ from agentle.parsing.factories.visual_description_agent_default_factory import (
     visual_description_agent_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parser_registry
 
 
 class FileParser(DocumentParser):
@@ -202,9 +201,12 @@ class FileParser(DocumentParser):
             ```
         """
         from agentle.parsing.parsers.link import LinkParser
+        from agentle.parsing.parses import parser_registry
 
         path = Path(document_path)
-        parser_cls: type[DocumentParser] | None = parser_registry.get(path.suffix)
+        parser_cls: type[DocumentParser] | None = parser_registry.get(
+            path.suffix.lstrip(".")
+        )
 
         visual_description_agent = (
             self.visual_description_agent or visual_description_agent_default_factory()

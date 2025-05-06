@@ -10,11 +10,9 @@ from typing import Literal, override
 
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 
-@parses("txt", "alg")
 class TxtFileParser(DocumentParser):
     """
     Parser for processing plain text files (.txt, .alg).

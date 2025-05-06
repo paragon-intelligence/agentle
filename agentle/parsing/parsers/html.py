@@ -27,11 +27,9 @@ from agentle.parsing.factories.visual_description_agent_default_factory import (
 )
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 
-@parses("html")
 class HTMLParser(DocumentParser):
     """
     Parser for processing HTML files.

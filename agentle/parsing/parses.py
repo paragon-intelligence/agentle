@@ -1,7 +1,27 @@
+from __future__ import annotations
 from collections.abc import Callable, MutableMapping
+from typing import TYPE_CHECKING
 
-from agentle.parsing.document_parser import DocumentParser
+from deprecated.classic import deprecated
+
+from agentle.parsing.parsers.audio import AudioFileParser
+from agentle.parsing.parsers.compressed import CompressedFileParser
+from agentle.parsing.parsers.docx import DocxFileParser
+from agentle.parsing.parsers.dwg import DWGFileParser
+from agentle.parsing.parsers.gif import GifFileParser
 from agentle.parsing.parsers.html import HTMLParser
+from agentle.parsing.parsers.pdf import PDFFileParser
+from agentle.parsing.parsers.pkt import PKTFileParser
+from agentle.parsing.parsers.pptx import PptxFileParser
+from agentle.parsing.parsers.static_image import StaticImageParser
+from agentle.parsing.parsers.txt import TxtFileParser
+from agentle.parsing.parsers.video import VideoFileParser
+from agentle.parsing.parsers.xlsx import XlsxFileParser
+from agentle.parsing.parsers.xml import XMLFileParser
+
+if TYPE_CHECKING:
+    from agentle.parsing.document_parser import DocumentParser
+
 
 """
 Parser Registry and Extension Mapping System
@@ -19,8 +39,37 @@ which is central to the framework's ability to handle different file types trans
 """
 
 parser_registry: MutableMapping[str, type[DocumentParser]] = {
+    "flac": AudioFileParser,
+    "mp3": AudioFileParser,
+    "mpeg": AudioFileParser,
+    "mpga": AudioFileParser,
+    "m4a": AudioFileParser,
+    "ogg": AudioFileParser,
+    "wav": AudioFileParser,
+    "webm": AudioFileParser,
+    "zip": CompressedFileParser,
+    "rar": CompressedFileParser,
+    "pkz": CompressedFileParser,
+    "doc": DocxFileParser,
+    "docx": DocxFileParser,
+    "dwg": DWGFileParser,
+    "gif": GifFileParser,
     "html": HTMLParser,
-    
+    "pdf": PDFFileParser,
+    "pkt": PKTFileParser,
+    "pptx": PptxFileParser,
+    "png": StaticImageParser,
+    "jpeg": StaticImageParser,
+    "tiff": StaticImageParser,
+    "bmp": StaticImageParser,
+    "jpg": StaticImageParser,
+    "jp2": StaticImageParser,
+    "txt": TxtFileParser,
+    "alg": TxtFileParser,
+    "mp4": VideoFileParser,
+    "xlsx": XlsxFileParser,
+    "xls": XlsxFileParser,
+    "xml": XMLFileParser,
 }
 """
 Global registry mapping file extensions to their respective DocumentParser classes.
@@ -31,6 +80,7 @@ subclass that can parse that file type.
 """
 
 
+@deprecated(action="ignore", reason="We use a predefined dict directly.")  # type: ignore
 def parses[ParserT: DocumentParser](
     *extensions: str,
 ) -> Callable[[type[ParserT]], type[ParserT]]:

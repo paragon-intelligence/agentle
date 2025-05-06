@@ -26,13 +26,11 @@ from agentle.parsing.factories.audio_description_agent_default_factory import (
     audio_description_agent_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 logger = logging.getLogger(__name__)
 
 
-@parses("flac", "mp3", "mpeg", "mpga", "m4a", "ogg", "wav", "webm")
 class AudioFileParser(DocumentParser):
     """
     Parser for processing various audio file formats.

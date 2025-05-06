@@ -16,13 +16,11 @@ from rsb.models.field import Field
 
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 logger = logging.getLogger(__name__)
 
 
-@parses("xml")
 class XMLFileParser(DocumentParser):
     """
     Parser for processing XML files into structured document representations.

@@ -24,11 +24,9 @@ from agentle.parsing.factories.visual_description_agent_default_factory import (
 )
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 
-@parses("png", "jpeg", "tiff", "bmp", "jpg", "jp2")
 class StaticImageParser(DocumentParser):
     """
     Parser for processing static image files in various formats.

@@ -22,10 +22,8 @@ from agentle.parsing.factories.visual_description_agent_default_factory import (
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parsers.file_parser import FileParser
-from agentle.parsing.parses import parses
 
 
-@parses("zip", "rar", "pkz")
 class CompressedFileParser(DocumentParser):
     """
     Parser for processing compressed archive files (ZIP, RAR, PKZ).

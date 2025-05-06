@@ -26,12 +26,10 @@ from agentle.parsing.factories.visual_description_agent_default_factory import (
 from agentle.parsing.image import Image
 from agentle.parsing.page_item.table_page_item import TablePageItem
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 from rsb.models.field import Field
 
 
-@parses("xls", "xlsx")
 class XlsxFileParser(DocumentParser):
     """
     Parser for processing Excel spreadsheet files (.xls, .xlsx).

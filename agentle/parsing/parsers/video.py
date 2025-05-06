@@ -20,11 +20,9 @@ from agentle.parsing.factories.visual_description_agent_default_factory import (
     visual_description_agent_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 
-@parses("mp4")
 class VideoFileParser(DocumentParser):
     """
     Parser for processing video files (MP4 format).

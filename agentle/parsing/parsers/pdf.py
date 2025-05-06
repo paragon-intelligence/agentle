@@ -24,11 +24,9 @@ from agentle.parsing.factories.visual_description_agent_default_factory import (
 )
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_document import ParsedDocument
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 
-@parses("pdf")
 class PDFFileParser(DocumentParser):
     """
     Parser for processing PDF documents into structured representations.

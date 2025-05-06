@@ -24,11 +24,9 @@ from agentle.parsing.factories.visual_description_agent_default_factory import (
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.parsing.parsers.static_image import StaticImageParser
-from agentle.parsing.parses import parses
 from agentle.parsing.section_content import SectionContent
 
 
-@parses("dwg")
 class DWGFileParser(DocumentParser):
     """
     Parser for processing AutoCAD DWG files.
