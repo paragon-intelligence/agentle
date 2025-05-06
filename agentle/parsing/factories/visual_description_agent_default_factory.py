@@ -2,14 +2,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from agentle.agents.agent import Agent
     from agentle.generations.models.structured_outputs_store.visual_media_description import (
         VisualMediaDescription,
     )
+    from agentle.generations.providers.base.generation_provider import (
+        GenerationProvider,
+    )
 
 
-def visual_description_agent_default_factory() -> Agent[VisualMediaDescription]:
+def visual_description_agent_default_factory(
+    provider: GenerationProvider | None = None,
+) -> Agent[VisualMediaDescription]:
     """
     Creates and returns an Agent specialized for processing visual media content.
 
@@ -59,6 +65,6 @@ def visual_description_agent_default_factory() -> Agent[VisualMediaDescription]:
     return Agent(
         model="gemini-2.0-pro-vision",
         instructions="You are a helpful assistant that deeply understands visual media.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=provider or GoogleGenaiGenerationProvider(),
         response_schema=VisualMediaDescription,
     )

@@ -212,6 +212,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     The service provider of the agent
     """
 
+    file_visual_description_provider: GenerationProvider | None = Field(default=None)
+    """
+    The service provider of the agent for visual description.
+    """
+
+    file_audio_description_provider: GenerationProvider | None = Field(default=None)
+    """
+    The service provider of the agent for audio description.
+    """
+
     version: str = Field(
         default="0.0.1",
         description="The version of the agent - format is up to the provider. (e.g. '1.0.0')",
@@ -699,6 +709,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         _logger.bind_optional(
             lambda log: log.info("Starting agent run with input type: %s", type(input))
         )
+        generation_provider: GenerationProvider = (
+            self.generation_provider
+            if isinstance(self.generation_provider, GenerationProvider)
+            else self.generation_provider()
+        )
 
         static_knowledge_prompt: str | None = None
         # Process static knowledge if any exists
@@ -709,14 +724,22 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 # Convert string to StaticKnowledge with NO_CACHE
                 if isinstance(knowledge_item, str):
                     knowledge_item = StaticKnowledge(
-                        content=knowledge_item, cache=NO_CACHE
+                        content=knowledge_item, cache=NO_CACHE, parse_timeout=30
                     )
 
                 # Process the knowledge item based on its content type
                 content_to_parse = knowledge_item.content
                 parsed_content = None
                 cache_key = None
-                parser = self.document_parser or file_parser_default_factory()
+                parser = self.document_parser or file_parser_default_factory(
+                    visual_description_provider=generation_provider
+                    if self.file_visual_description_provider is None
+                    else self.file_visual_description_provider,
+                    audio_description_provider=generation_provider
+                    if self.file_audio_description_provider is None
+                    else self.file_audio_description_provider,
+                    parse_timeout=knowledge_item.parse_timeout,
+                )
 
                 # Check if caching is enabled
                 if knowledge_item.cache is not NO_CACHE:
@@ -809,11 +832,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
         )
 
-        generation_provider: GenerationProvider = (
-            self.generation_provider
-            if isinstance(self.generation_provider, GenerationProvider)
-            else self.generation_provider()
-        )
         _logger.bind_optional(
             lambda log: log.debug(
                 "Using generation provider: %s", type(generation_provider).__name__

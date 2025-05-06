@@ -39,6 +39,7 @@ class LinkParser(DocumentParser):
     audio_description_agent: Agent[AudioDescription] = Field(
         default_factory=audio_description_agent_default_factory
     )
+    parse_timeout: float = Field(default=30)
 
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:
@@ -159,7 +160,11 @@ class LinkParser(DocumentParser):
                             f.write(chunk)
 
             # Parse the downloaded file
-            file_parser = FileParser()
+            file_parser = FileParser(
+                visual_description_agent=self.visual_description_agent,
+                audio_description_agent=self.audio_description_agent,
+                parse_timeout=self.parse_timeout,
+            )
             parsed_document = await file_parser.parse_async(temp_path)
 
             # Update the name to reflect the original URL
@@ -188,7 +193,7 @@ class LinkParser(DocumentParser):
             try:
                 # Go to the URL and wait for the network to be idle
                 # This helps ensure dynamic content is loaded
-                await page.goto(url, wait_until="networkidle")
+                await page.goto(url, timeout=self.parse_timeout * 1000)
 
                 # Give extra time for JavaScript-heavy pages to finish rendering
                 await page.wait_for_timeout(2000)

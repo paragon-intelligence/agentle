@@ -158,6 +158,9 @@ class FileParser(DocumentParser):
     Useful when you want to customize the prompt for the audio description.
     """
 
+    parse_timeout: float = Field(default=30)
+    """The timeout for the parse operation in seconds."""
+
     @override
     async def parse_async(self, document_path: str) -> ParsedDocument:
         """
@@ -217,6 +220,7 @@ class FileParser(DocumentParser):
                     parser_cls,
                     visual_description_agent=self.visual_description_agent,
                     audio_description_agent=self.audio_description_agent,
+                    parse_timeout=self.parse_timeout,
                 ).parse_async(document_path=document_path)
             else:
                 raise ValueError(f"Unsupported extension: {path.suffix}")

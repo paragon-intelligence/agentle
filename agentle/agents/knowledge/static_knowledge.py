@@ -24,6 +24,9 @@ class StaticKnowledge(BaseModel):
         description="The cache time of the knowledge. If None, the knowledge is not cached. If 'infinite', the knowledge is cached indefinitely.",
     )
 
+    parse_timeout: float = Field(default=30)
+    """The timeout for the parse operation in seconds."""
+
     def is_url(self) -> bool:
         parsed_url = urlparse(self.content)
         return parsed_url.scheme in ["http", "https"]

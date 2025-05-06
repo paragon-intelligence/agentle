@@ -8,9 +8,14 @@ if TYPE_CHECKING:
     from agentle.generations.models.structured_outputs_store.audio_description import (
         AudioDescription,
     )
+    from agentle.generations.providers.base.generation_provider import (
+        GenerationProvider,
+    )
 
 
-def audio_description_agent_default_factory() -> Agent[AudioDescription]:
+def audio_description_agent_default_factory(
+    provider: GenerationProvider | None = None,
+) -> Agent[AudioDescription]:
     """
     Creates and returns an Agent specialized for processing audio content.
 
@@ -58,6 +63,6 @@ def audio_description_agent_default_factory() -> Agent[AudioDescription]:
     return Agent(
         model="gemini-2.0-flash",
         instructions="You are a helpful assistant that deeply understands audio files.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=provider or GoogleGenaiGenerationProvider(),
         response_schema=AudioDescription,
     )
