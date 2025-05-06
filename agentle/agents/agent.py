@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import logging
 import uuid
 from collections.abc import (
     AsyncGenerator,
@@ -44,7 +45,6 @@ from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 from rsb.models.mimetype import MimeType
 
-
 from agentle.agents.a2a.models.agent_skill import AgentSkill
 from agentle.agents.a2a.models.authentication import Authentication
 from agentle.agents.a2a.models.capabilities import Capabilities
@@ -56,7 +56,7 @@ from agentle.agents.context import Context
 from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
-from agentle.agents.knowledge.static_knowledge import StaticKnowledge, NO_CACHE
+from agentle.agents.knowledge.static_knowledge import NO_CACHE, StaticKnowledge
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.trace_params import TraceParams
@@ -76,25 +76,27 @@ from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.factories.file_parser_default_factory import (
     file_parser_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.prompts.models.prompt import Prompt
-from agentle.parsing.document_parser import DocumentParser
 
 if TYPE_CHECKING:
     from io import BytesIO, StringIO
     from pathlib import Path
-    from mcp.types import Tool as MCPTool
 
     import numpy as np
     import pandas as pd
+    from mcp.types import Tool as MCPTool
     from PIL import Image
     from pydantic import BaseModel as PydanticBaseModel
 
 type WithoutStructuredOutput = None
 type _ToolName = str
+
+logger = logging.getLogger(__name__)
 
 
 class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
@@ -198,7 +200,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     # Dear dev
     # Really sorry to use "Any" here. But if we use DocumentParser, we get an import cycle.
     # No worries, in the model_validator, we check if it's a DocumentParser.
-    document_parser: DocumentParser | None= Field(default=None)
+    document_parser: DocumentParser | None = Field(default=None)
     """
     A document parser to be used by the agent. This will be used to parse the static
     knowledge documents, if provided.
@@ -737,18 +739,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 if parsed_content is None:
                     if knowledge_item.is_url():
                         try:
-                            parsed_content = await parser.parse_async(
-                                content_to_parse
-                            )
+                            parsed_content = await parser.parse_async(content_to_parse)
                             knowledge_contents.append(
                                 f"## URL: {content_to_parse}\n\n{parsed_content.sections[0].text}"
                             )
                         except ValueError:
                             knowledge_contents.append(f"## URL: {content_to_parse}")
                     elif knowledge_item.is_file_path():
-                        parsed_content = await parser.parse_async(
-                            content_to_parse
-                        )
+                        parsed_content = await parser.parse_async(content_to_parse)
                         knowledge_contents.append(
                             f"## Document: {parsed_content.name}\n\n{parsed_content.sections[0].text}"
                         )
