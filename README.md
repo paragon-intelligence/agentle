@@ -576,6 +576,9 @@ if __name__ == "__main__":
     streamlit_app()
 ```
 
+<img width="1212" alt="image" src="https://github.com/user-attachments/assets/1c31da4c-aeb2-4ca6-88ac-62fb903d6d92" />
+
+
 ## 🔍 Observability and Tracing
 
 Agentle provides built-in observability through Langfuse, with a flexible interface for other providers:
