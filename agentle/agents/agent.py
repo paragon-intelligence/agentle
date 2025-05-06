@@ -779,13 +779,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         _logger.bind_optional(
                             lambda log: log.debug("Parsing URL: %s", content_to_parse)
                         )
-                        try:
-                            parsed_content = await parser.parse_async(content_to_parse)
-                            knowledge_contents.append(
-                                f"## URL: {content_to_parse}\n\n{parsed_content.sections[0].text}"
-                            )
-                        except ValueError:
-                            knowledge_contents.append(f"## URL: {content_to_parse}")
+                        parsed_content = await parser.parse_async(content_to_parse)
+                        knowledge_contents.append(
+                            f"## URL: {content_to_parse}\n\n{parsed_content.sections[0].text}"
+                        )
                     elif knowledge_item.is_file_path():
                         _logger.bind_optional(
                             lambda log: log.debug("Parsing file: %s", content_to_parse)

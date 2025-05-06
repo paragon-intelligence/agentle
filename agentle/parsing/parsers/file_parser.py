@@ -142,16 +142,16 @@ class FileParser(DocumentParser):
 
     type: Literal["file"] = "file"
     strategy: Literal["low", "high"] = Field(default="high")
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory,
+    visual_description_agent: Agent[VisualMediaDescription] | None = Field(
+        default=None,
     )
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
     """
 
-    audio_description_agent: Agent[AudioDescription] = Field(
-        default_factory=audio_description_agent_default_factory,
+    audio_description_agent: Agent[AudioDescription] | None = Field(
+        default=None,
     )
     """
     The agent to use for generating the audio description of the document.
@@ -206,6 +206,13 @@ class FileParser(DocumentParser):
         path = Path(document_path)
         parser_cls: type[DocumentParser] | None = parser_registry.get(path.suffix)
 
+        visual_description_agent = (
+            self.visual_description_agent or visual_description_agent_default_factory()
+        )
+        audio_description_agent = (
+            self.audio_description_agent or audio_description_agent_default_factory()
+        )
+
         if not parser_cls:
             parsed_url = urlparse(document_path)
             is_url = parsed_url.scheme in ["http", "https"]
@@ -218,8 +225,8 @@ class FileParser(DocumentParser):
 
                 return await create_instance_dynamically(  # used because mypy complained about the type of the parser_cls
                     parser_cls,
-                    visual_description_agent=self.visual_description_agent,
-                    audio_description_agent=self.audio_description_agent,
+                    visual_description_agent=visual_description_agent,
+                    audio_description_agent=audio_description_agent,
                     parse_timeout=self.parse_timeout,
                 ).parse_async(document_path=document_path)
             else:

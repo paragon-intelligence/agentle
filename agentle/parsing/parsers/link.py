@@ -221,7 +221,11 @@ class LinkParser(DocumentParser):
 
                 try:
                     # Parse the HTML file to get any embedded media
-                    file_parser = FileParser()
+                    file_parser = FileParser(
+                        visual_description_agent=self.visual_description_agent,
+                        audio_description_agent=self.audio_description_agent,
+                        parse_timeout=self.parse_timeout,
+                    )
                     html_parsed = await file_parser.parse_async(html_path)
 
                     # Combine sections if the HTML parser extracted additional information
