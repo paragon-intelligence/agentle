@@ -1,6 +1,7 @@
 from collections.abc import Callable, MutableMapping
 
 from agentle.parsing.document_parser import DocumentParser
+from agentle.parsing.parsers.html import HTMLParser
 
 """
 Parser Registry and Extension Mapping System
@@ -17,7 +18,10 @@ This system enables the automatic selection of the appropriate parser based on a
 which is central to the framework's ability to handle different file types transparently.
 """
 
-parser_registry: MutableMapping[str, type[DocumentParser]] = {}
+parser_registry: MutableMapping[str, type[DocumentParser]] = {
+    "html": HTMLParser,
+    
+}
 """
 Global registry mapping file extensions to their respective DocumentParser classes.
 
