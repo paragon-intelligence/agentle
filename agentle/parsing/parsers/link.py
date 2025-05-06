@@ -177,89 +177,74 @@ class LinkParser(DocumentParser):
 
     async def _parse_webpage(self, url: str) -> ParsedDocument:
         """Parse a webpage using Playwright."""
-        try:
-            # Import playwright here to handle ImportError gracefully
-            from playwright.async_api import async_playwright
+        # Import playwright here to handle ImportError gracefully
+        from playwright.async_api import async_playwright
 
-            async with async_playwright() as p:
-                # Launch a browser with default viewport size
-                browser = await p.chromium.launch(headless=True)
-                page = await browser.new_page()
+        async with async_playwright() as p:
+            # Launch a browser with default viewport size
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+
+            try:
+                # Go to the URL and wait for the network to be idle
+                # This helps ensure dynamic content is loaded
+                await page.goto(url, wait_until="networkidle")
+
+                # Give extra time for JavaScript-heavy pages to finish rendering
+                await page.wait_for_timeout(2000)
+
+                # Get the page title
+                title = await page.title()
+
+                # Get the page content
+                content = await page.content()
+
+                # Get the visible text
+                text = await page.evaluate("""() => {
+                    return document.body.innerText;
+                }""")
+
+                # Create a SectionContent with the parsed data
+                section = SectionContent(number=1, text=text, md=f"# {title}\n\n{text}")
+
+                # Create a temporary HTML file for the content
+                with tempfile.NamedTemporaryFile(
+                    delete=False, suffix=".html"
+                ) as tmp_file:
+                    tmp_file.write(content.encode("utf-8"))
+                    html_path = tmp_file.name
 
                 try:
-                    # Go to the URL and wait for the network to be idle
-                    # This helps ensure dynamic content is loaded
-                    await page.goto(url, wait_until="networkidle")
+                    # Parse the HTML file to get any embedded media
+                    file_parser = FileParser()
+                    html_parsed = await file_parser.parse_async(html_path)
 
-                    # Give extra time for JavaScript-heavy pages to finish rendering
-                    await page.wait_for_timeout(2000)
-
-                    # Get the page title
-                    title = await page.title()
-
-                    # Get the page content
-                    content = await page.content()
-
-                    # Get the visible text
-                    text = await page.evaluate("""() => {
-                        return document.body.innerText;
-                    }""")
-
-                    # Create a SectionContent with the parsed data
-                    section = SectionContent(
-                        number=1, text=text, md=f"# {title}\n\n{text}"
-                    )
-
-                    # Create a temporary HTML file for the content
-                    with tempfile.NamedTemporaryFile(
-                        delete=False, suffix=".html"
-                    ) as tmp_file:
-                        tmp_file.write(content.encode("utf-8"))
-                        html_path = tmp_file.name
-
-                    try:
-                        # Parse the HTML file to get any embedded media
-                        file_parser = FileParser()
-                        html_parsed = await file_parser.parse_async(html_path)
-
-                        # Combine sections if the HTML parser extracted additional information
-                        if len(html_parsed.sections) > 0:
-                            for i, html_section in enumerate(html_parsed.sections):
-                                # If this is the first section, merge it with our main section
-                                if i == 0:
-                                    # Update images and items from the HTML parser
-                                    section = SectionContent(
-                                        number=section.number,
-                                        text=section.text,
-                                        md=section.md,
-                                        images=html_section.images,
-                                        items=html_section.items,
-                                    )
-                                # For additional sections, add them as-is
-                                else:
-                                    section = section + html_section
-                    finally:
-                        # Clean up the temporary HTML file
-                        if os.path.exists(html_path):
-                            os.unlink(html_path)
-
-                    # Return the parsed document
-                    return ParsedDocument(
-                        name=title or Path(urlparse(url).path).name or "webpage",
-                        sections=[section],
-                    )
+                    # Combine sections if the HTML parser extracted additional information
+                    if len(html_parsed.sections) > 0:
+                        for i, html_section in enumerate(html_parsed.sections):
+                            # If this is the first section, merge it with our main section
+                            if i == 0:
+                                # Update images and items from the HTML parser
+                                section = SectionContent(
+                                    number=section.number,
+                                    text=section.text,
+                                    md=section.md,
+                                    images=html_section.images,
+                                    items=html_section.items,
+                                )
+                            # For additional sections, add them as-is
+                            else:
+                                section = section + html_section
                 finally:
-                    # Close the browser
-                    await browser.close()
-        except ImportError:
-            # Fallback in case Playwright is not available
-            return ParsedDocument(
-                name=Path(urlparse(url).path).name or "webpage",
-                sections=[
-                    SectionContent(
-                        number=1,
-                        text=f"Unable to parse URL: {url}. Playwright is not installed.",
-                        md=f"# URL: {url}\n\nUnable to parse this URL. Playwright is not installed.",
-                    )
-                ],
-            )
+                    # Clean up the temporary HTML file
+                    if os.path.exists(html_path):
+                        os.unlink(html_path)
+
+                # Return the parsed document
+                return ParsedDocument(
+                    name=title or Path(urlparse(url).path).name or "webpage",
+                    sections=[section],
+                )
+            finally:
+                # Close the browser
+                await browser.close()

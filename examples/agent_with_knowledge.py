@@ -14,6 +14,7 @@ agent = Agent(
         # URLs as strings
         "https://monowave.store/",
     ],
+    debug=True,
 )
 
 agent.run("Que tipos de produtos tem a monowave?")

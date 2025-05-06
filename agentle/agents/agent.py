@@ -694,13 +694,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 weather = result.parsed.weather
             ```
         """
-        _logger = (
-            Maybe(logger) if self.debug else Maybe(None)
+        _logger = Maybe(logger if self.debug else None)
+
+        _logger.bind_optional(
+            lambda log: log.info("Starting agent run with input type: %s", type(input))
         )
 
         static_knowledge_prompt: str | None = None
         # Process static knowledge if any exists
         if self.static_knowledge:
+            _logger.bind_optional(lambda log: log.debug("Processing static knowledge"))
             knowledge_contents: list[str] = []
             for knowledge_item in self.static_knowledge:
                 # Convert string to StaticKnowledge with NO_CACHE
@@ -717,6 +720,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
                 # Check if caching is enabled
                 if knowledge_item.cache is not NO_CACHE:
+                    _logger.bind_optional(
+                        lambda log: log.debug("Using cache for knowledge item")
+                    )
                     try:
                         # Import aiocache only when needed
                         from aiocache import cached
@@ -747,6 +753,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 # If no cached content (either cache not enabled or cache miss), parse directly
                 if parsed_content is None:
                     if knowledge_item.is_url():
+                        _logger.bind_optional(
+                            lambda log: log.debug("Parsing URL: %s", content_to_parse)
+                        )
                         try:
                             parsed_content = await parser.parse_async(content_to_parse)
                             knowledge_contents.append(
@@ -755,11 +764,17 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         except ValueError:
                             knowledge_contents.append(f"## URL: {content_to_parse}")
                     elif knowledge_item.is_file_path():
+                        _logger.bind_optional(
+                            lambda log: log.debug("Parsing file: %s", content_to_parse)
+                        )
                         parsed_content = await parser.parse_async(content_to_parse)
                         knowledge_contents.append(
                             f"## Document: {parsed_content.name}\n\n{parsed_content.sections[0].text}"
                         )
                     else:  # Raw text
+                        _logger.bind_optional(
+                            lambda log: log.debug("Using raw text knowledge")
+                        )
                         knowledge_contents.append(
                             f"## Information:\n\n{content_to_parse}"
                         )
@@ -788,21 +803,43 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         context: Context = self._convert_input_to_context(
             input, instructions=instructions
         )
+        _logger.bind_optional(
+            lambda log: log.debug(
+                "Converted input to context with %d messages", len(context.messages)
+            )
+        )
 
         generation_provider: GenerationProvider = (
             self.generation_provider
             if isinstance(self.generation_provider, GenerationProvider)
             else self.generation_provider()
         )
+        _logger.bind_optional(
+            lambda log: log.debug(
+                "Using generation provider: %s", type(generation_provider).__name__
+            )
+        )
 
         mcp_tools: MutableSequence[MCPTool] = []
         if bool(self.mcp_servers):
+            _logger.bind_optional(
+                lambda log: log.debug("Getting tools from MCP servers")
+            )
             for server in self.mcp_servers:
                 tools = await server.list_tools()
                 mcp_tools.extend(tools)
+            _logger.bind_optional(
+                lambda log: log.debug("Got %d tools from MCP servers", len(mcp_tools))
+            )
 
         agent_has_tools = self.has_tools() or len(mcp_tools) > 0
+        _logger.bind_optional(
+            lambda log: log.debug("Agent has tools: %s", agent_has_tools)
+        )
         if not agent_has_tools:
+            _logger.bind_optional(
+                lambda log: log.debug("No tools available, generating direct response")
+            )
             generation: Generation[
                 T_Schema
             ] = await generation_provider.create_generation_async(
@@ -812,6 +849,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 generation_config=self.config.generationConfig
                 if trace_params is None
                 else self.config.generationConfig.clone(new_trace_params=trace_params),
+            )
+            _logger.bind_optional(
+                lambda log: log.debug(
+                    "Generated response with %d tokens", generation.usage.total_tokens
+                )
             )
 
             return AgentRunOutput(
@@ -827,6 +869,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         ] + [
             Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
         ]
+        _logger.bind_optional(
+            lambda log: log.debug("Using %d tools in total", len(all_tools))
+        )
 
         available_tools: MutableMapping[str, Tool[Any]] = {
             tool.name: tool for tool in all_tools
@@ -835,7 +880,15 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         state = RunState[T_Schema].init_state()
         # Convert all tools in the array to Tool objects
         called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]] = {}
+
         while state.iteration < self.config.maxIterations:
+            _logger.bind_optional(
+                lambda log: log.info(
+                    "Starting iteration %d of %d",
+                    state.iteration + 1,
+                    self.config.maxIterations,
+                )
+            )
             # Remove the filtering of tools that have already been called
             # since we want to allow calling the same tool multiple times
 
@@ -862,6 +915,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
             # We no longer decide if there are no more tools since we allow repeated tool calls
             # Instead, we'll rely on the agent to stop calling tools when it has all needed information
+            _logger.bind_optional(
+                lambda log: log.debug("Generating tool call response")
+            )
             tool_call_generation = await generation_provider.create_generation_async(
                 model=self.model,
                 messages=MessageSequence(context.messages)
@@ -870,35 +926,71 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 generation_config=self.config.generationConfig,
                 tools=all_tools,  # Use all tools in every iteration
             )
+            _logger.bind_optional(
+                lambda log: log.debug(
+                    "Tool call generation completed with %d tool calls",
+                    tool_call_generation.tool_calls_amount(),
+                )
+            )
 
             agent_didnt_call_any_tool = tool_call_generation.tool_calls_amount() == 0
             if agent_didnt_call_any_tool:
+                _logger.bind_optional(
+                    lambda log: log.info(
+                        "Agent didn't call any tool, generating final response"
+                    )
+                )
                 # Only make another call if we need structured output or didn't get text
                 if self.response_schema is not None or not tool_call_generation.text:
+                    _logger.bind_optional(
+                        lambda log: log.debug("Generating structured response")
+                    )
                     generation = await generation_provider.create_generation_async(
                         model=self.model,
                         messages=context.messages,
                         response_schema=self.response_schema,
                         generation_config=self.config.generationConfig,
                     )
+                    _logger.bind_optional(
+                        lambda log: log.debug("Final generation complete")
+                    )
                     return self._build_agent_run_output(
                         context=context, generation=generation
                     )
 
                 # If we got text and don't need structure, use what we have
+                _logger.bind_optional(
+                    lambda log: log.debug("Using existing text response")
+                )
                 return self._build_agent_run_output(
                     generation=cast(Generation[T_Schema], tool_call_generation),
                     context=context,
                 )
 
             # Agent called one tool. We must call the tool and update the state.
+            _logger.bind_optional(
+                lambda log: log.info(
+                    "Processing %d tool calls", len(tool_call_generation.tool_calls)
+                )
+            )
 
             for tool_execution_suggestion in tool_call_generation.tool_calls:
+                _logger.bind_optional(
+                    lambda log: log.debug(
+                        "Executing tool: %s with args: %s",
+                        tool_execution_suggestion.tool_name,
+                        tool_execution_suggestion.args,
+                    )
+                )
+                tool_result = available_tools[tool_execution_suggestion.tool_name].call(
+                    **tool_execution_suggestion.args
+                )
+                _logger.bind_optional(
+                    lambda log: log.debug("Tool execution result: %s", tool_result)
+                )
                 called_tools[tool_execution_suggestion.id] = (  # here
                     tool_execution_suggestion,
-                    available_tools[tool_execution_suggestion.tool_name].call(
-                        **tool_execution_suggestion.args
-                    ),
+                    tool_result,
                 )
 
             state.update(
@@ -908,6 +1000,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 token_usage=tool_call_generation.usage,
             )
 
+        _logger.bind_optional(
+            lambda log: log.error(
+                "Max tool calls exceeded after %d iterations", self.config.maxIterations
+            )
+        )
         raise MaxToolCallsExceededError(
             f"Max tool calls exceeded after {self.config.maxIterations} iterations"
         )
