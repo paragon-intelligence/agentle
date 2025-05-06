@@ -17,4 +17,4 @@ agent = Agent(
     debug=True,
 )
 
-print(agent.run("Que tipos de produtos tem a monowave?"))
+print(agent.run("What kind of products does monowave have?"))
