@@ -82,7 +82,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
             else None
         )
 
-        def _format_tool_call_display(tool_call: ToolExecutionSuggestion) -> str:
+        def _format_tool_call_display(tool_call: ToolExecutionSuggestion) -> str:  # type: ignore
             args_str = json.dumps(tool_call.args, indent=2, default=str)
             return f"**Tool Executed:** `{tool_call.tool_name}`\n**Arguments:**\n```json\n{args_str}\n```"
 
@@ -819,9 +819,9 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                     session_knowledge_prompt_parts.append(
                         "\n\n--- SESSION-ADDED KNOWLEDGE START ---"
                     )
-                    for item in session_knowledge_items_proc:
-                        item_name = str(item.get("name", "Item"))  # type: ignore
-                        item_content = str(item.get("content", ""))  # type: ignore
+                    for item_dict in session_knowledge_items_proc:
+                        item_name = str(item_dict.get("name", "Item"))  # type: ignore
+                        item_content = str(item_dict.get("content", ""))  # type: ignore
                         session_knowledge_prompt_parts.append(
                             f"Knowledge Item: {item_name}\nContent:\n{item_content}"
                         )

@@ -6,7 +6,7 @@ structured data using a Pydantic model schema.
 """
 
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Any, List, Optional
 from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
@@ -14,7 +14,7 @@ from agentle.generations.providers.google.google_genai_generation_provider impor
 
 
 # Define a tool the agent can use
-def get_city_data(city: str) -> dict:
+def get_city_data(city: str) -> dict[str, Any]:
     """
     Get basic information about a city.
 
