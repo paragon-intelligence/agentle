@@ -1,7 +1,6 @@
 import json
 from collections.abc import Callable
-from typing import Any, Literal, cast, List, Tuple, Dict, Union, Optional, TypeVar
-import uuid
+from typing import Any, Literal, cast, List, Tuple, Dict, Union
 
 from rsb.adapters.adapter import Adapter
 
@@ -13,8 +12,6 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
 )
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.models.messages.message import Message
-from agentle.generations.models.messages.developer_message import DeveloperMessage
 
 # Define a type for session-added knowledge items for clarity
 SessionKnowledgeItem = Dict[
@@ -430,7 +427,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                     cache_text = "Cache: Disabled/Default"
                                 else:
                                     cache_text = f"Cache: {str(cache_info)}"
-                            elif isinstance(item, str):
+                            elif isinstance(item, str):  # type: ignore
                                 source_text = item
 
                             st.markdown(f"**Source {i + 1}**")
@@ -610,15 +607,15 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
 
             # Create container structure - IMPROVED STRUCTURE
             message_container = st.container()
-            
+
             # Message display area
             with message_container:
                 # Add a container for messages that doesn't use chat-messages div
                 message_area = st.empty()
-                
+
                 # Render messages using HTML instead of st.chat_message
                 current_messages_main: List[Dict[str, Any]] = st.session_state.messages
-                
+
                 if not current_messages_main:
                     # Welcome message
                     message_area.markdown(
@@ -636,26 +633,30 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                 else:
                     # Render all messages as HTML
                     messages_html = ""
-                    
-                    for msg_idx, message_data in enumerate(current_messages_main):
+
+                    for _, message_data in enumerate(current_messages_main):
                         role = str(message_data.get("role", "unknown"))
                         content = str(message_data.get("content", ""))
                         metadata: Dict[str, Any] = cast(
                             Dict[str, Any], message_data.get("metadata", {})
                         )
-                        
-                        message_class = "user-message" if role == "user" else "assistant-message"
-                        
+
+                        message_class = (
+                            "user-message" if role == "user" else "assistant-message"
+                        )
+
                         # Start message div
                         messages_html += f'<div class="message {message_class}">'
                         messages_html += '<div class="message-content">'
-                        
+
                         # Message content
-                        messages_html += f'{content}'
-                        
+                        messages_html += f"{content}"
+
                         # Handle file attachments for user messages
                         if role == "user":
-                            files_metadata: Union[List[Dict[str, Any]], None] = metadata.get("files")
+                            files_metadata: Union[List[Dict[str, Any]], None] = (
+                                metadata.get("files")
+                            )
                             if isinstance(files_metadata, list) and files_metadata:
                                 for file_info in files_metadata:
                                     file_name = str(file_info.get("name", "file"))
@@ -668,50 +669,66 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                         </div>
                                     </div>
                                     """
-                        
+
                         # Tool calls for assistant messages in dev mode
-                        if role == "assistant" and st.session_state.display_mode == "dev":
-                            tool_calls_md: Union[List[Dict[str, Any]], None] = metadata.get("tool_calls")
+                        if (
+                            role == "assistant"
+                            and st.session_state.display_mode == "dev"
+                        ):
+                            tool_calls_md: Union[List[Dict[str, Any]], None] = (
+                                metadata.get("tool_calls")
+                            )
                             if isinstance(tool_calls_md, list) and tool_calls_md:
-                                messages_html += '<div style="margin-top:0.5rem;font-size:0.85rem;">'
-                                messages_html += '<details>'
-                                messages_html += '<summary>🛠️ Tool Calls</summary>'
-                                
+                                messages_html += (
+                                    '<div style="margin-top:0.5rem;font-size:0.85rem;">'
+                                )
+                                messages_html += "<details>"
+                                messages_html += "<summary>🛠️ Tool Calls</summary>"
+
                                 for tc_data in tool_calls_md:
                                     if "tool_name" in tc_data and "args" in tc_data:
-                                        tool_name = str(tc_data.get("tool_name", "Unknown Tool"))
-                                        args_json = json.dumps(tc_data.get("args", {}), indent=2, default=str)
-                                        
+                                        tool_name = str(
+                                            tc_data.get("tool_name", "Unknown Tool")
+                                        )
+                                        args_json = json.dumps(
+                                            tc_data.get("args", {}),
+                                            indent=2,
+                                            default=str,
+                                        )
+
                                         messages_html += f'<div style="margin-top:0.5rem;"><b>Tool:</b> {tool_name}</div>'
                                         messages_html += f'<pre style="background:#f5f5f5;padding:0.5rem;border-radius:4px;font-size:0.8rem;overflow:auto;">{args_json}</pre>'
-                                        
+
                                         if "result" in tc_data:
                                             result_str = str(tc_data.get("result", ""))
-                                            messages_html += '<div><b>Result:</b></div>'
+                                            messages_html += "<div><b>Result:</b></div>"
                                             messages_html += f'<pre style="background:#f5f5f5;padding:0.5rem;border-radius:4px;font-size:0.8rem;overflow:auto;">{result_str}</pre>'
-                                
-                                messages_html += '</details>'
-                                messages_html += '</div>'
-                        
+
+                                messages_html += "</details>"
+                                messages_html += "</div>"
+
                         # Close message div
-                        messages_html += '</div></div>'
-                    
+                        messages_html += "</div></div>"
+
                     # Render all messages at once
                     message_area.markdown(messages_html, unsafe_allow_html=True)
-            
 
             # Input area with improved file upload
             st.markdown('<div class="input-area">', unsafe_allow_html=True)
             st.markdown('<div class="input-container">', unsafe_allow_html=True)
-            
+
             # File preview if a file is selected
             staged_file_info = st.session_state.uploaded_file_for_next_message
-            
+
             if staged_file_info:
                 fname = str(staged_file_info.get("name", "file"))
                 file_size = len(staged_file_info.get("data", b"")) // 1024
-                file_size_display = f"{file_size} KB" if file_size < 1024 else f"{file_size // 1024:.1f} MB"
-                
+                file_size_display = (
+                    f"{file_size} KB"
+                    if file_size < 1024
+                    else f"{file_size // 1024:.1f} MB"
+                )
+
                 col1, col2 = st.columns([0.7, 0.3])
                 with col1:
                     st.markdown(
@@ -729,28 +746,25 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                         st.rerun()
 
             # Create a proper layout for input and upload
-            input_col, upload_col = st.columns([0.9, 0.1])
-            
+            input_col, _ = st.columns([0.9, 0.1])
+
             # Text input
             with input_col:
                 user_prompt = st.chat_input(
                     "Type your message here...", key="main_chat_input"
                 )
-            
+
             # Completely redesigned file upload approach
             # Instead of using a column, place the file upload outside the main input flow
-            
+
             # Create a hidden uploader with a unique key
-            uploader_key = f"file_uploader_{len(st.session_state.messages) if isinstance(st.session_state.messages, list) else 0}"
-           
-            
+            uploader_key = f"file_uploader_{len(st.session_state.messages) if isinstance(st.session_state.messages, list) else 0}"  # type: ignore
+
             # Create the actual uploader with minimal visibility
             uploaded_file = st.file_uploader(
-                "Upload file",
-                key=uploader_key,
-                label_visibility="collapsed"
+                "Upload file", key=uploader_key, label_visibility="collapsed"
             )
-            
+
             if uploaded_file is not None:
                 # Store file data properly
                 st.session_state.uploaded_file_for_next_message = {
@@ -759,22 +773,26 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                     "mime_type": uploaded_file.type or "application/octet-stream",
                 }
                 st.rerun()
-            
-            st.markdown('</div>', unsafe_allow_html=True)  # Close input-container
-            st.markdown('</div>', unsafe_allow_html=True)  # Close input-area
+
+            st.markdown("</div>", unsafe_allow_html=True)  # Close input-container
+            st.markdown("</div>", unsafe_allow_html=True)  # Close input-area
 
             # --- Handle New User Input Processing ---
             if user_prompt:
                 new_user_message_metadata: Dict[str, Any] = {}
 
                 # Attach file if it exists
-                staged_file_to_send: Union[Dict[str, Any], None] = st.session_state.uploaded_file_for_next_message
+                staged_file_to_send: Union[Dict[str, Any], None] = (
+                    st.session_state.uploaded_file_for_next_message
+                )
                 if staged_file_to_send:
                     new_user_message_metadata["files"] = [staged_file_to_send]
                     st.session_state.uploaded_file_for_next_message = None
 
                 # Add user message to chat history
-                current_messages_processing: List[Dict[str, Any]] = st.session_state.messages
+                current_messages_processing: List[Dict[str, Any]] = (
+                    st.session_state.messages
+                )
                 current_messages_processing.append(
                     {
                         "role": "user",
@@ -794,14 +812,16 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                     original_instructions = "\n".join(agent.instructions)
 
                 session_knowledge_prompt_parts: List[str] = []
-                session_knowledge_items_proc: List[SessionKnowledgeItem] = st.session_state.session_added_knowledge
+                session_knowledge_items_proc: List[SessionKnowledgeItem] = (
+                    st.session_state.session_added_knowledge
+                )
                 if session_knowledge_items_proc:
                     session_knowledge_prompt_parts.append(
                         "\n\n--- SESSION-ADDED KNOWLEDGE START ---"
                     )
                     for item in session_knowledge_items_proc:
-                        item_name = str(item.get("name", "Item"))
-                        item_content = str(item.get("content", ""))
+                        item_name = str(item.get("name", "Item"))  # type: ignore
+                        item_content = str(item.get("content", ""))  # type: ignore
                         session_knowledge_prompt_parts.append(
                             f"Knowledge Item: {item_name}\nContent:\n{item_content}"
                         )
@@ -826,7 +846,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                 bytes, file_info_agent.get("data", b"")
                             )
                             file_mime_type_agent = str(
-                                file_info_agent.get("mime_type")
+                                file_info_agent.get("mime_type")  # type: ignore
                                 or "application/octet-stream"
                             )
                             if file_data_bytes_agent:
@@ -902,7 +922,9 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                 )
 
                         # Append assistant's response
-                        assistant_response_messages: List[Dict[str, Any]] = st.session_state.messages
+                        assistant_response_messages: List[Dict[str, Any]] = (
+                            st.session_state.messages
+                        )
                         assistant_response_messages.append(
                             {
                                 "role": "assistant",
@@ -913,7 +935,9 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                         st.session_state.messages = assistant_response_messages
 
                         # Update token usage
-                        token_usage_update_list: List[Tuple[int, int]] = st.session_state.token_usage
+                        token_usage_update_list: List[Tuple[int, int]] = (
+                            st.session_state.token_usage
+                        )
                         if hasattr(generation, "usage") and generation.usage:
                             token_usage_update_list.append(
                                 (
@@ -927,7 +951,9 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                         error_msg = f"Agent error: {str(e_agent_run_main)}"
                         st.error(error_msg)
                         # Append error message to chat
-                        error_handling_messages: List[Dict[str, Any]] = st.session_state.messages
+                        error_handling_messages: List[Dict[str, Any]] = (
+                            st.session_state.messages
+                        )
                         error_handling_messages.append(
                             {
                                 "role": "assistant",
