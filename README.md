@@ -265,112 +265,6 @@ text_io = StringIO("This is some text data from a stream")
 agent.run(text_io)  # Reads content from StringIO
 ```
 
-## 📨 Message and Part Types
-
-Agentle provides a rich messaging system that enables fine-grained control over how you communicate with agents. This is especially powerful for multimodal interactions and complex conversations:
-
-### Message Types
-
-```python
-from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.models.messages.assistant_message import AssistantMessage
-from agentle.generations.models.messages.developer_message import DeveloperMessage
-from agentle.generations.models.message_parts.text import TextPart
-
-# Create a conversation with multiple message types
-messages = [
-    # System instructions (not visible to the user)
-    DeveloperMessage(parts=[
-        TextPart(text="You are a helpful travel assistant that speaks in a friendly tone.")
-    ]),
-    
-    # User's initial message
-    UserMessage(parts=[
-        TextPart(text="I'm planning a trip to Japan in April.")
-    ]),
-    
-    # Previous assistant response in the conversation
-    AssistantMessage(parts=[
-        TextPart(text="That's a wonderful time to visit Japan! Cherry blossoms should be in bloom.")
-    ]),
-    
-    # User's follow-up question
-    UserMessage(parts=[
-        TextPart(text="What cities should I visit for the best cherry blossom viewing?")
-    ])
-]
-
-# Pass the complete conversation to the agent
-result = agent.run(messages)
-```
-
-### Part Types
-
-Each message can contain multiple parts of different types, enabling rich multimodal interactions:
-
-```python
-from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.models.message_parts.text import TextPart
-from agentle.generations.models.message_parts.file import FilePart
-from agentle.generations.tools.tool import Tool
-
-# Create a message with different part types
-message = UserMessage(
-    parts=[
-        # Text part for regular text input
-        TextPart(text="Can you analyze this image and data?"),
-        
-        # File part for image analysis (multimodal models)
-        FilePart(
-            data=open("vacation_photo.jpg", "rb").read(),
-            mime_type="image/jpeg"
-        ),
-        
-        # Tool reference to pass tool execution results
-        Tool.from_callable(get_weather).with_result(
-            args={"location": "Tokyo"},
-            result="Sunny, 23°C, Humidity: 45%"
-        )
-    ]
-)
-
-# Run the agent with the multi-part message
-result = agent.run(message)
-```
-
-### Context Object
-
-For maximum control, you can create a Context object to manage complete conversations:
-
-```python
-from agentle.agents.context import Context
-from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.models.messages.developer_message import DeveloperMessage
-from agentle.generations.models.message_parts.text import TextPart
-from agentle.agents.step import Step
-
-# Create a custom context with specific messages
-context = Context(
-    messages=[
-        DeveloperMessage(parts=[
-            TextPart(text="You are a travel planning assistant with expertise in budgeting.")
-        ]),
-        UserMessage(parts=[
-            TextPart(text="I want to plan a 7-day trip to Europe with a $3000 budget.")
-        ])
-    ],
-    # Optionally track conversation steps
-    steps=[
-        Step(type="user_input", content="Initial travel budget query")
-    ]
-)
-
-# Run the agent with the custom context
-result = agent.run(context)
-```
-
-This messaging system allows for precise control over agent interactions, enabling everything from simple queries to complex multi-turn, multimodal conversations with full context management.
-
 ## 🔄 Agent Composition
 
 ### Agent Pipelines
@@ -960,3 +854,109 @@ agent = Agent(
 This approach gives you complete flexibility to integrate any document processing system while maintaining compatibility with Agentle's knowledge integration framework.
 
 The knowledge integration system seamlessly works with the rest of Agentle's features like tool calling, structured outputs, and Agent-to-Agent communication.
+
+## 📨 Message and Part Types
+
+Agentle provides a rich messaging system that enables fine-grained control over how you communicate with agents. This is especially powerful for multimodal interactions and complex conversations:
+
+### Message Types
+
+```python
+from agentle.generations.models.messages.user_message import UserMessage
+from agentle.generations.models.messages.assistant_message import AssistantMessage
+from agentle.generations.models.messages.developer_message import DeveloperMessage
+from agentle.generations.models.message_parts.text import TextPart
+
+# Create a conversation with multiple message types
+messages = [
+    # System instructions (not visible to the user)
+    DeveloperMessage(parts=[
+        TextPart(text="You are a helpful travel assistant that speaks in a friendly tone.")
+    ]),
+    
+    # User's initial message
+    UserMessage(parts=[
+        TextPart(text="I'm planning a trip to Japan in April.")
+    ]),
+    
+    # Previous assistant response in the conversation
+    AssistantMessage(parts=[
+        TextPart(text="That's a wonderful time to visit Japan! Cherry blossoms should be in bloom.")
+    ]),
+    
+    # User's follow-up question
+    UserMessage(parts=[
+        TextPart(text="What cities should I visit for the best cherry blossom viewing?")
+    ])
+]
+
+# Pass the complete conversation to the agent
+result = agent.run(messages)
+```
+
+### Part Types
+
+Each message can contain multiple parts of different types, enabling rich multimodal interactions:
+
+```python
+from agentle.generations.models.messages.user_message import UserMessage
+from agentle.generations.models.message_parts.text import TextPart
+from agentle.generations.models.message_parts.file import FilePart
+from agentle.generations.tools.tool import Tool
+
+# Create a message with different part types
+message = UserMessage(
+    parts=[
+        # Text part for regular text input
+        TextPart(text="Can you analyze this image and data?"),
+        
+        # File part for image analysis (multimodal models)
+        FilePart(
+            data=open("vacation_photo.jpg", "rb").read(),
+            mime_type="image/jpeg"
+        ),
+        
+        # Tool reference to pass tool execution results
+        Tool.from_callable(get_weather).with_result(
+            args={"location": "Tokyo"},
+            result="Sunny, 23°C, Humidity: 45%"
+        )
+    ]
+)
+
+# Run the agent with the multi-part message
+result = agent.run(message)
+```
+
+### Context Object
+
+For maximum control, you can create a Context object to manage complete conversations:
+
+```python
+from agentle.agents.context import Context
+from agentle.generations.models.messages.user_message import UserMessage
+from agentle.generations.models.messages.developer_message import DeveloperMessage
+from agentle.generations.models.message_parts.text import TextPart
+from agentle.agents.step import Step
+
+# Create a custom context with specific messages
+context = Context(
+    messages=[
+        DeveloperMessage(parts=[
+            TextPart(text="You are a travel planning assistant with expertise in budgeting.")
+        ]),
+        UserMessage(parts=[
+            TextPart(text="I want to plan a 7-day trip to Europe with a $3000 budget.")
+        ])
+    ],
+    # Optionally track conversation steps
+    steps=[
+        Step(type="user_input", content="Initial travel budget query")
+    ]
+)
+
+# Run the agent with the custom context
+result = agent.run(context)
+```
+
+This messaging system allows for precise control over agent interactions, enabling everything from simple queries to complex multi-turn, multimodal conversations with full context management.
