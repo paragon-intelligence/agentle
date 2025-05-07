@@ -4,7 +4,10 @@ version = "v0.1.0"
 description = "..."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["mcp[cli]>=1.6.0", "rock-solid-base>=0.0.28"]
+dependencies = [
+    "mcp[cli]>=1.6.0",
+    "rock-solid-base>=0.0.28",
+]
 
 [[project.authors]]
 name = "Arthur Brenno"
@@ -21,4 +24,35 @@ packages = ["agentle"]
 packages = ["agentle"]
 
 [dependency-groups]
-dev = ["aiocache>=0.12.3", "aiofiles>=24.1.0", "aiohttp>=3.11.18", "blacksheep>=2.2.0", "cerebras-cloud-sdk>=1.29.0", "furo>=2024.8.6", "google-genai>=1.11.0", "ipykernel>=6.29.5", "langfuse>=2.60.3", "markdownify>=1.1.0", "mypy>=1.15.0", "openai>=1.75.0", "openai-agents>=0.0.11", "openpyxl>=3.1.5", "pandas>=2.2.3", "pillow>=11.2.1", "playwright>=1.52.0", "pydantic>=2.11.3", "pydantic-ai>=0.1.3", "pymupdf>=1.25.5", "pypdf>=5.4.0", "pytest>=8.3.5", "python-docx>=1.1.2", "python-dotenv>=1.1.0", "python-pptx>=1.0.2", "r2r>=3.5.14", "rarfile>=4.2", "sphinx>=8.2.3", "streamlit>=1.45.0", "uvicorn>=0.34.1"]
+dev = [
+    "aiocache>=0.12.3",
+    "aiofiles>=24.1.0",
+    "aiohttp>=3.11.18",
+    "blacksheep>=2.2.0",
+    "cerebras-cloud-sdk>=1.29.0",
+    "furo>=2024.8.6",
+    "google-genai>=1.11.0",
+    "ipykernel>=6.29.5",
+    "langfuse>=2.60.3",
+    "markdownify>=1.1.0",
+    "mypy>=1.15.0",
+    "openai>=1.77.0",
+    "openai-agents>=0.0.11",
+    "openpyxl>=3.1.5",
+    "pandas>=2.2.3",
+    "pillow>=11.2.1",
+    "playwright>=1.52.0",
+    "pydantic>=2.11.3",
+    "pydantic-ai>=0.1.3",
+    "pymupdf>=1.25.5",
+    "pypdf>=5.4.0",
+    "pytest>=8.3.5",
+    "python-docx>=1.1.2",
+    "python-dotenv>=1.1.0",
+    "python-pptx>=1.0.2",
+    "r2r>=3.5.14",
+    "rarfile>=4.2",
+    "sphinx>=8.2.3",
+    "streamlit>=1.45.0",
+    "uvicorn>=0.34.1",
+]

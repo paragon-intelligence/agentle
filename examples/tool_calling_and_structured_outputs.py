@@ -6,7 +6,7 @@ structured data using a Pydantic model schema.
 """
 
 from pydantic import BaseModel
-from typing import Any, List, Optional
+from typing import Any
 from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
@@ -61,10 +61,10 @@ class TravelRecommendation(BaseModel):
     country: str
     population: int
     local_time: str  # Agent will need to calculate this based on timezone
-    attractions: List[str]
+    attractions: list[str]
     best_time_to_visit: str
     estimated_daily_budget: float
-    safety_rating: Optional[int] = None  # 1-10 scale
+    safety_rating: int | None = None  # 1-10 scale
 
 
 # Create an agent with both tools and a structured output schema
