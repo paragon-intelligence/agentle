@@ -21,7 +21,7 @@ a consistent interface regardless of the underlying AI provider being used.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -403,7 +403,16 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         Returns:
             float: The price per million input tokens for the specified model.
         """
-        return 0.0  # TODO(arthur)
+        if not self.use_vertex_ai or estimate_tokens is None:
+            return 0.0
+
+        model_to_price_per_million: Mapping[str, float] = {"gemini-2.0-flash": 0.40}
+
+        ppm = model_to_price_per_million.get(model)
+        if ppm is None:
+            raise ValueError(f"Model {model} not found in model_to_price_per_million")
+
+        return ppm * (estimate_tokens / 1_000_000)
 
     @override
     def price_per_million_tokens_output(
@@ -419,4 +428,4 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         Returns:
             float: The price per million output tokens for the specified model.
         """
-        return 0.0  # TODO(arthur)
+        return 0.0
