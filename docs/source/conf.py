@@ -72,15 +72,5 @@ intersphinx_mapping = {
     "pandas": ("https://pandas.pydata.org/docs/", None),
 }
 
-# Search settings - disabling snowballstemmer to fix the issue
-html_search_language = "en"
-html_search_options = {"type": "default"}
-
-# Disable stemmer for search
-html_search_scorer = ""
-html_search_options = {"dict": "english"}
-
-# We'll keep the search functionality enabled
-html_use_index = True
-html_use_searchindex = True
-html_search_enabled = True
+# Disable search features that rely on snowballstemmer
+html_search_enabled = False

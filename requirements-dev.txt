@@ -1,0 +1,5 @@
+# Documentation dependencies
+sphinx>=8.2.0
+furo>=2024.8.0
+snowballstemmer>=2.2.0
+docutils>=0.21.0

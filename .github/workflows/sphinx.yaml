@@ -40,11 +40,16 @@ jobs:
 
       - name: Prepare Deployment Directory
         run: |
-          mkdir -p deploy_output
+          # Create necessary directories
+          mkdir -p deploy_output/build/html
+          
+          # Copy the logo, nojekyll, and index.html
           cp -r docs/logo.png deploy_output/
-          cp docs/index.html deploy_output/index.html 
-          cp -r docs/build/html deploy_output/build/html
           touch deploy_output/.nojekyll  # Add .nojekyll in the root
+          cp docs/index.html deploy_output/index.html
+          
+          # Copy the built documentation
+          cp -r docs/build/html/* deploy_output/build/html/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
