@@ -30,10 +30,13 @@ jobs:
       - name: Install project and dependencies
         run: |
           pip install -e .
-          pip install sphinx furo snowballstemmer
+          pip install sphinx==7.2.6 furo==2023.9.10 docutils==0.20.1 PyStemmer==2.2.0.1
 
       - name: Build Docs
-        run: make docs
+        run: |
+          cd docs
+          make html
+          touch build/html/.nojekyll
 
       - name: Prepare Deployment Directory
         run: |
