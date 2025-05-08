@@ -27,21 +27,26 @@ jobs:
       - name: Install PIP
         run: pip install --root-user-action=ignore --upgrade pip
 
-      - name: Install project dependencies for docs using pip # Use uv and dev dependencies
-        run: pip install sphinx furo
+      - name: Install project and dependencies
+        run: |
+          pip install -e .
+          pip install sphinx furo snowballstemmer
 
-      - name: Build Docs # Use your makefile to build docs
-        run: make docs # This will execute 'make docs' in your root directory
+      - name: Build Docs
+        run: make docs
 
       - name: Prepare Deployment Directory
         run: |
-          mkdir -p deploy_output/docs  # Create deploy_output and docs subdirectory in one go
-          cp docs/index.html deploy_output/index.html # Copy index.html to staging root
-          cp -r docs/build/html/* deploy_output/docs # Copy ALL Sphinx output to staging/docs
+          mkdir -p deploy_output/docs
+          cp docs/index.html deploy_output/index.html
+          cp -r docs/logo.png deploy_output/
+          cp -r docs/build/html/* deploy_output/docs
+          touch deploy_output/.nojekyll
 
-      - name: Deploy to GitHub Pages # Using peaceiris/actions-gh-pages - a popular action
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/master'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./deploy_output # Publish the staging directory
+          publish_dir: ./deploy_output
+          enable_jekyll: false
