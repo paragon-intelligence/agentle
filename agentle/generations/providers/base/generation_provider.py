@@ -265,3 +265,39 @@ class GenerationProvider(abc.ABC):
                 potentially with structured output if a response_schema was provided.
         """
         ...
+
+    @abc.abstractmethod
+    def price_per_million_tokens_input(
+        self, model: str, estimate_tokens: int | None = None
+    ) -> float:
+        """
+        Get the price per million tokens for input/prompt tokens.
+
+        Args:
+            model: The name or identifier of the language model.
+            estimate_tokens: Optional. An estimated number of tokens that might
+                be relevant for tiered pricing models where the price varies
+                based on usage volume.
+
+        Returns:
+            float: The price in USD per million input tokens.
+        """
+        ...
+
+    @abc.abstractmethod
+    def price_per_million_tokens_output(
+        self, model: str, estimate_tokens: int | None = None
+    ) -> float:
+        """
+        Get the price per million tokens for output/completion tokens.
+
+        Args:
+            model: The name or identifier of the language model.
+            estimate_tokens: Optional. An estimated number of tokens that might
+                be relevant for tiered pricing models where the price varies
+                based on usage volume.
+
+        Returns:
+            float: The price in USD per million output tokens.
+        """
+        ...

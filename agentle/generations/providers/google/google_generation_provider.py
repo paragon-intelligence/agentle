@@ -34,7 +34,6 @@ from agentle.generations.models.messages.assistant_message import AssistantMessa
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.pricing.price_retrievable import PriceRetrievable
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
@@ -70,7 +69,7 @@ type WithoutStructuredOutput = None
 logger = logging.getLogger(__name__)
 
 
-class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
+class GoogleGenerationProvider(GenerationProvider):
     """
     Provider implementation for Google's Generative AI service.
 
@@ -150,7 +149,8 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
         self.message_adapter = message_adapter or MessageToGoogleContentAdapter()
         self.function_calling_config = function_calling_config or {}
         self.tracing_manager = TracingManager(
-            tracing_client=tracing_client, provider_name=self.organization
+            tracing_client=tracing_client,
+            provider=self,
         )
 
     @property
@@ -343,6 +343,21 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
                     else None,
                 },
             }
+            
+            input_cost = self.price_per_million_tokens_input(
+                used_model, response.usage.prompt_tokens
+            ) if response.usage.prompt_tokens else 0.0
+            
+            output_cost = self.price_per_million_tokens_output(
+                used_model, response.usage.completion_tokens
+            ) if response.usage.completion_tokens else 0.0
+            
+            total_cost = input_cost + output_cost
+            
+            # Add cost information to output_data
+            output_data["usage"]["input_cost"] = input_cost
+            output_data["usage"]["output_cost"] = output_cost
+            output_data["usage"]["total_cost"] = total_cost
 
             # Add user-specified output if available
             if "output" in trace_params:
@@ -365,10 +380,17 @@ class GoogleGenerationProvider(GenerationProvider, PriceRetrievable):
             if is_final_generation:
                 final_output = {
                     "final_response": response.text,
-                    "structured_output": response.parsed
-                    if hasattr(response, "parsed")
-                    else None,
-                    "usage": output_data["usage"],
+                    "structured_output": response.parsed if hasattr(response, "parsed") else None,
+                    "usage": {
+                        "input": response.usage.prompt_tokens if response.usage else None,
+                        "output": response.usage.completion_tokens if response.usage else None,
+                        "total": response.usage.total_tokens if response.usage else None,
+                        "unit": "TOKENS",
+                        "input_cost": output_data["usage"].get("input_cost"),
+                        "output_cost": output_data["usage"].get("output_cost"),
+                        "total_cost": output_data["usage"].get("total_cost"),
+                        "currency": "USD"
+                    }
                 }
                 await self.tracing_manager.complete_trace(
                     trace_client=trace_client,

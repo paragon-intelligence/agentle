@@ -52,10 +52,11 @@ Note: To use this client, you need to set up Langfuse credentials as environment
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional, Sequence, override
+from typing import TYPE_CHECKING, Any, Optional, Sequence, override
 
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
@@ -497,9 +498,11 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         session_id: str | None = None,
         input: object | None = None,
         output: object | None = None,
-        metadata: dict[str, object] | None = None,
+        metadata: Mapping[str, object] | None = None,
         tags: Sequence[str] | None = None,
         timestamp: datetime | None = None,
+        usage_details: Mapping[str, Any] | None = None,
+        cost_details: Mapping[str, Any] | None = None,
     ) -> StatefulObservabilityClient:
         """
         End the current observation in Langfuse.
@@ -554,13 +557,21 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
                 (StatefulSpanClient, StatefulGenerationClient),
             ):
                 # For spans and generations, call end()
-                self._stateful_client.end(
-                    name=name,
-                    input=input,
-                    output=output,
-                    metadata=metadata,
-                    end_time=timestamp,
-                )
+                kwargs = {
+                    "name": name,
+                    "input": input,
+                    "output": output,
+                    "metadata": metadata,
+                    "end_time": timestamp,
+                }
+
+                # Only add usage_details and cost_details if they're provided
+                if usage_details:
+                    kwargs["usage"] = usage_details
+                if cost_details:
+                    kwargs["cost"] = cost_details
+
+                self._stateful_client.end(**kwargs)  # type: ignore
             elif isinstance(self._stateful_client, StatefulTraceClient):
                 # For traces, call update()
                 self._stateful_client.update(

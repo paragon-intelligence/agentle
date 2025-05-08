@@ -16,6 +16,7 @@ from datetime import datetime
 from typing import Any, Optional, cast
 
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
@@ -36,8 +37,9 @@ class TracingManager:
 
     def __init__(
         self,
+        *,
         tracing_client: Optional[StatefulObservabilityClient] = None,
-        provider_name: str = "unknown",
+        provider: GenerationProvider,
     ) -> None:
         """
         Initialize a new tracing manager.
@@ -47,7 +49,7 @@ class TracingManager:
             provider_name: The name of the provider using this tracing manager.
         """
         self.tracing_client = tracing_client
-        self.provider_name = provider_name
+        self.provider = provider
 
     async def setup_trace(
         self,
@@ -97,7 +99,7 @@ class TracingManager:
             else:
                 # Create new trace
                 trace_name = trace_params.get(
-                    "name", f"{self.provider_name}_{model}_conversation"
+                    "name", f"{self.provider.organization}_{model}_conversation"
                 )
 
                 trace_client = await self.tracing_client.trace(
@@ -114,7 +116,7 @@ class TracingManager:
                         },
                     ),
                     metadata={
-                        "provider": self.provider_name,
+                        "provider": self.provider.organization,
                         "model": model,
                     },
                 )
@@ -146,7 +148,7 @@ class TracingManager:
             # Create generation
             try:
                 generation_name = trace_params.get(
-                    "name", f"{self.provider_name}_{model}_generation"
+                    "name", f"{self.provider.organization}_{model}_generation"
                 )
 
                 # Extract config metadata if available
@@ -159,7 +161,7 @@ class TracingManager:
                     }
 
                 generation_client = await trace_client.model_generation(
-                    provider=self.provider_name,
+                    provider=self.provider.organization,
                     model=model,
                     input_data=input_data,
                     metadata={
@@ -199,20 +201,57 @@ class TracingManager:
         output_data: dict[str, Any],
         trace_metadata: Optional[dict[str, Any]] = None,
     ) -> None:
-        """
-        Complete a generation with success.
-
-        Args:
-            generation_client: The client for the generation to complete.
-            start_time: When the generation started.
-            output_data: The data produced by the generation.
-            trace_metadata: Additional metadata for the trace.
-        """
+        """Complete a generation with success."""
         if generation_client:
-            await generation_client.complete_with_success(
-                output=output_data,
-                start_time=start_time,
+            # Extract usage data from output_data if present
+            usage_details = None
+            cost_details = None
+
+            if "usage" in output_data:
+                usage = output_data["usage"]
+                # Format usage data according to Langfuse's expectations
+                usage_details = {
+                    "input": usage.get("input_tokens"),
+                    "output": usage.get("output_tokens"),
+                    "total": usage.get("total_tokens"),
+                    "unit": "TOKENS",
+                }
+
+                # Calculate costs if we have price information
+                # This assumes your provider has price_per_million_tokens_input/output methods
+                model = trace_metadata.get("model") if trace_metadata else None
+                if (
+                    model
+                    and hasattr(self, "provider")
+                    and hasattr(self.provider, "price_per_million_tokens_input")
+                ):
+                    input_price = self.provider.price_per_million_tokens_input(model)
+                    output_price = self.provider.price_per_million_tokens_output(model)
+
+                    input_tokens = usage.get("input_tokens", 0)
+                    output_tokens = usage.get("output_tokens", 0)
+
+                    input_cost = (input_tokens / 1_000_000) * input_price
+                    output_cost = (output_tokens / 1_000_000) * output_price
+
+                    cost_details = {
+                        "input": input_cost,
+                        "output": output_cost,
+                        "total": input_cost + output_cost,
+                        "currency": "USD",
+                    }
+
+            # Remove usage from output data to avoid duplication
+            output_data_without_usage = {
+                k: v for k, v in output_data.items() if k != "usage"
+            }
+
+            # Update generation with proper usage and cost details
+            await generation_client.end(
+                output=output_data_without_usage,
                 metadata=trace_metadata or {},
+                usage_details=usage_details,
+                cost_details=cost_details,
             )
 
     async def complete_trace(

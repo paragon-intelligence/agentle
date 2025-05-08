@@ -41,8 +41,9 @@ await trace_client.end()
 from __future__ import annotations
 
 import abc
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Sequence
+from typing import Any, Sequence
 
 
 class StatefulObservabilityClient(abc.ABC):
@@ -265,9 +266,11 @@ class StatefulObservabilityClient(abc.ABC):
         session_id: str | None = None,
         input: object | None = None,
         output: object | None = None,
-        metadata: dict[str, object] | None = None,
+        metadata: Mapping[str, object] | None = None,
         tags: Sequence[str] | None = None,
         timestamp: datetime | None = None,
+        usage_details: Mapping[str, Any] | None = None,
+        cost_details: Mapping[str, Any] | None = None,
     ) -> StatefulObservabilityClient:
         """
         End the current trace, span, or generation with optional final data.
@@ -372,6 +375,8 @@ class StatefulObservabilityClient(abc.ABC):
         output: dict[str, object],
         start_time: datetime | None = None,
         metadata: dict[str, object] | None = None,
+        usage_details: dict[str, object] | None = None,
+        cost_details: dict[str, object] | None = None,
     ) -> StatefulObservabilityClient:
         """
         End the current trace/span/generation with success status and timing.
@@ -387,14 +392,18 @@ class StatefulObservabilityClient(abc.ABC):
         complete_metadata: dict[str, object] = {"status": "success"}
 
         if start_time:
-            # Convert float to object type for dictionary
             latency_ms = (datetime.now() - start_time).total_seconds() * 1000
             complete_metadata["latency_ms"] = latency_ms
 
         if metadata:
             complete_metadata.update(metadata)
 
-        return await self.end(output=output, metadata=complete_metadata)
+        return await self.end(
+            output=output,
+            metadata=complete_metadata,
+            usage_details=usage_details,
+            cost_details=cost_details,
+        )
 
     async def complete_with_error(
         self,
