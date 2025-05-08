@@ -183,16 +183,24 @@
         /* Marquee effect for tech stack */
         @keyframes marquee {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            100% { transform: translateX(-100%); }
         }
         
         .marquee {
             white-space: nowrap;
             overflow: hidden;
+            width: 100%;
+            display: flex;
+        }
+        
+        .marquee-content, .marquee-content-clone {
+            display: flex;
+            width: 100%;
+            flex-shrink: 0;
+            padding-right: 0;
         }
         
         .marquee-content {
-            display: inline-block;
             animation: marquee 20s linear infinite;
         }
     </style>
@@ -328,7 +336,7 @@ print(response.text)</code></pre>
         <div class="py-4 bg-dark-800 border-t border-dark-700 overflow-hidden">
             <div class="marquee">
                 <div class="marquee-content">
-                    <div class="flex space-x-12 items-center px-4">
+                    <div class="flex space-x-12 items-center">
                         <span class="text-gray-400">Gemini</span>
                         <span class="text-primary-500">●</span>
                         <span class="text-gray-400">LangFuse</span>
@@ -341,6 +349,10 @@ print(response.text)</code></pre>
                         <span class="text-primary-500">●</span>
                         <span class="text-gray-400">A2A Protocol</span>
                         <span class="text-primary-500">●</span>
+                    </div>
+                </div>
+                <div class="marquee-content-clone">
+                    <div class="flex space-x-12 items-center">
                         <span class="text-gray-400">Gemini</span>
                         <span class="text-primary-500">●</span>
                         <span class="text-gray-400">LangFuse</span>
@@ -352,6 +364,7 @@ print(response.text)</code></pre>
                         <span class="text-gray-400">Pydantic</span>
                         <span class="text-primary-500">●</span>
                         <span class="text-gray-400">A2A Protocol</span>
+                        <span class="text-primary-500">●</span>
                     </div>
                 </div>
             </div>
