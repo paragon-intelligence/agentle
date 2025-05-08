@@ -1,59 +1,81 @@
 Contributing
-============
+===========
 
-We welcome contributions to Agentle! This document outlines the process for contributing to the project.
+Thank you for your interest in contributing to Agentle! This guide will help you get started.
 
 Development Setup
----------------
+----------------
 
-1. Fork the repository on GitHub
-2. Clone your fork locally
+To set up Agentle for local development:
+
+1. Clone the repository from GitHub:
+
+   .. code-block:: bash
+
+      git clone https://github.com/paragon-intelligence/agentle.git
+      cd agentle
+
+2. Create and activate a virtual environment:
+
+   .. code-block:: bash
+
+      python -m venv venv
+      source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 3. Install development dependencies:
 
    .. code-block:: bash
 
-      pip install -e ".[dev]"
-
-4. Create a branch for your feature:
-
-   .. code-block:: bash
-
-      git checkout -b feature-name
+      pip install -e ".[dev,test]"
 
 Code Standards
-------------
+-------------
 
-- We use mypy for type checking
-- Ruff for linting
-- All code should be properly typed
+Agentle uses:
+
+- Black for code formatting
+- Isort for import sorting
+- Flake8 for linting
+- Mypy for type checking
 
 Testing
-------
+-------
 
-Before submitting a pull request, make sure all tests pass:
+Tests are written using pytest. Run the test suite with:
 
 .. code-block:: bash
 
-   # Run tests command here
+   pytest tests/
+
+We encourage test-driven development for new features.
 
 Documentation
 ------------
 
-Please update the documentation when adding or modifying features.
-
-To build the documentation locally:
+Documentation is built using Sphinx:
 
 .. code-block:: bash
 
    cd docs
    make html
 
-The built documentation will be available in the `docs/build/html` directory.
+Preview the documentation by opening `build/html/index.html` in a web browser.
+
+Please document all public modules, functions, classes, and methods with docstrings following the Google style guide.
 
 Submitting Changes
-----------------
+-----------------
 
-1. Push your changes to your fork
-2. Submit a pull request to the main repository
-3. Ensure CI checks pass
-4. Update your PR based on reviewer feedback 
+1. Create a new branch for your feature or bugfix:
+
+   .. code-block:: bash
+
+      git checkout -b feature-or-fix-name
+
+2. Make your changes and commit them with clear messages.
+
+3. Push to your fork and submit a pull request.
+
+4. Ensure CI passes on your PR.
+
+Thank you for contributing!

@@ -1,15 +1,13 @@
 API Reference
 ============
 
-This section contains detailed API documentation for Agentle.
-
 .. toctree::
    :maxdepth: 2
-
+   
    agents
+   generations
+   prompts
    rag
+   mcp
    stt
    tts
-   prompts
-   mcp
-   generations 

@@ -1,7 +1,10 @@
 Agents API
-=========
+==========
 
-.. automodule:: agentle.agents
-   :members:
-   :undoc-members:
-   :show-inheritance: 
+.. autosummary::
+   :toctree: generated
+   
+   agentle.agents
+   agentle.agents.agent
+   agentle.agents.agent_pipeline
+   agentle.agents.agent_team

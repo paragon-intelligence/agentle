@@ -1,7 +1,10 @@
 Generations API
-==============
+===============
 
-.. automodule:: agentle.generations
-   :members:
-   :undoc-members:
-   :show-inheritance: 
+.. autosummary::
+   :toctree: generated
+   
+   agentle.generations
+   agentle.generations.providers
+   agentle.generations.providers.google
+   agentle.generations.providers.openai

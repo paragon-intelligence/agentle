@@ -30,7 +30,7 @@ jobs:
       - name: Install project dependencies for docs using pip
         run: |
           pip install -e .
-          pip install sphinx furo
+          pip install sphinx furo snowballstemmer
 
       - name: Build Sphinx Documentation
         run: |
