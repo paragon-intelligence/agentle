@@ -19,6 +19,8 @@ release = "0.0.13"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
+language = "en"  # Explicitly set the language
+
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
