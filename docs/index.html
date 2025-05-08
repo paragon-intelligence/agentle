@@ -181,28 +181,8 @@
         }
 
         /* Marquee effect for tech stack */
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-        
-        .marquee {
-            white-space: nowrap;
-            overflow: hidden;
-            width: 100%;
-            display: flex;
-        }
-        
-        .marquee-content, .marquee-content-clone {
-            display: flex;
-            width: 100%;
-            flex-shrink: 0;
-            padding-right: 0;
-        }
-        
-        .marquee-content {
-            animation: marquee 20s linear infinite;
-        }
+    <!-- Remove previous marquee CSS -->
+    /* Other styles remain unchanged */
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -318,7 +298,7 @@ agent = Agent(
     name="Quick Start Agent",
     generation_provider=GoogleGenaiGenerationProvider(),
     model="gemini-2.0-flash",
-    instructions="You are a helpful assistant."
+    instructions="You are a helpful assistant who provides concise, accurate information."
 )
 
 # Run the agent
@@ -333,39 +313,21 @@ print(response.text)</code></pre>
         </div>
 
         <!-- Technology Stack Marquee -->
-        <div class="py-4 bg-dark-800 border-t border-dark-700 overflow-hidden">
-            <div class="marquee">
-                <div class="marquee-content">
-                    <div class="flex space-x-12 items-center">
-                        <span class="text-gray-400">Gemini</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">LangFuse</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">BlackSheep</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">Streamlit</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">Pydantic</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">A2A Protocol</span>
-                        <span class="text-primary-500">●</span>
-                    </div>
-                </div>
-                <div class="marquee-content-clone">
-                    <div class="flex space-x-12 items-center">
-                        <span class="text-gray-400">Gemini</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">LangFuse</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">BlackSheep</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">Streamlit</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">Pydantic</span>
-                        <span class="text-primary-500">●</span>
-                        <span class="text-gray-400">A2A Protocol</span>
-                        <span class="text-primary-500">●</span>
-                    </div>
+        <div class="py-4 bg-dark-800 border-t border-dark-700">
+            <div id="marquee-container" class="relative overflow-hidden w-full" style="height: 36px;">
+                <div id="marquee-content" class="whitespace-nowrap absolute top-0 flex items-center space-x-12 px-4">
+                    <span class="text-gray-400">Gemini</span>
+                    <span class="text-primary-500">●</span>
+                    <span class="text-gray-400">LangFuse</span>
+                    <span class="text-primary-500">●</span>
+                    <span class="text-gray-400">BlackSheep</span>
+                    <span class="text-primary-500">●</span>
+                    <span class="text-gray-400">Streamlit</span>
+                    <span class="text-primary-500">●</span>
+                    <span class="text-gray-400">Pydantic</span>
+                    <span class="text-primary-500">●</span>
+                    <span class="text-gray-400">A2A Protocol</span>
+                    <span class="text-primary-500">●</span>
                 </div>
             </div>
         </div>
@@ -879,6 +841,45 @@ result = pipeline.run("Research the impact of artificial intelligence on healthc
             duration: 800,
             easing: 'ease-out-cubic',
             delay: 100,
+        });
+
+        // Marquee animation with JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('marquee-container');
+            const content = document.getElementById('marquee-content');
+            
+            // Clone the content multiple times to ensure it fills the view
+            const contentWidth = content.offsetWidth;
+            const requiredClones = Math.ceil(window.innerWidth / contentWidth) + 1;
+            
+            for (let i = 0; i < requiredClones; i++) {
+                const clone = content.cloneNode(true);
+                clone.style.left = `${contentWidth * (i + 1)}px`;
+                container.appendChild(clone);
+            }
+            
+            // Animation variables
+            let pixelsPerSecond = 50; // Adjust speed here
+            let position = 0;
+            
+            function animate() {
+                position -= 1;
+                
+                // Reset position when first element is fully outside the view
+                if (position <= -contentWidth) {
+                    position = 0;
+                }
+                
+                // Move all elements
+                const elements = container.querySelectorAll('[id^="marquee-content"]');
+                elements.forEach((el, index) => {
+                    el.style.transform = `translateX(${position}px)`;
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
         });
     </script>
 </body>
