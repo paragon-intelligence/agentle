@@ -267,4 +267,4 @@ Web API with BlackSheep
        import uvicorn
        uvicorn.run(app, host="127.0.0.1", port=8000)
 
-For more examples, check the GitHub repository at https://github.com/arthurbrenno/agentle. 
+For more examples, check the GitHub repository at https://github.com/paragon-intelligence/agentle. 

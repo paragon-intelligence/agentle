@@ -71,3 +71,13 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
 }
+
+# Search settings - to help resolve the snowballstemmer issue
+html_search_language = "en"
+html_search_options = {"type": "default"}
+html_search_scorer = "scorer.js"
+
+# As a fallback, disable search completely to bypass the stemmer issue
+html_use_index = False
+html_use_searchindex = False
+html_search_enabled = False

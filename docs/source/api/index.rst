@@ -10,7 +10,6 @@ This section contains detailed API documentation for Agentle.
    rag
    stt
    tts
-   guardrails
    prompts
    mcp
    generations 

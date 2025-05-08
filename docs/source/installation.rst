@@ -22,7 +22,7 @@ To install from source:
 
 .. code-block:: bash
 
-   git clone https://github.com/arthurbrenno/agentle.git
+   git clone https://github.com/paragon-intelligence/agentle.git
    cd agentle
    pip install -e .
 
