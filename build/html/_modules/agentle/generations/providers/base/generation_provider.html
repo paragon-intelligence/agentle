@@ -554,6 +554,48 @@
 <span class="sd">                potentially with structured output if a response_schema was provided.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="GenerationProvider.price_per_million_tokens_input">
+<a class="viewcode-back" href="../../../../../api/generated/agentle.generations.providers.html#agentle.generations.providers.GenerationProvider.price_per_million_tokens_input">[docs]</a>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">price_per_million_tokens_input</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">estimate_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the price per million tokens for input/prompt tokens.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model: The name or identifier of the language model.</span>
+<span class="sd">            estimate_tokens: Optional. An estimated number of tokens that might</span>
+<span class="sd">                be relevant for tiered pricing models where the price varies</span>
+<span class="sd">                based on usage volume.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The price in USD per million input tokens.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="GenerationProvider.price_per_million_tokens_output">
+<a class="viewcode-back" href="../../../../../api/generated/agentle.generations.providers.html#agentle.generations.providers.GenerationProvider.price_per_million_tokens_output">[docs]</a>
+    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">price_per_million_tokens_output</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">estimate_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the price per million tokens for output/completion tokens.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model: The name or identifier of the language model.</span>
+<span class="sd">            estimate_tokens: Optional. An estimated number of tokens that might</span>
+<span class="sd">                be relevant for tiered pricing models where the price varies</span>
+<span class="sd">                based on usage volume.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The price in USD per million output tokens.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
 </div>
 
 </pre></div>

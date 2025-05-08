@@ -474,6 +474,50 @@ organization (e.g., “openai”, “google”, “anthropic”).</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.generations.providers.GenerationProvider.price_per_million_tokens_input">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">price_per_million_tokens_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimate_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/agentle/generations/providers/base/generation_provider.html#GenerationProvider.price_per_million_tokens_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.generations.providers.GenerationProvider.price_per_million_tokens_input" title="Link to this definition">¶</a></dt>
+<dd><p>Get the price per million tokens for input/prompt tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name or identifier of the language model.</p></li>
+<li><p><strong>estimate_tokens</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Optional. An estimated number of tokens that might
+be relevant for tiered pricing models where the price varies
+based on usage volume.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The price in USD per million input tokens.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.generations.providers.GenerationProvider.price_per_million_tokens_output">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">price_per_million_tokens_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimate_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/agentle/generations/providers/base/generation_provider.html#GenerationProvider.price_per_million_tokens_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.generations.providers.GenerationProvider.price_per_million_tokens_output" title="Link to this definition">¶</a></dt>
+<dd><p>Get the price per million tokens for output/completion tokens.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name or identifier of the language model.</p></li>
+<li><p><strong>estimate_tokens</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Optional. An estimated number of tokens that might
+be relevant for tiered pricing models where the price varies
+based on usage volume.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The price in USD per million output tokens.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id1">
 <span class="sig-name descname"><span class="pre">tracing_client</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">MaybeProtocol</span><span class="p"><span class="pre">[</span></span><span class="pre">StatefulObservabilityClient</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
@@ -549,6 +593,8 @@ organization (e.g., “openai”, “google”, “anthropic”).</p>
 <li><a class="reference internal" href="#agentle.generations.providers.GenerationProvider.create_generation_by_prompt_async"><code class="docutils literal notranslate"><span class="pre">GenerationProvider.create_generation_by_prompt_async()</span></code></a></li>
 <li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">GenerationProvider.default_model</span></code></a></li>
 <li><a class="reference internal" href="#agentle.generations.providers.GenerationProvider.organization"><code class="docutils literal notranslate"><span class="pre">GenerationProvider.organization</span></code></a></li>
+<li><a class="reference internal" href="#agentle.generations.providers.GenerationProvider.price_per_million_tokens_input"><code class="docutils literal notranslate"><span class="pre">GenerationProvider.price_per_million_tokens_input()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.generations.providers.GenerationProvider.price_per_million_tokens_output"><code class="docutils literal notranslate"><span class="pre">GenerationProvider.price_per_million_tokens_output()</span></code></a></li>
 <li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">GenerationProvider.tracing_client</span></code></a></li>
 </ul>
 </li>
