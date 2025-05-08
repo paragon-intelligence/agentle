@@ -53,6 +53,16 @@ html_theme_options = {
 html_static_path = ["_static"]
 html_title = f"{project} {release} Documentation"
 
+# Copy the logo to the build directory
+html_logo = "../logo.png"
+html_favicon = "../logo.png"
+
+# Ensure the right output paths for GitHub Pages
+html_baseurl = "https://paragon-intelligence.github.io/agentle/"
+
+# Disable use of file modification times in output
+html_last_updated_fmt = ""
+
 # Intersphinx mapping
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
