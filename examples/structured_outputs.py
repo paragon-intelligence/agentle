@@ -5,6 +5,7 @@ This example demonstrates how to create an agent that returns structured data
 using a Pydantic model as a response schema.
 """
 
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -12,6 +13,11 @@ from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
 )
+from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
+
+load_dotenv()
+
+observability_client = LangfuseObservabilityClient()
 
 
 # Define a structured response schema using Pydantic
@@ -26,7 +32,9 @@ class WeatherForecast(BaseModel):
 # Create an agent with the response schema
 structured_agent = Agent(
     name="Weather Agent",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=GoogleGenaiGenerationProvider(
+        tracing_client=observability_client
+    ),
     model="gemini-2.0-flash",
     instructions="You are a weather forecasting assistant. When asked about weather, provide accurate forecasts.",
     response_schema=WeatherForecast,  # This defines the expected response structure
