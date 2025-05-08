@@ -1,0 +1,833 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+        <link rel="canonical" href="https://paragon-intelligence.github.io/agentle/_modules/agentle/agents/agent_team.html" />
+
+    <link rel="shortcut icon" href="../../../_static/logo.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>agentle.agents.agent_team - Agentle 0.0.13 Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">Agentle 0.0.13 Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/logo.png" alt="Logo"/>
+  </div>
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../../../_static/logo-light.svg" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../../../_static/logo-dark.svg" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Agentle 0.0.13 Documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/agents.html">Agents API</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Agents API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.agents.html">agentle.agents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.agents.agent.html">agentle.agents.agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.agents.agent_pipeline.html">agentle.agents.agent_pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.agents.agent_team.html">agentle.agents.agent_team</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/generations.html">Generations API</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Generations API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.generations.html">agentle.generations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.generations.providers.html">agentle.generations.providers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.generations.providers.google.html">agentle.generations.providers.google</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.generations.providers.openai.html">agentle.generations.providers.openai</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/prompts.html">Prompts API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/rag.html">RAG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/mcp.html">MCP API</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/stt.html">Speech-to-Text API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Speech-to-Text API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.stt.html">agentle.stt</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/tts.html">Text-to-Speech API</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Text-to-Speech API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/generated/agentle.tts.html">agentle.tts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for agentle.agents.agent_team</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Agent Team Module for the Agentle Framework</span>
+
+<span class="sd">This module provides functionality for creating dynamic teams of AI agents managed by an orchestrator.</span>
+<span class="sd">AgentTeam implements a flexible approach to multi-agent systems where agents are selected at runtime</span>
+<span class="sd">based on the specific requirements of each task and subtask.</span>
+
+<span class="sd">Unlike the AgentPipeline which follows a fixed sequence of agents, AgentTeam uses an orchestrator</span>
+<span class="sd">agent to dynamically analyze tasks and select the most appropriate agent to handle each step.</span>
+<span class="sd">This provides greater flexibility and adaptability, particularly for complex workflows where:</span>
+
+<span class="sd">1. The optimal sequence of agents depends on the specific task</span>
+<span class="sd">2. Different agents may be needed depending on the content of previous responses</span>
+<span class="sd">3. The same agent may need to be invoked multiple times for different aspects of a task</span>
+<span class="sd">4. The task completion criteria can only be determined at runtime</span>
+
+<span class="sd">Example:</span>
+<span class="sd">```python</span>
+<span class="sd">from agentle.agents.agent import Agent</span>
+<span class="sd">from agentle.agents.agent_team import AgentTeam</span>
+<span class="sd">from agentle.agents.agent_config import AgentConfig</span>
+<span class="sd">from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider</span>
+
+<span class="sd"># Create provider for all agents</span>
+<span class="sd">provider = GoogleGenaiGenerationProvider()</span>
+
+<span class="sd"># Create specialized agents</span>
+<span class="sd">research_agent = Agent(</span>
+<span class="sd">    name=&quot;Research Agent&quot;,</span>
+<span class="sd">    description=&quot;Specialized in finding information and data on various topics&quot;,</span>
+<span class="sd">    generation_provider=provider,</span>
+<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    instructions=&quot;You are a research agent focused on gathering accurate information.&quot;,</span>
+<span class="sd">)</span>
+
+<span class="sd">coding_agent = Agent(</span>
+<span class="sd">    name=&quot;Coding Agent&quot;,</span>
+<span class="sd">    description=&quot;Specialized in writing and debugging code in various languages&quot;,</span>
+<span class="sd">    generation_provider=provider,</span>
+<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    instructions=&quot;You are a coding expert that writes clean, efficient code.&quot;,</span>
+<span class="sd">)</span>
+
+<span class="sd">writing_agent = Agent(</span>
+<span class="sd">    name=&quot;Writing Agent&quot;,</span>
+<span class="sd">    description=&quot;Specialized in creating clear and engaging written content&quot;,</span>
+<span class="sd">    generation_provider=provider,</span>
+<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    instructions=&quot;You are a writing expert that creates compelling content.&quot;,</span>
+<span class="sd">)</span>
+
+<span class="sd"># Create a team with these agents and an orchestrator</span>
+<span class="sd">team = AgentTeam(</span>
+<span class="sd">    agents=[research_agent, coding_agent, writing_agent],</span>
+<span class="sd">    orchestrator_provider=provider,</span>
+<span class="sd">    orchestrator_model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    team_config=AgentConfig(maxIterations=10)</span>
+<span class="sd">)</span>
+
+<span class="sd"># Run the team with a task</span>
+<span class="sd">result = team.run(&quot;Research the latest advancements in quantum computing and summarize them.&quot;)</span>
+<span class="sd">print(result.generation.text)</span>
+<span class="sd">```</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">MutableSequence</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Self</span><span class="p">,</span> <span class="n">cast</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">rsb.coroutines.run_sync</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_sync</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rsb.models.base_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rsb.models.field</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rsb.models.model_validator</span><span class="w"> </span><span class="kn">import</span> <span class="n">model_validator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_input</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentInput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_run_output</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentRunOutput</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.base.generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenerationProvider</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GoogleGenaiGenerationProvider</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_OrchestratorOutput</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Structured output for the orchestrator agent to determine task routing.</span>
+
+<span class="sd">    This model defines the format of responses expected from the orchestrator agent.</span>
+<span class="sd">    The orchestrator analyzes tasks and determines: (1) which agent should handle</span>
+<span class="sd">    the current task step, and (2) whether the overall task is complete.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        agent_id: The str of the chosen agent that should handle the current task step.</span>
+<span class="sd">        task_done: A boolean flag indicating whether the overall task is complete.</span>
+<span class="sd">                  When True, the team execution will terminate and return the final result.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">agent_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">task_done</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_agent_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;agent_id must be a non-empty string&quot;</span><span class="p">)</span>
+
+        <span class="c1"># check if it&#39;s valid UUID</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">UUID</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;agent_id must be a valid UUID&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<div class="viewcode-block" id="AgentTeam">
+<a class="viewcode-back" href="../../../api/generated/agentle.agents.agent_team.html#agentle.agents.agent_team.AgentTeam">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AgentTeam</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A dynamic team of AI agents managed by an orchestrator agent.</span>
+
+<span class="sd">    AgentTeam implements an approach to multi-agent systems where agents are selected</span>
+<span class="sd">    dynamically at runtime by an orchestrator. The orchestrator analyzes each task or</span>
+<span class="sd">    subtask and determines which specialized agent is best suited to handle it.</span>
+
+<span class="sd">    This provides greater flexibility than sequential pipelines, as the exact sequence</span>
+<span class="sd">    of agent invocations can be determined based on the specifics of the task and the</span>
+<span class="sd">    content of intermediate responses.</span>
+
+<span class="sd">    Key features:</span>
+<span class="sd">    - Dynamic agent selection: The orchestrator chooses the most appropriate agent for each step</span>
+<span class="sd">    - Adaptable workflows: The sequence of agents is determined at runtime based on the task</span>
+<span class="sd">    - Conversation history: Context is maintained throughout the task execution</span>
+<span class="sd">    - Configurable execution limits: Prevents infinite loops with clear termination criteria</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        agents: A sequence of specialized Agent instances available to the team.</span>
+<span class="sd">        orchestrator_provider: The generation provider used by the orchestrator agent.</span>
+<span class="sd">        orchestrator_model: The model to be used by the orchestrator agent.</span>
+<span class="sd">        team_config: Configuration options for the team, including iteration limits.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        ```python</span>
+<span class="sd">        # Create a basic team with several specialized agents</span>
+<span class="sd">        provider = GoogleGenaiGenerationProvider()</span>
+
+<span class="sd">        math_agent = Agent(</span>
+<span class="sd">            name=&quot;Math Agent&quot;,</span>
+<span class="sd">            description=&quot;Expert in solving mathematical problems&quot;,</span>
+<span class="sd">            generation_provider=provider,</span>
+<span class="sd">            model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">            instructions=&quot;You are a mathematics expert.&quot;</span>
+<span class="sd">        )</span>
+
+<span class="sd">        language_agent = Agent(</span>
+<span class="sd">            name=&quot;Language Agent&quot;,</span>
+<span class="sd">            description=&quot;Expert in language translation and linguistics&quot;,</span>
+<span class="sd">            generation_provider=provider,</span>
+<span class="sd">            model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">            instructions=&quot;You are a language and translation expert.&quot;</span>
+<span class="sd">        )</span>
+
+<span class="sd">        team = AgentTeam(</span>
+<span class="sd">            agents=[math_agent, language_agent],</span>
+<span class="sd">            orchestrator_provider=provider,</span>
+<span class="sd">            orchestrator_model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Run the team on a task</span>
+<span class="sd">        result = team.run(&quot;Translate the phrase &#39;The square root of 144 is 12&#39; into French&quot;)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Creating a team with custom configuration:</span>
+<span class="sd">        ```python</span>
+<span class="sd">        # Create a team with custom configuration</span>
+<span class="sd">        custom_team = AgentTeam(</span>
+<span class="sd">            agents=[agent1, agent2, agent3],</span>
+<span class="sd">            orchestrator_provider=provider,</span>
+<span class="sd">            orchestrator_model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">            team_config=AgentConfig(</span>
+<span class="sd">                maxIterations=15,  # Allow more iterations than default</span>
+<span class="sd">                maxToolCalls=20    # Allow more tool calls if agents use tools</span>
+<span class="sd">            )</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Run the team with a complex multi-step task</span>
+<span class="sd">        result = custom_team.run(&quot;Research, analyze, and summarize recent developments in AI safety&quot;)</span>
+<span class="sd">        ```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">agents</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>  <span class="c1"># This is a required field</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A sequence of specialized Agent instances available to the team.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">orchestrator_provider</span><span class="p">:</span> <span class="n">GenerationProvider</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The generation provider used by the orchestrator agent.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">orchestrator_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>  <span class="c1"># This is a required field</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The model to be used by the orchestrator agent.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">team_config</span><span class="p">:</span> <span class="n">AgentConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">AgentConfig</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Configuration options for the team, including iteration limits.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="AgentTeam.Config">
+<a class="viewcode-back" href="../../../api/generated/agentle.agents.agent_team.html#agentle.agents.agent_team.AgentTeam.Config">[docs]</a>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Config</span><span class="p">:</span>
+        <span class="n">arbitrary_types_allowed</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="AgentTeam.extend">
+<a class="viewcode-back" href="../../../api/generated/agentle.agents.agent_team.html#agentle.agents.agent_team.AgentTeam.extend">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">AgentTeam</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentTeam</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extend the current team with another Agent or AgentTeam.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">other</span></div>
+
+
+<div class="viewcode-block" id="AgentTeam.run">
+<a class="viewcode-back" href="../../../api/generated/agentle.agents.agent_team.html#agentle.agents.agent_team.AgentTeam.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">AgentInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the agent team synchronously with the provided input.</span>
+
+<span class="sd">        This method is a synchronous wrapper around run_async that allows</span>
+<span class="sd">        the team to be used in synchronous contexts.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input: The initial input to the team.</span>
+<span class="sd">                  Can be a string, UserMessage, Context, or any supported AgentInput type.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentRunOutput: The final output from the team after task completion.</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            ```python</span>
+<span class="sd">            team = AgentTeam(</span>
+<span class="sd">                agents=[research_agent, writing_agent, code_agent],</span>
+<span class="sd">                orchestrator_provider=provider,</span>
+<span class="sd">                orchestrator_model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # Simple string input</span>
+<span class="sd">            result = team.run(&quot;Create a Python function to calculate the Fibonacci sequence&quot;)</span>
+
+<span class="sd">            # Access the result</span>
+<span class="sd">            final_text = result.generation.text</span>
+<span class="sd">            ```</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">run_sync</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_async</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AgentTeam.run_async">
+<a class="viewcode-back" href="../../../api/generated/agentle.agents.agent_team.html#agentle.agents.agent_team.AgentTeam.run_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">AgentInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Dynamically executes a team of agents guided by an orchestrator.</span>
+
+<span class="sd">        This method creates an orchestrator agent that analyzes each task step and</span>
+<span class="sd">        selects the most appropriate agent to handle it. The process continues iteratively</span>
+<span class="sd">        until the orchestrator determines the task is complete or the maximum number of</span>
+<span class="sd">        iterations is reached.</span>
+
+<span class="sd">        Process flow:</span>
+<span class="sd">        1. Orchestrator analyzes the current input/task</span>
+<span class="sd">        2. Orchestrator selects the most appropriate agent and indicates if task is complete</span>
+<span class="sd">        3. If task is complete, return the latest result</span>
+<span class="sd">        4. Otherwise, the selected agent processes the input</span>
+<span class="sd">        5. The agent&#39;s output becomes the next input</span>
+<span class="sd">        6. The process repeats until completion or max iterations</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input: The initial input to the team</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentRunOutput: The final result when the task is complete</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the team contains no agents</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            ```python</span>
+<span class="sd">            # Using the team with async/await</span>
+<span class="sd">            import asyncio</span>
+
+<span class="sd">            async def process_complex_task():</span>
+<span class="sd">                team = AgentTeam(</span>
+<span class="sd">                    agents=[agent1, agent2, agent3],</span>
+<span class="sd">                    orchestrator_provider=provider,</span>
+<span class="sd">                    orchestrator_model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">                )</span>
+
+<span class="sd">                result = await team.run_async(&quot;Perform this complex multi-step task&quot;)</span>
+<span class="sd">                return result.generation.text</span>
+
+<span class="sd">            final_result = asyncio.run(process_complex_task())</span>
+<span class="sd">            ```</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            - The team_config.maxIterations parameter controls the maximum number of</span>
+<span class="sd">              agent invocations to prevent infinite loops.</span>
+<span class="sd">            - Conversation history is maintained to provide context to the orchestrator.</span>
+<span class="sd">            - The orchestrator has complete information about all available agents.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;AgentTeam must have at least one agent&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Build a detailed description of available agents for the orchestrator</span>
+        <span class="n">agent_descriptions</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="c1"># Create a description of each agent&#39;s capabilities</span>
+            <span class="n">skills_desc</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">skill</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">skill</span> <span class="ow">in</span> <span class="n">agent</span><span class="o">.</span><span class="n">skills</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">skills</span>
+                <span class="k">else</span> <span class="s2">&quot;No specific skills defined&quot;</span>
+            <span class="p">)</span>
+
+            <span class="n">agent_desc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            Agent ID: </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">uid</span><span class="si">}</span>
+<span class="s2">            Name: </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span>
+<span class="s2">            Description: </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">description</span><span class="si">}</span>
+<span class="s2">            Skills: </span><span class="si">{</span><span class="n">skills_desc</span><span class="si">}</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+            <span class="n">agent_descriptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_desc</span><span class="p">)</span>
+
+        <span class="n">agents_info</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">agent_descriptions</span><span class="p">)</span>
+
+        <span class="c1"># Create an orchestrator agent with knowledge of available agents</span>
+        <span class="n">orchestrator_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Orchestrator&quot;</span><span class="p">,</span>
+            <span class="n">generation_provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orchestrator_provider</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orchestrator_model</span><span class="p">,</span>
+            <span class="n">instructions</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;You are an orchestrator agent that analyzes tasks and determines which agent</span>
+<span class="s2">            should handle them. Examine the input carefully and select the most appropriate agent based on </span>
+<span class="s2">            its capabilities and expertise. You should also determine if the task is complete.</span>
+<span class="s2">            </span>
+<span class="s2">            Here are the available agents you can choose from:</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">agents_info</span><span class="si">}</span>
+<span class="s2">            </span>
+<span class="s2">            For each task you are given, you must:</span>
+<span class="s2">            1. Analyze the task requirements thoroughly</span>
+<span class="s2">            2. Select the most appropriate agent by its ID based on its capabilities</span>
+<span class="s2">            3. Determine if the task is complete (set task_done to true if it is)</span>
+<span class="s2">            </span>
+<span class="s2">            If you believe the task has been fully addressed, set task_done to true.</span>
+<span class="s2">            If you believe the task requires further processing, select the appropriate agent and set task_done to false.</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="n">response_schema</span><span class="o">=</span><span class="n">_OrchestratorOutput</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">team_config</span><span class="p">,</span>  <span class="c1"># Use the team config for the orchestrator</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Create agent lookup by UUID</span>
+        <span class="n">agent_map</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">uid</span><span class="p">):</span> <span class="n">agent</span> <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">}</span>
+
+        <span class="c1"># Initial context with the original input</span>
+        <span class="n">current_input</span> <span class="o">=</span> <span class="nb">input</span>
+        <span class="n">task_done</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Keep track of the last output to return</span>
+        <span class="n">last_output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Use maxIterations from team_config to prevent infinite loops</span>
+        <span class="n">iteration_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">max_iterations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">team_config</span><span class="o">.</span><span class="n">maxIterations</span>
+
+        <span class="c1"># Keep track of the conversation history for context</span>
+        <span class="n">conversation_history</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Iterate until the task is done or max iterations is reached</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">task_done</span> <span class="ow">and</span> <span class="n">iteration_count</span> <span class="o">&lt;</span> <span class="n">max_iterations</span><span class="p">:</span>
+            <span class="c1"># Increment iteration counter</span>
+            <span class="n">iteration_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># Format orchestrator input with task history</span>
+            <span class="n">orchestrator_input</span> <span class="o">=</span> <span class="n">current_input</span>
+            <span class="k">if</span> <span class="n">conversation_history</span><span class="p">:</span>
+                <span class="c1"># If we have history, add it as context</span>
+                <span class="n">history_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">conversation_history</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">orchestrator_input</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Task Context/History:</span>
+<span class="si">{</span><span class="n">history_text</span><span class="si">}</span>
+
+<span class="s2">Current input:</span>
+<span class="si">{</span><span class="n">current_input</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+            <span class="c1"># Use the orchestrator to decide which agent should handle the task</span>
+            <span class="n">orchestrator_result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">orchestrator_agent</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">orchestrator_input</span><span class="p">)</span>
+            <span class="n">orchestrator_output</span> <span class="o">=</span> <span class="n">orchestrator_result</span><span class="o">.</span><span class="n">parsed</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">orchestrator_output</span><span class="p">:</span>
+                <span class="c1"># Fallback in case the orchestrator fails to produce structured output</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Orchestrator failed to produce structured output, using first agent as fallback&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
+
+            <span class="c1"># Check if the task is done</span>
+            <span class="n">task_done</span> <span class="o">=</span> <span class="n">orchestrator_output</span><span class="o">.</span><span class="n">task_done</span>
+            <span class="k">if</span> <span class="n">task_done</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Task marked as complete by orchestrator after </span><span class="si">{</span><span class="n">iteration_count</span><span class="si">}</span><span class="s2"> iterations&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="n">last_output</span>
+                    <span class="k">if</span> <span class="n">last_output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Get the chosen agent</span>
+            <span class="n">agent_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">orchestrator_output</span><span class="o">.</span><span class="n">agent_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">agent_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">agent_map</span><span class="p">:</span>
+                <span class="c1"># Fallback if the orchestrator chooses an unknown agent</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Orchestrator selected unknown agent ID: </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2">, using first agent as fallback&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
+
+            <span class="n">chosen_agent</span> <span class="o">=</span> <span class="n">agent_map</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Iteration </span><span class="si">{</span><span class="n">iteration_count</span><span class="si">}</span><span class="s2">: Orchestrator selected agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Run the chosen agent with the current input</span>
+            <span class="n">agent_output</span> <span class="o">=</span> <span class="k">await</span> <span class="n">chosen_agent</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
+            <span class="n">last_output</span> <span class="o">=</span> <span class="n">agent_output</span>
+
+            <span class="c1"># Update the conversation history</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">conversation_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;User/Task: </span><span class="si">{</span><span class="n">current_input</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                <span class="n">conversation_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Update the input with the agent&#39;s response for the next iteration</span>
+            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                <span class="n">current_input</span> <span class="o">=</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If we don&#39;t have text output, use the original input again</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; produced no text output, returning current output&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">agent_output</span>
+
+        <span class="c1"># If we&#39;ve reached max iterations, return the last output</span>
+        <span class="k">if</span> <span class="n">iteration_count</span> <span class="o">&gt;=</span> <span class="n">max_iterations</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Warning: AgentTeam reached maximum iterations (</span><span class="si">{</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2">) without completion&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># This should never be reached due to the returns above, but added for type safety</span>
+        <span class="k">if</span> <span class="n">last_output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">last_output</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">AgentTeam</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentTeam</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combine this AgentTeam with another Agent or AgentTeam.</span>
+
+<span class="sd">        This operator allows for easy composition of teams by combining their agents.</span>
+<span class="sd">        When adding an Agent, it&#39;s incorporated into the current team&#39;s agent list.</span>
+<span class="sd">        When adding another AgentTeam, all its agents are added to the current team.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            other: Another Agent or AgentTeam to combine with this team</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentTeam: A new AgentTeam containing all agents from both sources</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            ```python</span>
+<span class="sd">            # Create initial team</span>
+<span class="sd">            basic_team = AgentTeam(</span>
+<span class="sd">                agents=[agent1, agent2],</span>
+<span class="sd">                orchestrator_provider=provider,</span>
+<span class="sd">                orchestrator_model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # Add another agent</span>
+<span class="sd">            expanded_team = basic_team + specialized_agent</span>
+
+<span class="sd">            # Add another team</span>
+<span class="sd">            other_team = AgentTeam(agents=[agent3, agent4], ...)</span>
+<span class="sd">            combined_team = expanded_team + other_team</span>
+
+<span class="sd">            # The combined team now contains all agents from both teams</span>
+<span class="sd">            ```</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Agent</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">AgentTeam</span><span class="p">(</span>
+                <span class="n">agents</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">other</span><span class="p">]),</span>
+                <span class="n">orchestrator_provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orchestrator_provider</span><span class="p">,</span>
+                <span class="n">orchestrator_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orchestrator_model</span><span class="p">,</span>
+                <span class="n">team_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">team_config</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">AgentTeam</span><span class="p">(</span>
+            <span class="n">agents</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">agents</span><span class="p">)),</span>
+            <span class="n">orchestrator_provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orchestrator_provider</span><span class="p">,</span>
+            <span class="n">orchestrator_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orchestrator_model</span><span class="p">,</span>
+            <span class="n">team_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">team_config</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, Arthur Brenno
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on May 08, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../_static/documentation_options.js?v=9fc46840"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

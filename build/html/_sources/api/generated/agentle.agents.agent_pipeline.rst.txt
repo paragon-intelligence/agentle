@@ -1,0 +1,12 @@
+﻿agentle.agents.agent\_pipeline
+==============================
+
+.. automodule:: agentle.agents.agent_pipeline
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AgentPipeline
+   

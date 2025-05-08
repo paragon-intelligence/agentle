@@ -1,0 +1,615 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.agent_team" href="agentle.agents.agent_team.html" /><link rel="prev" title="agentle.agents.agent" href="agentle.agents.agent.html" />
+        <link rel="canonical" href="https://paragon-intelligence.github.io/agentle/api/generated/agentle.agents.agent_pipeline.html" />
+
+    <link rel="shortcut icon" href="../../_static/logo.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>agentle.agents.agent_pipeline - Agentle 0.0.13 Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">Agentle 0.0.13 Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.png" alt="Logo"/>
+  </div>
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../../_static/logo-light.svg" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../../_static/logo-dark.svg" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Agentle 0.0.13 Documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../agents.html">Agents API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Agents API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="agentle.agents.html">agentle.agents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agentle.agents.agent.html">agentle.agents.agent</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">agentle.agents.agent_pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agentle.agents.agent_team.html">agentle.agents.agent_team</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../generations.html">Generations API</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Generations API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="agentle.generations.html">agentle.generations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agentle.generations.providers.html">agentle.generations.providers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agentle.generations.providers.google.html">agentle.generations.providers.google</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agentle.generations.providers.openai.html">agentle.generations.providers.openai</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../prompts.html">Prompts API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../rag.html">RAG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mcp.html">MCP API</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../stt.html">Speech-to-Text API</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Speech-to-Text API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="agentle.stt.html">agentle.stt</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tts.html">Text-to-Speech API</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Text-to-Speech API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="agentle.tts.html">agentle.tts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/api/generated/agentle.agents.agent_pipeline.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-agentle.agents.agent_pipeline">
+<span id="agentle-agents-agent-pipeline"></span><h1>agentle.agents.agent_pipeline<a class="headerlink" href="#module-agentle.agents.agent_pipeline" title="Link to this heading">¶</a></h1>
+<p>Agent Pipeline Module for the Agentle Framework</p>
+<p>This module provides functionality for creating sequential pipelines of AI agents,
+where the output of one agent becomes the input to the next. Pipelines offer a deterministic
+way to decompose complex tasks into a series of simpler steps handled by specialized agents.</p>
+<p>Unlike the AgentTeam which uses an orchestrator to dynamically select agents,
+AgentPipeline follows a fixed sequence of predefined agents, providing a more
+predictable execution flow. This is particularly useful for workflows where:</p>
+<ol class="arabic simple">
+<li><p>The sequence of operations is known in advance</p></li>
+<li><p>Each step builds upon the results of the previous step</p></li>
+<li><p>A clear division of responsibility between agents is needed</p></li>
+</ol>
+<p>Example:
+<a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
+from agentle.agents.agent import Agent
+from agentle.agents.pipelines.agent_pipeline import AgentPipeline
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider</p>
+<p># Create specialized agents
+research_agent = Agent(</p>
+<blockquote>
+<div><p>name=”Research Agent”,
+instructions=”You are a research agent. Your task is to gather information on a topic.”,
+model=”gemini-2.0-flash”,
+generation_provider=GoogleGenaiGenerationProvider(),</p>
+</div></blockquote>
+<p>)</p>
+<dl class="simple">
+<dt>analysis_agent = Agent(</dt><dd><p>name=”Analysis Agent”,
+instructions=”You are an analysis agent. Your task is to analyze information and identify patterns.”,
+model=”gemini-2.0-flash”,
+generation_provider=GoogleGenaiGenerationProvider(),</p>
+</dd>
+</dl>
+<p>)</p>
+<dl class="simple">
+<dt>summary_agent = Agent(</dt><dd><p>name=”Summary Agent”,
+instructions=”You are a summary agent. Your task is to create concise summaries.”,
+model=”gemini-2.0-flash”,
+generation_provider=GoogleGenaiGenerationProvider(),</p>
+</dd>
+</dl>
+<p>)</p>
+<p># Create a pipeline of agents
+pipeline = AgentPipeline(agents=[research_agent, analysis_agent, summary_agent])</p>
+<p># Run the pipeline
+result = pipeline.run(“Tell me about renewable energy technologies”)
+print(result.generation.text)
+<a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+<p class="rubric">Classes</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline" title="agentle.agents.agent_pipeline.AgentPipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentPipeline</span></code></a>(*, agents[, debug_mode])</p></td>
+<td><p>A sequential pipeline of AI agents where the output of one agent becomes the input to the next.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">agentle.agents.agent_pipeline.</span></span><span class="sig-name descname"><span class="pre">AgentPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/agentle/agents/agent_pipeline.html#AgentPipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>A sequential pipeline of AI agents where the output of one agent becomes the input to the next.</p>
+<p>AgentPipeline provides a way to chain multiple agents together in a fixed sequence,
+allowing complex tasks to be broken down into manageable steps. Each agent in the pipeline
+specializes in a specific subtask, and the agents work together by passing information
+from one to the next.</p>
+<p>Key features:
+- Sequential execution: Agents run in the exact order specified
+- Automatic input/output handling: Output from one agent becomes input to the next
+- Deterministic workflow: The same pipeline with the same initial input produces consistent results
+- Debug capabilities: Optional logging of intermediate steps for troubleshooting</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.13)"><em>Sequence</em></a><em>[</em><a class="reference internal" href="agentle.agents.agent.html#agentle.agents.agent.Agent" title="agentle.agents.agent.Agent"><em>Agent</em></a><em>[</em><em>Any</em><em>]</em><em>]</em>)</p></li>
+<li><p><strong>debug_mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline.agents">
+<span class="sig-name descname"><span class="pre">agents</span></span><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline.agents" title="Link to this definition">¶</a></dt>
+<dd><p>A sequence of Agent instances that form the pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.13)">collections.abc.Sequence</a>[<a class="reference internal" href="agentle.agents.agent.html#agentle.agents.agent.Agent" title="agentle.agents.agent.Agent">agentle.agents.agent.Agent</a>[Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline.debug_mode">
+<span class="sig-name descname"><span class="pre">debug_mode</span></span><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline.debug_mode" title="Link to this definition">¶</a></dt>
+<dd><p>When True, enables detailed logging of pipeline execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p><a href="#id9"><span class="problematic" id="id10">``</span></a><a href="#id11"><span class="problematic" id="id12">`</span></a>python
+# Create a simple translation pipeline
+english_to_french = Agent(</p>
+<blockquote>
+<div><p>name=”English to French”,
+instructions=”Translate English text to French.”,
+model=”gemini-2.0-flash”</p>
+</div></blockquote>
+<p>)</p>
+<dl class="simple">
+<dt>french_to_spanish = Agent(</dt><dd><p>name=”French to Spanish”,
+instructions=”Translate French text to Spanish.”,
+model=”gemini-2.0-flash”</p>
+</dd>
+</dl>
+<p>)</p>
+<p># Chain the agents into a pipeline
+translation_pipeline = AgentPipeline(</p>
+<blockquote>
+<div><p>agents=[english_to_french, french_to_spanish]</p>
+</div></blockquote>
+<p>)</p>
+<p># Run the pipeline
+result = translation_pipeline.run(“Hello, how are you?”)
+# Result will be “Hola, ¿cómo estás?” after passing through both agents
+<a href="#id13"><span class="problematic" id="id14">``</span></a><a href="#id15"><span class="problematic" id="id16">`</span></a></p>
+<p>Creating a complex analysis pipeline:
+<a href="#id17"><span class="problematic" id="id18">``</span></a><a href="#id19"><span class="problematic" id="id20">`</span></a>python
+# Data extraction agent
+extractor = Agent(name=”Extractor”, instructions=”Extract key data points…”)</p>
+<p># Analysis agent
+analyzer = Agent(name=”Analyzer”, instructions=”Analyze the following data…”)</p>
+<p># Recommendation agent
+recommender = Agent(name=”Recommender”, instructions=”Based on the analysis…”)</p>
+<p># Create analysis pipeline
+analysis_pipeline = AgentPipeline(</p>
+<blockquote>
+<div><p>agents=[extractor, analyzer, recommender],
+debug_mode=True  # Enable logging for debugging</p>
+</div></blockquote>
+<p>)</p>
+<p># Run pipeline with initial data
+result = analysis_pipeline.run(“Raw data: …”)
+<a href="#id21"><span class="problematic" id="id22">``</span></a><a href="#id23"><span class="problematic" id="id24">`</span></a></p>
+<p>Create a new model by parsing and validating input data from keyword arguments.</p>
+<p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
+validated to form a valid model.</p>
+<p><cite>self</cite> is explicitly positional-only to allow <cite>self</cite> as a field name.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.13)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="agentle.agents.agent.html#agentle.agents.agent.Agent" title="agentle.agents.agent.Agent"><span class="pre">Agent</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id25">
+<span class="sig-name descname"><span class="pre">debug_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><a class="headerlink" href="#id25" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline.model_config" title="Link to this definition">¶</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/agentle/agents/agent_pipeline.html#AgentPipeline.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline.run" title="Link to this definition">¶</a></dt>
+<dd><p>Run the agent pipeline synchronously with the provided input.</p>
+<p>This method is a synchronous wrapper around run_async that allows
+the pipeline to be used in synchronous contexts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input</strong> (<em>AgentInput</em>) – The initial input to the first agent in the pipeline.
+Can be a string, UserMessage, Context, or any supported AgentInput type.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The output from the final agent in the pipeline.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>AgentRunOutput</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p><a href="#id26"><span class="problematic" id="id27">``</span></a><a href="#id28"><span class="problematic" id="id29">`</span></a>python
+pipeline = AgentPipeline(agents=[agent1, agent2, agent3])</p>
+<p># Simple string input
+result = pipeline.run(“Analyze this text”)</p>
+<p># Using a more complex input type
+from agentle.generations.models.messages.user_message import UserMessage
+from agentle.generations.models.message_parts.text import TextPart</p>
+<p>message = UserMessage(parts=[TextPart(text=”Analyze this data”)])
+result = pipeline.run(message)
+<a href="#id30"><span class="problematic" id="id31">``</span></a><a href="#id32"><span class="problematic" id="id33">`</span></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline.run_async">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/agentle/agents/agent_pipeline.html#AgentPipeline.run_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline.run_async" title="Link to this definition">¶</a></dt>
+<dd><p>Executes a pipeline of agents in sequence asynchronously.</p>
+<p>This method processes the agents in the pipeline sequentially, where the output of
+one agent becomes the input to the next agent. The method returns the output of
+the final agent in the pipeline, or the last agent that successfully produced output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input</strong> (<em>AgentInput</em>) – The initial input to the first agent in the pipeline</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result from the final agent in the pipeline</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>AgentRunOutput</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the pipeline contains no agents</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.13)"><strong>RuntimeError</strong></a> – If the pipeline execution fails to produce any output</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p><a href="#id34"><span class="problematic" id="id35">``</span></a><a href="#id36"><span class="problematic" id="id37">`</span></a>python
+pipeline = AgentPipeline(agents=[agent1, agent2, agent3])</p>
+<p># Using with async/await
+import asyncio</p>
+<dl class="simple">
+<dt>async def process_data():</dt><dd><p>result = await pipeline.run_async(“Process this data”)
+return result.generation.text</p>
+</dd>
+</dl>
+<p>final_result = asyncio.run(process_data())
+<a href="#id38"><span class="problematic" id="id39">``</span></a><a href="#id40"><span class="problematic" id="id41">`</span></a></p>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>If an agent in the middle of the pipeline produces no text output,
+the pipeline will terminate early and return the output of that agent.</p></li>
+<li><p>The debug_mode attribute controls whether detailed logging is performed
+during pipeline execution.</p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="agentle.agents.agent_team.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">agentle.agents.agent_team</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="agentle.agents.agent.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">agentle.agents.agent</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, Arthur Brenno
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on May 08, 2025</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">agentle.agents.agent_pipeline</a><ul>
+<li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline"><code class="docutils literal notranslate"><span class="pre">AgentPipeline</span></code></a><ul>
+<li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.agents"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.agents</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.debug_mode"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.debug_mode</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.agents</span></code></a></li>
+<li><a class="reference internal" href="#id25"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.debug_mode</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.model_config"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.model_config</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.run"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.run()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.run_async"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.run_async()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=9fc46840"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

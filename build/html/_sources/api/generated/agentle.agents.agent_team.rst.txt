@@ -1,0 +1,12 @@
+﻿agentle.agents.agent\_team
+==========================
+
+.. automodule:: agentle.agents.agent_team
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AgentTeam
+   
