@@ -104,3 +104,4 @@ docker/milvus/volumes
 emerge/html
 emerge-**
 emerge_
+ui

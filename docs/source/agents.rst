@@ -101,23 +101,6 @@ The primary way to interact with agents is through the ``run`` method:
     result = agent.run(message)
     print(result.text)
 
-Multi-turn Conversations
-----------------------
-
-Agentle automatically maintains conversation history:
-
-.. code-block:: python
-
-    # First turn
-    result1 = agent.run("Tell me about quantum computing")
-    print(result1.text)
-
-    # Second turn - agent remembers the context
-    result2 = agent.run("What are its practical applications?")
-    print(result2.text)
-
-    # Reset the conversation if needed
-    agent.reset()
 
 Agent Response Structure
 ----------------------
