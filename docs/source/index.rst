@@ -13,7 +13,7 @@ Agentle makes it effortless to create, compose, and deploy intelligent AI agents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting Started
+   :caption: Getting Started 
 
    installation
    quickstart
