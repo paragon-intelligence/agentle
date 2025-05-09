@@ -45,7 +45,7 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
 from agentle.generations.models.messages.generated_assistant_message import (
     GeneratedAssistantMessage,
 )
-from agentle.generations.providers.google._adapters.google_part_to_part_adapter import (
+from agentle.generations.providers.google.adapters.google_part_to_part_adapter import (
     GooglePartToPartAdapter,
 )
 

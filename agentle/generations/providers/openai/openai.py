@@ -14,6 +14,9 @@ from agentle.generations.providers.base.generation_provider import GenerationPro
 from agentle.generations.providers.openai.adapters.agentle_message_to_openai_message_adapter import (
     AgentleMessageToOpenaiMessageAdapter,
 )
+from agentle.generations.providers.openai.adapters.chat_completion_to_generation_adapter import (
+    ChatCompletionToGenerationAdapter,
+)
 from agentle.generations.tools.tool import Tool
 
 type WithoutStructuredOutput = None
@@ -88,6 +91,7 @@ class OpenaiGenerationProvider(GenerationProvider):
         tools: Sequence[Tool[Any]] | None = None,
     ) -> Generation[T]:
         from openai import AsyncOpenAI
+        from openai.types.chat.chat_completion import ChatCompletion
 
         client = AsyncOpenAI(
             api_key=self.api_key,
@@ -102,14 +106,20 @@ class OpenaiGenerationProvider(GenerationProvider):
             project=self.project_name,
         )
 
-        message_adapter = AgentleMessageToOpenaiMessageAdapter()
+        input_message_adapter = AgentleMessageToOpenaiMessageAdapter()
 
-        c = client.chat.completions.create(  # type: ignore
-            messages=[message_adapter.adapt(message) for message in messages],
+        chat_completion: ChatCompletion = await client.chat.completions.create(  # type: ignore
+            messages=[input_message_adapter.adapt(message) for message in messages],
             model=model or self.default_model,
         )
 
-        raise NotImplementedError("Not implemented yet.")
+        output_adapter = ChatCompletionToGenerationAdapter[T](
+            response_schema=response_schema
+        )
+
+        return output_adapter.adapt(chat_completion)
+
+        raise NotImplementedError
 
     @property
     @override

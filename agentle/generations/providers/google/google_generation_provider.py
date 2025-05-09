@@ -37,13 +37,13 @@ from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
-from agentle.generations.providers.google._adapters.agentle_tool_to_google_tool_adapter import (
+from agentle.generations.providers.google.adapters.agentle_tool_to_google_tool_adapter import (
     AgentleToolToGoogleToolAdapter,
 )
-from agentle.generations.providers.google._adapters.generate_generate_content_response_to_generation_adapter import (
+from agentle.generations.providers.google.adapters.generate_generate_content_response_to_generation_adapter import (
     GenerateGenerateContentResponseToGenerationAdapter,
 )
-from agentle.generations.providers.google._adapters.message_to_google_content_adapter import (
+from agentle.generations.providers.google.adapters.message_to_google_content_adapter import (
     MessageToGoogleContentAdapter,
 )
 from agentle.generations.providers.google.function_calling_config import (
@@ -324,7 +324,6 @@ class GoogleGenerationProvider(GenerationProvider):
             # Create the response
             response = GenerateGenerateContentResponseToGenerationAdapter[T](
                 response_schema=response_schema,
-                start_time=start,
                 model=used_model,
             ).adapt(generate_content_response)
 
@@ -343,17 +342,25 @@ class GoogleGenerationProvider(GenerationProvider):
                     else None,
                 },
             }
-            
-            input_cost = self.price_per_million_tokens_input(
-                used_model, response.usage.prompt_tokens
-            ) if response.usage.prompt_tokens else 0.0
-            
-            output_cost = self.price_per_million_tokens_output(
-                used_model, response.usage.completion_tokens
-            ) if response.usage.completion_tokens else 0.0
-            
+
+            input_cost = (
+                self.price_per_million_tokens_input(
+                    used_model, response.usage.prompt_tokens
+                )
+                if response.usage.prompt_tokens
+                else 0.0
+            )
+
+            output_cost = (
+                self.price_per_million_tokens_output(
+                    used_model, response.usage.completion_tokens
+                )
+                if response.usage.completion_tokens
+                else 0.0
+            )
+
             total_cost = input_cost + output_cost
-            
+
             # Add cost information to output_data
             output_data["usage"]["input_cost"] = input_cost
             output_data["usage"]["output_cost"] = output_cost
@@ -380,17 +387,25 @@ class GoogleGenerationProvider(GenerationProvider):
             if is_final_generation:
                 final_output = {
                     "final_response": response.text,
-                    "structured_output": response.parsed if hasattr(response, "parsed") else None,
+                    "structured_output": response.parsed
+                    if hasattr(response, "parsed")
+                    else None,
                     "usage": {
-                        "input": response.usage.prompt_tokens if response.usage else None,
-                        "output": response.usage.completion_tokens if response.usage else None,
-                        "total": response.usage.total_tokens if response.usage else None,
+                        "input": response.usage.prompt_tokens
+                        if response.usage
+                        else None,
+                        "output": response.usage.completion_tokens
+                        if response.usage
+                        else None,
+                        "total": response.usage.total_tokens
+                        if response.usage
+                        else None,
                         "unit": "TOKENS",
                         "input_cost": output_data["usage"].get("input_cost"),
                         "output_cost": output_data["usage"].get("output_cost"),
                         "total_cost": output_data["usage"].get("total_cost"),
-                        "currency": "USD"
-                    }
+                        "currency": "USD",
+                    },
                 }
                 await self.tracing_manager.complete_trace(
                     trace_client=trace_client,

@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, override
 from rsb.adapters.adapter import Adapter
 
 from agentle.generations.models.messages.message import Message
-from agentle.generations.providers.google._adapters.part_to_google_part_adapter import (
+from agentle.generations.providers.google.adapters.part_to_google_part_adapter import (
     PartToGooglePartAdapter,
 )
 from agentle.generations.tools.tool import Tool

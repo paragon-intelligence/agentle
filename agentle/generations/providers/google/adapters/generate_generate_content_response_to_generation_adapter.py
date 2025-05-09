@@ -62,7 +62,7 @@ from rsb.adapters.adapter import Adapter
 from agentle.generations.models.generation.choice import Choice
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.usage import Usage
-from agentle.generations.providers.google._adapters.google_content_to_generated_assistant_message_adapter import (
+from agentle.generations.providers.google.adapters.google_content_to_generated_assistant_message_adapter import (
     GoogleContentToGeneratedAssistantMessageAdapter,
 )
 
@@ -92,9 +92,6 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
             parse structured data from the response. When provided, the adapter will
             attempt to extract typed data according to this schema.
 
-        start_time (datetime.datetime): The timestamp when the generation request was
-            initiated. Used to calculate the elapsed time for the generation.
-
         preferred_id (uuid.UUID | None): An optional UUID to use for the resulting
             Generation object. If not provided, a new UUID is generated.
 
@@ -111,7 +108,6 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
         adapter = GenerateGenerateContentResponseToGenerationAdapter(
             model="gemini-1.5-pro",
             response_schema=None,  # No structured data
-            start_time=datetime.datetime.now()
         )
 
         # Process a response from Google's API
@@ -128,7 +124,6 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
         structured_adapter = GenerateGenerateContentResponseToGenerationAdapter[MovieInfo](
             model="gemini-1.5-pro",
             response_schema=MovieInfo,
-            start_time=datetime.datetime.now()
         )
 
         # When Google returns parsed data according to the schema
@@ -152,7 +147,6 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
         *,
         model: str,
         response_schema: type[T] | None,
-        start_time: datetime.datetime,
         google_content_to_generated_assistant_message_adapter: GoogleContentToGeneratedAssistantMessageAdapter[
             T
         ]
@@ -173,7 +167,6 @@ class GenerateGenerateContentResponseToGenerationAdapter[T](
         """
         super().__init__()
         self.response_schema = response_schema
-        self.start_time = start_time
         self._logger = Logger(self.__class__.__name__)
         self.google_content_to_message_adapter = (
             google_content_to_generated_assistant_message_adapter
