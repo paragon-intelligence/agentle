@@ -24,6 +24,9 @@ packages = ["agentle"]
 packages = ["agentle"]
 
 [dependency-groups]
+cache = [
+    "aiocache>=0.12.3",
+]
 dev = [
     "aiocache>=0.12.3",
     "aiofiles>=24.1.0",
@@ -55,4 +58,16 @@ dev = [
     "sphinx>=8.2.3",
     "streamlit>=1.45.0",
     "uvicorn>=0.34.1",
+]
+google = [
+    "google-genai>=1.11.0",
+]
+http = [
+    "blacksheep>=2.2.0",
+]
+langfuse = [
+    "langfuse>=2.60.3",
+]
+streamlit = [
+    "streamlit>=1.45.0",
 ]

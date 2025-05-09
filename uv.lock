@@ -12,6 +12,9 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+cache = [
+    { name = "aiocache" },
+]
 dev = [
     { name = "aiocache" },
     { name = "aiofiles" },
@@ -44,6 +47,18 @@ dev = [
     { name = "streamlit" },
     { name = "uvicorn" },
 ]
+google = [
+    { name = "google-genai" },
+]
+http = [
+    { name = "blacksheep" },
+]
+langfuse = [
+    { name = "langfuse" },
+]
+streamlit = [
+    { name = "streamlit" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -52,6 +67,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+cache = [{ name = "aiocache", specifier = ">=0.12.3" }]
 dev = [
     { name = "aiocache", specifier = ">=0.12.3" },
     { name = "aiofiles", specifier = ">=24.1.0" },
@@ -84,6 +100,10 @@ dev = [
     { name = "streamlit", specifier = ">=1.45.0" },
     { name = "uvicorn", specifier = ">=0.34.1" },
 ]
+google = [{ name = "google-genai", specifier = ">=1.11.0" }]
+http = [{ name = "blacksheep", specifier = ">=2.2.0" }]
+langfuse = [{ name = "langfuse", specifier = ">=2.60.3" }]
+streamlit = [{ name = "streamlit", specifier = ">=1.45.0" }]
 
 [[package]]
 name = "aiocache"

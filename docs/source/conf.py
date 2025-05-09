@@ -1,76 +1,61 @@
 # Configuration file for the Sphinx documentation builder.
 #
-# For the full list of built-in configuration values, see the documentation:
+# For the full list of built-in configuration options see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-import os
-import sys
-
-# Add the project root directory to the path so Sphinx can find the package
-sys.path.insert(0, os.path.abspath("../.."))
-
 project = "Agentle"
-copyright = "2025, Arthur Brenno"
+copyright = "2025, Paragon Intelligence"
 author = "Arthur Brenno"
-release = "0.0.13"
+release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
-
-language = "en"  # Explicitly set the language
-
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.autosummary",
+    "sphinx_rtd_theme",
 ]
 
 templates_path = ["_templates"]
-pygments_style = "default"
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
-# -- autodoc configuration --------------------------------------------------
-autodoc_default_options = {
-    "members": True,
-    "undoc-members": True,
-    "show-inheritance": True,
-}
-autodoc_typehints = "description"
-autoclass_content = "both"
-autosummary_generate = True
+exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-html_theme = "furo"
-html_theme_options = {
-    "light_logo": "logo-light.svg",
-    "dark_logo": "logo-dark.svg",
-    "sidebar_hide_name": False,
-}
+html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
-html_title = f"{project} {release} Documentation"
+html_logo = "../../docs/logo.png"
+html_favicon = "../../docs/favicon.ico"
+html_theme_options = {
+    "logo_only": False,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    "style_external_links": False,
+    "style_nav_header_background": "#2980B9",
+    # Toc options
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "titles_only": False,
+}
 
-# Copy the logo to the build directory
-html_logo = "../logo.png"
-html_favicon = "../logo.png"
+# -- Extension configuration -------------------------------------------------
+autodoc_member_order = "bysource"
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_include_init_with_doc = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
 
-# Ensure the right output paths for GitHub Pages
-html_baseurl = "https://paragon-intelligence.github.io/agentle/"
-
-# Disable use of file modification times in output
-html_last_updated_fmt = ""
-
-# Intersphinx mapping
+# -- Intersphinx mapping ----------------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "pydantic": ("https://docs.pydantic.dev/latest/", None),
 }
-
-# Disable search features that rely on snowballstemmer
-html_search_enabled = False
