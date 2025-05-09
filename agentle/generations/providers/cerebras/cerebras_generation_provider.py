@@ -34,7 +34,6 @@ from agentle.generations.models.generation.generation_config import GenerationCo
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.pricing.price_retrievable import PriceRetrievable
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
@@ -59,7 +58,7 @@ if TYPE_CHECKING:
 type WithoutStructuredOutput = None
 
 
-class CerebrasGenerationProvider(GenerationProvider, PriceRetrievable):
+class CerebrasGenerationProvider(GenerationProvider):
     """
     Provider implementation for Cerebras AI services.
 

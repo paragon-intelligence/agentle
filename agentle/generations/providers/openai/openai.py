@@ -10,7 +10,6 @@ from agentle.generations.models.generation.generation_config import GenerationCo
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.pricing.price_retrievable import PriceRetrievable
 from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.generations.providers.openai.adapters.agentle_message_to_openai_message_adapter import (
     AgentleMessageToOpenaiMessageAdapter,
@@ -32,7 +31,7 @@ class NotGivenSentinel:
 NOT_GIVEN = NotGivenSentinel()
 
 
-class OpenaiGenerationProvider(GenerationProvider, PriceRetrievable):
+class OpenaiGenerationProvider(GenerationProvider):
     """
     OpenAI generation provider.
     """
