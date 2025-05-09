@@ -1,0 +1,406 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Observability &mdash; Agentle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Agent API" href="api/agent.html" />
+    <link rel="prev" title="Deployment" href="deployment.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Agentle
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knowledge_integration.html">Knowledge Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_composition.html">Agent Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Deployment &amp; Operations</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Observability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-tracing-setup">Basic Tracing Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-gets-traced">What Gets Traced</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enhanced-tracing-with-spans">Enhanced Tracing with Spans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tracing-pipelines-and-teams">Tracing Pipelines and Teams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#monitoring-in-production">Monitoring in Production</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-langfuse">Setting Up Langfuse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customizing-observability">Customizing Observability</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices">Best Practices</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/agent.html">Agent API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/tools.html">Tools API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Agentle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Observability</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/observability.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="observability">
+<h1>Observability<a class="headerlink" href="#observability" title="Link to this heading"></a></h1>
+<p>Agentle provides built-in observability features to help you monitor, debug, and analyze your agents’ performance and behavior in production. This page explains how to set up and use these capabilities.</p>
+<section id="basic-tracing-setup">
+<h2>Basic Tracing Setup<a class="headerlink" href="#basic-tracing-setup" title="Link to this heading"></a></h2>
+<p>Agentle integrates with Langfuse for tracing, which allows you to monitor your agents’ performance, behavior, and cost:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tracing.langfuse</span><span class="w"> </span><span class="kn">import</span> <span class="n">LangfuseObservabilityClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Create a tracing client</span>
+<span class="n">tracing_client</span> <span class="o">=</span> <span class="n">LangfuseObservabilityClient</span><span class="p">(</span>
+    <span class="n">public_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LANGFUSE_PUBLIC_KEY&quot;</span><span class="p">),</span>
+    <span class="n">secret_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LANGFUSE_SECRET_KEY&quot;</span><span class="p">),</span>
+    <span class="n">host</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LANGFUSE_HOST&quot;</span><span class="p">,</span> <span class="s2">&quot;https://cloud.langfuse.com&quot;</span><span class="p">)</span>  <span class="c1"># Optional: Default is cloud.langfuse.com</span>
+<span class="p">)</span>
+
+<span class="c1"># Create a generation provider with tracing enabled</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="n">GoogleGenaiGenerationProvider</span><span class="p">(</span>
+    <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GOOGLE_API_KEY&quot;</span><span class="p">),</span>
+    <span class="n">tracing_client</span><span class="o">=</span><span class="n">tracing_client</span>
+<span class="p">)</span>
+
+<span class="c1"># Create an agent with the traced provider</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Traceable Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the agent - tracing happens automatically</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="s2">&quot;What&#39;s the weather in Tokyo?&quot;</span><span class="p">,</span>
+    <span class="n">trace_params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;weather_query&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;user123&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="s2">&quot;mobile_app&quot;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="what-gets-traced">
+<h2>What Gets Traced<a class="headerlink" href="#what-gets-traced" title="Link to this heading"></a></h2>
+<p>When you enable tracing, Agentle automatically captures:</p>
+<ol class="arabic simple">
+<li><p><strong>Model calls</strong>: Details about each generation request, including:
+- Model name and parameters
+- Input tokens and cost
+- Output tokens and cost
+- Latency</p></li>
+<li><p><strong>Tool executions</strong>: When tools are called, including:
+- Tool name
+- Input parameters
+- Output results
+- Execution time</p></li>
+<li><p><strong>User interactions</strong>: Complete conversation history for context</p></li>
+<li><p><strong>Metadata</strong>: Custom metadata you provide via trace_params</p></li>
+</ol>
+</section>
+<section id="enhanced-tracing-with-spans">
+<h2>Enhanced Tracing with Spans<a class="headerlink" href="#enhanced-tracing-with-spans" title="Link to this heading"></a></h2>
+<p>For more detailed insights, you can create custom spans to measure specific operations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tracing.langfuse</span><span class="w"> </span><span class="kn">import</span> <span class="n">LangfuseObservabilityClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">asynccontextmanager</span>
+
+<span class="c1"># Create a tracing client</span>
+<span class="n">tracing_client</span> <span class="o">=</span> <span class="n">LangfuseObservabilityClient</span><span class="p">()</span>
+
+<span class="c1"># Create a custom span for a specific operation</span>
+<span class="nd">@asynccontextmanager</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_trace_span</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="c1"># Start the span</span>
+    <span class="k">with</span> <span class="n">tracing_client</span><span class="o">.</span><span class="n">start_span</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">span</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="c1"># The span is automatically ended when exiting the context</span>
+            <span class="k">pass</span>
+
+<span class="c1"># Use the custom span in your code</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_data_with_tracing</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">custom_trace_span</span><span class="p">(</span><span class="s2">&quot;data_processing&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;data_size&quot;</span><span class="p">:</span> <span class="s2">&quot;large&quot;</span><span class="p">}):</span>
+        <span class="c1"># Perform some operation that you want to measure</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">process_complex_data</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+</div>
+</section>
+<section id="tracing-pipelines-and-teams">
+<h2>Tracing Pipelines and Teams<a class="headerlink" href="#tracing-pipelines-and-teams" title="Link to this heading"></a></h2>
+<p>When using agent compositions, Agentle automatically traces the entire workflow:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_team</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentTeam</span>
+
+<span class="c1"># Create a pipeline with tracing</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">analysis_agent</span><span class="p">,</span> <span class="n">summary_agent</span><span class="p">],</span>
+    <span class="n">debug_mode</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the pipeline with trace parameters</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="s2">&quot;Research quantum computing advances&quot;</span><span class="p">,</span>
+    <span class="n">trace_params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;research_pipeline&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;researcher_001&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;department&quot;</span><span class="p">:</span> <span class="s2">&quot;physics&quot;</span><span class="p">,</span> <span class="s2">&quot;priority&quot;</span><span class="p">:</span> <span class="s2">&quot;high&quot;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Create a team with tracing</span>
+<span class="n">team</span> <span class="o">=</span> <span class="n">AgentTeam</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">coding_agent</span><span class="p">,</span> <span class="n">math_agent</span><span class="p">],</span>
+    <span class="n">orchestrator_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>  <span class="c1"># Using the provider with tracing enabled</span>
+    <span class="n">orchestrator_model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the team with trace parameters</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">team</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="s2">&quot;Explain the mathematical foundations of quantum computing&quot;</span><span class="p">,</span>
+    <span class="n">trace_params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;quantum_research&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="s2">&quot;researcher_001&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="monitoring-in-production">
+<h2>Monitoring in Production<a class="headerlink" href="#monitoring-in-production" title="Link to this heading"></a></h2>
+<p>For production deployments, you can set up comprehensive monitoring:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># API endpoint with tracing</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/api/chat&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">ChatRequest</span><span class="p">):</span>
+    <span class="c1"># Extract user info from request</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">user_id</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s2">&quot;user_id&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;anonymous&quot;</span>
+
+    <span class="c1"># Run the agent with tracing</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+        <span class="n">trace_params</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;api_chat_request&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="n">user_id</span><span class="p">,</span>
+            <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;endpoint&quot;</span><span class="p">:</span> <span class="s2">&quot;/api/chat&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;client_ip&quot;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">host</span><span class="p">,</span>
+                <span class="s2">&quot;request_id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Return the response</span>
+    <span class="k">return</span> <span class="n">ChatResponse</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="setting-up-langfuse">
+<h2>Setting Up Langfuse<a class="headerlink" href="#setting-up-langfuse" title="Link to this heading"></a></h2>
+<p>To use Langfuse for tracing:</p>
+<ol class="arabic">
+<li><p><strong>Sign up</strong>: Create an account at <a class="reference external" href="https://cloud.langfuse.com">Langfuse</a></p></li>
+<li><p><strong>Get credentials</strong>: Obtain your Public Key and Secret Key from the Langfuse dashboard</p></li>
+<li><p><strong>Set environment variables</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">LANGFUSE_PUBLIC_KEY</span><span class="o">=</span><span class="s2">&quot;your-public-key&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LANGFUSE_SECRET_KEY</span><span class="o">=</span><span class="s2">&quot;your-secret-key&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">LANGFUSE_HOST</span><span class="o">=</span><span class="s2">&quot;https://cloud.langfuse.com&quot;</span><span class="w">  </span><span class="c1"># Optional</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Install dependencies</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>langfuse
+</pre></div>
+</div>
+</li>
+<li><p><strong>Initialize the client</strong> in your application as shown above</p></li>
+</ol>
+<p>The Langfuse dashboard provides:</p>
+<ul class="simple">
+<li><p>Real-time monitoring of all agent interactions</p></li>
+<li><p>Cost tracking and usage analytics</p></li>
+<li><p>Performance metrics and bottleneck identification</p></li>
+<li><p>Conversation history and context inspection</p></li>
+<li><p>Error rate monitoring</p></li>
+<li><p>Custom filtering and searching</p></li>
+</ul>
+<p>Here’s an example of what production traces look like in Langfuse:</p>
+<a class="reference internal image-reference" href="../langfuse_traces.png"><img alt="Langfuse Traces Example" class="align-center" src="../langfuse_traces.png" style="width: 800px;" />
+</a>
+</section>
+<section id="customizing-observability">
+<h2>Customizing Observability<a class="headerlink" href="#customizing-observability" title="Link to this heading"></a></h2>
+<p>You can implement custom observability clients by implementing the <code class="docutils literal notranslate"><span class="pre">ObservabilityClient</span></code> abstract base class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">override</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tracing.observability_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObservabilityClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tracing.observability_span</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObservabilitySpan</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomObservabilityClient</span><span class="p">(</span><span class="n">ObservabilityClient</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom observability client implementation&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="c1"># Initialize your custom observability service</span>
+
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a new trace and return its ID&quot;&quot;&quot;</span>
+        <span class="c1"># Implement your trace creation logic</span>
+        <span class="n">trace_id</span> <span class="o">=</span> <span class="s2">&quot;custom-trace-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="c1"># Log or send to your observability service</span>
+        <span class="k">return</span> <span class="n">trace_id</span>
+
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start_span</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                  <span class="n">parent_span_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">trace_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ObservabilitySpan</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a new span and return the span object&quot;&quot;&quot;</span>
+        <span class="c1"># Implement your span creation logic</span>
+        <span class="n">span_id</span> <span class="o">=</span> <span class="s2">&quot;custom-span-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="c1"># Create and return a span</span>
+        <span class="k">return</span> <span class="n">CustomObservabilitySpan</span><span class="p">(</span><span class="n">span_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="c1"># Implement other required methods...</span>
+
+<span class="c1"># Custom span implementation</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomObservabilitySpan</span><span class="p">(</span><span class="n">ObservabilitySpan</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom span implementation&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">span_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">CustomObservabilityClient</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">span_id</span> <span class="o">=</span> <span class="n">span_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;End the span and record its duration&quot;&quot;&quot;</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span>
+        <span class="c1"># Log or send to your observability service</span>
+
+    <span class="c1"># Implement other required methods...</span>
+
+<span class="c1"># Use your custom observability client</span>
+<span class="n">custom_client</span> <span class="o">=</span> <span class="n">CustomObservabilityClient</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your-api-key&quot;</span><span class="p">)</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="n">GoogleGenaiGenerationProvider</span><span class="p">(</span><span class="n">tracing_client</span><span class="o">=</span><span class="n">custom_client</span><span class="p">)</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Custom Traced Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Consistent Naming</strong>: Use consistent naming conventions for traces and spans</p></li>
+<li><p><strong>Meaningful Metadata</strong>: Include relevant metadata for filtering and analysis</p></li>
+<li><p><strong>User Identification</strong>: Always include user IDs when possible for user-centric analysis</p></li>
+<li><p><strong>Appropriate Detail Level</strong>: Balance between too much and too little information</p></li>
+<li><p><strong>Error Tracking</strong>: Ensure errors are properly captured and categorized</p></li>
+<li><p><strong>Regular Analysis</strong>: Review traces regularly to identify patterns and issues</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="deployment.html" class="btn btn-neutral float-left" title="Deployment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api/agent.html" class="btn btn-neutral float-right" title="Agent API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Paragon Intelligence.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

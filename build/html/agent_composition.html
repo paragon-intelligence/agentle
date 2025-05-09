@@ -1,0 +1,379 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Composition &mdash; Agentle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Prompt Management" href="prompt_management.html" />
+    <link rel="prev" title="Knowledge Integration" href="knowledge_integration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Agentle
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knowledge_integration.html">Knowledge Integration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Agent Composition</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#agent-pipelines">Agent Pipelines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-pipeline-setup">Basic Pipeline Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-pipelines-work">How Pipelines Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pipeline-with-different-models">Pipeline with Different Models</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#agent-teams">Agent Teams</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-team-setup">Basic Team Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-teams-work">How Teams Work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#teams-with-advanced-routing">Teams with Advanced Routing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#combining-pipelines-and-teams">Combining Pipelines and Teams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices">Best Practices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Deployment &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/agent.html">Agent API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/tools.html">Tools API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Agentle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Agent Composition</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/agent_composition.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="agent-composition">
+<h1>Agent Composition<a class="headerlink" href="#agent-composition" title="Link to this heading"></a></h1>
+<p>Agentle provides powerful ways to compose multiple agents together to create more complex AI systems. This page explains two main approaches to agent composition: Agent Pipelines and Agent Teams.</p>
+<section id="agent-pipelines">
+<h2>Agent Pipelines<a class="headerlink" href="#agent-pipelines" title="Link to this heading"></a></h2>
+<p>Agent Pipelines connect agents in a sequence where the output of one agent becomes the input to the next. This is useful for breaking down complex tasks into simpler steps that can be handled by specialized agents.</p>
+<section id="basic-pipeline-setup">
+<h3>Basic Pipeline Setup<a class="headerlink" href="#basic-pipeline-setup" title="Link to this heading"></a></h3>
+<p>Here’s how to create a basic agent pipeline:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Create a provider for all agents</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="n">GoogleGenaiGenerationProvider</span><span class="p">()</span>
+
+<span class="c1"># Create specialized agents</span>
+<span class="n">research_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Research Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a research agent focused on gathering information.</span>
+<span class="s2">    Be thorough and prioritize accuracy over speculation.&quot;&quot;&quot;</span>
+<span class="p">)</span>
+
+<span class="n">analysis_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Analysis Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are an analysis agent that identifies patterns.</span>
+<span class="s2">    Highlight meaningful relationships and insights from the data.&quot;&quot;&quot;</span>
+<span class="p">)</span>
+
+<span class="n">summary_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Summary Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a summary agent that creates concise summaries.</span>
+<span class="s2">    Present key findings in a logical order with accessible language.&quot;&quot;&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Create a pipeline</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">analysis_agent</span><span class="p">,</span> <span class="n">summary_agent</span><span class="p">],</span>
+    <span class="n">debug_mode</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Enable to see intermediate steps</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the pipeline</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Research the impact of artificial intelligence on healthcare&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="how-pipelines-work">
+<h3>How Pipelines Work<a class="headerlink" href="#how-pipelines-work" title="Link to this heading"></a></h3>
+<p>An Agent Pipeline:</p>
+<ol class="arabic simple">
+<li><p>Takes the user input and passes it to the first agent</p></li>
+<li><p>Takes the output of the first agent and passes it to the second agent</p></li>
+<li><p>Continues this process through all agents in the pipeline</p></li>
+<li><p>Returns the output of the final agent as the result</p></li>
+</ol>
+<p>By default, each agent in the pipeline receives only the output of the previous agent. If you want to include the original query in each step, you can set the <code class="docutils literal notranslate"><span class="pre">include_query</span></code> parameter:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a pipeline that includes the original query in each step</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">analysis_agent</span><span class="p">,</span> <span class="n">summary_agent</span><span class="p">],</span>
+    <span class="n">include_query</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Include original query in each step</span>
+    <span class="n">debug_mode</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="pipeline-with-different-models">
+<h3>Pipeline with Different Models<a class="headerlink" href="#pipeline-with-different-models" title="Link to this heading"></a></h3>
+<p>You can create pipelines with agents that use different models:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Agent for broad research (using a more capable but slower model)</span>
+<span class="n">research_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Research Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-pro&quot;</span><span class="p">,</span>  <span class="c1"># More capable model for research</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a thorough research agent that gathers detailed information.&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Agent for analysis (using a balanced model)</span>
+<span class="n">analysis_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Analysis Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>  <span class="c1"># Balanced model for analysis</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You identify patterns and insights from the information.&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Agent for summarization (using a faster model)</span>
+<span class="n">summary_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Summary Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>  <span class="c1"># Fast model for summarization</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You create concise, clear summaries.&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Create a pipeline with different models</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">analysis_agent</span><span class="p">,</span> <span class="n">summary_agent</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="agent-teams">
+<h2>Agent Teams<a class="headerlink" href="#agent-teams" title="Link to this heading"></a></h2>
+<p>Agent Teams consist of multiple specialized agents with an orchestrator that dynamically selects the most appropriate agent for each task. This is useful when you have different agents specialized for different types of tasks.</p>
+<section id="basic-team-setup">
+<h3>Basic Team Setup<a class="headerlink" href="#basic-team-setup" title="Link to this heading"></a></h3>
+<p>Here’s how to create a basic agent team:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_team</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentTeam</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.a2a.models.agent_skill</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentSkill</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Create a provider for all agents</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="n">GoogleGenaiGenerationProvider</span><span class="p">()</span>
+
+<span class="c1"># Create specialized agents with different skills</span>
+<span class="n">research_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Research Agent&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Specialized in finding accurate information on various topics&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a research agent focused on gathering accurate information.&quot;</span><span class="p">,</span>
+    <span class="n">skills</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">AgentSkill</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;search&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Find information on any topic&quot;</span><span class="p">),</span>
+        <span class="n">AgentSkill</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;fact-check&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Verify factual claims&quot;</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">coding_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Coding Assistant&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Specialized in writing and debugging code&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a coding expert focused on writing clean, efficient code.&quot;</span><span class="p">,</span>
+    <span class="n">skills</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">AgentSkill</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;code-generation&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Write code in various languages&quot;</span><span class="p">),</span>
+        <span class="n">AgentSkill</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;debugging&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Find and fix bugs in code&quot;</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="c1"># Create a team with these agents</span>
+<span class="n">team</span> <span class="o">=</span> <span class="n">AgentTeam</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">coding_agent</span><span class="p">],</span>
+    <span class="n">orchestrator_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">orchestrator_model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the team with different queries</span>
+<span class="n">research_query</span> <span class="o">=</span> <span class="s2">&quot;What are the main challenges in quantum computing today?&quot;</span>
+<span class="n">research_result</span> <span class="o">=</span> <span class="n">team</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">research_query</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">research_result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+<span class="n">coding_query</span> <span class="o">=</span> <span class="s2">&quot;Write a Python function to find the Fibonacci sequence up to n terms.&quot;</span>
+<span class="n">coding_result</span> <span class="o">=</span> <span class="n">team</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">coding_query</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">coding_result</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="how-teams-work">
+<h3>How Teams Work<a class="headerlink" href="#how-teams-work" title="Link to this heading"></a></h3>
+<p>An Agent Team:</p>
+<ol class="arabic simple">
+<li><p>Analyzes the user query through the orchestrator</p></li>
+<li><p>Determines which agent is best suited to handle the query based on skills and descriptions</p></li>
+<li><p>Routes the query to the selected agent</p></li>
+<li><p>Returns the response from the selected agent</p></li>
+</ol>
+<p>The orchestrator can be configured with specific instructions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a team with custom orchestrator instructions</span>
+<span class="n">team</span> <span class="o">=</span> <span class="n">AgentTeam</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">coding_agent</span><span class="p">,</span> <span class="n">math_agent</span><span class="p">],</span>
+    <span class="n">orchestrator_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">orchestrator_model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">orchestrator_instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a query router that analyzes user requests</span>
+<span class="s2">    and determines which specialized agent would be best suited to handle the request.</span>
+<span class="s2">    Consider the skills and expertise of each agent when making your decision.&quot;&quot;&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="teams-with-advanced-routing">
+<h3>Teams with Advanced Routing<a class="headerlink" href="#teams-with-advanced-routing" title="Link to this heading"></a></h3>
+<p>You can create more complex team structures with advanced routing logic:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_team</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentTeam</span><span class="p">,</span> <span class="n">RoutingStrategy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.a2a.models.agent_skill</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentSkill</span>
+
+<span class="c1"># Create a team with custom routing strategy</span>
+<span class="n">advanced_team</span> <span class="o">=</span> <span class="n">AgentTeam</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">coding_agent</span><span class="p">,</span> <span class="n">math_agent</span><span class="p">],</span>
+    <span class="n">orchestrator_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
+    <span class="n">orchestrator_model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">routing_strategy</span><span class="o">=</span><span class="n">RoutingStrategy</span><span class="o">.</span><span class="n">SKILL_MATCH</span><span class="p">,</span>  <span class="c1"># Route based on skill matching</span>
+    <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.7</span>  <span class="c1"># Minimum confidence score to route to an agent</span>
+<span class="p">)</span>
+
+<span class="c1"># The team will now require a higher confidence in agent selection,</span>
+<span class="c1"># and will prioritize matching specific skills to queries</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="combining-pipelines-and-teams">
+<h2>Combining Pipelines and Teams<a class="headerlink" href="#combining-pipelines-and-teams" title="Link to this heading"></a></h2>
+<p>For even more powerful systems, you can combine pipelines and teams:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a pipeline of teams</span>
+<span class="n">pipeline_of_teams</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_team</span><span class="p">,</span> <span class="n">analysis_team</span><span class="p">,</span> <span class="n">summary_team</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Or create a team of pipelines</span>
+<span class="n">team_of_pipelines</span> <span class="o">=</span> <span class="n">AgentTeam</span><span class="p">(</span>
+    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">data_pipeline</span><span class="p">,</span> <span class="n">text_pipeline</span><span class="p">,</span> <span class="n">image_pipeline</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Specialized Instructions</strong>: Make sure each agent in a pipeline or team has clear, specialized instructions</p></li>
+<li><p><strong>Clear Boundaries</strong>: Ensure clear boundaries between agent responsibilities to avoid overlap</p></li>
+<li><p><strong>Error Handling</strong>: Consider how errors should propagate through pipelines</p></li>
+<li><p><strong>Debug Mode</strong>: Use debug_mode=True during development to see intermediate steps</p></li>
+<li><p><strong>Skill Definition</strong>: Define skills clearly to help the orchestrator route queries accurately</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="knowledge_integration.html" class="btn btn-neutral float-left" title="Knowledge Integration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="prompt_management.html" class="btn btn-neutral float-right" title="Prompt Management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Paragon Intelligence.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,400 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deployment &mdash; Agentle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Observability" href="observability.html" />
+    <link rel="prev" title="A2A" href="a2a.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Agentle
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knowledge_integration.html">Knowledge Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_composition.html">Agent Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Deployment &amp; Operations</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Deployment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#web-api-with-blacksheep">Web API with BlackSheep</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#agent-api">Agent API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#a2a-interface-api">A2A Interface API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#interactive-ui-with-streamlit">Interactive UI with Streamlit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-integrations">Custom Integrations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#flask-integration">Flask Integration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fastapi-integration">FastAPI Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#production-considerations">Production Considerations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scaling">Scaling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#security">Security</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cost-management">Cost Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#monitoring">Monitoring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deployment-environment">Deployment Environment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/agent.html">Agent API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/tools.html">Tools API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Agentle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Deployment</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/deployment.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="deployment">
+<h1>Deployment<a class="headerlink" href="#deployment" title="Link to this heading"></a></h1>
+<p>Agentle provides multiple ways to deploy your agents to production environments, from web APIs to interactive UIs. This page covers the available deployment options.</p>
+<section id="web-api-with-blacksheep">
+<h2>Web API with BlackSheep<a class="headerlink" href="#web-api-with-blacksheep" title="Link to this heading"></a></h2>
+<p>You can expose your agent or A2A interface as a RESTful API using BlackSheep:</p>
+<section id="agent-api">
+<h3>Agent API<a class="headerlink" href="#agent-api" title="Link to this heading"></a></h3>
+<p>Here’s how to deploy a simple agent as an API:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentToBlackSheepApplicationAdapter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Create your agent</span>
+<span class="n">code_assistant</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Code Assistant&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;An AI assistant specialized in helping with programming tasks.&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a helpful programming assistant.</span>
+<span class="s2">    You can answer questions about programming languages, help debug code,</span>
+<span class="s2">    explain programming concepts, and provide code examples.&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Convert the agent to a BlackSheep ASGI application</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">AgentToBlackSheepApplicationAdapter</span><span class="p">()</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">code_assistant</span><span class="p">)</span>
+
+<span class="c1"># Run the API server</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">uvicorn</span>
+    <span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The API will have the following endpoints:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/agents/code_assistant/run</span></code> - Send prompts to the agent and get responses synchronously</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/openapi</span></code> - Get the OpenAPI specification</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/docs</span></code> - Access the interactive API documentation</p></li>
+</ul>
+</section>
+<section id="a2a-interface-api">
+<h3>A2A Interface API<a class="headerlink" href="#a2a-interface-api" title="Link to this heading"></a></h3>
+<p>For more complex asynchronous workloads, you can expose your agent using the Agent-to-Agent (A2A) protocol:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.a2a.a2a_interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">A2AInterface</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentToBlackSheepApplicationAdapter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Create your agent</span>
+<span class="n">code_assistant</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Async Code Assistant&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;An AI assistant specialized in helping with programming tasks asynchronously.&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a helpful programming assistant.</span>
+<span class="s2">    You can answer questions about programming languages, help debug code,</span>
+<span class="s2">    explain programming concepts, and provide code examples.&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Create an A2A interface for the agent</span>
+<span class="n">a2a_interface</span> <span class="o">=</span> <span class="n">A2AInterface</span><span class="p">(</span><span class="n">agent</span><span class="o">=</span><span class="n">code_assistant</span><span class="p">)</span>
+
+<span class="c1"># Convert the A2A interface to a BlackSheep ASGI application</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">AgentToBlackSheepApplicationAdapter</span><span class="p">()</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">a2a_interface</span><span class="p">)</span>
+
+<span class="c1"># Run the API server</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">uvicorn</span>
+    <span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The A2A API will have the following endpoints:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/tasks/send</span></code> - Send a task to the agent asynchronously</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/tasks/get</span></code> - Get task results</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/tasks/cancel</span></code> - Cancel a running task</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">WebSocket</span> <span class="pre">/api/v1/notifications</span></code> - Subscribe to push notifications about task status changes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/openapi</span></code> - Get the OpenAPI specification</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/docs</span></code> - Access the interactive API documentation</p></li>
+</ul>
+<p>The A2A interface provides a message broker pattern for task processing, similar to RabbitMQ, but exposed through a RESTful API interface.</p>
+</section>
+</section>
+<section id="interactive-ui-with-streamlit">
+<h2>Interactive UI with Streamlit<a class="headerlink" href="#interactive-ui-with-streamlit" title="Link to this heading"></a></h2>
+<p>Create a chat interface for your agent using Streamlit:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.ui.streamlit</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentToStreamlit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Create your agent</span>
+<span class="n">travel_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Travel Guide&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A helpful travel guide that answers questions about destinations.&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a knowledgeable travel guide who helps users plan trips.&quot;&quot;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Convert the agent to a Streamlit app</span>
+<span class="n">streamlit_app</span> <span class="o">=</span> <span class="n">AgentToStreamlit</span><span class="p">(</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Travel Assistant&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ask me anything about travel destinations and planning!&quot;</span><span class="p">,</span>
+    <span class="n">initial_mode</span><span class="o">=</span><span class="s2">&quot;presentation&quot;</span><span class="p">,</span>  <span class="c1"># Can be &quot;dev&quot; or &quot;presentation&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">travel_agent</span><span class="p">)</span>
+
+<span class="c1"># Run the Streamlit app</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">streamlit_app</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Running the app:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>streamlit<span class="w"> </span>run<span class="w"> </span>travel_app.py
+</pre></div>
+</div>
+<p>The Streamlit interface provides:</p>
+<ol class="arabic simple">
+<li><p>A clean chat UI for interacting with your agent</p></li>
+<li><p>Message history persistence within the session</p></li>
+<li><p>Ability to clear chat history</p></li>
+<li><p>Dev mode for seeing raw responses and debugging</p></li>
+</ol>
+</section>
+<section id="custom-integrations">
+<h2>Custom Integrations<a class="headerlink" href="#custom-integrations" title="Link to this heading"></a></h2>
+<p>For more complex applications, you can directly integrate Agentle agents into your codebase:</p>
+<section id="flask-integration">
+<h3>Flask Integration<a class="headerlink" href="#flask-integration" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">jsonify</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Create your agent</span>
+<span class="n">assistant</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Flask Assistant&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant integrated with a Flask application.&quot;</span>
+<span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/api/chat&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;POST&#39;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">():</span>
+    <span class="n">user_input</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_input</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="s1">&#39;No message provided&#39;</span><span class="p">}),</span> <span class="mi">400</span>
+
+    <span class="c1"># Run the agent</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">assistant</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">user_input</span><span class="p">)</span>
+
+    <span class="c1"># Return the response</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span>
+        <span class="s1">&#39;response&#39;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+        <span class="c1"># Optionally include other response data</span>
+        <span class="s1">&#39;raw&#39;</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">raw</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="s1">&#39;raw&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">})</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="fastapi-integration">
+<h3>FastAPI Integration<a class="headerlink" href="#fastapi-integration" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">()</span>
+
+<span class="c1"># Define request and response models</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ChatRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ChatResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">response</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="c1"># Create your agent</span>
+<span class="n">assistant</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;FastAPI Assistant&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant integrated with a FastAPI application.&quot;</span>
+<span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/api/chat&quot;</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ChatResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">ChatRequest</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">request</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;No message provided&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Run the agent</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">assistant</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="c1"># Return the response</span>
+    <span class="k">return</span> <span class="n">ChatResponse</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">uvicorn</span>
+    <span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="production-considerations">
+<h2>Production Considerations<a class="headerlink" href="#production-considerations" title="Link to this heading"></a></h2>
+<p>When deploying Agentle agents to production, consider the following:</p>
+<section id="scaling">
+<h3>Scaling<a class="headerlink" href="#scaling" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Consider running multiple instances behind a load balancer for high-traffic applications</p></li>
+<li><p>For A2A implementations, use a proper message broker (e.g., Redis, RabbitMQ) for task queue management</p></li>
+<li><p>Use server-side caching strategies to reduce repeated model calls</p></li>
+</ul>
+</section>
+<section id="security">
+<h3>Security<a class="headerlink" href="#security" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Implement proper authentication for API endpoints</p></li>
+<li><p>Consider rate limiting to prevent abuse</p></li>
+<li><p>Be mindful of the data sent to external LLM providers</p></li>
+</ul>
+</section>
+<section id="cost-management">
+<h3>Cost Management<a class="headerlink" href="#cost-management" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Monitor and log usage metrics to track costs</p></li>
+<li><p>Consider implementing caching strategies for common queries</p></li>
+<li><p>Use appropriate model size/type based on complexity requirements</p></li>
+</ul>
+</section>
+<section id="monitoring">
+<h3>Monitoring<a class="headerlink" href="#monitoring" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Implement logging for requests and responses</p></li>
+<li><p>Set up error alerting</p></li>
+<li><p>Use Agentle’s observability features to track performance and usage</p></li>
+</ul>
+</section>
+<section id="deployment-environment">
+<h3>Deployment Environment<a class="headerlink" href="#deployment-environment" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Use a production-grade ASGI server like Uvicorn or Hypercorn behind a reverse proxy like Nginx</p></li>
+<li><p>Deploy using containerization (Docker) for consistency across environments</p></li>
+<li><p>Consider serverless deployment options for scalable, on-demand usage</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="a2a.html" class="btn btn-neutral float-left" title="A2A" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="observability.html" class="btn btn-neutral float-right" title="Observability" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Paragon Intelligence.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

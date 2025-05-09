@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Structured Outputs &mdash; Agentle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Knowledge Integration" href="knowledge_integration.html" />
+    <link rel="prev" title="Inputs" href="inputs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Agentle
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Structured Outputs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-structured-output">Basic Structured Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#working-with-complex-models">Working with Complex Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#handling-response-validation">Handling Response Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#response-format-options">Response Format Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#combining-with-tools">Combining with Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices">Best Practices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="knowledge_integration.html">Knowledge Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_composition.html">Agent Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Deployment &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/agent.html">Agent API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/tools.html">Tools API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Agentle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Structured Outputs</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/structured_outputs.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="structured-outputs">
+<h1>Structured Outputs<a class="headerlink" href="#structured-outputs" title="Link to this heading"></a></h1>
+<p>Agentle allows you to define the structure of agent responses using Pydantic models, enabling strongly-typed outputs that can be easily integrated into your application logic.</p>
+<section id="basic-structured-output">
+<h2>Basic Structured Output<a class="headerlink" href="#basic-structured-output" title="Link to this heading"></a></h2>
+<p>Here’s a simple example of using structured outputs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Define your output schema</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">WeatherForecast</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">location</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">current_temperature</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">conditions</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">forecast</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">humidity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># Create an agent with structured output</span>
+<span class="n">structured_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Weather Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a weather forecasting assistant. Provide accurate forecasts.&quot;</span><span class="p">,</span>
+    <span class="n">response_schema</span><span class="o">=</span><span class="n">WeatherForecast</span>  <span class="c1"># Define the expected response structure</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the agent</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">structured_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather like in San Francisco?&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access structured data with type hints</span>
+<span class="n">weather</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">parsed</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Weather for: </span><span class="si">{</span><span class="n">weather</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Temperature: </span><span class="si">{</span><span class="n">weather</span><span class="o">.</span><span class="n">current_temperature</span><span class="si">}</span><span class="s2">°C&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Conditions: </span><span class="si">{</span><span class="n">weather</span><span class="o">.</span><span class="n">conditions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="n">weather</span><span class="o">.</span><span class="n">forecast</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- </span><span class="si">{</span><span class="n">day</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="working-with-complex-models">
+<h2>Working with Complex Models<a class="headerlink" href="#working-with-complex-models" title="Link to this heading"></a></h2>
+<p>You can use nested models and complex structures:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="c1"># Define an enum for weather conditions</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">WeatherCondition</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="n">SUNNY</span> <span class="o">=</span> <span class="s2">&quot;sunny&quot;</span>
+    <span class="n">CLOUDY</span> <span class="o">=</span> <span class="s2">&quot;cloudy&quot;</span>
+    <span class="n">RAINY</span> <span class="o">=</span> <span class="s2">&quot;rainy&quot;</span>
+    <span class="n">SNOWY</span> <span class="o">=</span> <span class="s2">&quot;snowy&quot;</span>
+    <span class="n">STORMY</span> <span class="o">=</span> <span class="s2">&quot;stormy&quot;</span>
+
+<span class="c1"># Define a nested model for daily forecast</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DailyForecast</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">high_temp</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">low_temp</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">condition</span><span class="p">:</span> <span class="n">WeatherCondition</span>
+    <span class="n">precipitation_chance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Between 0 and 1</span>
+    <span class="n">wind_speed</span><span class="p">:</span> <span class="nb">float</span>
+
+<span class="c1"># Define the main response model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DetailedWeatherForecast</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">location</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">country</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">current</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">conditions</span><span class="p">:</span> <span class="n">WeatherCondition</span>
+    <span class="n">forecast</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DailyForecast</span><span class="p">]</span>
+    <span class="n">alerts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_updated</span><span class="p">:</span> <span class="n">datetime</span>
+
+<span class="c1"># Create an agent with the complex schema</span>
+<span class="n">detailed_weather_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Detailed Weather Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a weather forecasting assistant that provides detailed, structured forecasts.&quot;</span><span class="p">,</span>
+    <span class="n">response_schema</span><span class="o">=</span><span class="n">DetailedWeatherForecast</span>
+<span class="p">)</span>
+
+<span class="c1"># Get structured response</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">detailed_weather_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Give me a detailed 5-day forecast for Tokyo, Japan&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access the structured data</span>
+<span class="n">forecast</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">parsed</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Weather for </span><span class="si">{</span><span class="n">forecast</span><span class="o">.</span><span class="n">location</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">forecast</span><span class="o">.</span><span class="n">country</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current temperature: </span><span class="si">{</span><span class="n">forecast</span><span class="o">.</span><span class="n">current</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">°C&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current conditions: </span><span class="si">{</span><span class="n">forecast</span><span class="o">.</span><span class="n">conditions</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">5-day forecast:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="n">forecast</span><span class="o">.</span><span class="n">forecast</span><span class="p">:</span>
+    <span class="n">date_str</span> <span class="o">=</span> <span class="n">day</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%A, %B </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">date_str</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">day</span><span class="o">.</span><span class="n">condition</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">day</span><span class="o">.</span><span class="n">low_temp</span><span class="si">}</span><span class="s2">°C to </span><span class="si">{</span><span class="n">day</span><span class="o">.</span><span class="n">high_temp</span><span class="si">}</span><span class="s2">°C&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="handling-response-validation">
+<h2>Handling Response Validation<a class="headerlink" href="#handling-response-validation" title="Link to this heading"></a></h2>
+<p>If the agent generates a response that doesn’t match your schema, Agentle will try to handle it gracefully:</p>
+<ol class="arabic simple">
+<li><p>First, it will attempt to repair the response by asking the model to fix the structure</p></li>
+<li><p>If that fails, you can access the raw text through <cite>response.text</cite> even if parsing failed</p></li>
+</ol>
+<p>You can customize validation behavior:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.validation_behavior</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationBehavior</span>
+
+<span class="c1"># Create an agent with custom validation behavior</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Custom Validation Agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a structured data assistant.&quot;</span><span class="p">,</span>
+    <span class="n">response_schema</span><span class="o">=</span><span class="n">YourResponseSchema</span><span class="p">,</span>
+    <span class="c1"># Define what happens when validation fails</span>
+    <span class="n">validation_behavior</span><span class="o">=</span><span class="n">ValidationBehavior</span><span class="o">.</span><span class="n">WARN</span>  <span class="c1"># Options: STRICT, WARN, IGNORE</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="response-format-options">
+<h2>Response Format Options<a class="headerlink" href="#response-format-options" title="Link to this heading"></a></h2>
+<p>Agentle supports multiple formats for structured outputs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.structured_outputs_store.json_format</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONFormat</span>
+
+<span class="c1"># Create an agent with JSON format preference</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;JSON Formatter&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You create structured outputs in JSON format.&quot;</span><span class="p">,</span>
+    <span class="n">response_schema</span><span class="o">=</span><span class="n">YourResponseSchema</span><span class="p">,</span>
+    <span class="n">response_format</span><span class="o">=</span><span class="n">JSONFormat</span><span class="p">()</span>  <span class="c1"># Explicitly specify JSON format</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="combining-with-tools">
+<h2>Combining with Tools<a class="headerlink" href="#combining-with-tools" title="Link to this heading"></a></h2>
+<p>For even more powerful agents, combine structured outputs with tool calling:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="c1"># Define a tool</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_city_data</span><span class="p">(</span><span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get basic information about a city.&quot;&quot;&quot;</span>
+    <span class="n">city_database</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Paris&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;country&quot;</span><span class="p">:</span> <span class="s2">&quot;France&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;population&quot;</span><span class="p">:</span> <span class="mi">2161000</span><span class="p">,</span>
+            <span class="s2">&quot;timezone&quot;</span><span class="p">:</span> <span class="s2">&quot;CET&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;famous_for&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Eiffel Tower&quot;</span><span class="p">,</span> <span class="s2">&quot;Louvre&quot;</span><span class="p">,</span> <span class="s2">&quot;Notre Dame&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="c1"># More cities...</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">city_database</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">city</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;No data found for </span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
+
+<span class="c1"># Define the structured response schema</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TravelRecommendation</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">city</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">country</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">population</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">local_time</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">attractions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">best_time_to_visit</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">estimated_daily_budget</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">safety_rating</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># Create an agent with both tools and a structured output schema</span>
+<span class="n">travel_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Travel Advisor&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a travel advisor that provides structured recommendations for city visits.&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_city_data</span><span class="p">],</span>
+    <span class="n">response_schema</span><span class="o">=</span><span class="n">TravelRecommendation</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the agent</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">travel_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Create a travel recommendation for Tokyo.&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access structured data</span>
+<span class="n">rec</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">parsed</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TRAVEL RECOMMENDATION FOR </span><span class="si">{</span><span class="n">rec</span><span class="o">.</span><span class="n">city</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">rec</span><span class="o">.</span><span class="n">country</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Population: </span><span class="si">{</span><span class="n">rec</span><span class="o">.</span><span class="n">population</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best time to visit: </span><span class="si">{</span><span class="n">rec</span><span class="o">.</span><span class="n">best_time_to_visit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Clear Instructions</strong>: Make sure your agent instructions align with your schema requirements</p></li>
+<li><p><strong>Schema Complexity</strong>: Balance schema complexity with model capabilities - too complex schemas may lead to validation errors</p></li>
+<li><p><strong>Field Documentation</strong>: Add field descriptions to help the model generate appropriate values</p></li>
+<li><p><strong>Optional Fields</strong>: Use Optional for fields that might not always be present</p></li>
+<li><p><strong>Validation Feedback</strong>: Use ValidationBehavior.WARN during development to see validation issues</p></li>
+<li><p><strong>Default Values</strong>: Provide sensible defaults for fields where appropriate</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="inputs.html" class="btn btn-neutral float-left" title="Inputs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="knowledge_integration.html" class="btn btn-neutral float-right" title="Knowledge Integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Paragon Intelligence.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

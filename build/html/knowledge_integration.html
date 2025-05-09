@@ -1,0 +1,356 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knowledge Integration &mdash; Agentle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Agent Composition" href="agent_composition.html" />
+    <link rel="prev" title="Structured Outputs" href="structured_outputs.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Agentle
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Knowledge Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-knowledge-integration">Basic Knowledge Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#knowledge-source-types">Knowledge Source Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#caching-behavior">Caching Behavior</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-knowledge-integration-works">How Knowledge Integration Works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-document-parsers">Custom Document Parsers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#practical-example-legal-assistant">Practical Example: Legal Assistant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices">Best Practices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agent_composition.html">Agent Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Deployment &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/agent.html">Agent API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/tools.html">Tools API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Agentle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Knowledge Integration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/knowledge_integration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="knowledge-integration">
+<h1>Knowledge Integration<a class="headerlink" href="#knowledge-integration" title="Link to this heading"></a></h1>
+<p>Agentle provides a powerful knowledge integration system that allows agents to leverage information from various sources when generating responses. This feature is particularly useful for building specialized agents that need domain-specific knowledge beyond their pre-trained capabilities.</p>
+<section id="basic-knowledge-integration">
+<h2>Basic Knowledge Integration<a class="headerlink" href="#basic-knowledge-integration" title="Link to this heading"></a></h2>
+<p>Here’s a simple example of integrating knowledge with an agent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaticKnowledge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Create an agent with static knowledge</span>
+<span class="n">travel_expert</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Japan Travel Expert&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a Japan travel expert who provides detailed information about Japanese destinations.&quot;</span><span class="p">,</span>
+    <span class="c1"># Provide static knowledge from multiple sources</span>
+    <span class="n">static_knowledge</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># Include knowledge from local documents</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;data/japan_travel_guide.pdf&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="mi">3600</span><span class="p">),</span>  <span class="c1"># Cache for 1 hour</span>
+        <span class="c1"># Include knowledge from websites</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;https://www.japan-guide.com/&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="s2">&quot;infinite&quot;</span><span class="p">),</span>  <span class="c1"># Cache indefinitely</span>
+        <span class="c1"># Include direct text knowledge</span>
+        <span class="s2">&quot;Tokyo is the capital of Japan and one of the most populous cities in the world.&quot;</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># The agent will incorporate the knowledge when answering</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">travel_expert</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What should I know about visiting Tokyo in cherry blossom season?&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="knowledge-source-types">
+<h2>Knowledge Source Types<a class="headerlink" href="#knowledge-source-types" title="Link to this heading"></a></h2>
+<p>The framework supports multiple knowledge source types through the <code class="docutils literal notranslate"><span class="pre">StaticKnowledge</span></code> class:</p>
+<ul class="simple">
+<li><p><strong>Documents</strong>: PDF, DOCX, TXT, PPTX, and other document formats</p></li>
+<li><p><strong>URLs</strong>: Web pages and online resources</p></li>
+<li><p><strong>Raw Text</strong>: Direct text snippets</p></li>
+</ul>
+<p>You can provide knowledge in several ways:</p>
+<ol class="arabic">
+<li><p><strong>As strings</strong>: The framework will automatically convert them to <code class="docutils literal notranslate"><span class="pre">StaticKnowledge</span></code> objects</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="c1"># ... other agent settings ...</span>
+    <span class="n">static_knowledge</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># URLs as strings</span>
+        <span class="s2">&quot;https://example.com/research-paper.html&quot;</span><span class="p">,</span>
+        <span class="c1"># Local file paths as strings</span>
+        <span class="s2">&quot;data/report.pdf&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;references/definitions.txt&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>As StaticKnowledge objects</strong>: For maximum control, especially with caching</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaticKnowledge</span>
+
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="c1"># ... other agent settings ...</span>
+    <span class="n">static_knowledge</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># Document with 1 hour cache</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;data/report.pdf&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="mi">3600</span><span class="p">),</span>
+        <span class="c1"># URL with infinite cache</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;https://example.com/api-docs&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="s2">&quot;infinite&quot;</span><span class="p">),</span>
+        <span class="c1"># Raw text with no cache</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;This is raw knowledge text&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="caching-behavior">
+<h2>Caching Behavior<a class="headerlink" href="#caching-behavior" title="Link to this heading"></a></h2>
+<p>The caching system works as follows:</p>
+<ol class="arabic simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">cache</span></code> is not specified or is <code class="docutils literal notranslate"><span class="pre">None</span></code>, content is parsed fresh each time</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">cache</span></code> is an integer, the content is cached for that many seconds (requires aiocache)</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">cache</span></code> is the string “infinite”, the content is cached indefinitely until the process ends (requires aiocache)</p></li>
+</ol>
+<p>To enable caching, you’ll need to install the optional aiocache package:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>aiocache
+</pre></div>
+</div>
+<p>Caching is particularly useful for large documents or URLs that are expensive to parse repeatedly.</p>
+</section>
+<section id="how-knowledge-integration-works">
+<h2>How Knowledge Integration Works<a class="headerlink" href="#how-knowledge-integration-works" title="Link to this heading"></a></h2>
+<p>When you provide static knowledge to an agent:</p>
+<ol class="arabic simple">
+<li><p>The agent uses appropriate document parsers to extract content from each knowledge source</p></li>
+<li><p>If caching is enabled and the aiocache package is installed, parsed content is cached for the specified duration</p></li>
+<li><p>The parsed content is organized into a structured knowledge base format</p></li>
+<li><p>This knowledge base is appended to the agent’s instructions</p></li>
+<li><p>When the agent responds to queries, it can leverage this knowledge base</p></li>
+</ol>
+</section>
+<section id="custom-document-parsers">
+<h2>Custom Document Parsers<a class="headerlink" href="#custom-document-parsers" title="Link to this heading"></a></h2>
+<p>For specialized knowledge extraction needs, you can provide a custom document parser to the agent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaticKnowledge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.parsing.parsers.file_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileParser</span>
+
+<span class="c1"># Create a custom document parser with specialized settings</span>
+<span class="n">custom_parser</span> <span class="o">=</span> <span class="n">FileParser</span><span class="p">(</span>
+    <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;high&quot;</span><span class="p">,</span>  <span class="c1"># Use high-detail parsing</span>
+    <span class="n">visual_description_agent</span><span class="o">=</span><span class="n">your_custom_vision_agent</span>  <span class="c1"># Customize image analysis</span>
+<span class="p">)</span>
+
+<span class="c1"># Create an agent with the custom parser</span>
+<span class="n">research_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="c1"># ... other agent settings ...</span>
+    <span class="n">static_knowledge</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;research_papers/paper.pdf&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="mi">3600</span><span class="p">),</span>
+        <span class="c1"># ... other knowledge sources ...</span>
+    <span class="p">],</span>
+    <span class="n">document_parser</span><span class="o">=</span><span class="n">custom_parser</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also create completely custom document parsers by implementing the <code class="docutils literal notranslate"><span class="pre">DocumentParser</span></code> abstract base class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">override</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.parsing.document_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentParser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.parsing.parsed_document</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParsedDocument</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.parsing.section_content</span><span class="w"> </span><span class="kn">import</span> <span class="n">SectionContent</span>
+
+<span class="c1"># Create a custom parser</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CustomParser</span><span class="p">(</span><span class="n">DocumentParser</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom document parser implementation&quot;&quot;&quot;</span>
+
+    <span class="nd">@override</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">parse_async</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">document_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParsedDocument</span><span class="p">:</span>
+        <span class="c1"># Implement your custom parsing logic here</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">document_path</span><span class="p">)</span>
+
+        <span class="c1"># For this example, we&#39;ll just use a placeholder</span>
+        <span class="n">parsed_content</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Content from </span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> would be parsed with custom logic&quot;</span>
+
+        <span class="c1"># Return in the standard ParsedDocument format</span>
+        <span class="k">return</span> <span class="n">ParsedDocument</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">path</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">sections</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">SectionContent</span><span class="p">(</span>
+                    <span class="n">number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">text</span><span class="o">=</span><span class="n">parsed_content</span><span class="p">,</span>
+                    <span class="n">md</span><span class="o">=</span><span class="n">parsed_content</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+<span class="c1"># Use the custom parser with an agent</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Document Expert&quot;</span><span class="p">,</span>
+    <span class="c1"># ... other agent settings ...</span>
+    <span class="n">static_knowledge</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;documents/report.pdf&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="s2">&quot;infinite&quot;</span><span class="p">)</span>
+    <span class="p">],</span>
+    <span class="c1"># Pass your custom parser to the agent</span>
+    <span class="n">document_parser</span><span class="o">=</span><span class="n">CustomParser</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="practical-example-legal-assistant">
+<h2>Practical Example: Legal Assistant<a class="headerlink" href="#practical-example-legal-assistant" title="Link to this heading"></a></h2>
+<p>Here’s a comprehensive example showing how to create a legal assistant with domain-specific knowledge:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaticKnowledge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.parsing.factories.file_parser_default_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">file_parser_default_factory</span>
+
+<span class="c1"># Create a legal assistant with domain-specific knowledge</span>
+<span class="n">legal_assistant</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Legal Assistant&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a legal assistant specialized in contract law. Help users understand legal concepts and review contracts.&quot;</span><span class="p">,</span>
+
+    <span class="c1"># Provide multiple knowledge sources with different caching strategies</span>
+    <span class="n">static_knowledge</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># Local document sources with caching</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;legal_docs/contract_templates.pdf&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="mi">3600</span><span class="p">),</span>  <span class="c1"># Cache for 1 hour</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;legal_docs/legal_definitions.docx&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="s2">&quot;infinite&quot;</span><span class="p">),</span>  <span class="c1"># Cache indefinitely</span>
+
+        <span class="c1"># Online resources with caching</span>
+        <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;https://www.law.cornell.edu/wex/contract&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="mi">86400</span><span class="p">),</span>  <span class="c1"># Cache for 1 day</span>
+
+        <span class="c1"># Direct knowledge snippets (no need for caching)</span>
+        <span class="s2">&quot;Force majeure clauses excuse a party from performance when extraordinary events prevent fulfillment of obligations.&quot;</span>
+    <span class="p">],</span>
+
+    <span class="c1"># Optional: Use a custom document parser for specialized parsing needs</span>
+    <span class="n">document_parser</span><span class="o">=</span><span class="n">file_parser_default_factory</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;high&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># The agent will leverage all provided knowledge when responding</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">legal_assistant</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What should I look for in a non-disclosure agreement?&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Caching Strategy</strong>: Use appropriate caching based on how frequently the source changes</p></li>
+<li><p><strong>Knowledge Organization</strong>: Organize knowledge into related documents rather than one large document</p></li>
+<li><p><strong>Quality over Quantity</strong>: Provide high-quality, relevant knowledge rather than overwhelming the agent</p></li>
+<li><p><strong>Test Different Sources</strong>: Experiment with different knowledge sources to find the best combination</p></li>
+<li><p><strong>Update Regularly</strong>: Keep knowledge sources updated, especially for domains that change frequently</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="structured_outputs.html" class="btn btn-neutral float-left" title="Structured Outputs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="agent_composition.html" class="btn btn-neutral float-right" title="Agent Composition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Paragon Intelligence.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

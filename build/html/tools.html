@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tools &mdash; Agentle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Inputs" href="inputs.html" />
+    <link rel="prev" title="Agents" href="agents.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Agentle
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-tool-integration">Basic Tool Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#function-docstrings-and-type-hints">Function Docstrings and Type Hints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-multiple-tools">Adding Multiple Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-tool-usage">Advanced Tool Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#combining-tools-with-structured-outputs">Combining Tools with Structured Outputs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classes-as-tools">Classes as Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#manually-providing-tool-results">Manually Providing Tool Results</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#best-practices-for-tools">Best Practices for Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knowledge_integration.html">Knowledge Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_composition.html">Agent Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Deployment &amp; Operations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/agent.html">Agent API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/tools.html">Tools API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Agentle</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tools</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tools.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tools">
+<h1>Tools<a class="headerlink" href="#tools" title="Link to this heading"></a></h1>
+<p>Tools (also known as function calling) allow agents to perform actions beyond text generation by invoking specific functions. This page explains how to integrate and use tools with Agentle agents.</p>
+<section id="basic-tool-integration">
+<h2>Basic Tool Integration<a class="headerlink" href="#basic-tool-integration" title="Link to this heading"></a></h2>
+<p>Here’s a simple example of integrating a tool with an agent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the current weather for a location.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        location: The city or location to get weather for</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A string describing the weather</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">weather_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;New York&quot;</span><span class="p">:</span> <span class="s2">&quot;Sunny, 75°F&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;London&quot;</span><span class="p">:</span> <span class="s2">&quot;Rainy, 60°F&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Tokyo&quot;</span><span class="p">:</span> <span class="s2">&quot;Cloudy, 65°F&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Sydney&quot;</span><span class="p">:</span> <span class="s2">&quot;Clear, 80°F&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">weather_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Weather data not available for </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create an agent with a tool</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="n">weather_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Weather Assistant&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant that can answer questions about the weather.&quot;</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">]</span>  <span class="c1"># Pass the function as a tool</span>
+<span class="p">)</span>
+
+<span class="c1"># The agent will automatically use the tool when appropriate</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">weather_agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather like in Tokyo?&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="function-docstrings-and-type-hints">
+<h2>Function Docstrings and Type Hints<a class="headerlink" href="#function-docstrings-and-type-hints" title="Link to this heading"></a></h2>
+<p>Agentle uses function docstrings and type hints to determine:</p>
+<ol class="arabic simple">
+<li><p>When to call the function</p></li>
+<li><p>What parameters to pass</p></li>
+<li><p>How to interpret the results</p></li>
+</ol>
+<p>For best results, provide clear docstrings and type hints:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">calculate_mortgage</span><span class="p">(</span>
+    <span class="n">principal</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">interest_rate</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">years</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate monthly mortgage payments.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        principal: The loan amount in dollars</span>
+<span class="sd">        interest_rate: Annual interest rate (as a percentage, e.g., 5.5 for 5.5%)</span>
+<span class="sd">        years: Loan term in years</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary containing monthly payment, total interest, and total cost</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">monthly_rate</span> <span class="o">=</span> <span class="n">interest_rate</span> <span class="o">/</span> <span class="mi">100</span> <span class="o">/</span> <span class="mi">12</span>
+    <span class="n">num_payments</span> <span class="o">=</span> <span class="n">years</span> <span class="o">*</span> <span class="mi">12</span>
+
+    <span class="c1"># Calculate monthly payment</span>
+    <span class="n">monthly_payment</span> <span class="o">=</span> <span class="n">principal</span> <span class="o">*</span> <span class="p">(</span><span class="n">monthly_rate</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">monthly_rate</span><span class="p">)</span> <span class="o">**</span> <span class="n">num_payments</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="mi">1</span> <span class="o">+</span> <span class="n">monthly_rate</span><span class="p">)</span> <span class="o">**</span> <span class="n">num_payments</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Calculate total interest and total cost</span>
+    <span class="n">total_cost</span> <span class="o">=</span> <span class="n">monthly_payment</span> <span class="o">*</span> <span class="n">num_payments</span>
+    <span class="n">total_interest</span> <span class="o">=</span> <span class="n">total_cost</span> <span class="o">-</span> <span class="n">principal</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;monthly_payment&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">monthly_payment</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="s2">&quot;total_interest&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">total_interest</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="s2">&quot;total_cost&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">total_cost</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="adding-multiple-tools">
+<h2>Adding Multiple Tools<a class="headerlink" href="#adding-multiple-tools" title="Link to this heading"></a></h2>
+<p>You can add multiple tools to an agent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current weather for a location.&quot;&quot;&quot;</span>
+    <span class="c1"># Implementation...</span>
+    <span class="k">return</span> <span class="n">weather_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Weather data not available for </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_currency</span><span class="p">(</span><span class="n">amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">from_currency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">to_currency</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert an amount from one currency to another.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        amount: The amount to convert</span>
+<span class="sd">        from_currency: The source currency code (e.g., USD, EUR)</span>
+<span class="sd">        to_currency: The target currency code (e.g., USD, EUR)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The converted amount</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Sample conversion rates (in practice, use a real API)</span>
+    <span class="n">rates</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;USD&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="s2">&quot;EUR&quot;</span><span class="p">:</span> <span class="mf">0.85</span><span class="p">,</span>
+        <span class="s2">&quot;GBP&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+        <span class="s2">&quot;JPY&quot;</span><span class="p">:</span> <span class="mf">110.0</span><span class="p">,</span>
+        <span class="s2">&quot;CAD&quot;</span><span class="p">:</span> <span class="mf">1.25</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Convert to USD first, then to target currency</span>
+    <span class="n">usd_amount</span> <span class="o">=</span> <span class="n">amount</span> <span class="o">/</span> <span class="n">rates</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">from_currency</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">converted_amount</span> <span class="o">=</span> <span class="n">usd_amount</span> <span class="o">*</span> <span class="n">rates</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">to_currency</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">converted_amount</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Create an agent with multiple tools</span>
+<span class="n">travel_assistant</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Travel Assistant&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful travel assistant.&quot;</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">,</span> <span class="n">convert_currency</span><span class="p">]</span>  <span class="c1"># Multiple tools</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="advanced-tool-usage">
+<h2>Advanced Tool Usage<a class="headerlink" href="#advanced-tool-usage" title="Link to this heading"></a></h2>
+<section id="combining-tools-with-structured-outputs">
+<h3>Combining Tools with Structured Outputs<a class="headerlink" href="#combining-tools-with-structured-outputs" title="Link to this heading"></a></h3>
+<p>For even more powerful agents, combine tool calling with structured outputs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TravelRecommendation</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">city</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">country</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">population</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">local_time</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">attractions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">best_time_to_visit</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">estimated_daily_budget</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">safety_rating</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># Create an agent with both tools and a structured output schema</span>
+<span class="n">travel_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Travel Advisor&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;You are a travel advisor that provides structured recommendations for city visits.&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_city_data</span><span class="p">],</span>
+    <span class="n">response_schema</span><span class="o">=</span><span class="n">TravelRecommendation</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="classes-as-tools">
+<h3>Classes as Tools<a class="headerlink" href="#classes-as-tools" title="Link to this heading"></a></h3>
+<p>You can also use methods from classes as tools:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Calculator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add two numbers together.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">subtract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Subtract b from a.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+
+<span class="n">calculator</span> <span class="o">=</span> <span class="n">Calculator</span><span class="p">()</span>
+
+<span class="c1"># Use instance methods as tools</span>
+<span class="n">math_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Math Helper&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a math assistant.&quot;</span><span class="p">,</span>
+    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">calculator</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="n">calculator</span><span class="o">.</span><span class="n">subtract</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="manually-providing-tool-results">
+<h3>Manually Providing Tool Results<a class="headerlink" href="#manually-providing-tool-results" title="Link to this heading"></a></h3>
+<p>You can also manually provide tool results to an agent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tools.tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.messages.user_message</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserMessage</span>
+
+<span class="c1"># Create a tool reference with a pre-computed result</span>
+<span class="n">weather_tool_result</span> <span class="o">=</span> <span class="n">Tool</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="n">get_weather</span><span class="p">)</span><span class="o">.</span><span class="n">with_result</span><span class="p">(</span>
+    <span class="n">args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="s2">&quot;Tokyo&quot;</span><span class="p">},</span>
+    <span class="n">result</span><span class="o">=</span><span class="s2">&quot;Sunny, 23°C, Humidity: 45%&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Create a message with the tool result</span>
+<span class="n">message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span>
+    <span class="n">parts</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;What&#39;s the weather in Tokyo?&quot;</span><span class="p">),</span>
+        <span class="n">weather_tool_result</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Run the agent with the message containing the tool result</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="best-practices-for-tools">
+<h2>Best Practices for Tools<a class="headerlink" href="#best-practices-for-tools" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Clear Docstrings</strong>: Provide clear, detailed docstrings that explain what the function does</p></li>
+<li><p><strong>Type Hints</strong>: Always use type hints for parameters and return values</p></li>
+<li><p><strong>Error Handling</strong>: Ensure your tools handle errors gracefully</p></li>
+<li><p><strong>Idempotence</strong>: When possible, make your tools idempotent (same input always produces same output)</p></li>
+<li><p><strong>Security</strong>: Be mindful of security implications, especially for tools that access sensitive resources</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="agents.html" class="btn btn-neutral float-left" title="Agents" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="inputs.html" class="btn btn-neutral float-right" title="Inputs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Paragon Intelligence.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
