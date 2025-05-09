@@ -386,22 +386,6 @@
 </pre></div>
 </div>
 </section>
-<section id="multi-turn-conversations">
-<h2>Multi-turn Conversations<a class="headerlink" href="#multi-turn-conversations" title="Link to this heading">¶</a></h2>
-<p>Agentle automatically maintains conversation history:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># First turn</span>
-<span class="n">result1</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;Tell me about quantum computing&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result1</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-
-<span class="c1"># Second turn - agent remembers the context</span>
-<span class="n">result2</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What are its practical applications?&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result2</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-
-<span class="c1"># Reset the conversation if needed</span>
-<span class="n">agent</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
 <section id="agent-response-structure">
 <h2>Agent Response Structure<a class="headerlink" href="#agent-response-structure" title="Link to this heading">¶</a></h2>
 <p>When you call <code class="docutils literal notranslate"><span class="pre">agent.run()</span></code>, you get back a response object with these key properties:</p>
@@ -507,7 +491,6 @@
 <li><a class="reference internal" href="#agent-parameters">Agent Parameters</a></li>
 <li><a class="reference internal" href="#creating-specialized-agents">Creating Specialized Agents</a></li>
 <li><a class="reference internal" href="#running-agents">Running Agents</a></li>
-<li><a class="reference internal" href="#multi-turn-conversations">Multi-turn Conversations</a></li>
 <li><a class="reference internal" href="#agent-response-structure">Agent Response Structure</a></li>
 <li><a class="reference internal" href="#advanced-agent-configuration">Advanced Agent Configuration</a></li>
 </ul>
