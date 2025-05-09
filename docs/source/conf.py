@@ -5,8 +5,8 @@
 
 # -- Project information -----------------------------------------------------
 project = "Agentle"
-copyright = "2025, Paragon Intelligence"
-author = "Arthur Brenno"
+copyright = "2025, Agentle Team"
+author = "Agentle Team"
 release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
@@ -15,29 +15,30 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
-    "sphinx_rtd_theme",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = []
 
 # -- Options for HTML output -------------------------------------------------
-html_theme = "sphinx_rtd_theme"
+html_theme = "furo"  # Changed from sphinx_rtd_theme to furo
 html_static_path = ["_static"]
 html_logo = "../../docs/logo.png"
 html_favicon = "../../docs/favicon.ico"
+
+# Configure furo theme options
 html_theme_options = {
-    "logo_only": False,
-    "display_version": True,
-    "prev_next_buttons_location": "bottom",
-    "style_external_links": False,
-    "style_nav_header_background": "#2980B9",
-    # Toc options
-    "collapse_navigation": True,
-    "sticky_navigation": True,
-    "navigation_depth": 4,
-    "includehidden": True,
-    "titles_only": False,
+    "sidebar_hide_name": False,
+    "navigation_with_keys": True,
+    "announcement": "This is a preview of Agentle's documentation (Release date: May 16, 2025)",
+    "light_css_variables": {
+        "color-brand-primary": "#2980B9",
+        "color-brand-content": "#2980B9",
+    },
+    "dark_css_variables": {
+        "color-brand-primary": "#4DA3E2",
+        "color-brand-content": "#4DA3E2",
+    },
 }
 
 # -- Extension configuration -------------------------------------------------
