@@ -106,52 +106,6 @@ You can use nested models and complex structures:
         date_str = day.date.strftime("%A, %B %d")
         print(f"{date_str}: {day.condition.value}, {day.low_temp}°C to {day.high_temp}°C")
 
-Handling Response Validation
---------------------------
-
-If the agent generates a response that doesn't match your schema, Agentle will try to handle it gracefully:
-
-1. First, it will attempt to repair the response by asking the model to fix the structure
-2. If that fails, you can access the raw text through `response.text` even if parsing failed
-
-You can customize validation behavior:
-
-.. code-block:: python
-
-    from agentle.agents.agent import Agent
-    from agentle.agents.validation_behavior import ValidationBehavior
-
-    # Create an agent with custom validation behavior
-    agent = Agent(
-        name="Custom Validation Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
-        instructions="You are a structured data assistant.",
-        response_schema=YourResponseSchema,
-        # Define what happens when validation fails
-        validation_behavior=ValidationBehavior.WARN  # Options: STRICT, WARN, IGNORE
-    )
-
-Response Format Options
----------------------
-
-Agentle supports multiple formats for structured outputs:
-
-.. code-block:: python
-
-    from agentle.agents.agent import Agent
-    from agentle.generations.models.structured_outputs_store.json_format import JSONFormat
-
-    # Create an agent with JSON format preference
-    agent = Agent(
-        name="JSON Formatter",
-        generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
-        instructions="You create structured outputs in JSON format.",
-        response_schema=YourResponseSchema,
-        response_format=JSONFormat()  # Explicitly specify JSON format
-    )
-
 Combining with Tools
 ------------------
 
@@ -213,5 +167,4 @@ Best Practices
 2. **Schema Complexity**: Balance schema complexity with model capabilities - too complex schemas may lead to validation errors
 3. **Field Documentation**: Add field descriptions to help the model generate appropriate values
 4. **Optional Fields**: Use Optional for fields that might not always be present
-5. **Validation Feedback**: Use ValidationBehavior.WARN during development to see validation issues
 6. **Default Values**: Provide sensible defaults for fields where appropriate

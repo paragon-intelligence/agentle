@@ -68,37 +68,6 @@ When you enable tracing, Agentle automatically captures:
 
 4. **Metadata**: Custom metadata you provide via trace_params
 
-Enhanced Tracing with Spans
--------------------------
-
-For more detailed insights, you can create custom spans to measure specific operations:
-
-.. code-block:: python
-
-    from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
-    from agentle.agents.agent import Agent
-    from contextlib import asynccontextmanager
-
-    # Create a tracing client
-    tracing_client = LangfuseObservabilityClient()
-
-    # Create a custom span for a specific operation
-    @asynccontextmanager
-    async def custom_trace_span(name, metadata=None):
-        # Start the span
-        with tracing_client.start_span(name=name, metadata=metadata) as span:
-            try:
-                yield span
-            finally:
-                # The span is automatically ended when exiting the context
-                pass
-
-    # Use the custom span in your code
-    async def process_data_with_tracing():
-        async with custom_trace_span("data_processing", {"data_size": "large"}):
-            # Perform some operation that you want to measure
-            result = await process_complex_data()
-            return result
 
 Tracing Pipelines and Teams
 -------------------------
@@ -214,66 +183,8 @@ Here's an example of what production traces look like in Langfuse:
 Customizing Observability
 -----------------------
 
-You can implement custom observability clients by implementing the ``ObservabilityClient`` abstract base class:
+You can implement custom observability clients by implementing the ``StatefulObservabilityClient`` abstract base class. Take a look at internal code to see how it works.
 
-.. code-block:: python
-
-    from typing import Any, Dict, Optional, override
-    from agentle.generations.tracing.observability_client import ObservabilityClient
-    from agentle.generations.tracing.observability_span import ObservabilitySpan
-
-    class CustomObservabilityClient(ObservabilityClient):
-        """Custom observability client implementation"""
-        
-        def __init__(self, api_key: str):
-            self.api_key = api_key
-            # Initialize your custom observability service
-            
-        @override
-        def start_trace(self, name: str, metadata: Optional[Dict[str, Any]] = None) -> str:
-            """Start a new trace and return its ID"""
-            # Implement your trace creation logic
-            trace_id = "custom-trace-" + str(uuid.uuid4())
-            # Log or send to your observability service
-            return trace_id
-            
-        @override
-        def start_span(self, name: str, metadata: Optional[Dict[str, Any]] = None, 
-                      parent_span_id: Optional[str] = None, trace_id: Optional[str] = None) -> ObservabilitySpan:
-            """Start a new span and return the span object"""
-            # Implement your span creation logic
-            span_id = "custom-span-" + str(uuid.uuid4())
-            # Create and return a span
-            return CustomObservabilitySpan(span_id, self)
-            
-        # Implement other required methods...
-
-    # Custom span implementation
-    class CustomObservabilitySpan(ObservabilitySpan):
-        """Custom span implementation"""
-        
-        def __init__(self, span_id: str, client: CustomObservabilityClient):
-            self.span_id = span_id
-            self.client = client
-            self.start_time = time.time()
-            
-        @override
-        def end(self) -> None:
-            """End the span and record its duration"""
-            duration = time.time() - self.start_time
-            # Log or send to your observability service
-            
-        # Implement other required methods...
-
-    # Use your custom observability client
-    custom_client = CustomObservabilityClient(api_key="your-api-key")
-    provider = GoogleGenaiGenerationProvider(tracing_client=custom_client)
-    agent = Agent(
-        name="Custom Traced Agent",
-        generation_provider=provider,
-        model="gemini-2.0-flash",
-        instructions="You are a helpful assistant."
-    )
 
 Best Practices
 ------------

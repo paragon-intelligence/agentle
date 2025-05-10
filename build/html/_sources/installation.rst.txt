@@ -49,7 +49,7 @@ To install the latest development version from source:
 
 .. code-block:: bash
 
-    git clone https://github.com/exampleorg/agentle.git
+    git clone https://github.com/paragon-intelligence/agentle.git
     cd agentle
     pip install -e .
 
@@ -63,10 +63,10 @@ Google AI
 
 For Google AI models (Gemini), you'll need a Google AI API key:
 
-1. Visit the `Google AI Studio <https://makersuite.google.com/>`_
+1. Visit the `Google AI Studio <https://aistudio.google.com/app/apikey/>`_
 2. Click on "Get API key"
 3. Follow the instructions to create a project and API key
-4. Set the environment variable:
+4. Set the environment variable (or place it in your .env):
 
 .. code-block:: bash
 
@@ -79,7 +79,7 @@ For Google AI models (Gemini), you'll need a Google AI API key:
 OpenAI
 ~~~~~
 
-For OpenAI models (GPT-4, GPT-3.5), you'll need an OpenAI API key:
+For OpenAI models, you'll need an OpenAI API key:
 
 1. Visit `OpenAI API Keys <https://platform.openai.com/account/api-keys>`_
 2. Create a new API key

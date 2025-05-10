@@ -307,7 +307,7 @@
 <h2>Creating Prompt Templates<a class="headerlink" href="#creating-prompt-templates" title="Link to this heading">¶</a></h2>
 <p>Prompt templates are text files with variable placeholders that can be filled in at runtime. By default, Agentle uses a simple <code class="docutils literal notranslate"><span class="pre">{{variable}}</span></code> syntax for variables:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">./prompts/weather_template.txt</span><a class="headerlink" href="#id1" title="Link to this code">¶</a></div>
+<div class="code-block-caption"><span class="caption-text">./prompts/weather_template.md</span><a class="headerlink" href="#id1" title="Link to this code">¶</a></div>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Please provide a detailed {{days}}-day weather forecast for {{location}} in {{units}} degrees.
 Include information about:
 
@@ -414,23 +414,6 @@ Make the forecast concise but informative.
 </div>
 </section>
 </section>
-<section id="versioned-prompts">
-<h2>Versioned Prompts<a class="headerlink" href="#versioned-prompts" title="Link to this heading">¶</a></h2>
-<p>For more sophisticated applications, you can implement versioning for your prompts:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.prompts.prompt_providers.fs_prompt_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">FSPromptProvider</span>
-
-<span class="c1"># Create a versioned prompt provider</span>
-<span class="n">versioned_provider</span> <span class="o">=</span> <span class="n">FSPromptProvider</span><span class="p">(</span>
-    <span class="n">base_path</span><span class="o">=</span><span class="s2">&quot;./prompts&quot;</span><span class="p">,</span>
-    <span class="n">version</span><span class="o">=</span><span class="s2">&quot;v2&quot;</span>  <span class="c1"># Will look for prompts in ./prompts/v2/</span>
-<span class="p">)</span>
-
-<span class="c1"># Load a prompt from the versioned directory</span>
-<span class="n">prompt</span> <span class="o">=</span> <span class="n">versioned_provider</span><span class="o">.</span><span class="n">provide</span><span class="p">(</span><span class="s2">&quot;customer_service&quot;</span><span class="p">)</span>  <span class="c1"># Loads ./prompts/v2/customer_service.txt</span>
-</pre></div>
-</div>
-<p>You can also implement a custom versioning strategy by extending the base prompt provider classes.</p>
-</section>
 <section id="using-prompts-with-agents">
 <h2>Using Prompts with Agents<a class="headerlink" href="#using-prompts-with-agents" title="Link to this heading">¶</a></h2>
 <p>Prompts can be used with agents in several ways:</p>
@@ -465,40 +448,6 @@ Make the forecast concise but informative.
     <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
     <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
     <span class="n">instructions</span><span class="o">=</span><span class="n">compiled_instructions</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="in-tool-documentation">
-<h3>In Tool Documentation<a class="headerlink" href="#in-tool-documentation" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load a prompt for tool documentation</span>
-<span class="n">tool_doc_prompt</span> <span class="o">=</span> <span class="n">prompt_provider</span><span class="o">.</span><span class="n">provide</span><span class="p">(</span><span class="s2">&quot;tool_documentation&quot;</span><span class="p">)</span>
-
-<span class="c1"># Compile for a specific tool</span>
-<span class="n">search_tool_doc</span> <span class="o">=</span> <span class="n">tool_doc_prompt</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="n">tool_name</span><span class="o">=</span><span class="s2">&quot;search&quot;</span><span class="p">,</span>
-    <span class="n">parameters</span><span class="o">=</span><span class="s2">&quot;query: The search query string&quot;</span><span class="p">,</span>
-    <span class="n">returns</span><span class="o">=</span><span class="s2">&quot;A list of search results with titles and URLs&quot;</span>
-<span class="p">)</span>
-
-<span class="c1"># Define a tool with the compiled documentation</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    {documentation}</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Implementation...</span>
-    <span class="k">return</span> <span class="n">results</span>
-
-<span class="c1"># Replace the docstring placeholder</span>
-<span class="n">search</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">documentation</span><span class="o">=</span><span class="n">search_tool_doc</span><span class="p">)</span>
-
-<span class="c1"># Use the tool with the agent</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Search Assistant&quot;</span><span class="p">,</span>
-    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a search assistant.&quot;</span><span class="p">,</span>
-    <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">search</span><span class="p">]</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -645,11 +594,9 @@ Generated on {{date}}
 <li><a class="reference internal" href="#database-provider">Database Provider</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#versioned-prompts">Versioned Prompts</a></li>
 <li><a class="reference internal" href="#using-prompts-with-agents">Using Prompts with Agents</a><ul>
 <li><a class="reference internal" href="#as-direct-input">As Direct Input</a></li>
 <li><a class="reference internal" href="#in-agent-instructions">In Agent Instructions</a></li>
-<li><a class="reference internal" href="#in-tool-documentation">In Tool Documentation</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#advanced-prompt-templates">Advanced Prompt Templates</a></li>

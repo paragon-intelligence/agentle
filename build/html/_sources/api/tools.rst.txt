@@ -35,23 +35,7 @@ The ``Tool`` class is the core class for tool integration:
                 A Tool instance
             """
             # Implementation details...
-            
-        def with_result(
-            self,
-            args: Dict[str, Any],
-            result: Any
-        ) -> "Tool":
-            """
-            Create a copy of this tool with a pre-computed result.
-            
-            Args:
-                args: The arguments used to call the tool
-                result: The result of the tool execution
-                
-            Returns:
-                A new Tool instance with the result
-            """
-            # Implementation details...
+
 
 FunctionDefinition
 ~~~~~~~~~~~~~~~~
@@ -224,41 +208,6 @@ You can add tools to an existing agent using the ``with_tools()`` method:
 
     # Use the agent with tools
     response = agent_with_tools.run("What's the weather in London?")
-
-Manually Providing Tool Results
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In some cases, you might want to manually provide the results of tool execution:
-
-.. code-block:: python
-
-    from agentle.generations.models.messages.user_message import UserMessage
-    from agentle.generations.models.message_parts.text import TextPart
-    from agentle.generations.tools.tool import Tool
-
-    # Create a tool reference with a pre-computed result
-    weather_tool_result = Tool.from_callable(get_weather).with_result(
-        args={"location": "Tokyo"},
-        result="Sunny, 23°C, Humidity: 45%"
-    )
-    
-    # Create a message with the tool result
-    message = UserMessage(
-        parts=[
-            TextPart(text="What's the weather in Tokyo?"),
-            weather_tool_result
-        ]
-    )
-    
-    # Run the agent with the message containing the tool result
-    result = agent.run(message)
-
-This approach is useful when:
-
-1. You want to execute tools outside of the agent's control
-2. You're implementing a custom execution flow
-3. You need to handle rate limiting or other constraints
-4. You're integrating with external systems
 
 Tool Docstring and Signature
 --------------------------

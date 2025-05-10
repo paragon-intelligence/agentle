@@ -338,36 +338,6 @@
 <li><p><strong>Metadata</strong>: Custom metadata you provide via trace_params</p></li>
 </ol>
 </section>
-<section id="enhanced-tracing-with-spans">
-<h2>Enhanced Tracing with Spans<a class="headerlink" href="#enhanced-tracing-with-spans" title="Link to this heading">¶</a></h2>
-<p>For more detailed insights, you can create custom spans to measure specific operations:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tracing.langfuse</span><span class="w"> </span><span class="kn">import</span> <span class="n">LangfuseObservabilityClient</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">asynccontextmanager</span>
-
-<span class="c1"># Create a tracing client</span>
-<span class="n">tracing_client</span> <span class="o">=</span> <span class="n">LangfuseObservabilityClient</span><span class="p">()</span>
-
-<span class="c1"># Create a custom span for a specific operation</span>
-<span class="nd">@asynccontextmanager</span>
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">custom_trace_span</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="c1"># Start the span</span>
-    <span class="k">with</span> <span class="n">tracing_client</span><span class="o">.</span><span class="n">start_span</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">span</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="c1"># The span is automatically ended when exiting the context</span>
-            <span class="k">pass</span>
-
-<span class="c1"># Use the custom span in your code</span>
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_data_with_tracing</span><span class="p">():</span>
-    <span class="k">async</span> <span class="k">with</span> <span class="n">custom_trace_span</span><span class="p">(</span><span class="s2">&quot;data_processing&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;data_size&quot;</span><span class="p">:</span> <span class="s2">&quot;large&quot;</span><span class="p">}):</span>
-        <span class="c1"># Perform some operation that you want to measure</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">process_complex_data</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">result</span>
-</pre></div>
-</div>
-</section>
 <section id="tracing-pipelines-and-teams">
 <h2>Tracing Pipelines and Teams<a class="headerlink" href="#tracing-pipelines-and-teams" title="Link to this heading">¶</a></h2>
 <p>When using agent compositions, Agentle automatically traces the entire workflow:</p>
@@ -471,65 +441,7 @@
 </section>
 <section id="customizing-observability">
 <h2>Customizing Observability<a class="headerlink" href="#customizing-observability" title="Link to this heading">¶</a></h2>
-<p>You can implement custom observability clients by implementing the <code class="docutils literal notranslate"><span class="pre">ObservabilityClient</span></code> abstract base class:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">override</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tracing.observability_client</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObservabilityClient</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tracing.observability_span</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObservabilitySpan</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">CustomObservabilityClient</span><span class="p">(</span><span class="n">ObservabilityClient</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom observability client implementation&quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span>
-        <span class="c1"># Initialize your custom observability service</span>
-
-    <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">start_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a new trace and return its ID&quot;&quot;&quot;</span>
-        <span class="c1"># Implement your trace creation logic</span>
-        <span class="n">trace_id</span> <span class="o">=</span> <span class="s2">&quot;custom-trace-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
-        <span class="c1"># Log or send to your observability service</span>
-        <span class="k">return</span> <span class="n">trace_id</span>
-
-    <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">start_span</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                  <span class="n">parent_span_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">trace_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ObservabilitySpan</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a new span and return the span object&quot;&quot;&quot;</span>
-        <span class="c1"># Implement your span creation logic</span>
-        <span class="n">span_id</span> <span class="o">=</span> <span class="s2">&quot;custom-span-&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
-        <span class="c1"># Create and return a span</span>
-        <span class="k">return</span> <span class="n">CustomObservabilitySpan</span><span class="p">(</span><span class="n">span_id</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-
-    <span class="c1"># Implement other required methods...</span>
-
-<span class="c1"># Custom span implementation</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">CustomObservabilitySpan</span><span class="p">(</span><span class="n">ObservabilitySpan</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom span implementation&quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">span_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">CustomObservabilityClient</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">span_id</span> <span class="o">=</span> <span class="n">span_id</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-
-    <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;End the span and record its duration&quot;&quot;&quot;</span>
-        <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span>
-        <span class="c1"># Log or send to your observability service</span>
-
-    <span class="c1"># Implement other required methods...</span>
-
-<span class="c1"># Use your custom observability client</span>
-<span class="n">custom_client</span> <span class="o">=</span> <span class="n">CustomObservabilityClient</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your-api-key&quot;</span><span class="p">)</span>
-<span class="n">provider</span> <span class="o">=</span> <span class="n">GoogleGenaiGenerationProvider</span><span class="p">(</span><span class="n">tracing_client</span><span class="o">=</span><span class="n">custom_client</span><span class="p">)</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Custom Traced Agent&quot;</span><span class="p">,</span>
-    <span class="n">generation_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
-<span class="p">)</span>
-</pre></div>
-</div>
+<p>You can implement custom observability clients by implementing the <code class="docutils literal notranslate"><span class="pre">StatefulObservabilityClient</span></code> abstract base class. Take a look at internal code to see how it works.</p>
 </section>
 <section id="best-practices">
 <h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
@@ -602,7 +514,6 @@
 <li><a class="reference internal" href="#">Observability</a><ul>
 <li><a class="reference internal" href="#basic-tracing-setup">Basic Tracing Setup</a></li>
 <li><a class="reference internal" href="#what-gets-traced">What Gets Traced</a></li>
-<li><a class="reference internal" href="#enhanced-tracing-with-spans">Enhanced Tracing with Spans</a></li>
 <li><a class="reference internal" href="#tracing-pipelines-and-teams">Tracing Pipelines and Teams</a></li>
 <li><a class="reference internal" href="#monitoring-in-production">Monitoring in Production</a></li>
 <li><a class="reference internal" href="#setting-up-langfuse">Setting Up Langfuse</a></li>

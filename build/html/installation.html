@@ -313,7 +313,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 <section id="installation-from-source">
 <h2>Installation from Source<a class="headerlink" href="#installation-from-source" title="Link to this heading">¶</a></h2>
 <p>To install the latest development version from source:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/exampleorg/agentle.git
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/paragon-intelligence/agentle.git
 <span class="nb">cd</span><span class="w"> </span>agentle
 pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
@@ -326,10 +326,10 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 <h3>Google AI<a class="headerlink" href="#google-ai" title="Link to this heading">¶</a></h3>
 <p>For Google AI models (Gemini), you’ll need a Google AI API key:</p>
 <ol class="arabic simple">
-<li><p>Visit the <a class="reference external" href="https://makersuite.google.com/">Google AI Studio</a></p></li>
+<li><p>Visit the <a class="reference external" href="https://aistudio.google.com/app/apikey/">Google AI Studio</a></p></li>
 <li><p>Click on “Get API key”</p></li>
 <li><p>Follow the instructions to create a project and API key</p></li>
-<li><p>Set the environment variable:</p></li>
+<li><p>Set the environment variable (or place it in your .env):</p></li>
 </ol>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Linux/macOS</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">GOOGLE_API_KEY</span><span class="o">=</span><span class="s2">&quot;your-google-api-key&quot;</span>
@@ -341,7 +341,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </section>
 <section id="openai">
 <h3>OpenAI<a class="headerlink" href="#openai" title="Link to this heading">¶</a></h3>
-<p>For OpenAI models (GPT-4, GPT-3.5), you’ll need an OpenAI API key:</p>
+<p>For OpenAI models, you’ll need an OpenAI API key:</p>
 <ol class="arabic simple">
 <li><p>Visit <a class="reference external" href="https://platform.openai.com/account/api-keys">OpenAI API Keys</a></p></li>
 <li><p>Create a new API key</p></li>

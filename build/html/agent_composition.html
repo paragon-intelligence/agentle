@@ -320,7 +320,6 @@
 <span class="c1"># Create a pipeline</span>
 <span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">analysis_agent</span><span class="p">,</span> <span class="n">summary_agent</span><span class="p">],</span>
-    <span class="n">debug_mode</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Enable to see intermediate steps</span>
 <span class="p">)</span>
 
 <span class="c1"># Run the pipeline</span>
@@ -342,8 +341,6 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a pipeline that includes the original query in each step</span>
 <span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">analysis_agent</span><span class="p">,</span> <span class="n">summary_agent</span><span class="p">],</span>
-    <span class="n">include_query</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Include original query in each step</span>
-    <span class="n">debug_mode</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -462,42 +459,6 @@
 </pre></div>
 </div>
 </section>
-<section id="teams-with-advanced-routing">
-<h3>Teams with Advanced Routing<a class="headerlink" href="#teams-with-advanced-routing" title="Link to this heading">¶</a></h3>
-<p>You can create more complex team structures with advanced routing logic:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_team</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentTeam</span><span class="p">,</span> <span class="n">RoutingStrategy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.a2a.models.agent_skill</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentSkill</span>
-
-<span class="c1"># Create a team with custom routing strategy</span>
-<span class="n">advanced_team</span> <span class="o">=</span> <span class="n">AgentTeam</span><span class="p">(</span>
-    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_agent</span><span class="p">,</span> <span class="n">coding_agent</span><span class="p">,</span> <span class="n">math_agent</span><span class="p">],</span>
-    <span class="n">orchestrator_provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span>
-    <span class="n">orchestrator_model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
-    <span class="n">routing_strategy</span><span class="o">=</span><span class="n">RoutingStrategy</span><span class="o">.</span><span class="n">SKILL_MATCH</span><span class="p">,</span>  <span class="c1"># Route based on skill matching</span>
-    <span class="n">confidence_threshold</span><span class="o">=</span><span class="mf">0.7</span>  <span class="c1"># Minimum confidence score to route to an agent</span>
-<span class="p">)</span>
-
-<span class="c1"># The team will now require a higher confidence in agent selection,</span>
-<span class="c1"># and will prioritize matching specific skills to queries</span>
-</pre></div>
-</div>
-</section>
-</section>
-<section id="combining-pipelines-and-teams">
-<h2>Combining Pipelines and Teams<a class="headerlink" href="#combining-pipelines-and-teams" title="Link to this heading">¶</a></h2>
-<p>For even more powerful systems, you can combine pipelines and teams:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a pipeline of teams</span>
-<span class="n">pipeline_of_teams</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
-    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">research_team</span><span class="p">,</span> <span class="n">analysis_team</span><span class="p">,</span> <span class="n">summary_team</span><span class="p">]</span>
-<span class="p">)</span>
-
-<span class="c1"># Or create a team of pipelines</span>
-<span class="n">team_of_pipelines</span> <span class="o">=</span> <span class="n">AgentTeam</span><span class="p">(</span>
-    <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">data_pipeline</span><span class="p">,</span> <span class="n">text_pipeline</span><span class="p">,</span> <span class="n">image_pipeline</span><span class="p">]</span>
-<span class="p">)</span>
-</pre></div>
-</div>
 </section>
 <section id="best-practices">
 <h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
@@ -505,7 +466,6 @@
 <li><p><strong>Specialized Instructions</strong>: Make sure each agent in a pipeline or team has clear, specialized instructions</p></li>
 <li><p><strong>Clear Boundaries</strong>: Ensure clear boundaries between agent responsibilities to avoid overlap</p></li>
 <li><p><strong>Error Handling</strong>: Consider how errors should propagate through pipelines</p></li>
-<li><p><strong>Debug Mode</strong>: Use debug_mode=True during development to see intermediate steps</p></li>
 <li><p><strong>Skill Definition</strong>: Define skills clearly to help the orchestrator route queries accurately</p></li>
 </ol>
 </section>
@@ -576,10 +536,8 @@
 <li><a class="reference internal" href="#agent-teams">Agent Teams</a><ul>
 <li><a class="reference internal" href="#basic-team-setup">Basic Team Setup</a></li>
 <li><a class="reference internal" href="#how-teams-work">How Teams Work</a></li>
-<li><a class="reference internal" href="#teams-with-advanced-routing">Teams with Advanced Routing</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#combining-pipelines-and-teams">Combining Pipelines and Teams</a></li>
 <li><a class="reference internal" href="#best-practices">Best Practices</a></li>
 </ul>
 </li>

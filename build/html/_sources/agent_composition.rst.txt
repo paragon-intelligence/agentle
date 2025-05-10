@@ -51,7 +51,6 @@ Here's how to create a basic agent pipeline:
     # Create a pipeline
     pipeline = AgentPipeline(
         agents=[research_agent, analysis_agent, summary_agent],
-        debug_mode=True  # Enable to see intermediate steps
     )
 
     # Run the pipeline
@@ -75,8 +74,6 @@ By default, each agent in the pipeline receives only the output of the previous 
     # Create a pipeline that includes the original query in each step
     pipeline = AgentPipeline(
         agents=[research_agent, analysis_agent, summary_agent],
-        include_query=True,  # Include original query in each step
-        debug_mode=True
     )
 
 Pipeline with Different Models
@@ -200,51 +197,10 @@ The orchestrator can be configured with specific instructions:
         Consider the skills and expertise of each agent when making your decision."""
     )
 
-Teams with Advanced Routing
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can create more complex team structures with advanced routing logic:
-
-.. code-block:: python
-
-    from agentle.agents.agent import Agent
-    from agentle.agents.agent_team import AgentTeam, RoutingStrategy
-    from agentle.agents.a2a.models.agent_skill import AgentSkill
-    
-    # Create a team with custom routing strategy
-    advanced_team = AgentTeam(
-        agents=[research_agent, coding_agent, math_agent],
-        orchestrator_provider=provider,
-        orchestrator_model="gemini-2.0-flash",
-        routing_strategy=RoutingStrategy.SKILL_MATCH,  # Route based on skill matching
-        confidence_threshold=0.7  # Minimum confidence score to route to an agent
-    )
-
-    # The team will now require a higher confidence in agent selection,
-    # and will prioritize matching specific skills to queries
-
-Combining Pipelines and Teams
----------------------------
-
-For even more powerful systems, you can combine pipelines and teams:
-
-.. code-block:: python
-
-    # Create a pipeline of teams
-    pipeline_of_teams = AgentPipeline(
-        agents=[research_team, analysis_team, summary_team]
-    )
-    
-    # Or create a team of pipelines
-    team_of_pipelines = AgentTeam(
-        agents=[data_pipeline, text_pipeline, image_pipeline]
-    )
-
 Best Practices
 ------------
 
 1. **Specialized Instructions**: Make sure each agent in a pipeline or team has clear, specialized instructions
 2. **Clear Boundaries**: Ensure clear boundaries between agent responsibilities to avoid overlap
 3. **Error Handling**: Consider how errors should propagate through pipelines
-4. **Debug Mode**: Use debug_mode=True during development to see intermediate steps
-5. **Skill Definition**: Define skills clearly to help the orchestrator route queries accurately
+4. **Skill Definition**: Define skills clearly to help the orchestrator route queries accurately

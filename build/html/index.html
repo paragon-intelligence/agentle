@@ -281,7 +281,18 @@
 <p>Welcome to Agentle’s documentation. Agentle is a powerful yet elegant framework for building the next generation of AI agents.</p>
 <a class="reference internal image-reference" href="_images/logo.png"><img alt="Agentle Logo" class="align-center" src="_images/logo.png" style="width: 200px;" />
 </a>
-<p>Agentle makes it effortless to create, compose, and deploy intelligent AI agents - from simple task-focused agents to complex multi-agent systems. Built with developer productivity and type safety in mind, Agentle provides a clean, intuitive API for transforming cutting-edge AI capabilities into production-ready applications.</p>
+<section id="author-s-note">
+<h2>Author’s Note<a class="headerlink" href="#author-s-note" title="Link to this heading">¶</a></h2>
+<p>I created Agentle out of frustration with the direction of other agent frameworks. Many frameworks have lost sight of clean design principles by adding numerous configuration flags to their Agent constructors (like <code class="docutils literal notranslate"><span class="pre">enable_whatever=True</span></code>, <code class="docutils literal notranslate"><span class="pre">add_memory=True</span></code>, etc.). This approach creates countless possible combinations, making debugging and development unnecessarily complex.</p>
+<p>Agentle strives to maintain a careful balance between simplicity and practicality. For example, I’ve wrestled with questions like whether document parsing functionality belongs in the Agent constructor. While not “simple” in the purest sense, such features can be practical for users. Finding this balance is central to Agentle’s design philosophy.</p>
+<p>Core principles of Agentle:</p>
+<ul class="simple">
+<li><p>Avoiding configuration flags in constructors whenever possible</p></li>
+<li><p>Organizing each class and function in separate modules by design</p></li>
+<li><p>Following the Single Responsibility Principle rather than strictly Pythonic conventions</p></li>
+<li><p>Creating a codebase that’s not only easy to use but also easy to maintain and extend</p></li>
+</ul>
+<p>Through this thoughtful approach to architecture, Agentle aims to provide a framework that’s both powerful and elegant for building the next generation of AI agents.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
@@ -341,8 +352,6 @@
 <li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#basic-structured-output">Basic Structured Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#working-with-complex-models">Working with Complex Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#handling-response-validation">Handling Response Validation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#response-format-options">Response Format Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#combining-with-tools">Combining with Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#best-practices">Best Practices</a></li>
 </ul>
@@ -360,7 +369,6 @@
 <li class="toctree-l1"><a class="reference internal" href="agent_composition.html">Agent Composition</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="agent_composition.html#agent-pipelines">Agent Pipelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="agent_composition.html#agent-teams">Agent Teams</a></li>
-<li class="toctree-l2"><a class="reference internal" href="agent_composition.html#combining-pipelines-and-teams">Combining Pipelines and Teams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="agent_composition.html#best-practices">Best Practices</a></li>
 </ul>
 </li>
@@ -368,7 +376,6 @@
 <li class="toctree-l2"><a class="reference internal" href="prompt_management.html#basic-prompt-management">Basic Prompt Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prompt_management.html#creating-prompt-templates">Creating Prompt Templates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prompt_management.html#prompt-providers">Prompt Providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#versioned-prompts">Versioned Prompts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prompt_management.html#using-prompts-with-agents">Using Prompts with Agents</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prompt_management.html#advanced-prompt-templates">Advanced Prompt Templates</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prompt_management.html#creating-custom-prompt-providers">Creating Custom Prompt Providers</a></li>
@@ -402,7 +409,6 @@
 <li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="observability.html#basic-tracing-setup">Basic Tracing Setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="observability.html#what-gets-traced">What Gets Traced</a></li>
-<li class="toctree-l2"><a class="reference internal" href="observability.html#enhanced-tracing-with-spans">Enhanced Tracing with Spans</a></li>
 <li class="toctree-l2"><a class="reference internal" href="observability.html#tracing-pipelines-and-teams">Tracing Pipelines and Teams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="observability.html#monitoring-in-production">Monitoring in Production</a></li>
 <li class="toctree-l2"><a class="reference internal" href="observability.html#setting-up-langfuse">Setting Up Langfuse</a></li>
@@ -437,12 +443,13 @@
 </ul>
 </div>
 <section id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">¶</a></h2>
+<h3>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
+</section>
 </section>
 </section>
 
@@ -492,7 +499,10 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Agentle Documentation</a><ul>
+<li><a class="reference internal" href="#author-s-note">Author’s Note</a><ul>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

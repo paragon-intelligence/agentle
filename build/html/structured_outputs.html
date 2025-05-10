@@ -377,48 +377,6 @@
 </pre></div>
 </div>
 </section>
-<section id="handling-response-validation">
-<h2>Handling Response Validation<a class="headerlink" href="#handling-response-validation" title="Link to this heading">¶</a></h2>
-<p>If the agent generates a response that doesn’t match your schema, Agentle will try to handle it gracefully:</p>
-<ol class="arabic simple">
-<li><p>First, it will attempt to repair the response by asking the model to fix the structure</p></li>
-<li><p>If that fails, you can access the raw text through <cite>response.text</cite> even if parsing failed</p></li>
-</ol>
-<p>You can customize validation behavior:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.validation_behavior</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationBehavior</span>
-
-<span class="c1"># Create an agent with custom validation behavior</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Custom Validation Agent&quot;</span><span class="p">,</span>
-    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a structured data assistant.&quot;</span><span class="p">,</span>
-    <span class="n">response_schema</span><span class="o">=</span><span class="n">YourResponseSchema</span><span class="p">,</span>
-    <span class="c1"># Define what happens when validation fails</span>
-    <span class="n">validation_behavior</span><span class="o">=</span><span class="n">ValidationBehavior</span><span class="o">.</span><span class="n">WARN</span>  <span class="c1"># Options: STRICT, WARN, IGNORE</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="response-format-options">
-<h2>Response Format Options<a class="headerlink" href="#response-format-options" title="Link to this heading">¶</a></h2>
-<p>Agentle supports multiple formats for structured outputs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.structured_outputs_store.json_format</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONFormat</span>
-
-<span class="c1"># Create an agent with JSON format preference</span>
-<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;JSON Formatter&quot;</span><span class="p">,</span>
-    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
-    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You create structured outputs in JSON format.&quot;</span><span class="p">,</span>
-    <span class="n">response_schema</span><span class="o">=</span><span class="n">YourResponseSchema</span><span class="p">,</span>
-    <span class="n">response_format</span><span class="o">=</span><span class="n">JSONFormat</span><span class="p">()</span>  <span class="c1"># Explicitly specify JSON format</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</section>
 <section id="combining-with-tools">
 <h2>Combining with Tools<a class="headerlink" href="#combining-with-tools" title="Link to this heading">¶</a></h2>
 <p>For even more powerful agents, combine structured outputs with tool calling:</p>
@@ -477,10 +435,9 @@
 <li><p><strong>Clear Instructions</strong>: Make sure your agent instructions align with your schema requirements</p></li>
 <li><p><strong>Schema Complexity</strong>: Balance schema complexity with model capabilities - too complex schemas may lead to validation errors</p></li>
 <li><p><strong>Field Documentation</strong>: Add field descriptions to help the model generate appropriate values</p></li>
-<li><p><strong>Optional Fields</strong>: Use Optional for fields that might not always be present</p></li>
-<li><p><strong>Validation Feedback</strong>: Use ValidationBehavior.WARN during development to see validation issues</p></li>
-<li><p><strong>Default Values</strong>: Provide sensible defaults for fields where appropriate</p></li>
 </ol>
+<p>4. <strong>Optional Fields</strong>: Use Optional for fields that might not always be present
+6. <strong>Default Values</strong>: Provide sensible defaults for fields where appropriate</p>
 </section>
 </section>
 
@@ -542,8 +499,6 @@
 <li><a class="reference internal" href="#">Structured Outputs</a><ul>
 <li><a class="reference internal" href="#basic-structured-output">Basic Structured Output</a></li>
 <li><a class="reference internal" href="#working-with-complex-models">Working with Complex Models</a></li>
-<li><a class="reference internal" href="#handling-response-validation">Handling Response Validation</a></li>
-<li><a class="reference internal" href="#response-format-options">Response Format Options</a></li>
 <li><a class="reference internal" href="#combining-with-tools">Combining with Tools</a></li>
 <li><a class="reference internal" href="#best-practices">Best Practices</a></li>
 </ul>

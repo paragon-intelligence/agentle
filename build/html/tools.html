@@ -462,31 +462,6 @@
 </pre></div>
 </div>
 </section>
-<section id="manually-providing-tool-results">
-<h3>Manually Providing Tool Results<a class="headerlink" href="#manually-providing-tool-results" title="Link to this heading">¶</a></h3>
-<p>You can also manually provide tool results to an agent:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tools.tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.messages.user_message</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserMessage</span>
-
-<span class="c1"># Create a tool reference with a pre-computed result</span>
-<span class="n">weather_tool_result</span> <span class="o">=</span> <span class="n">Tool</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="n">get_weather</span><span class="p">)</span><span class="o">.</span><span class="n">with_result</span><span class="p">(</span>
-    <span class="n">args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="s2">&quot;Tokyo&quot;</span><span class="p">},</span>
-    <span class="n">result</span><span class="o">=</span><span class="s2">&quot;Sunny, 23°C, Humidity: 45%&quot;</span>
-<span class="p">)</span>
-
-<span class="c1"># Create a message with the tool result</span>
-<span class="n">message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span>
-    <span class="n">parts</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;What&#39;s the weather in Tokyo?&quot;</span><span class="p">),</span>
-        <span class="n">weather_tool_result</span>
-    <span class="p">]</span>
-<span class="p">)</span>
-
-<span class="c1"># Run the agent with the message containing the tool result</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
 </section>
 <section id="best-practices-for-tools">
 <h2>Best Practices for Tools<a class="headerlink" href="#best-practices-for-tools" title="Link to this heading">¶</a></h2>
@@ -562,7 +537,6 @@
 <li><a class="reference internal" href="#advanced-tool-usage">Advanced Tool Usage</a><ul>
 <li><a class="reference internal" href="#combining-tools-with-structured-outputs">Combining Tools with Structured Outputs</a></li>
 <li><a class="reference internal" href="#classes-as-tools">Classes as Tools</a></li>
-<li><a class="reference internal" href="#manually-providing-tool-results">Manually Providing Tool Results</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#best-practices-for-tools">Best Practices for Tools</a></li>

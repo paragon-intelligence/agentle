@@ -413,12 +413,6 @@
             <span class="n">data</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s2">&quot;vacation_photo.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
             <span class="n">mime_type</span><span class="o">=</span><span class="s2">&quot;image/jpeg&quot;</span>
         <span class="p">),</span>
-
-        <span class="c1"># Tool reference to pass tool execution results</span>
-        <span class="n">Tool</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="n">get_weather</span><span class="p">)</span><span class="o">.</span><span class="n">with_result</span><span class="p">(</span>
-            <span class="n">args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="s2">&quot;Tokyo&quot;</span><span class="p">},</span>
-            <span class="n">result</span><span class="o">=</span><span class="s2">&quot;Sunny, 23°C, Humidity: 45%&quot;</span>
-        <span class="p">)</span>
     <span class="p">]</span>
 <span class="p">)</span>
 

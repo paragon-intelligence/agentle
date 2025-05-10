@@ -36,7 +36,7 @@ Creating Prompt Templates
 Prompt templates are text files with variable placeholders that can be filled in at runtime. By default, Agentle uses a simple ``{{variable}}`` syntax for variables:
 
 .. code-block:: text
-    :caption: ./prompts/weather_template.txt
+    :caption: ./prompts/weather_template.md
 
     Please provide a detailed {{days}}-day weather forecast for {{location}} in {{units}} degrees.
     Include information about:
@@ -150,26 +150,6 @@ For applications that need to store prompts in a database:
     # Load a prompt from the database
     prompt = db_provider.provide("greeting")
 
-Versioned Prompts
----------------
-
-For more sophisticated applications, you can implement versioning for your prompts:
-
-.. code-block:: python
-
-    from agentle.prompts.prompt_providers.fs_prompt_provider import FSPromptProvider
-    
-    # Create a versioned prompt provider
-    versioned_provider = FSPromptProvider(
-        base_path="./prompts",
-        version="v2"  # Will look for prompts in ./prompts/v2/
-    )
-    
-    # Load a prompt from the versioned directory
-    prompt = versioned_provider.provide("customer_service")  # Loads ./prompts/v2/customer_service.txt
-
-You can also implement a custom versioning strategy by extending the base prompt provider classes.
-
 Using Prompts with Agents
 -----------------------
 
@@ -212,40 +192,6 @@ In Agent Instructions
         instructions=compiled_instructions
     )
 
-In Tool Documentation
-~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    # Load a prompt for tool documentation
-    tool_doc_prompt = prompt_provider.provide("tool_documentation")
-    
-    # Compile for a specific tool
-    search_tool_doc = tool_doc_prompt.compile(
-        tool_name="search",
-        parameters="query: The search query string",
-        returns="A list of search results with titles and URLs"
-    )
-    
-    # Define a tool with the compiled documentation
-    def search(query: str) -> list:
-        """
-        {documentation}
-        """
-        # Implementation...
-        return results
-    
-    # Replace the docstring placeholder
-    search.__doc__ = search.__doc__.format(documentation=search_tool_doc)
-    
-    # Use the tool with the agent
-    agent = Agent(
-        name="Search Assistant",
-        generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
-        instructions="You are a search assistant.",
-        tools=[search]
-    )
 
 Advanced Prompt Templates
 -----------------------

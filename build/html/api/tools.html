@@ -304,23 +304,6 @@
 <span class="sd">            A Tool instance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Implementation details...</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_result</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">args</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-        <span class="n">result</span><span class="p">:</span> <span class="n">Any</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Tool&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a copy of this tool with a pre-computed result.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            args: The arguments used to call the tool</span>
-<span class="sd">            result: The result of the tool execution</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            A new Tool instance with the result</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Implementation details...</span>
 </pre></div>
 </div>
 </section>
@@ -483,39 +466,6 @@
 <span class="n">response</span> <span class="o">=</span> <span class="n">agent_with_tools</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather in London?&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="manually-providing-tool-results">
-<h3>Manually Providing Tool Results<a class="headerlink" href="#manually-providing-tool-results" title="Link to this heading">¶</a></h3>
-<p>In some cases, you might want to manually provide the results of tool execution:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.messages.user_message</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserMessage</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.message_parts.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">TextPart</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.tools.tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
-
-<span class="c1"># Create a tool reference with a pre-computed result</span>
-<span class="n">weather_tool_result</span> <span class="o">=</span> <span class="n">Tool</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="n">get_weather</span><span class="p">)</span><span class="o">.</span><span class="n">with_result</span><span class="p">(</span>
-    <span class="n">args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="s2">&quot;Tokyo&quot;</span><span class="p">},</span>
-    <span class="n">result</span><span class="o">=</span><span class="s2">&quot;Sunny, 23°C, Humidity: 45%&quot;</span>
-<span class="p">)</span>
-
-<span class="c1"># Create a message with the tool result</span>
-<span class="n">message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span>
-    <span class="n">parts</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;What&#39;s the weather in Tokyo?&quot;</span><span class="p">),</span>
-        <span class="n">weather_tool_result</span>
-    <span class="p">]</span>
-<span class="p">)</span>
-
-<span class="c1"># Run the agent with the message containing the tool result</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This approach is useful when:</p>
-<ol class="arabic simple">
-<li><p>You want to execute tools outside of the agent’s control</p></li>
-<li><p>You’re implementing a custom execution flow</p></li>
-<li><p>You need to handle rate limiting or other constraints</p></li>
-<li><p>You’re integrating with external systems</p></li>
-</ol>
 </section>
 </section>
 <section id="tool-docstring-and-signature">
@@ -762,7 +712,6 @@
 <li><a class="reference internal" href="#using-tools-with-agents">Using Tools with Agents</a><ul>
 <li><a class="reference internal" href="#passing-tools-to-agents">Passing Tools to Agents</a></li>
 <li><a class="reference internal" href="#adding-tools-to-existing-agents">Adding Tools to Existing Agents</a></li>
-<li><a class="reference internal" href="#manually-providing-tool-results">Manually Providing Tool Results</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#tool-docstring-and-signature">Tool Docstring and Signature</a><ul>
