@@ -114,13 +114,15 @@ Define prompts directly in your code:
 Database Provider
 ~~~~~~~~~~~~~~
 
-For applications that need to store prompts in a database:
+Store and retrieve prompts from various database systems, both SQL and NoSQL:
 
 .. code-block:: python
 
     from agentle.prompts.prompt_providers.db_prompt_provider import DBPromptProvider
+    
+    # SQLite example
     import sqlite3
-
+    
     # Connect to a database
     conn = sqlite3.connect("prompts.db")
     
@@ -149,6 +151,85 @@ For applications that need to store prompts in a database:
     
     # Load a prompt from the database
     prompt = db_provider.provide("greeting")
+
+The DBPromptProvider supports a wide range of database systems:
+
+**Relational Databases:**
+
+.. code-block:: python
+
+    # PostgreSQL (with asyncpg)
+    import asyncpg
+    
+    async def get_postgres_prompt():
+        conn = await asyncpg.connect(
+            user="postgres", password="password",
+            database="mydb", host="localhost"
+        )
+        
+        provider = DBPromptProvider(
+            connection=conn,
+            query="SELECT content FROM prompt_templates WHERE name = $1"
+        )
+        
+        return provider.provide("welcome_email")
+    
+    # MySQL/MariaDB
+    import mysql.connector
+    
+    conn = mysql.connector.connect(
+        host="localhost", user="user",
+        password="password", database="mydb"
+    )
+    
+    mysql_provider = DBPromptProvider(
+        connection=conn,
+        query="SELECT template FROM prompts WHERE name = %s"
+    )
+
+**NoSQL Databases:**
+
+.. code-block:: python
+
+    # MongoDB
+    from pymongo import MongoClient
+    
+    client = MongoClient("mongodb://localhost:27017/")
+    
+    mongo_provider = DBPromptProvider(
+        connection=client,
+        query="prompt_db.templates",  # Format: "database.collection"
+        param_conversion=lambda prompt_id: {"name": prompt_id}
+    )
+    
+    # Redis
+    import redis
+    
+    r = redis.Redis(host="localhost", port=6379, db=0)
+    
+    # Add a prompt to Redis
+    r.set("prompt:greeting", "Hello {{name}}! Welcome to our service.")
+    
+    redis_provider = DBPromptProvider(
+        connection=r,
+        query="",  # Query is ignored for Redis
+        param_conversion=lambda prompt_id: f"prompt:{prompt_id}"
+    )
+    
+    # Couchbase
+    from couchbase.cluster import Cluster
+    from couchbase.auth import PasswordAuthenticator
+    
+    auth = PasswordAuthenticator("username", "password")
+    cluster = Cluster("couchbase://localhost", authenticator=auth)
+    
+    couchbase_provider = DBPromptProvider(
+        connection=cluster,
+        query="prompt_bucket.prompts",  # Format: "bucket.collection"
+        param_conversion=lambda prompt_id: prompt_id
+    )
+
+The provider automatically detects the database type and uses the appropriate query mechanism. It works with both synchronous and asynchronous database clients, making it adaptable to various application architectures.
 
 Using Prompts with Agents
 -----------------------
