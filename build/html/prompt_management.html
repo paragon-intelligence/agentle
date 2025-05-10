@@ -378,8 +378,10 @@ Make the forecast concise but informative.
 </section>
 <section id="database-provider">
 <h3>Database Provider<a class="headerlink" href="#database-provider" title="Link to this heading">¶</a></h3>
-<p>For applications that need to store prompts in a database:</p>
+<p>Store and retrieve prompts from various database systems, both SQL and NoSQL:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.prompts.prompt_providers.db_prompt_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">DBPromptProvider</span>
+
+<span class="c1"># SQLite example</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
 
 <span class="c1"># Connect to a database</span>
@@ -412,6 +414,79 @@ Make the forecast concise but informative.
 <span class="n">prompt</span> <span class="o">=</span> <span class="n">db_provider</span><span class="o">.</span><span class="n">provide</span><span class="p">(</span><span class="s2">&quot;greeting&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The DBPromptProvider supports a wide range of database systems:</p>
+<p><strong>Relational Databases:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># PostgreSQL (with asyncpg)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncpg</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_postgres_prompt</span><span class="p">():</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncpg</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+        <span class="n">user</span><span class="o">=</span><span class="s2">&quot;postgres&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;password&quot;</span><span class="p">,</span>
+        <span class="n">database</span><span class="o">=</span><span class="s2">&quot;mydb&quot;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">provider</span> <span class="o">=</span> <span class="n">DBPromptProvider</span><span class="p">(</span>
+        <span class="n">connection</span><span class="o">=</span><span class="n">conn</span><span class="p">,</span>
+        <span class="n">query</span><span class="o">=</span><span class="s2">&quot;SELECT content FROM prompt_templates WHERE name = $1&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">provider</span><span class="o">.</span><span class="n">provide</span><span class="p">(</span><span class="s2">&quot;welcome_email&quot;</span><span class="p">)</span>
+
+<span class="c1"># MySQL/MariaDB</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mysql.connector</span>
+
+<span class="n">conn</span> <span class="o">=</span> <span class="n">mysql</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+    <span class="n">host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="s2">&quot;user&quot;</span><span class="p">,</span>
+    <span class="n">password</span><span class="o">=</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="s2">&quot;mydb&quot;</span>
+<span class="p">)</span>
+
+<span class="n">mysql_provider</span> <span class="o">=</span> <span class="n">DBPromptProvider</span><span class="p">(</span>
+    <span class="n">connection</span><span class="o">=</span><span class="n">conn</span><span class="p">,</span>
+    <span class="n">query</span><span class="o">=</span><span class="s2">&quot;SELECT template FROM prompts WHERE name = </span><span class="si">%s</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>NoSQL Databases:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># MongoDB</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pymongo</span><span class="w"> </span><span class="kn">import</span> <span class="n">MongoClient</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">MongoClient</span><span class="p">(</span><span class="s2">&quot;mongodb://localhost:27017/&quot;</span><span class="p">)</span>
+
+<span class="n">mongo_provider</span> <span class="o">=</span> <span class="n">DBPromptProvider</span><span class="p">(</span>
+    <span class="n">connection</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+    <span class="n">query</span><span class="o">=</span><span class="s2">&quot;prompt_db.templates&quot;</span><span class="p">,</span>  <span class="c1"># Format: &quot;database.collection&quot;</span>
+    <span class="n">param_conversion</span><span class="o">=</span><span class="k">lambda</span> <span class="n">prompt_id</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">prompt_id</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Redis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">redis</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">Redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">6379</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Add a prompt to Redis</span>
+<span class="n">r</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;prompt:greeting&quot;</span><span class="p">,</span> <span class="s2">&quot;Hello {{name}}! Welcome to our service.&quot;</span><span class="p">)</span>
+
+<span class="n">redis_provider</span> <span class="o">=</span> <span class="n">DBPromptProvider</span><span class="p">(</span>
+    <span class="n">connection</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
+    <span class="n">query</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>  <span class="c1"># Query is ignored for Redis</span>
+    <span class="n">param_conversion</span><span class="o">=</span><span class="k">lambda</span> <span class="n">prompt_id</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;prompt:</span><span class="si">{</span><span class="n">prompt_id</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Couchbase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">couchbase.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">Cluster</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">couchbase.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">PasswordAuthenticator</span>
+
+<span class="n">auth</span> <span class="o">=</span> <span class="n">PasswordAuthenticator</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">)</span>
+<span class="n">cluster</span> <span class="o">=</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&quot;couchbase://localhost&quot;</span><span class="p">,</span> <span class="n">authenticator</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+
+<span class="n">couchbase_provider</span> <span class="o">=</span> <span class="n">DBPromptProvider</span><span class="p">(</span>
+    <span class="n">connection</span><span class="o">=</span><span class="n">cluster</span><span class="p">,</span>
+    <span class="n">query</span><span class="o">=</span><span class="s2">&quot;prompt_bucket.prompts&quot;</span><span class="p">,</span>  <span class="c1"># Format: &quot;bucket.collection&quot;</span>
+    <span class="n">param_conversion</span><span class="o">=</span><span class="k">lambda</span> <span class="n">prompt_id</span><span class="p">:</span> <span class="n">prompt_id</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The provider automatically detects the database type and uses the appropriate query mechanism. It works with both synchronous and asynchronous database clients, making it adaptable to various application architectures.</p>
 </section>
 </section>
 <section id="using-prompts-with-agents">
