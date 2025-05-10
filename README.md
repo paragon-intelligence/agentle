@@ -413,6 +413,10 @@ if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
 ```
 
+The following documentation is automatically created and reachable via http://localhost:8000/docs
+<img width="1440" alt="image" src="https://github.com/user-attachments/assets/d9d743cb-ad9c-41eb-a059-eda089efa6b6" />
+
+
 **Available Endpoints:**
 - `POST /api/v1/agents/code_assistant/run` - Send prompts to the agent and get responses synchronously
 - `GET /openapi` - Get the OpenAPI specification
@@ -450,6 +454,10 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
 ```
+
+The following documentation is automatically created and reachable via http://localhost:8000/docs
+<img width="1436" alt="image" src="https://github.com/user-attachments/assets/b818954f-fb58-4079-98b2-88bc9d84b2c4" />
+
 
 **Available Endpoints:**
 - `POST /api/v1/tasks/send` - Send a task to the agent asynchronously
