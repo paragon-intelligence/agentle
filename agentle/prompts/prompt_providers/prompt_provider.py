@@ -24,7 +24,7 @@ class PromptProvider(abc.ABC):
     """
 
     @abc.abstractmethod
-    def provide(self, prompt_id: str, cache_ttl_seconds: int = 0) -> Prompt:
+    def provide(self, prompt_id: str) -> Prompt:
         """
         Retrieve a prompt by its identifier.
 

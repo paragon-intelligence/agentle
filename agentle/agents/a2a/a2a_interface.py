@@ -18,6 +18,7 @@ from typing import (
     cast,
 )
 
+from agentle.agents.a2a.a2a_interface_options import A2AInterfaceOptions
 from agentle.agents.a2a.resources.push_notification_resource import (
     PushNotificationResource,
 )
@@ -171,7 +172,9 @@ class A2AInterface[T_Schema]:
     def __init__(
         self,
         agent: "Agent[T_Schema] | AgentTeam | AgentPipeline",
+        *,
         task_manager: Optional[TaskManager] = None,
+        options: A2AInterfaceOptions | None = None,
     ):
         """
         Initialize the A2A interface.
@@ -187,6 +190,7 @@ class A2AInterface[T_Schema]:
         # Create the task resource
         self.agent = agent
         self.task_manager = task_manager
+        self.options = options
 
         # Use a wrapper for tasks instead of modifying the Pydantic model
         self.tasks = TasksWrapper[T_Schema](task_manager, agent)

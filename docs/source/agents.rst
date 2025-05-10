@@ -117,10 +117,8 @@ When you call ``agent.run()``, you get back a response object with these key pro
      - The text response from the agent
    * - ``parsed``
      - The structured output (if a response_schema was provided)
-   * - ``message``
-     - The complete message object
-   * - ``raw``
-     - The raw response from the underlying provider
+   * - ``generation``
+     - The complete generation object with the agent's response
 
 Advanced Agent Configuration
 --------------------------

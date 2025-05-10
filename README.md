@@ -917,12 +917,6 @@ message = UserMessage(
             data=open("vacation_photo.jpg", "rb").read(),
             mime_type="image/jpeg"
         ),
-        
-        # Tool reference to pass tool execution results
-        Tool.from_callable(get_weather).with_result(
-            args={"location": "Tokyo"},
-            result="Sunny, 23°C, Humidity: 45%"
-        )
     ]
 )
 

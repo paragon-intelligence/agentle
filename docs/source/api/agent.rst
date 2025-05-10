@@ -3,6 +3,7 @@ Agent API
 ==========
 
 This page documents the API for the ``Agent`` class, which is the core building block of the Agentle framework.
+This page documentation and others in this module are a WIP. If you want to check the internal API, for now, I recommend going directly to the code.
 
 Agent Class
 ----------

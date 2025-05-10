@@ -294,7 +294,7 @@ You can customize the A2A interface with additional parameters:
     # Configure the A2A interface with options
     a2a = A2AInterface(
         agent=agent,
-        options=A2AInterfaceOptions(
+        options=A2AInterfaceOptions( # wip
             max_concurrent_tasks=10,  # Maximum number of concurrent tasks
             task_timeout=300,         # Task timeout in seconds
             task_poll_interval=1,     # Polling interval for task status

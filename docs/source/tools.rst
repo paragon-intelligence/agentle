@@ -198,33 +198,6 @@ You can also use methods from classes as tools:
         tools=[calculator.add, calculator.subtract]
     )
 
-Manually Providing Tool Results
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can also manually provide tool results to an agent:
-
-.. code-block:: python
-
-    from agentle.generations.tools.tool import Tool
-    from agentle.generations.models.messages.user_message import UserMessage
-
-    # Create a tool reference with a pre-computed result
-    weather_tool_result = Tool.from_callable(get_weather).with_result(
-        args={"location": "Tokyo"},
-        result="Sunny, 23°C, Humidity: 45%"
-    )
-    
-    # Create a message with the tool result
-    message = UserMessage(
-        parts=[
-            TextPart(text="What's the weather in Tokyo?"),
-            weather_tool_result
-        ]
-    )
-    
-    # Run the agent with the message containing the tool result
-    result = agent.run(message)
-
 Best Practices for Tools
 ----------------------
 

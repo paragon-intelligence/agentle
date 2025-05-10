@@ -87,6 +87,7 @@ from agentle.prompts.models.prompt import Prompt
 if TYPE_CHECKING:
     from io import BytesIO, StringIO
     from pathlib import Path
+    from agentle.agents.agent_team import AgentTeam
 
     import numpy as np
     import pandas as pd
@@ -207,7 +208,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     knowledge documents, if provided.
     """
 
-    generation_provider: GenerationProvider | type[GenerationProvider]
+    generation_provider: GenerationProvider
     """
     The service provider of the agent
     """
@@ -478,11 +479,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         """
         # Determine provider information
         provider_dict: dict[str, str] | None = None
-        provider_class = (
-            self.generation_provider.__class__
-            if isinstance(self.generation_provider, GenerationProvider)
-            else self.generation_provider
-        )
+        provider_class = self.generation_provider.__class__
 
         # Map provider class to organization name
         provider_name: str | None = None
@@ -709,11 +706,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         _logger.bind_optional(
             lambda log: log.info("Starting agent run with input type: %s", type(input))
         )
-        generation_provider: GenerationProvider = (
-            self.generation_provider
-            if isinstance(self.generation_provider, GenerationProvider)
-            else self.generation_provider()
-        )
+        generation_provider: GenerationProvider = self.generation_provider
 
         static_knowledge_prompt: str | None = None
         # Process static knowledge if any exists
@@ -1389,4 +1382,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 developer_message,
                 UserMessage(parts=[TextPart(text=str(input))]),
             ]
+        )
+
+    def __add__(self, other: Agent[Any]) -> AgentTeam:
+        from agentle.agents.agent_team import AgentTeam
+
+        return AgentTeam(
+            agents=[self, other],
+            orchestrator_provider=self.generation_provider,
+            orchestrator_model=self.model or self.generation_provider.default_model,
         )

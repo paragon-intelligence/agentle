@@ -24,24 +24,32 @@ class LangfusePromptProvider(PromptProvider):
     This provider fetches prompts from Langfuse, a platform for LLM observability
     and prompt management. It requires a Langfuse client instance to be provided.
 
+    It inherits template compilation capabilities from the base PromptProvider class,
+    allowing templates to be retrieved from Langfuse and compiled with context data.
+
     Attributes:
         client (Langfuse): The Langfuse client instance used to connect to the API.
+        cache_ttl_seconds (int): Time-to-live in seconds for caching prompts.
     """
 
     client: Langfuse
+    cache_ttl_seconds: int = 0
 
-    def __init__(self, client: Langfuse) -> None:
+    def __init__(self, client: Langfuse, cache_ttl_seconds: int = 0) -> None:
         """
         Initialize a new Langfuse prompt provider.
 
         Args:
             client (Langfuse): The Langfuse client instance to use for API requests.
+            cache_ttl_seconds (int, optional): Time-to-live in seconds for caching.
+                                              Default is 0 (no caching).
         """
         super().__init__()
         self.client = client
+        self.cache_ttl_seconds = cache_ttl_seconds
 
     @override
-    def provide(self, prompt_id: str, cache_ttl_seconds: int = 0) -> Prompt:
+    def provide(self, prompt_id: str) -> Prompt:
         """
         Retrieve a prompt from the Langfuse API.
 
@@ -49,8 +57,6 @@ class LangfusePromptProvider(PromptProvider):
 
         Args:
             prompt_id (str): The identifier for the prompt to retrieve from Langfuse.
-            cache_ttl_seconds (int, optional): Time-to-live in seconds for caching the
-                                              prompt in Langfuse. Default is 0 (no caching).
 
         Returns:
             Prompt: A Prompt object containing the content fetched from Langfuse.
@@ -59,6 +65,7 @@ class LangfusePromptProvider(PromptProvider):
             Exceptions from the Langfuse client may be raised if the API request fails.
         """
         langfuse_prompt = self.client.get_prompt(
-            prompt_id, cache_ttl_seconds=cache_ttl_seconds
+            prompt_id, cache_ttl_seconds=self.cache_ttl_seconds
         )
+
         return Prompt(content=langfuse_prompt.prompt)
