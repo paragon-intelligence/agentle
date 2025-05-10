@@ -14,6 +14,22 @@ OFFICIAL RELEASE: MAY 16 - 2025
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/agentle.svg)](https://badge.fury.io/py/agentle)
 
+## Author's Note
+
+I created Agentle out of frustration with the direction of other agent frameworks. Many frameworks have lost sight of clean design principles by adding numerous configuration flags to their Agent constructors (like ``enable_whatever=True``, ``add_memory=True``, etc.). This approach creates countless possible combinations, making debugging and development unnecessarily complex. I wanted to create a framework that was both helpful in some common scenarios, but let the develper (his job) to DEVELOP.
+
+Agentle strives to maintain a careful balance between simplicity and practicality. For example, I've wrestled with questions like whether document parsing functionality belongs in the Agent constructor. While not "simple" in the purest sense, such features can be practical for users. Finding this balance is central to Agentle's design philosophy.
+
+Core principles of Agentle:
+
+* Avoiding configuration flags in constructors whenever possible
+* Organizing each class and function in separate modules by design
+* Following the Single Responsibility Principle rather than strictly Pythonic conventions (5000 SLOC types.py file)
+* Creating a codebase that's not only easy to use but also easy to maintain and extend (though the limitations of python about circular imports, me (and other devs), should be aware of this issue when working with one class per module)
+
+Through this thoughtful approach to architecture, Agentle aims to provide a framework that's both powerful and elegant for building the next generation of AI agents.
+
+
 ## ✨ Key Features
 
 - 🧠 **Simple Agent Creation** - Build powerful AI agents with minimal code
