@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
 ### Production-Ready API with BlackSheep
 
-Expose your agent as a RESTful API with automatic Swagger documentation:
+Expose your agent as a RESTful API with automatic Scalar documentation:
 
 ```python
 from agentle.agents.agent import Agent
