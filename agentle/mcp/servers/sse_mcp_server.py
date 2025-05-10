@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     )
 
 
-class HTTPMCPServer(MCPServerProtocol):
+class SSEMCPServer(MCPServerProtocol):
     """
     HTTP implementation of the MCP (Model Control Protocol) server.
 
@@ -46,7 +46,7 @@ class HTTPMCPServer(MCPServerProtocol):
         timeout_in_seconds (float): Request timeout in seconds
 
     Usage:
-        server = HTTPMCPServer(server_name="Example MCP", server_url="http://example.com/api")
+        server = SSEMCPServer(server_name="Example MCP", server_url="http://example.com/api")
         await server.connect()
         tools = await server.list_tools()
         result = await server.call_tool("tool_name", {"param": "value"})
