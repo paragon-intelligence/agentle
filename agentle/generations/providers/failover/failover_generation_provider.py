@@ -60,8 +60,8 @@ class FailoverGenerationProvider(GenerationProvider):
     def __init__(
         self,
         *,
-        tracing_client: StatefulObservabilityClient | None,
         generation_providers: Sequence[GenerationProvider],
+        tracing_client: StatefulObservabilityClient | None = None,
         shuffle: bool = False,
     ) -> None:
         """
