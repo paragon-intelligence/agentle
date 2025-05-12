@@ -84,10 +84,10 @@ from agentle.parsing.factories.file_parser_default_factory import (
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.prompts.models.prompt import Prompt
+from pathlib import Path
+from io import BytesIO, StringIO
 
 if TYPE_CHECKING:
-    from io import BytesIO, StringIO
-    from pathlib import Path
     from agentle.agents.agent_team import AgentTeam
 
     from mcp.types import Tool as MCPTool
@@ -1406,7 +1406,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     )
             except (ImportError, AttributeError):
                 pass
-        
+
         elif isinstance(input, (dict, list, tuple, set, frozenset)):
             # Convert dict, list, tuple, set, frozenset to JSON string
             try:
