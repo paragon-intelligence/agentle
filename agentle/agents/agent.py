@@ -1384,22 +1384,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     UserMessage(parts=[TextPart(text=input.md)]),
                 ]
             )
-        # Handle Pydantic models if available
-        elif HAS_PYDANTIC:
-            try:
-                from pydantic import BaseModel as PydanticBaseModel
-
-                if isinstance(input, PydanticBaseModel):
-                    # Convert Pydantic model to JSON string
-                    text = input.model_dump_json(indent=2)
-                    return Context(
-                        messages=[
-                            developer_message,
-                            UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
-                        ]
-                    )
-            except (ImportError, AttributeError):
-                pass
 
         # Sequence handling: Check for Message sequences or Part sequences
         # Explicitly check for Sequence for MyPy's benefit
@@ -1421,6 +1405,23 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         UserMessage(parts=list(valid_parts)),
                     ]
                 )
+
+        # Handle Pydantic models if available
+        elif HAS_PYDANTIC:
+            try:
+                from pydantic import BaseModel as PydanticBaseModel
+
+                if isinstance(input, PydanticBaseModel):
+                    # Convert Pydantic model to JSON string
+                    text = input.model_dump_json(indent=2)
+                    return Context(
+                        messages=[
+                            developer_message,
+                            UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
+                        ]
+                    )
+            except (ImportError, AttributeError):
+                pass
 
         # Fallback for any unhandled type
         # Convert to string representation as a last resort
