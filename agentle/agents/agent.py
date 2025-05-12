@@ -1296,22 +1296,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     UserMessage(parts=[TextPart(text=text)]),
                 ]
             )
-        elif isinstance(input, (dict, list, tuple, set, frozenset)):
-            # Convert dict, list, tuple, set, frozenset to JSON string
-            try:
-                # Use json.dumps for serialization
-                text = json.dumps(
-                    input, indent=2, default=str
-                )  # Add default=str for non-serializable
-            except TypeError:
-                # Fallback to string representation if json fails
-                text = f"Input is a collection: {str(input)}"
-            return Context(
-                messages=[
-                    developer_message,
-                    UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
-                ]
-            )
         elif isinstance(input, (datetime.datetime, datetime.date, datetime.time)):
             # Convert datetime objects to ISO format string
             return Context(
@@ -1422,6 +1406,23 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     )
             except (ImportError, AttributeError):
                 pass
+        
+        elif isinstance(input, (dict, list, tuple, set, frozenset)):
+            # Convert dict, list, tuple, set, frozenset to JSON string
+            try:
+                # Use json.dumps for serialization
+                text = json.dumps(
+                    input, indent=2, default=str
+                )  # Add default=str for non-serializable
+            except TypeError:
+                # Fallback to string representation if json fails
+                text = f"Input is a collection: {str(input)}"
+            return Context(
+                messages=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
+                ]
+            )
 
         # Fallback for any unhandled type
         # Convert to string representation as a last resort
