@@ -1,14 +1,10 @@
 [project]
 name = "agentle"
-version = "v0.1.2"
+version = "v0.1.3"
 description = "..."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "google-genai>=1.14.0",
-    "mcp[cli]>=1.6.0",
- "rock-solid-base>=0.0.28",
-]
+dependencies = ["google-genai>=1.14.0", "mcp[cli]>=1.6.0", "rock-solid-base>=0.0.28"]
 
 [[project.authors]]
 name = "Arthur Brenno"
