@@ -25,6 +25,7 @@ output = weather_agent.run("Hello. What is the weather in Tokyo?")
 from __future__ import annotations
 
 import datetime
+import importlib.util
 import json
 import logging
 import uuid
@@ -89,16 +90,26 @@ if TYPE_CHECKING:
     from pathlib import Path
     from agentle.agents.agent_team import AgentTeam
 
-    import numpy as np
-    import pandas as pd
     from mcp.types import Tool as MCPTool
-    from PIL import Image
-    from pydantic import BaseModel as PydanticBaseModel
+
 
 type WithoutStructuredOutput = None
 type _ToolName = str
 
 logger = logging.getLogger(__name__)
+
+
+# Check for optional dependencies
+def is_module_available(module_name: str) -> bool:
+    """Check if a module is available without importing it."""
+    return importlib.util.find_spec(module_name) is not None
+
+
+# Pre-check for common optional dependencies
+HAS_PANDAS = is_module_available("pandas")
+HAS_NUMPY = is_module_available("numpy")
+HAS_PIL = is_module_available("PIL")
+HAS_PYDANTIC = is_module_available("pydantic")
 
 
 class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
@@ -1200,51 +1211,79 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     UserMessage(parts=[TextPart(text=input())]),
                 ]
             )
-        elif isinstance(input, pd.DataFrame):
-            # Convert DataFrame to Markdown
-            return Context(
-                messages=[
-                    developer_message,
-                    UserMessage(parts=[TextPart(text=input.to_markdown() or "")]),
-                ]
-            )
-        elif isinstance(input, np.ndarray):
-            # Convert NumPy array to string representation
-            return Context(
-                messages=[
-                    developer_message,
-                    UserMessage(parts=[TextPart(text=np.array2string(input))]),
-                ]
-            )
-        elif isinstance(input, Image.Image):
-            import io
+        # Handle pandas DataFrame if available
+        elif HAS_PANDAS:
+            try:
+                import pandas as pd
 
-            img_byte_arr = io.BytesIO()
-            img_format = getattr(input, "format", "PNG") or "PNG"
-            input.save(img_byte_arr, format=img_format)
-            img_byte_arr.seek(0)
-
-            mime_type_map = {
-                "PNG": "image/png",
-                "JPEG": "image/jpeg",
-                "JPG": "image/jpeg",
-                "GIF": "image/gif",
-                "WEBP": "image/webp",
-                "BMP": "image/bmp",
-                "TIFF": "image/tiff",
-            }
-            mime_type = mime_type_map.get(img_format, f"image/{img_format.lower()}")
-
-            return Context(
-                messages=[
-                    developer_message,
-                    UserMessage(
-                        parts=[
-                            FilePart(data=img_byte_arr.getvalue(), mime_type=mime_type)
+                if isinstance(input, pd.DataFrame):
+                    # Convert DataFrame to Markdown
+                    return Context(
+                        messages=[
+                            developer_message,
+                            UserMessage(
+                                parts=[TextPart(text=input.to_markdown() or "")]
+                            ),
                         ]
-                    ),
-                ]
-            )
+                    )
+            except ImportError:
+                pass
+        # Handle numpy arrays if available
+        elif HAS_NUMPY:
+            try:
+                import numpy as np
+
+                if isinstance(input, np.ndarray):
+                    # Convert NumPy array to string representation
+                    return Context(
+                        messages=[
+                            developer_message,
+                            UserMessage(parts=[TextPart(text=np.array2string(input))]),
+                        ]
+                    )
+            except ImportError:
+                pass
+        # Handle PIL images if available
+        elif HAS_PIL:
+            try:
+                from PIL import Image
+
+                if isinstance(input, Image.Image):
+                    import io
+
+                    img_byte_arr = io.BytesIO()
+                    img_format = getattr(input, "format", "PNG") or "PNG"
+                    input.save(img_byte_arr, format=img_format)
+                    img_byte_arr.seek(0)
+
+                    mime_type_map = {
+                        "PNG": "image/png",
+                        "JPEG": "image/jpeg",
+                        "JPG": "image/jpeg",
+                        "GIF": "image/gif",
+                        "WEBP": "image/webp",
+                        "BMP": "image/bmp",
+                        "TIFF": "image/tiff",
+                    }
+                    mime_type = mime_type_map.get(
+                        img_format, f"image/{img_format.lower()}"
+                    )
+
+                    return Context(
+                        messages=[
+                            developer_message,
+                            UserMessage(
+                                parts=[
+                                    FilePart(
+                                        data=img_byte_arr.getvalue(),
+                                        mime_type=mime_type,
+                                    )
+                                ]
+                            ),
+                        ]
+                    )
+            except ImportError:
+                pass
         elif isinstance(input, bytes):
             # Try decoding bytes, otherwise provide a description
             try:
@@ -1345,15 +1384,23 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     UserMessage(parts=[TextPart(text=input.md)]),
                 ]
             )
-        elif isinstance(input, PydanticBaseModel):
-            # Convert Pydantic model to JSON string
-            text = input.model_dump_json(indent=2)
-            return Context(
-                messages=[
-                    developer_message,
-                    UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
-                ]
-            )
+        # Handle Pydantic models if available
+        elif HAS_PYDANTIC:
+            try:
+                from pydantic import BaseModel as PydanticBaseModel
+
+                if isinstance(input, PydanticBaseModel):
+                    # Convert Pydantic model to JSON string
+                    text = input.model_dump_json(indent=2)
+                    return Context(
+                        messages=[
+                            developer_message,
+                            UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
+                        ]
+                    )
+            except (ImportError, AttributeError):
+                pass
+
         # Sequence handling: Check for Message sequences or Part sequences
         # Explicitly check for Sequence for MyPy's benefit
         elif isinstance(input, Sequence) and not isinstance(input, (str, bytes)):  # pyright: ignore[reportUnnecessaryIsInstance]
