@@ -185,9 +185,11 @@ class FSPromptProvider(PromptProvider):
         Get the file path for a prompt ID.
 
         This method tries both .md and .txt extensions if not already specified.
+        If prompt_id contains forward slashes (e.g., 'folder/subfolder/name'),
+        it will be treated as a path relative to base_dir.
 
         Args:
-            prompt_id (str): The prompt identifier
+            prompt_id (str): The prompt identifier, which can include directory paths
 
         Returns:
             Path: Path object for the prompt file
