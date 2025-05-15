@@ -21,9 +21,8 @@ if TYPE_CHECKING:
     from google.auth.credentials import Credentials
     from google.genai.client import (
         DebugConfig,
-        HttpOptions,
     )
-    from google.genai.types import Content
+    from google.genai.types import Content, HttpOptions
 
 
 class GoogleVertexaiGenerationProvider(GoogleGenerationProvider):

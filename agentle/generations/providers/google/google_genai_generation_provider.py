@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from google.auth.credentials import Credentials
     from google.genai.client import (
         DebugConfig,
-        HttpOptions,
     )
+    from google.genai.types import HttpOptions
     from google.genai.types import Content
 
 
