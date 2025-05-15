@@ -105,3 +105,4 @@ emerge/html
 emerge-**
 emerge_
 ui
+service_account.json
