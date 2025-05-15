@@ -291,12 +291,12 @@
                         </div>
                         <div class="code-body">
                             <pre class="language-python"><code class="text-sm sm:text-base">from agentle.agents.agent import Agent
-from agentle.generations.providers.google import GoogleGenaiGenerationProvider
+from agentle.generations.providers.google import GoogleGenerationProvider
 
 # Create a simple agent
 agent = Agent(
     name="Quick Start Agent",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=GoogleGenerationProvider(),
     model="gemini-2.0-flash",
     instructions="You are a helpful assistant."
 )
@@ -579,7 +579,7 @@ response = weather_agent.run("What's the weather like in Tokyo?")</code></pre>
                                 <pre class="language-python"><code class="text-sm sm:text-base">from pydantic import BaseModel
 from typing import List, Optional
 from agentle.agents.agent import Agent
-from agentle.generations.providers.google import GoogleGenaiGenerationProvider
+from agentle.generations.providers.google import GoogleGenerationProvider
 
 # Define your output schema with Pydantic
 class WeatherForecast(BaseModel):
@@ -592,7 +592,7 @@ class WeatherForecast(BaseModel):
 # Create an agent with structured output
 structured_agent = Agent(
     name="Weather Agent",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=GoogleGenerationProvider(),
     model="gemini-2.0-flash",
     instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
     response_schema=WeatherForecast  # Define the expected response structure
