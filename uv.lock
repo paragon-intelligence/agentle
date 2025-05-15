@@ -4,7 +4,7 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "agentle"
-version = "0.1.2"
+version = "0.1.6"
 source = { editable = "." }
 dependencies = [
     { name = "google-genai" },
@@ -32,6 +32,7 @@ dev = [
     { name = "openai-agents" },
     { name = "openpyxl" },
     { name = "pandas" },
+    { name = "pikepdf" },
     { name = "pillow" },
     { name = "playwright" },
     { name = "pydantic" },
@@ -44,6 +45,7 @@ dev = [
     { name = "python-pptx" },
     { name = "r2r" },
     { name = "rarfile" },
+    { name = "reportlab" },
     { name = "sphinx" },
     { name = "streamlit" },
     { name = "uvicorn" },
@@ -119,6 +121,7 @@ dev = [
     { name = "openai-agents", specifier = ">=0.0.11" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=2.2.3" },
+    { name = "pikepdf", specifier = ">=9.7.0" },
     { name = "pillow", specifier = ">=11.2.1" },
     { name = "playwright", specifier = ">=1.52.0" },
     { name = "pydantic", specifier = ">=2.11.3" },
@@ -131,6 +134,7 @@ dev = [
     { name = "python-pptx", specifier = ">=1.0.2" },
     { name = "r2r", specifier = ">=3.5.14" },
     { name = "rarfile", specifier = ">=4.2" },
+    { name = "reportlab", specifier = ">=4.4.1" },
     { name = "sphinx", specifier = ">=8.2.3" },
     { name = "streamlit", specifier = ">=1.45.0" },
     { name = "uvicorn", specifier = ">=0.34.1" },
@@ -643,6 +647,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/47/d7145bf2dc04684935d57d67dff9d6d795b2ba2796806bb109864be3a151/cffi-1.17.1-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:72e72408cad3d5419375fc87d289076ee319835bdfa2caad331e377589aebba9", size = 488469 },
     { url = "https://files.pythonhosted.org/packages/bf/ee/f94057fa6426481d663b88637a9a10e859e492c73d0384514a17d78ee205/cffi-1.17.1-cp313-cp313-win32.whl", hash = "sha256:e03eab0a8677fa80d646b5ddece1cbeaf556c313dcfac435ba11f107ba117b5d", size = 172475 },
     { url = "https://files.pythonhosted.org/packages/7c/fc/6a8cb64e5f0324877d503c854da15d76c1e50eb722e320b15345c4d0c6de/cffi-1.17.1-cp313-cp313-win_amd64.whl", hash = "sha256:f6a16c31041f09ead72d69f583767292f750d24913dadacf5756b966aacb3f1a", size = 182009 },
+]
+
+[[package]]
+name = "chardet"
+version = "5.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f3/0d/f7b6ab21ec75897ed80c17d79b15951a719226b9fababf1e40ea74d69079/chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7", size = 2069618 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/38/6f/f5fbc992a329ee4e0f288c1fe0e2ad9485ed064cac731ed2fe47dcc38cbf/chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970", size = 199385 },
 ]
 
 [[package]]
@@ -1948,6 +1961,27 @@ wheels = [
 ]
 
 [[package]]
+name = "pikepdf"
+version = "9.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "deprecated" },
+    { name = "lxml" },
+    { name = "packaging" },
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9d/eb/4756ba366b5b243a1b5711e02993ea932d45d7e2d750bf01eb0029dc443e/pikepdf-9.7.0.tar.gz", hash = "sha256:ab54895a246768a2660cafe48052dbf5425c76f6f04e0f53b911df6cfd7e1c95", size = 2921981 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/29/ed/bd49f596b3e084cd1bb81b2790f3415b71e52fcb44e180273df9fa4f98b9/pikepdf-9.7.0-cp313-cp313-macosx_13_0_x86_64.whl", hash = "sha256:0dcaacf08a6e90fde28c35012144b237134864dc00d656c72be43be50bc44dfa", size = 4835708 },
+    { url = "https://files.pythonhosted.org/packages/4c/8e/9e14b5a8d76acc5362d756c3590c93559f013f58057d2c2282676940f93a/pikepdf-9.7.0-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:a8a00a980d16200ffcf55255ec6135c0746c9dd28d67008fc4c3c1b0c67515f5", size = 4510226 },
+    { url = "https://files.pythonhosted.org/packages/97/e1/05839627621cfa412708c498c472347d6acfebf83615c204d3f935afd1ee/pikepdf-9.7.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:36444fdae924dba9f41f4cf11d96bd188af18367f46c1503de129e685386fd4d", size = 2275016 },
+    { url = "https://files.pythonhosted.org/packages/0a/c2/a0d30a21ce3091f151ef0e0d6217d3ba8f6417853414c6e307aedb765ddc/pikepdf-9.7.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e5bdc775b4544393fb4ba18f9333a1a2a19536ec5a9d1f2f9285a9ef4df8b16f", size = 2424289 },
+    { url = "https://files.pythonhosted.org/packages/39/7d/c86047fc6d8a8fa9c8e7b8db0845552ae8830c771bed0fe3dfc7e0eff3b0/pikepdf-9.7.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:ddb22cad9cb44435b267302e34ffd86a0c36c22c41c6ad4b583607348e52e1a7", size = 3429648 },
+    { url = "https://files.pythonhosted.org/packages/c6/bf/9ef07fb3f95adc7d772fc5cdd9ec250f3e45b69c77ba77d4aa8614c52596/pikepdf-9.7.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:bbb922c44f17678aaaab95bbeef4514b24fdfa038345aa199b5676ee2c70ea50", size = 3623392 },
+    { url = "https://files.pythonhosted.org/packages/6b/a7/5290acfb2bbb7bd3c3d299187cd02772d58710ba36a6cb714e9236360f39/pikepdf-9.7.0-cp313-cp313-win_amd64.whl", hash = "sha256:98801341997d8f31684028f46b07919033d0d5169acf9892a0b37f7712e24e8b", size = 3535567 },
+]
+
+[[package]]
 name = "pillow"
 version = "11.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2746,6 +2780,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ed/e3/c446a64984ea9f69982ba1a69d4658d5014bc7a0ea468a07e1a1265db6e2/regex-2024.11.6-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:4f51f88c126370dcec4908576c5a627220da6c09d0bff31cfa89f2523843316d", size = 787733 },
     { url = "https://files.pythonhosted.org/packages/2b/f1/e40c8373e3480e4f29f2692bd21b3e05f296d3afebc7e5dcf21b9756ca1c/regex-2024.11.6-cp313-cp313-win32.whl", hash = "sha256:63b13cfd72e9601125027202cad74995ab26921d8cd935c25f09c630436348ff", size = 262122 },
     { url = "https://files.pythonhosted.org/packages/45/94/bc295babb3062a731f52621cdc992d123111282e291abaf23faa413443ea/regex-2024.11.6-cp313-cp313-win_amd64.whl", hash = "sha256:2b3361af3198667e99927da8b84c1b010752fa4b1115ee30beaa332cabc3ef1a", size = 273545 },
+]
+
+[[package]]
+name = "reportlab"
+version = "4.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "chardet" },
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7b/d8/c3366bf10a5a5fcc3467eefa9504f6aa24fcda5817b5b147eabd37a385e1/reportlab-4.4.1.tar.gz", hash = "sha256:5f9b9fc0b7a48e8912c25ccf69d26b82980ab0da718e4f583fa720e8f8f5073f", size = 3509107 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a1/2e/7994a139150abf11c8dd258feb091ad654823a83cfd9720bfdded27185c3/reportlab-4.4.1-py3-none-any.whl", hash = "sha256:9217a1c8c1917217f819718b24972a96ad0c485a1c494749562d097b58d974b7", size = 1953615 },
 ]
 
 [[package]]
