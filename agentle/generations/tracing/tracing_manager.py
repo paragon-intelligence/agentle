@@ -200,25 +200,32 @@ class TracingManager:
         start_time: datetime,
         output_data: dict[str, Any],
         trace_metadata: Optional[dict[str, Any]] = None,
+        usage_details: Optional[dict[str, Any]] = None,  # Accept pre-calculated usage details
+        cost_details: Optional[dict[str, Any]] = None,   # Accept pre-calculated cost details
     ) -> None:
         """Complete a generation with success."""
         if generation_client:
-            # Extract usage data from output_data if present
-            usage_details = None
-            cost_details = None
-
-            if "usage" in output_data:
+            # Use provided usage_details and cost_details if available
+            final_usage_details = usage_details
+            final_cost_details = cost_details
+            
+            # If not provided explicitly, try to extract from output_data
+            if not final_usage_details and "usage" in output_data:
                 usage = output_data["usage"]
                 # Format usage data according to Langfuse's expectations
-                usage_details = {
-                    "input": usage.get("input_tokens"),
-                    "output": usage.get("output_tokens"),
-                    "total": usage.get("total_tokens"),
-                    "unit": "TOKENS",
+                final_usage_details = {
+                    "input": usage.get("input"),
+                    "output": usage.get("output"),
+                    "total": usage.get("total"),
+                    "unit": usage.get("unit", "TOKENS"),
                 }
-
-                # Calculate costs if we have price information
-                # This assumes your provider has price_per_million_tokens_input/output methods
+            
+            # If not provided explicitly, try to extract from output_data
+            if not final_cost_details and "cost" in output_data:
+                final_cost_details = output_data["cost"]
+            # If we still don't have cost details but have model info, calculate them
+            elif not final_cost_details and final_usage_details:
+                # Calculate costs if we have price information and provider methods
                 model = trace_metadata.get("model") if trace_metadata else None
                 if (
                     model
@@ -228,30 +235,30 @@ class TracingManager:
                     input_price = self.provider.price_per_million_tokens_input(model)
                     output_price = self.provider.price_per_million_tokens_output(model)
 
-                    input_tokens = usage.get("input_tokens", 0)
-                    output_tokens = usage.get("output_tokens", 0)
+                    input_tokens = final_usage_details.get("input", 0)
+                    output_tokens = final_usage_details.get("output", 0)
 
                     input_cost = (input_tokens / 1_000_000) * input_price
                     output_cost = (output_tokens / 1_000_000) * output_price
 
-                    cost_details = {
+                    final_cost_details = {
                         "input": input_cost,
                         "output": output_cost,
                         "total": input_cost + output_cost,
                         "currency": "USD",
                     }
 
-            # Remove usage from output data to avoid duplication
-            output_data_without_usage = {
-                k: v for k, v in output_data.items() if k != "usage"
+            # Remove usage and cost from output data to avoid duplication
+            output_data_without_usage_cost = {
+                k: v for k, v in output_data.items() if k not in ["usage", "cost"]
             }
 
             # Update generation with proper usage and cost details
             await generation_client.end(
-                output=output_data_without_usage,
+                output=output_data_without_usage_cost,
                 metadata=trace_metadata or {},
-                usage_details=usage_details,
-                cost_details=cost_details,
+                usage_details=final_usage_details,
+                cost_details=final_cost_details,
             )
 
     async def complete_trace(

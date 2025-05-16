@@ -385,6 +385,8 @@ class StatefulObservabilityClient(abc.ABC):
             output: The output data
             start_time: Start time for calculating latency
             metadata: Additional metadata
+            usage_details: Usage information (tokens, etc.)
+            cost_details: Cost information 
 
         Returns:
             The parent stateful client
@@ -397,6 +399,17 @@ class StatefulObservabilityClient(abc.ABC):
 
         if metadata:
             complete_metadata.update(metadata)
+        
+        # Make sure that cost_details contains proper field names
+        if cost_details and "total" in cost_details:
+            # Ensure we have all necessary fields with consistent naming
+            standardized_cost = {
+                "input": cost_details.get("input", 0.0),
+                "output": cost_details.get("output", 0.0),
+                "total": cost_details.get("total", 0.0),
+                "currency": cost_details.get("currency", "USD")
+            }
+            cost_details = standardized_cost
 
         return await self.end(
             output=output,

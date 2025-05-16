@@ -11,12 +11,15 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 
 from agentle.agents.agent import Agent
+from agentle.agents.agent_config import AgentConfig
 from agentle.generations.providers.google import GoogleGenerationProvider
 from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
+from agentle.generations.models.generation.trace_params import TraceParams
+from agentle.generations.models.generation.generation_config import GenerationConfig
 
 load_dotenv()
 
-observability_client = LangfuseObservabilityClient()
+tracing_client = LangfuseObservabilityClient()
 
 
 # Define a structured response schema using Pydantic
@@ -33,13 +36,21 @@ structured_agent = Agent(
     name="Weather Agent",
     generation_provider=GoogleGenerationProvider(
         use_vertex_ai=False,
-        tracing_client=observability_client,
+        tracing_client=tracing_client,
         project=os.getenv("GOOGLE_PROJECT_ID"),
         location=os.getenv("GOOGLE_LOCATION"),
     ),
     model="gemini-2.0-flash",
     instructions="You are a weather forecasting assistant. When asked about weather, provide accurate forecasts.",
     response_schema=WeatherForecast,  # This defines the expected response structure
+    config=AgentConfig(
+        generationConfig=GenerationConfig(
+            trace_params=TraceParams(
+                name="Weather App",
+                user_id="test_user",
+            )
+        )
+    ),
 )
 
 # Run the agent with a query that requires structured data

@@ -236,7 +236,10 @@ class GoogleGenerationProvider(GenerationProvider):
         )
 
         # Extract trace metadata if available
-        trace_metadata: dict[str, Any] = {}
+        trace_metadata: dict[str, Any] = {
+            "model": used_model,  # Ensure model is in metadata for cost calculation
+            "provider": self.organization,
+        }
         trace_params = _generation_config.trace_params
         if "metadata" in trace_params:
             metadata_val = trace_params["metadata"]
@@ -326,51 +329,52 @@ class GoogleGenerationProvider(GenerationProvider):
                 model=used_model,
             ).adapt(generate_content_response)
 
-            # Prepare output data for tracing
-            output_data: dict[str, Any] = {
-                "completion": response.text,
-                "usage": {
-                    "input_tokens": response.usage.prompt_tokens
-                    if response.usage
-                    else None,
-                    "output_tokens": response.usage.completion_tokens
-                    if response.usage
-                    else None,
-                    "total_tokens": response.usage.total_tokens
-                    if response.usage
-                    else None,
-                },
-            }
-
-            input_cost = (
-                self.price_per_million_tokens_input(
-                    used_model, response.usage.prompt_tokens
-                )
-                if response.usage.prompt_tokens
-                else 0.0
+            # Calculate costs properly
+            prompt_tokens = response.usage.prompt_tokens if response.usage else 0
+            completion_tokens = (
+                response.usage.completion_tokens if response.usage else 0
             )
 
-            output_cost = (
-                self.price_per_million_tokens_output(
-                    used_model, response.usage.completion_tokens
-                )
-                if response.usage.completion_tokens
-                else 0.0
+            input_cost = self.price_per_million_tokens_input(used_model, prompt_tokens)
+            output_cost = self.price_per_million_tokens_output(
+                used_model, completion_tokens
             )
-
             total_cost = input_cost + output_cost
 
-            # Add cost information to output_data
-            output_data["usage"]["input_cost"] = input_cost
-            output_data["usage"]["output_cost"] = output_cost
-            output_data["usage"]["total_cost"] = total_cost
+            # Ensure we use proper field names that Langfuse expects
+            cost_details = {
+                "input": input_cost,
+                "output": output_cost,
+                "total": total_cost,
+                "currency": "USD",
+            }
+
+            usage_details = {
+                "input": prompt_tokens,
+                "output": completion_tokens,
+                "total": response.usage.total_tokens
+                if response.usage
+                else prompt_tokens + completion_tokens,
+                "unit": "TOKENS",
+            }
+
+            # Prepare output data for tracing with properly formatted costs
+            output_data: dict[str, Any] = {
+                "completion": response.text,
+                "usage": usage_details,
+                "cost": cost_details,  # Make sure we include costs in the proper format
+            }
 
             # Add user-specified output if available
             if "output" in trace_params:
                 custom_output = trace_params["output"]
                 if isinstance(custom_output, dict):
                     for k, v in custom_output.items():
-                        output_data[k] = v
+                        if k not in [
+                            "usage",
+                            "cost",
+                        ]:  # Avoid overwriting our cost/usage data
+                            output_data[k] = v
                 else:
                     output_data["user_defined_output"] = custom_output
 
@@ -380,6 +384,9 @@ class GoogleGenerationProvider(GenerationProvider):
                 start_time=start,
                 output_data=output_data,
                 trace_metadata=trace_metadata,
+                # Explicitly pass cost details to ensure they're used
+                usage_details=usage_details,
+                cost_details=cost_details,
             )
 
             # If this is the final generation, complete the trace
@@ -389,22 +396,8 @@ class GoogleGenerationProvider(GenerationProvider):
                     "structured_output": response.parsed
                     if hasattr(response, "parsed")
                     else None,
-                    "usage": {
-                        "input": response.usage.prompt_tokens
-                        if response.usage
-                        else None,
-                        "output": response.usage.completion_tokens
-                        if response.usage
-                        else None,
-                        "total": response.usage.total_tokens
-                        if response.usage
-                        else None,
-                        "unit": "TOKENS",
-                        "input_cost": output_data["usage"].get("input_cost"),
-                        "output_cost": output_data["usage"].get("output_cost"),
-                        "total_cost": output_data["usage"].get("total_cost"),
-                        "currency": "USD",
-                    },
+                    "usage": usage_details,
+                    "cost": cost_details,  # Include costs in proper format
                 }
                 await self.tracing_manager.complete_trace(
                     trace_client=trace_client,
