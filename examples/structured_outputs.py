@@ -32,7 +32,7 @@ class WeatherForecast(BaseModel):
 structured_agent = Agent(
     name="Weather Agent",
     generation_provider=GoogleGenerationProvider(
-        use_vertex_ai=True,
+        use_vertex_ai=False,
         tracing_client=observability_client,
         project=os.getenv("GOOGLE_PROJECT_ID"),
         location=os.getenv("GOOGLE_LOCATION"),
@@ -43,7 +43,7 @@ structured_agent = Agent(
 )
 
 # Run the agent with a query that requires structured data
-response = structured_agent.run("What's the weather like in San Francisco?")
+response = structured_agent.run("Qual vai ser o clima em uberaba hoje?")
 
 
 weather = response.parsed
