@@ -142,7 +142,7 @@ class AgentPipeline(BaseModel):
         description="When True, enables detailed logging of pipeline execution steps.",
     )
 
-    def run(self, input: AgentInput) -> AgentRunOutput[Any]:
+    def run(self, input: AgentInput | Any) -> AgentRunOutput[Any]:
         """
         Run the agent pipeline synchronously with the provided input.
 
@@ -173,7 +173,7 @@ class AgentPipeline(BaseModel):
         """
         return run_sync(self.run_async, input=input)
 
-    async def run_async(self, input: AgentInput) -> AgentRunOutput[Any]:
+    async def run_async(self, input: AgentInput | Any) -> AgentRunOutput[Any]:
         """
         Executes a pipeline of agents in sequence asynchronously.
 

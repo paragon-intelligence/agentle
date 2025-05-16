@@ -220,7 +220,7 @@ class AgentTeam(BaseModel):
         """
         return self + other
 
-    def run(self, input: AgentInput) -> AgentRunOutput[Any]:
+    def run(self, input: AgentInput | Any) -> AgentRunOutput[Any]:
         """
         Run the agent team synchronously with the provided input.
 
@@ -251,7 +251,7 @@ class AgentTeam(BaseModel):
         """
         return run_sync(self.run_async, input=input)
 
-    async def run_async(self, input: AgentInput) -> AgentRunOutput[Any]:
+    async def run_async(self, input: AgentInput | Any) -> AgentRunOutput[Any]:
         """
         Dynamically executes a team of agents guided by an orchestrator.
 
