@@ -361,7 +361,7 @@ class GoogleGenerationProvider(GenerationProvider):
             output_data: dict[str, Any] = {
                 "completion": response.text,
                 "usage": usage_details,
-                "cost": cost_details,  # Make sure we include costs in the proper format
+                "cost_details": cost_details,  # Make sure we include costs in the proper format
             }
 
             # Add user-specified output if available
@@ -396,7 +396,7 @@ class GoogleGenerationProvider(GenerationProvider):
                     if hasattr(response, "parsed")
                     else None,
                     "usage": usage_details,
-                    "cost": cost_details,  # Include costs in proper format
+                    "cost_details": cost_details,  # Include costs in proper format
                 }
                 await self.tracing_manager.complete_trace(
                     trace_client=trace_client,

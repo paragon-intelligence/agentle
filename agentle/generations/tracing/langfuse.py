@@ -574,7 +574,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
                 if usage_details:
                     kwargs["usage"] = usage_details
                 if cost_details:
-                    kwargs["cost"] = cost_details
+                    kwargs["cost_details"] = cost_details
 
                 self._stateful_client.end(**kwargs)  # type: ignore
             elif isinstance(self._stateful_client, StatefulTraceClient):
