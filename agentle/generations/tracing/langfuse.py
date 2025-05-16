@@ -551,6 +551,11 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
             StatefulTraceClient,
         )
 
+        if cost_details and "currency" in cost_details:
+            cost_details = {
+                k: v for k, v in cost_details.items() if k != "currency"
+            }
+
         if self._stateful_client:
             if isinstance(
                 self._stateful_client,

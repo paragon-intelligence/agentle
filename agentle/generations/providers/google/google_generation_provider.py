@@ -341,12 +341,12 @@ class GoogleGenerationProvider(GenerationProvider):
             )
             total_cost = input_cost + output_cost
 
-            # Ensure we use proper field names that Langfuse expects
+            # MODIFY THIS PART - Remove currency field
             cost_details = {
                 "input": input_cost,
                 "output": output_cost,
                 "total": total_cost,
-                "currency": "USD",
+                # Remove the currency field
             }
 
             usage_details = {
@@ -357,7 +357,6 @@ class GoogleGenerationProvider(GenerationProvider):
                 else prompt_tokens + completion_tokens,
                 "unit": "TOKENS",
             }
-
             # Prepare output data for tracing with properly formatted costs
             output_data: dict[str, Any] = {
                 "completion": response.text,
@@ -435,9 +434,6 @@ class GoogleGenerationProvider(GenerationProvider):
         Returns:
             float: The price per million input tokens for the specified model.
         """
-        if not self.use_vertex_ai:
-            return 0.0
-
         # Pricing in USD per million tokens (from https://cloud.google.com/vertex-ai/generative-ai/pricing)
         # Standard pricing for most models
         model_to_price_per_million: Mapping[str, float | tuple[float, float, int]] = {
@@ -514,9 +510,6 @@ class GoogleGenerationProvider(GenerationProvider):
         Returns:
             float: The price per million output tokens for the specified model.
         """
-        if not self.use_vertex_ai:
-            return 0.0
-
         # Pricing in USD per million tokens (from https://cloud.google.com/vertex-ai/generative-ai/pricing)
         # Standard pricing for most models
         model_to_price_per_million: Mapping[str, float | tuple[float, float, int]] = {

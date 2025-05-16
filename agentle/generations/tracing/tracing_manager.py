@@ -200,29 +200,34 @@ class TracingManager:
         start_time: datetime,
         output_data: dict[str, Any],
         trace_metadata: Optional[dict[str, Any]] = None,
-        usage_details: Optional[dict[str, Any]] = None,  # Accept pre-calculated usage details
-        cost_details: Optional[dict[str, Any]] = None,   # Accept pre-calculated cost details
+        usage_details: Optional[dict[str, Any]] = None,
+        cost_details: Optional[dict[str, Any]] = None,
     ) -> None:
         """Complete a generation with success."""
         if generation_client:
             # Use provided usage_details and cost_details if available
             final_usage_details = usage_details
             final_cost_details = cost_details
-            
+
             # If not provided explicitly, try to extract from output_data
             if not final_usage_details and "usage" in output_data:
                 usage = output_data["usage"]
-                # Format usage data according to Langfuse's expectations
                 final_usage_details = {
                     "input": usage.get("input"),
                     "output": usage.get("output"),
                     "total": usage.get("total"),
                     "unit": usage.get("unit", "TOKENS"),
                 }
-            
+
             # If not provided explicitly, try to extract from output_data
             if not final_cost_details and "cost" in output_data:
-                final_cost_details = output_data["cost"]
+                cost = output_data["cost"]
+                final_cost_details = {
+                    "input": cost.get("input"),
+                    "output": cost.get("output"),
+                    "total": cost.get("total"),
+                    # Remove currency field if present
+                }
             # If we still don't have cost details but have model info, calculate them
             elif not final_cost_details and final_usage_details:
                 # Calculate costs if we have price information and provider methods
@@ -245,7 +250,7 @@ class TracingManager:
                         "input": input_cost,
                         "output": output_cost,
                         "total": input_cost + output_cost,
-                        "currency": "USD",
+                        # Remove currency field
                     }
 
             # Remove usage and cost from output data to avoid duplication
