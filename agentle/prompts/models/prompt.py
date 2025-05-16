@@ -269,3 +269,11 @@ class Prompt(BaseModel):
             str: The content of the prompt.
         """
         return self.text
+
+    def __add__(self, other: Prompt | str) -> Prompt:
+        """
+        Concatenate two prompts or a prompt and a string.
+        """
+        if isinstance(other, str):
+            return Prompt(content=self.text + other)
+        return Prompt(content=self.text + other.text)
