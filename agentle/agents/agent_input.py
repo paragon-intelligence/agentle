@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from PIL import Image
     from pydantic import BaseModel as PydanticBaseModel
 
-AgentInput = (
+type AgentInput = (
     str
     | Prompt
     | Context
