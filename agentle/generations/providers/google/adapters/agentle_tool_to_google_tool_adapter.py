@@ -55,6 +55,7 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Any, cast
+import json
 
 from rsb.adapters.adapter import Adapter
 
@@ -234,11 +235,41 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
                 if param_info.get("required", False):
                     required.append(param_name)
             else:
-                # For any other type, default to string type
-                properties[param_name] = types.Schema(type=types.Type.STRING)
-                self._logger.warning(
-                    f"Unknown parameter type for {param_name}, defaulting to string"
-                )
+                # For more complex types, try to infer a better type based on Python type
+                if isinstance(param_info_obj, (int, float)):
+                    # Numeric types
+                    if isinstance(param_info_obj, int):
+                        properties[param_name] = types.Schema(type=types.Type.INTEGER)
+                        self._logger.info(f"Inferred integer type for {param_name}")
+                    else:
+                        properties[param_name] = types.Schema(type=types.Type.NUMBER)
+                        self._logger.info(f"Inferred number type for {param_name}")
+                elif isinstance(param_info_obj, bool):
+                    # Boolean type
+                    properties[param_name] = types.Schema(type=types.Type.BOOLEAN)
+                    self._logger.info(f"Inferred boolean type for {param_name}")
+                elif isinstance(param_info_obj, (set, tuple, frozenset)):
+                    # Collection types that aren't already handled
+                    properties[param_name] = types.Schema(
+                        type=types.Type.ARRAY,
+                        items=types.Schema(type=types.Type.STRING),
+                    )
+                    self._logger.info(f"Inferred array type for {param_name}")
+                else:
+                    # Default to object for complex types, string for primitives
+                    try:
+                        # Check if it's a primitive type or something more complex
+                        # Just trying to serialize - we don't need to store the result
+                        json.dumps(param_info_obj)
+                        # If we can convert to JSON without error, it's likely an object
+                        properties[param_name] = types.Schema(type=types.Type.OBJECT)
+                        self._logger.info(f"Inferred object type for {param_name}")
+                    except (TypeError, OverflowError, ValueError):
+                        # Primitive or unconvertible types default to string
+                        properties[param_name] = types.Schema(type=types.Type.STRING)
+                        self._logger.warning(
+                            f"Unknown parameter type for {param_name}, defaulting to string"
+                        )
 
         # Criar o schema principal para os parâmetros da função
         parameters_schema = types.Schema(type=types.Type.OBJECT, properties=properties)
