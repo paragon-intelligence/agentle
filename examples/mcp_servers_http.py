@@ -48,4 +48,6 @@ with agent.with_mcp_servers():
 
     # Example query
     math_response = agent.run("What is 2+2?")
+
+    t = math_response
     print(math_response)
