@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     )
 
 
-class SSEMCPServer(MCPServerProtocol):
+class StreamableHTTPMCPServer(MCPServerProtocol):
     """
     Streamable HTTP implementation of the MCP (Model Context Protocol) server client.
 
@@ -51,7 +51,7 @@ class SSEMCPServer(MCPServerProtocol):
         timeout_s (float): Request timeout in seconds
 
     Usage:
-        server = SSEMCPServer(server_name="Example MCP", server_url="http://example.com", mcp_endpoint="/mcp")
+        server = StreamableHTTPMCPServer(server_name="Example MCP", server_url="http://example.com", mcp_endpoint="/mcp")
         await server.connect()
         tools = await server.list_tools()
         result = await server.call_tool("tool_name", {"param": "value"})
@@ -196,7 +196,7 @@ class SSEMCPServer(MCPServerProtocol):
             self._client = None
             self._session_id = None
             self._last_event_id = None
- 
+
     async def list_tools_async(self) -> Sequence["Tool"]:
         """
         List the tools available on the server.
@@ -565,4 +565,3 @@ class SSEMCPServer(MCPServerProtocol):
         except httpx.RequestError as e:
             self._logger.error(f"HTTP request error: {e}")
             raise
-

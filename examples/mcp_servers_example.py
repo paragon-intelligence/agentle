@@ -14,7 +14,7 @@ from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
 )
-from agentle.mcp.servers.sse_mcp_server import SSEMCPServer
+from agentle.mcp.servers.streamable_http_mcp_server import StreamableHTTPMCPServer
 from agentle.mcp.servers.stdio_mcp_server import StdioMCPServer
 
 # Set up provider
@@ -32,7 +32,7 @@ stdio_server = StdioMCPServer(
     server_env={"DEBUG": "1"},
 )
 
-sse_server = SSEMCPServer(
+sse_server = StreamableHTTPMCPServer(
     server_name="Weather API MCP",
     server_url="http://localhost:3000",  # Replace with actual server URL
 )
