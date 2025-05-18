@@ -9,7 +9,7 @@ connect to external resources, list available tools, and invoke tools.
 from __future__ import annotations
 
 import abc
-from collections.abc import Sequence
+from collections.abc import MutableMapping, Sequence
 from typing import TYPE_CHECKING
 
 from rsb.coroutines.run_sync import run_sync
@@ -66,7 +66,7 @@ class MCPServerProtocol(BaseModel, abc.ABC):
         return run_sync(self.list_resource_contents_async, uri=uri)
 
     def call_tool(
-        self, tool_name: str, arguments: dict[str, object] | None
+        self, tool_name: str, arguments: MutableMapping[str, object] | None
     ) -> CallToolResult:
         return run_sync(self.call_tool_async, tool_name=tool_name, arguments=arguments)
 
@@ -154,7 +154,7 @@ class MCPServerProtocol(BaseModel, abc.ABC):
 
     @abc.abstractmethod
     async def call_tool_async(
-        self, tool_name: str, arguments: dict[str, object] | None
+        self, tool_name: str, arguments: MutableMapping[str, object] | None
     ) -> CallToolResult:
         """
         Invoke a tool on the server.
@@ -163,7 +163,7 @@ class MCPServerProtocol(BaseModel, abc.ABC):
 
         Args:
             tool_name (str): The name of the tool to call.
-            arguments (dict[str, object] | None): Arguments to pass to the tool, or None if no arguments.
+            arguments (MutableMapping[str, object] | None): Arguments to pass to the tool, or None if no arguments.
 
         Returns:
             CallToolResult: The result of the tool invocation.

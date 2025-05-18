@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import shlex
-from collections.abc import Sequence
+from collections.abc import MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any, NotRequired, Optional, TypedDict, override
 
 from rsb.models.field import Field
@@ -39,11 +39,11 @@ class _JsonRpcRequestParams(TypedDict, total=False):
     """Parameters for a JSON-RPC request."""
 
     protocolVersion: NotRequired[str]
-    clientInfo: NotRequired[dict[str, str]]
-    capabilities: NotRequired[dict[str, dict[str, Any]]]
+    clientInfo: NotRequired[MutableMapping[str, str]]
+    capabilities: NotRequired[MutableMapping[str, MutableMapping[str, Any]]]
     uri: NotRequired[str]
     tool: NotRequired[str]
-    arguments: NotRequired[dict[str, Any]]
+    arguments: NotRequired[MutableMapping[str, Any]]
 
 
 class _JsonRpcRequest(TypedDict):
@@ -60,7 +60,7 @@ class _JsonRpcNotification(TypedDict):
 
     jsonrpc: str
     method: str
-    params: NotRequired[dict[str, Any]]
+    params: NotRequired[MutableMapping[str, Any]]
 
 
 class _JsonRpcResponse(TypedDict, total=False):
@@ -68,8 +68,8 @@ class _JsonRpcResponse(TypedDict, total=False):
 
     jsonrpc: str
     id: str
-    result: NotRequired[dict[str, Any]]
-    error: NotRequired[dict[str, Any]]
+    result: NotRequired[MutableMapping[str, Any]]
+    error: NotRequired[MutableMapping[str, Any]]
 
 
 class StdioMCPServer(MCPServerProtocol):
@@ -83,7 +83,7 @@ class StdioMCPServer(MCPServerProtocol):
     Attributes:
         server_name (str): A human-readable name for the server
         command (str): The command to run the server executable
-        server_env (dict[str, str]): Environment variables to pass to the server process
+        server_env (MutableMapping[str, str]): Environment variables to pass to the server process
         working_dir (str): Working directory for the server process
 
     Usage:
@@ -104,7 +104,7 @@ class StdioMCPServer(MCPServerProtocol):
     command: str = Field(..., description="Command to run the MCP server process")
 
     # Optional configuration fields
-    server_env: dict[str, str] = Field(
+    server_env: MutableMapping[str, str] = Field(
         default_factory=dict,
         description="Environment variables to pass to the server process",
     )
@@ -121,8 +121,8 @@ class StdioMCPServer(MCPServerProtocol):
     _stdin: Optional[asyncio.StreamWriter] = PrivateAttr(default=None)
     _stdout: Optional[asyncio.StreamReader] = PrivateAttr(default=None)
     _next_id: int = PrivateAttr(default=1)
-    _pending_requests: dict[str, asyncio.Future[_JsonRpcResponse]] = PrivateAttr(
-        default_factory=dict
+    _pending_requests: MutableMapping[str, asyncio.Future[_JsonRpcResponse]] = (
+        PrivateAttr(default_factory=dict)
     )
     _logger: logging.Logger = PrivateAttr(
         default_factory=lambda: logging.getLogger(__name__),
@@ -482,14 +482,14 @@ class StdioMCPServer(MCPServerProtocol):
 
     @override
     async def call_tool_async(
-        self, tool_name: str, arguments: dict[str, object] | None
+        self, tool_name: str, arguments: MutableMapping[str, object] | None
     ) -> "CallToolResult":
         """
         Invoke a tool on the server.
 
         Args:
             tool_name (str): The name of the tool to call
-            arguments (dict[str, object] | None): The arguments to pass to the tool
+            arguments (MutableMapping[str, object] | None): The arguments to pass to the tool
 
         Returns:
             CallToolResult: The result of the tool invocation

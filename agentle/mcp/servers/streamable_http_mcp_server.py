@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any, Optional
 
 import httpx
@@ -47,7 +47,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         server_name (str): A human-readable name for the server
         server_url (AnyUrl): The base URL of the HTTP server
         mcp_endpoint (str): The endpoint path for MCP requests (e.g., "/mcp")
-        headers (dict[str, str]): HTTP headers to include with each request
+        headers (MutableMapping[str, str]): HTTP headers to include with each request
         timeout_s (float): Request timeout in seconds
 
     Usage:
@@ -67,7 +67,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
     )
 
     # Optional configuration fields
-    headers: dict[str, str] = Field(
+    headers: MutableMapping[str, str] = Field(
         default_factory=dict,
         description="Custom HTTP headers to include with each request",
     )
@@ -122,7 +122,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         # Initialize the MCP protocol
         try:
             # Send initialization request
-            initialize_request: dict[str, Any] = {
+            initialize_request: MutableMapping[str, Any] = {
                 "jsonrpc": "2.0",
                 "id": str(self._jsonrpc_id_counter),
                 "method": "initialize",
@@ -197,7 +197,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             self._session_id = None
             self._last_event_id = None
 
-    async def list_tools_async(self) -> Sequence["Tool"]:
+    async def list_tools_async(self) -> Sequence[Tool]:
         """
         List the tools available on the server.
 
@@ -220,7 +220,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
 
         return [Tool.model_validate(tool) for tool in response["result"]["tools"]]
 
-    async def list_resources_async(self) -> Sequence["Resource"]:
+    async def list_resources_async(self) -> Sequence[Resource]:
         """
         List the resources available on the server.
 
@@ -248,7 +248,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
 
     async def list_resource_contents_async(
         self, uri: str
-    ) -> Sequence["TextResourceContents | BlobResourceContents"]:
+    ) -> Sequence[TextResourceContents | BlobResourceContents]:
         """
         List contents of a specific resource.
 
@@ -280,14 +280,14 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         ]
 
     async def call_tool_async(
-        self, tool_name: str, arguments: dict[str, object] | None
-    ) -> "CallToolResult":
+        self, tool_name: str, arguments: MutableMapping[str, object] | None
+    ) -> CallToolResult:
         """
         Invoke a tool on the server.
 
         Args:
             tool_name (str): The name of the tool to call
-            arguments (dict[str, object] | None): The arguments to pass to the tool
+            arguments (MutableMapping[str, object] | None): The arguments to pass to the tool
 
         Returns:
             CallToolResult: The result of the tool invocation
@@ -309,7 +309,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
 
     async def _parse_sse_stream(
         self, response: httpx.Response
-    ) -> AsyncIterator[dict[str, Any]]:
+    ) -> AsyncIterator[MutableMapping[str, Any]]:
         """
         Parse an SSE stream from an HTTP response.
 
@@ -317,7 +317,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             response (httpx.Response): The HTTP response with the SSE stream
 
         Yields:
-            dict[str, Any]: Parsed SSE events as dictionaries
+            MutableMapping[str, Any]: Parsed SSE events as dictionaries
         """
         event_data = ""
         event_id = None
@@ -370,17 +370,17 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                     event_type = value
 
     async def _send_request(
-        self, method: str, params: Optional[dict[str, Any]] = None
-    ) -> dict[str, Any]:
+        self, method: str, params: Optional[MutableMapping[str, Any]] = None
+    ) -> MutableMapping[str, Any]:
         """
         Send a JSON-RPC request to the server.
 
         Args:
             method (str): The JSON-RPC method to call
-            params (dict[str, Any], optional): The parameters for the method
+            params (MutableMapping[str, Any], optional): The parameters for the method
 
         Returns:
-            dict[str, Any]: The JSON-RPC response
+            MutableMapping[str, Any]: The JSON-RPC response
 
         Raises:
             ConnectionError: If the server is not connected
@@ -393,7 +393,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         request_id = str(self._jsonrpc_id_counter)
         self._jsonrpc_id_counter += 1
 
-        request: dict[str, Any] = {
+        request: MutableMapping[str, Any] = {
             "jsonrpc": "2.0",
             "id": request_id,
             "method": method,
@@ -401,7 +401,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         }
 
         # Prepare headers
-        headers: dict[str, str] = {}
+        headers: MutableMapping[str, str] = {}
         if self._session_id:
             headers["Mcp-Session-Id"] = self._session_id
 
@@ -448,7 +448,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                         if "error" in data:
                             raise ValueError(f"JSON-RPC error: {data['error']}")
                         # Create a new dictionary with explicit typing
-                        result: dict[str, Any] = {}
+                        result: MutableMapping[str, Any] = {}
                         for k, v in data.items():
                             result[k] = v
                         return result
@@ -460,7 +460,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 data_raw = response.json()
 
                 # Create a new dictionary with explicit typing
-                _data: dict[str, Any] = {}
+                _data: MutableMapping[str, Any] = {}
                 for k, v in data_raw.items():
                     _data[k] = v
 
@@ -476,12 +476,12 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             self._logger.error(f"HTTP request error: {e}")
             raise
 
-    async def _send_notification(self, notification: dict[str, Any]) -> None:
+    async def _send_notification(self, notification: MutableMapping[str, Any]) -> None:
         """
         Send a JSON-RPC notification to the server.
 
         Args:
-            notification (dict[str, Any]): The JSON-RPC notification to send
+            notification (MutableMapping[str, Any]): The JSON-RPC notification to send
 
         Raises:
             ConnectionError: If the server is not connected
@@ -491,7 +491,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             raise ConnectionError("Server not connected")
 
         # Prepare headers
-        headers: dict[str, str] = {}
+        headers: MutableMapping[str, str] = {}
         if self._session_id:
             headers["Mcp-Session-Id"] = self._session_id
 
@@ -531,7 +531,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             raise ConnectionError("Server not connected")
 
         # Prepare headers
-        headers: dict[str, str] = {"Accept": "text/event-stream"}
+        headers: MutableMapping[str, str] = {"Accept": "text/event-stream"}
 
         if self._session_id:
             headers["Mcp-Session-Id"] = self._session_id
