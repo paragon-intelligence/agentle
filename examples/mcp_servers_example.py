@@ -32,7 +32,7 @@ stdio_server = StdioMCPServer(
     server_env={"DEBUG": "1"},
 )
 
-sse_server = StreamableHTTPMCPServer(
+http_server = StreamableHTTPMCPServer(
     server_name="Weather API MCP",
     server_url="http://localhost:3000",  # Replace with actual server URL
 )
@@ -48,9 +48,9 @@ for tool in stdio_tools:
     print(f"  - {tool.name}: {tool.description}")
 
 # Connect to SSE server and list tools
-sse_server.connect()
-print(f"\n🔧 Tools from {sse_server.name}:")
-sse_tools = sse_server.list_tools()
+http_server.connect()
+print(f"\n🔧 Tools from {http_server.name}:")
+sse_tools = http_server.list_tools()
 for tool in sse_tools:
     print(f"  - {tool.name}: {tool.description}")
 
@@ -64,7 +64,7 @@ agent = Agent(
     instructions="""You are a helpful assistant with access to external tools
     through MCP servers. You can access files from the filesystem and
     get weather information for locations.""",
-    mcp_servers=[stdio_server, sse_server],
+    mcp_servers=[stdio_server, http_server],
 )
 
 # Use the with_mcp_servers context manager to automatically connect and cleanup
@@ -95,4 +95,4 @@ print("\n=== EXAMPLE COMPLETE ===")
 
 # Clean up remaining connections
 stdio_server.cleanup()
-sse_server.cleanup()
+http_server.cleanup()
