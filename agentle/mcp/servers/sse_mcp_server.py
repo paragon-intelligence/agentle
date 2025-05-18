@@ -10,14 +10,15 @@ The implementation follows the MCPServerProtocol interface and uses httpx for
 asynchronous HTTP communication.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import re
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, AsyncIterator, Dict, Any
+from collections.abc import AsyncIterator, Sequence
+from typing import TYPE_CHECKING, Any, override
 
 import httpx
-from rsb.models.any_url import AnyUrl
 from rsb.models.field import Field
 from rsb.models.private_attr import PrivateAttr
 
@@ -58,7 +59,7 @@ class SSEMCPServer(MCPServerProtocol):
 
     # Required configuration fields
     server_name: str = Field(..., description="Human-readable name for the MCP server")
-    server_url: AnyUrl = Field(..., description="Base URL for the HTTP MCP server")
+    server_url: str = Field(..., description="Base URL for the HTTP MCP server")
 
     # Optional configuration fields
     headers: dict[str, str] = Field(
@@ -75,7 +76,8 @@ class SSEMCPServer(MCPServerProtocol):
         default_factory=lambda: logging.getLogger(__name__),
     )
 
-    async def connect(self) -> None:
+    @override
+    async def connect_async(self) -> None:
         """
         Connect to the HTTP MCP server.
 
@@ -109,10 +111,11 @@ class SSEMCPServer(MCPServerProtocol):
                 )
         except Exception as e:
             self._logger.error(f"Error connecting to server: {e}")
-            await self.cleanup()
+            await self.cleanup_async()
             raise ConnectionError(f"Could not connect to server {self.server_url}: {e}")
 
     @property
+    @override
     def name(self) -> str:
         """
         Get a readable name for the server.
@@ -122,7 +125,8 @@ class SSEMCPServer(MCPServerProtocol):
         """
         return self.server_name
 
-    async def cleanup(self) -> None:
+    @override
+    async def cleanup_async(self) -> None:
         """
         Cleanup the server connection.
 
@@ -136,7 +140,7 @@ class SSEMCPServer(MCPServerProtocol):
 
     async def _parse_sse_stream(
         self, response: httpx.Response
-    ) -> AsyncIterator[Dict[str, Any]]:
+    ) -> AsyncIterator[dict[str, Any]]:
         """
         Parse an SSE stream from an HTTP response.
 
@@ -192,7 +196,7 @@ class SSEMCPServer(MCPServerProtocol):
                 elif field == "event":
                     event_type = value
 
-    async def list_tools(self) -> Sequence["Tool"]:
+    async def list_tools_async(self) -> Sequence[Tool]:
         """
         List the tools available on the server.
 
@@ -218,7 +222,7 @@ class SSEMCPServer(MCPServerProtocol):
             self._logger.error(f"HTTP request error: {e}")
             raise
 
-    async def list_resources(self) -> Sequence["Resource"]:
+    async def list_resources_async(self) -> Sequence[Resource]:
         """
         List the resources available on the server.
 
@@ -244,9 +248,9 @@ class SSEMCPServer(MCPServerProtocol):
             self._logger.error(f"HTTP request error: {e}")
             raise
 
-    async def list_resource_contents(
+    async def list_resource_contents_async(
         self, uri: str
-    ) -> Sequence["TextResourceContents | BlobResourceContents"]:
+    ) -> Sequence[TextResourceContents | BlobResourceContents]:
         """
         List contents of a specific resource.
 
@@ -281,7 +285,7 @@ class SSEMCPServer(MCPServerProtocol):
             self._logger.error(f"HTTP request error: {e}")
             raise
 
-    async def call_tool(
+    async def call_tool_async(
         self, tool_name: str, arguments: dict[str, object] | None
     ) -> "CallToolResult":
         """
@@ -310,7 +314,7 @@ class SSEMCPServer(MCPServerProtocol):
             payload = {"tool_name": tool_name, "arguments": arguments or {}}
 
             # Check if tool requires streaming response
-            tools = await self.list_tools()
+            tools = await self.list_tools_async()
             tool = next((t for t in tools if t.name == tool_name), None)
 
             if tool and getattr(tool, "streaming", False):

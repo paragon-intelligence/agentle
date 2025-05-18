@@ -9,13 +9,15 @@ The implementation follows the MCPServerProtocol interface and uses asyncio stre
 for communication.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
 import os
 import shlex
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Dict, Optional, TypedDict, NotRequired
+from typing import TYPE_CHECKING, Any, NotRequired, Optional, TypedDict, override
 
 from rsb.models.field import Field
 from rsb.models.private_attr import PrivateAttr
@@ -33,41 +35,41 @@ if TYPE_CHECKING:
 
 
 # TypedDict definitions for JSON-RPC messages
-class JsonRpcRequestParams(TypedDict, total=False):
+class _JsonRpcRequestParams(TypedDict, total=False):
     """Parameters for a JSON-RPC request."""
 
     protocolVersion: NotRequired[str]
-    clientInfo: NotRequired[Dict[str, str]]
-    capabilities: NotRequired[Dict[str, Dict[str, Any]]]
+    clientInfo: NotRequired[dict[str, str]]
+    capabilities: NotRequired[dict[str, dict[str, Any]]]
     uri: NotRequired[str]
     tool: NotRequired[str]
-    arguments: NotRequired[Dict[str, Any]]
+    arguments: NotRequired[dict[str, Any]]
 
 
-class JsonRpcRequest(TypedDict):
+class _JsonRpcRequest(TypedDict):
     """A JSON-RPC request message."""
 
     jsonrpc: str
     id: str
     method: str
-    params: NotRequired[JsonRpcRequestParams]
+    params: NotRequired[_JsonRpcRequestParams]
 
 
-class JsonRpcNotification(TypedDict):
+class _JsonRpcNotification(TypedDict):
     """A JSON-RPC notification message."""
 
     jsonrpc: str
     method: str
-    params: NotRequired[Dict[str, Any]]
+    params: NotRequired[dict[str, Any]]
 
 
-class JsonRpcResponse(TypedDict, total=False):
+class _JsonRpcResponse(TypedDict, total=False):
     """A JSON-RPC response message."""
 
     jsonrpc: str
     id: str
-    result: NotRequired[Dict[str, Any]]
-    error: NotRequired[Dict[str, Any]]
+    result: NotRequired[dict[str, Any]]
+    error: NotRequired[dict[str, Any]]
 
 
 class StdioMCPServer(MCPServerProtocol):
@@ -102,7 +104,7 @@ class StdioMCPServer(MCPServerProtocol):
     command: str = Field(..., description="Command to run the MCP server process")
 
     # Optional configuration fields
-    server_env: Dict[str, str] = Field(
+    server_env: dict[str, str] = Field(
         default_factory=dict,
         description="Environment variables to pass to the server process",
     )
@@ -119,7 +121,7 @@ class StdioMCPServer(MCPServerProtocol):
     _stdin: Optional[asyncio.StreamWriter] = PrivateAttr(default=None)
     _stdout: Optional[asyncio.StreamReader] = PrivateAttr(default=None)
     _next_id: int = PrivateAttr(default=1)
-    _pending_requests: Dict[str, asyncio.Future[JsonRpcResponse]] = PrivateAttr(
+    _pending_requests: dict[str, asyncio.Future[_JsonRpcResponse]] = PrivateAttr(
         default_factory=dict
     )
     _logger: logging.Logger = PrivateAttr(
@@ -127,7 +129,8 @@ class StdioMCPServer(MCPServerProtocol):
     )
     _read_task: Optional[asyncio.Task[None]] = PrivateAttr(default=None)
 
-    async def connect(self) -> None:
+    @override
+    async def connect_async(self) -> None:
         """
         Connect to the MCP server over stdin/stdout.
 
@@ -174,10 +177,11 @@ class StdioMCPServer(MCPServerProtocol):
 
         except (OSError, Exception) as e:
             self._logger.error(f"Failed to start server process: {e}")
-            await self.cleanup()
+            await self.cleanup_async()
             raise ConnectionError(f"Could not start server process: {e}")
 
     @property
+    @override
     def name(self) -> str:
         """
         Get a readable name for the server.
@@ -187,7 +191,8 @@ class StdioMCPServer(MCPServerProtocol):
         """
         return self.server_name
 
-    async def cleanup(self) -> None:
+    @override
+    async def cleanup_async(self) -> None:
         """
         Clean up the server connection.
 
@@ -235,7 +240,7 @@ class StdioMCPServer(MCPServerProtocol):
         """
         self._logger.info("Initializing MCP protocol")
 
-        initialize_request: JsonRpcRequest = {
+        initialize_request: _JsonRpcRequest = {
             "jsonrpc": "2.0",
             "id": str(self._next_id),
             "method": "initialize",
@@ -254,7 +259,7 @@ class StdioMCPServer(MCPServerProtocol):
             )
 
         # Send initialized notification
-        initialized_notification: JsonRpcNotification = {
+        initialized_notification: _JsonRpcNotification = {
             "jsonrpc": "2.0",
             "method": "initialized",
             "params": {},
@@ -317,15 +322,15 @@ class StdioMCPServer(MCPServerProtocol):
                 self._logger.error(f"Error reading from server: {e}")
                 # Continue reading, don't break the loop on errors
 
-    async def _send_request(self, request: JsonRpcRequest) -> JsonRpcResponse:
+    async def _send_request(self, request: _JsonRpcRequest) -> _JsonRpcResponse:
         """
         Send a request to the server and wait for the response.
 
         Args:
-            request (JsonRpcRequest): The JSON-RPC request to send
+            request (_JsonRpcRequest): The JSON-RPC request to send
 
         Returns:
-            JsonRpcResponse: The JSON-RPC response
+            _JsonRpcResponse: The JSON-RPC response
 
         Raises:
             ConnectionError: If the server is not connected
@@ -336,7 +341,7 @@ class StdioMCPServer(MCPServerProtocol):
 
         # Set up a future to receive the response
         request_id = request["id"]
-        response_future: asyncio.Future[JsonRpcResponse] = asyncio.Future()
+        response_future: asyncio.Future[_JsonRpcResponse] = asyncio.Future()
         self._pending_requests[request_id] = response_future
 
         # Send the request
@@ -355,12 +360,12 @@ class StdioMCPServer(MCPServerProtocol):
                 f"Request timed out after {self.request_timeout_s} seconds"
             )
 
-    async def _send_notification(self, notification: JsonRpcNotification) -> None:
+    async def _send_notification(self, notification: _JsonRpcNotification) -> None:
         """
         Send a notification to the server.
 
         Args:
-            notification (JsonRpcNotification): The JSON-RPC notification to send
+            notification (_JsonRpcNotification): The JSON-RPC notification to send
 
         Raises:
             ConnectionError: If the server is not connected
@@ -373,7 +378,7 @@ class StdioMCPServer(MCPServerProtocol):
         self._stdin.write(notification_json.encode("utf-8"))
         await self._stdin.drain()
 
-    async def list_tools(self) -> Sequence["Tool"]:
+    async def list_tools_async(self) -> Sequence[Tool]:
         """
         List the tools available on the server.
 
@@ -385,7 +390,7 @@ class StdioMCPServer(MCPServerProtocol):
         """
         from mcp.types import Tool
 
-        request: JsonRpcRequest = {
+        request: _JsonRpcRequest = {
             "jsonrpc": "2.0",
             "id": str(self._next_id),
             "method": "listTools",
@@ -402,7 +407,8 @@ class StdioMCPServer(MCPServerProtocol):
 
         return [Tool.model_validate(tool) for tool in response["result"]["tools"]]
 
-    async def list_resources(self) -> Sequence["Resource"]:
+    @override
+    async def list_resources_async(self) -> Sequence[Resource]:
         """
         List the resources available on the server.
 
@@ -414,7 +420,7 @@ class StdioMCPServer(MCPServerProtocol):
         """
         from mcp.types import Resource
 
-        request: JsonRpcRequest = {
+        request: _JsonRpcRequest = {
             "jsonrpc": "2.0",
             "id": str(self._next_id),
             "method": "listResources",
@@ -434,9 +440,10 @@ class StdioMCPServer(MCPServerProtocol):
             for resource in response["result"]["resources"]
         ]
 
-    async def list_resource_contents(
+    @override
+    async def list_resource_contents_async(
         self, uri: str
-    ) -> Sequence["TextResourceContents | BlobResourceContents"]:
+    ) -> Sequence[TextResourceContents | BlobResourceContents]:
         """
         List contents of a specific resource.
 
@@ -451,7 +458,7 @@ class StdioMCPServer(MCPServerProtocol):
         """
         from mcp.types import BlobResourceContents, TextResourceContents
 
-        request: JsonRpcRequest = {
+        request: _JsonRpcRequest = {
             "jsonrpc": "2.0",
             "id": str(self._next_id),
             "method": "readResource",
@@ -473,7 +480,8 @@ class StdioMCPServer(MCPServerProtocol):
             for content in response["result"]["contents"]
         ]
 
-    async def call_tool(
+    @override
+    async def call_tool_async(
         self, tool_name: str, arguments: dict[str, object] | None
     ) -> "CallToolResult":
         """
@@ -491,7 +499,7 @@ class StdioMCPServer(MCPServerProtocol):
         """
         from mcp.types import CallToolResult
 
-        request: JsonRpcRequest = {
+        request: _JsonRpcRequest = {
             "jsonrpc": "2.0",
             "id": str(self._next_id),
             "method": "callTool",

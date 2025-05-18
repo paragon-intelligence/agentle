@@ -606,12 +606,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             ```
         """
         for server in self.mcp_servers:
-            run_sync(server.connect)
+            server.connect()
         try:
             yield
         finally:
             for server in self.mcp_servers:
-                run_sync(server.cleanup)
+                server.cleanup()
 
     @asynccontextmanager
     async def with_mcp_servers_async(self) -> AsyncGenerator[None, None]:
@@ -633,12 +633,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             ```
         """
         for server in self.mcp_servers:
-            await server.connect()
+            await server.connect_async()
         try:
             yield
         finally:
             for server in self.mcp_servers:
-                await server.cleanup()
+                await server.cleanup_async()
 
     def run(
         self,
@@ -852,7 +852,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 lambda log: log.debug("Getting tools from MCP servers")
             )
             for server in self.mcp_servers:
-                tools = await server.list_tools()
+                tools = await server.list_tools_async()
                 mcp_tools.extend(tools)
             _logger.bind_optional(
                 lambda log: log.debug("Got %d tools from MCP servers", len(mcp_tools))

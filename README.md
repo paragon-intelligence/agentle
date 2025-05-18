@@ -402,6 +402,55 @@ print(response.text)
 
 ## 🧪 Advanced Features
 
+### MCP Servers Integration
+
+Connect your agents to external data sources and tools using the Model Context Protocol (MCP):
+
+```python
+from agentle.agents.agent import Agent
+from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+from agentle.mcp.servers.sse_mcp_server import SSEMCPServer
+from agentle.mcp.servers.stdio_mcp_server import StdioMCPServer
+
+# Set up provider
+provider = GoogleGenaiGenerationProvider()
+
+# Create MCP servers
+stdio_server = StdioMCPServer(
+    server_name="File System MCP",
+    command="/path/to/filesystem_mcp_server",  # Replace with actual command
+    server_env={"DEBUG": "1"},
+)
+
+sse_server = SSEMCPServer(
+    server_name="Weather API MCP",
+    server_url="http://localhost:3000",  # Replace with actual server URL
+)
+
+# Create agent with MCP servers
+agent = Agent(
+    name="MCP-Augmented Assistant",
+    description="An assistant that can access external tools via MCP",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="You are a helpful assistant with access to external tools.",
+    mcp_servers=[stdio_server, sse_server],
+)
+
+# Use the with_mcp_servers context manager for proper connection handling
+with agent.with_mcp_servers():
+    # Query that uses MCP server tools
+    response = agent.run("What's the weather like in Tokyo today?")
+    print(response.generation.text)
+```
+
+The Model Context Protocol (MCP) provides a standardized way for LLMs to access external data sources and tools. Agentle supports two types of MCP servers:
+
+- **StdioMCPServer**: Launches and communicates with local MCP servers over stdin/stdout
+- **SSEMCPServer**: Connects to remote HTTP servers with support for Server-Sent Events (SSE)
+
+Using the `with_mcp_servers()` context manager ensures proper connection handling and resource cleanup.
+
 ### Flexible Input Types
 
 Agentle agents can process various input types without complex conversions:

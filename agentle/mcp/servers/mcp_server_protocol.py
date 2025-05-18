@@ -5,12 +5,14 @@ This module defines the abstract base class for Model Context Protocol servers.
 It provides a standardized interface for different server implementations to
 connect to external resources, list available tools, and invoke tools.
 """
+
 from __future__ import annotations
 
 import abc
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 
 if TYPE_CHECKING:
@@ -35,8 +37,41 @@ class MCPServerProtocol(BaseModel, abc.ABC):
     methods defined in this interface.
     """
 
+    @property
     @abc.abstractmethod
-    async def connect(self) -> None:
+    def name(self) -> str:
+        """
+        Get a readable name for the server.
+
+        Returns:
+            str: A human-readable name identifying the server.
+        """
+        ...
+
+    def connect(self) -> None:
+        run_sync(self.connect_async)
+
+    def cleanup(self) -> None:
+        return run_sync(self.cleanup_async)
+
+    def list_tools(self) -> Sequence[Tool]:
+        return run_sync(self.list_tools_async)
+
+    def list_resources(self) -> Sequence[Resource]:
+        return run_sync(self.list_resources_async)
+
+    def list_resource_contents(
+        self, uri: str
+    ) -> Sequence[TextResourceContents | BlobResourceContents]:
+        return run_sync(self.list_resource_contents_async, uri=uri)
+
+    def call_tool(
+        self, tool_name: str, arguments: dict[str, object] | None
+    ) -> CallToolResult:
+        return run_sync(self.call_tool_async, tool_name=tool_name, arguments=arguments)
+
+    @abc.abstractmethod
+    async def connect_async(self) -> None:
         """
         Connect to the MCP server.
 
@@ -52,19 +87,8 @@ class MCPServerProtocol(BaseModel, abc.ABC):
         """
         ...
 
-    @property
     @abc.abstractmethod
-    def name(self) -> str:
-        """
-        Get a readable name for the server.
-
-        Returns:
-            str: A human-readable name identifying the server.
-        """
-        ...
-
-    @abc.abstractmethod
-    async def cleanup(self) -> None:
+    async def cleanup_async(self) -> None:
         """
         Clean up the server connection.
 
@@ -77,7 +101,7 @@ class MCPServerProtocol(BaseModel, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def list_tools(self) -> Sequence[Tool]:
+    async def list_tools_async(self) -> Sequence[Tool]:
         """
         List the tools available on the server.
 
@@ -92,7 +116,7 @@ class MCPServerProtocol(BaseModel, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def list_resources(self) -> Sequence[Resource]:
+    async def list_resources_async(self) -> Sequence[Resource]:
         """
         List the resources available on the server.
 
@@ -107,7 +131,7 @@ class MCPServerProtocol(BaseModel, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def list_resource_contents(
+    async def list_resource_contents_async(
         self, uri: str
     ) -> Sequence[TextResourceContents | BlobResourceContents]:
         """
@@ -129,7 +153,7 @@ class MCPServerProtocol(BaseModel, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def call_tool(
+    async def call_tool_async(
         self, tool_name: str, arguments: dict[str, object] | None
     ) -> CallToolResult:
         """
