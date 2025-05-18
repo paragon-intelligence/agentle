@@ -53,6 +53,7 @@ response = model.generate_content(
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from rsb.adapters.adapter import Adapter
@@ -107,6 +108,11 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
         google_tool = adapter.adapt(population_tool)
         ```
     """
+
+    def __init__(self) -> None:
+        """Initialize the adapter with a logger."""
+        super().__init__()
+        self._logger = logging.getLogger(__name__)
 
     def adapt(self, agentle_tool: Tool[Any]) -> "types.Tool":
         """
@@ -186,34 +192,53 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
         required: list[str] = []
 
         for param_name, param_info_obj in agentle_tool.parameters.items():
-            # Cast para dict para ajudar o linter
-            param_info = cast(dict[str, Any], param_info_obj)
-            param_schema_info: dict[str, Any] = {}
-
-            # Mapear o tipo
-            param_type_str = param_info.get("type", "object")
-            google_type = type_mapping.get(
-                str(param_type_str).lower(), types.Type.OBJECT
-            )  # Default to OBJECT if type unknown
-            param_schema_info["type"] = google_type
-
-            # TODO: Adicionar description se disponível em param_info futuramente
-            # param_schema_info["description"] = param_info.get("description")
-
-            # Adicionar valor padrão se disponível
-            if "default" in param_info:
-                param_schema_info["default"] = param_info["default"]
-
-            # Adicionar items para arrays (listas) - Simplificado, assume items são strings por agora
-            if google_type == types.Type.ARRAY:
-                # Assume array de strings como padrão simplificado
-                # Idealmente, o agentle.Tool.parameters precisaria especificar o tipo dos itens
-                param_schema_info["items"] = types.Schema(type=types.Type.STRING)
-
-            properties[param_name] = types.Schema(**param_schema_info)
-
-            if param_info.get("required", False):
+            # Handle different parameter types
+            if isinstance(param_info_obj, str):
+                # If parameter is a string, treat it as a simple string type parameter
+                properties[param_name] = types.Schema(type=types.Type.STRING)
+                # Consider string parameters as required by default
                 required.append(param_name)
+            elif isinstance(param_info_obj, list):
+                # If parameter is a list, treat it as an array of strings
+                properties[param_name] = types.Schema(
+                    type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)
+                )
+                # Lists are not required by default
+            elif isinstance(param_info_obj, dict):
+                # Regular dictionary parameter handling
+                param_info = cast(dict[str, Any], param_info_obj)
+
+                # Get parameter type
+                param_type_str = param_info.get("type", "object")
+                google_type = type_mapping.get(
+                    str(param_type_str).lower(), types.Type.OBJECT
+                )  # Default to OBJECT if type unknown
+
+                # Create parameter schema
+                if google_type == types.Type.ARRAY:
+                    # Handle array type with items schema
+                    # Assume array of strings as default
+                    properties[param_name] = types.Schema(
+                        type=google_type, items=types.Schema(type=types.Type.STRING)
+                    )
+                else:
+                    # Handle scalar types
+                    # Default value must be of the correct type for the parameter
+                    if "default" in param_info:
+                        properties[param_name] = types.Schema(
+                            type=google_type, default=param_info["default"]
+                        )
+                    else:
+                        properties[param_name] = types.Schema(type=google_type)
+
+                if param_info.get("required", False):
+                    required.append(param_name)
+            else:
+                # For any other type, default to string type
+                properties[param_name] = types.Schema(type=types.Type.STRING)
+                self._logger.warning(
+                    f"Unknown parameter type for {param_name}, defaulting to string"
+                )
 
         # Criar o schema principal para os parâmetros da função
         parameters_schema = types.Schema(type=types.Type.OBJECT, properties=properties)

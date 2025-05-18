@@ -15,8 +15,9 @@ from __future__ import annotations
 import json
 import logging
 import re
+import threading
 from collections.abc import AsyncIterator, MutableMapping, Sequence
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import httpx
 from rsb.models.field import Field
@@ -32,6 +33,11 @@ if TYPE_CHECKING:
         TextResourceContents,
         Tool,
     )
+
+# Module-level lock to protect the global session store
+_global_session_lock = threading.RLock()
+# Global state to maintain session information across event loops
+_global_session_store: Dict[str, Dict[str, Any]] = {}
 
 
 class StreamableHTTPMCPServer(MCPServerProtocol):
@@ -75,14 +81,15 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         default=100.0, description="Timeout in seconds for HTTP requests"
     )
 
-    # Internal state
-    _client: Optional[httpx.AsyncClient] = PrivateAttr(default=None)
+    # Internal state (NOT stored as a client instance to avoid event loop issues)
     _logger: logging.Logger = PrivateAttr(
         default_factory=lambda: logging.getLogger(__name__),
     )
+    # Session state stored as primitives to avoid cross-loop issues
     _session_id: Optional[str] = PrivateAttr(default=None)
     _last_event_id: Optional[str] = PrivateAttr(default=None)
     _jsonrpc_id_counter: int = PrivateAttr(default=1)
+    _initialized: bool = PrivateAttr(default=False)
 
     @property
     def name(self) -> str:
@@ -93,6 +100,39 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             str: The human-readable server name
         """
         return self.server_name
+
+    @property
+    def _server_key(self) -> str:
+        """
+        Get a unique key for this server for global session tracking.
+
+        Returns:
+            str: A unique identifier for this server instance
+        """
+        return f"{self.server_url}:{self.mcp_endpoint}"
+
+    async def _create_client(self) -> httpx.AsyncClient:
+        """
+        Create a new HTTP client for the current event loop.
+
+        Returns:
+            httpx.AsyncClient: A new HTTP client instance
+        """
+        # Set up the HTTP client with proper headers for Streamable HTTP
+        base_headers = {
+            "Accept": "application/json, text/event-stream",
+            "Cache-Control": "no-cache",
+        }
+
+        # Merge with user-provided headers
+        all_headers = {**base_headers, **self.headers}
+
+        self._logger.debug(f"Creating new HTTP client with headers: {all_headers}")
+
+        # Create a fresh client bound to the current event loop
+        return httpx.AsyncClient(
+            base_url=str(self.server_url), timeout=self.timeout_s, headers=all_headers
+        )
 
     async def connect_async(self) -> None:
         """
@@ -106,18 +146,20 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         """
         self._logger.info(f"Connecting to HTTP server: {self.server_url}")
 
-        # Set up the HTTP client with proper headers for Streamable HTTP
-        base_headers = {
-            "Accept": "application/json, text/event-stream",
-            "Cache-Control": "no-cache",
-        }
+        # Check if we have existing session information for this server
+        server_key = self._server_key
+        with _global_session_lock:
+            if server_key in _global_session_store:
+                session_info = _global_session_store[server_key]
+                self._logger.debug(f"Found existing session for {server_key}")
+                self._session_id = session_info.get("session_id")
+                self._last_event_id = session_info.get("last_event_id")
+                self._jsonrpc_id_counter = session_info.get("jsonrpc_counter", 1)
+                self._initialized = True
+                return
 
-        # Merge with user-provided headers
-        all_headers = {**base_headers, **self.headers}
-
-        self._client = httpx.AsyncClient(
-            base_url=str(self.server_url), timeout=self.timeout_s, headers=all_headers
-        )
+        # Create a new client for this operation
+        client = await self._create_client()
 
         # Initialize the MCP protocol
         try:
@@ -127,7 +169,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 "id": str(self._jsonrpc_id_counter),
                 "method": "initialize",
                 "params": {
-                    "protocolVersion": "2025-03-26",
+                    "protocolVersion": "2024-11-05",  # Use an older version for better compatibility
                     "clientInfo": {"name": "agentle-mcp-client", "version": "0.1.0"},
                     "capabilities": {"resources": {}, "tools": {}, "prompts": {}},
                 },
@@ -135,8 +177,14 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             self._jsonrpc_id_counter += 1
 
             # POST the initialize request to the MCP endpoint
-            response = await self._client.post(
-                self.mcp_endpoint, json=initialize_request
+            response = await client.post(self.mcp_endpoint, json=initialize_request)
+
+            self._logger.debug(
+                f"Initialization response status: {response.status_code}"
+            )
+            self._logger.debug(f"Initialization response headers: {response.headers}")
+            self._logger.debug(
+                f"Initialization response content: {response.text[:100]}..."
             )
 
             if response.status_code != 200:
@@ -147,10 +195,51 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                     f"Failed to initialize: HTTP {response.status_code}"
                 )
 
-            # Parse the response
-            init_result = response.json()
-            if "error" in init_result:
-                raise ConnectionError(f"Failed to initialize: {init_result['error']}")
+            # Check the content type before parsing
+            content_type = response.headers.get("Content-Type", "")
+
+            if "text/event-stream" in content_type:
+                # Handle SSE stream response
+                self._logger.debug("Received SSE stream response during initialization")
+                # Process the stream to find the initialization response
+                async for event in self._parse_sse_stream(response):
+                    data = event["data"]
+                    # Check if this is the response to our initialization request
+                    if (
+                        isinstance(data, dict)
+                        and "id" in data
+                        and data["id"] == str(self._jsonrpc_id_counter - 1)
+                    ):
+                        if "error" in data:
+                            raise ConnectionError(
+                                f"Failed to initialize: {data['error']}"
+                            )
+                        init_result = data
+                        break
+                else:
+                    # If we didn't find a matching response
+                    raise ConnectionError(
+                        "Did not receive initialization response in SSE stream"
+                    )
+            elif "application/json" in content_type:
+                # Parse the JSON response
+                try:
+                    init_result = response.json()
+                    if "error" in init_result:
+                        raise ConnectionError(
+                            f"Failed to initialize: {init_result['error']}"
+                        )
+                except json.JSONDecodeError as e:
+                    self._logger.error(f"Failed to parse JSON response: {e}")
+                    raise ConnectionError(
+                        f"Failed to parse initialization response: {e}"
+                    )
+            else:
+                # Unexpected content type
+                self._logger.warning(f"Unexpected content type: {content_type}")
+                raise ConnectionError(
+                    f"Unexpected content type during initialization: {content_type}"
+                )
 
             # Check for session ID in headers
             session_id = response.headers.get("Mcp-Session-Id")
@@ -159,16 +248,35 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 self._logger.debug(f"Session established with ID: {session_id}")
 
             # Send initialized notification
-            await self._send_notification(
-                {"jsonrpc": "2.0", "method": "initialized", "params": {}}
-            )
+            headers: Dict[str, str] = {}
+            if self._session_id:
+                headers["Mcp-Session-Id"] = self._session_id
 
+            notification: Dict[str, Any] = {
+                "jsonrpc": "2.0",
+                "method": "initialized",
+                "params": {},
+            }
+            await client.post(self.mcp_endpoint, json=notification, headers=headers)
+
+            # Store session info in the global store
+            with _global_session_lock:
+                _global_session_store[server_key] = {
+                    "session_id": self._session_id,
+                    "last_event_id": self._last_event_id,
+                    "jsonrpc_counter": self._jsonrpc_id_counter,
+                }
+
+            self._initialized = True
             self._logger.info("MCP protocol initialized successfully")
 
         except Exception as e:
             self._logger.error(f"Error connecting to server: {e}")
-            await self.cleanup_async()
+            self._initialized = False
             raise ConnectionError(f"Could not connect to server {self.server_url}: {e}")
+        finally:
+            # Always close the client
+            await client.aclose()
 
     async def cleanup_async(self) -> None:
         """
@@ -180,22 +288,33 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         Returns:
             None
         """
-        if self._client is not None:
-            self._logger.info(f"Closing connection with HTTP server: {self.server_url}")
+        self._logger.info(f"Closing connection with HTTP server: {self.server_url}")
 
-            # If we have a session ID, try to terminate the session
-            if self._session_id:
-                try:
-                    headers = {"Mcp-Session-Id": self._session_id}
-                    await self._client.delete(self.mcp_endpoint, headers=headers)
-                    self._logger.debug(f"Session terminated: {self._session_id}")
-                except Exception as e:
-                    self._logger.warning(f"Failed to terminate session: {e}")
+        # If we have a session ID, try to terminate the session
+        if self._session_id:
+            client = None
+            try:
+                client = await self._create_client()
+                headers = {"Mcp-Session-Id": self._session_id}
+                await client.delete(self.mcp_endpoint, headers=headers)
+                self._logger.debug(f"Session terminated: {self._session_id}")
 
-            await self._client.aclose()
-            self._client = None
-            self._session_id = None
-            self._last_event_id = None
+                # Remove from global store
+                server_key = self._server_key
+                with _global_session_lock:
+                    if server_key in _global_session_store:
+                        del _global_session_store[server_key]
+
+            except Exception as e:
+                self._logger.warning(f"Failed to terminate session: {e}")
+            finally:
+                # Always close the client
+                if client:
+                    await client.aclose()
+
+        self._session_id = None
+        self._last_event_id = None
+        self._initialized = False
 
     async def list_tools_async(self) -> Sequence[Tool]:
         """
@@ -210,7 +329,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         """
         from mcp.types import Tool
 
-        response = await self._send_request("listTools")
+        response = await self._send_request("tools/list")
 
         if "result" not in response:
             raise ValueError("Invalid response format: missing 'result'")
@@ -233,7 +352,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         """
         from mcp.types import Resource
 
-        response = await self._send_request("listResources")
+        response = await self._send_request("resources/list")
 
         if "result" not in response:
             raise ValueError("Invalid response format: missing 'result'")
@@ -264,7 +383,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         """
         from mcp.types import BlobResourceContents, TextResourceContents
 
-        response = await self._send_request("readResource", {"uri": uri})
+        response = await self._send_request("resources/read", {"uri": uri})
 
         if "result" not in response:
             raise ValueError("Invalid response format: missing 'result'")
@@ -299,7 +418,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         from mcp.types import CallToolResult
 
         response = await self._send_request(
-            "callTool", {"tool": tool_name, "arguments": arguments or {}}
+            "tools/call", {"name": tool_name, "arguments": arguments or {}}
         )
 
         if "result" not in response:
@@ -339,6 +458,13 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                         # Track the last event ID for potential resumability
                         if event_id:
                             self._last_event_id = event_id
+                            # Update global store with new event ID
+                            with _global_session_lock:
+                                server_key = self._server_key
+                                if server_key in _global_session_store:
+                                    _global_session_store[server_key][
+                                        "last_event_id"
+                                    ] = event_id
                     except json.JSONDecodeError:
                         yield {
                             "id": event_id,
@@ -386,28 +512,44 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             ConnectionError: If the server is not connected
             httpx.RequestError: If there's an error during the HTTP request
         """
-        if self._client is None:
-            raise ConnectionError("Server not connected")
+        # Ensure we're connected first
+        if not self._initialized:
+            self._logger.debug("Server not initialized, connecting first")
+            await self.connect_async()
 
-        # Create the JSON-RPC request
-        request_id = str(self._jsonrpc_id_counter)
-        self._jsonrpc_id_counter += 1
+        if not self._initialized:
+            raise ConnectionError("Failed to initialize connection")
 
-        request: MutableMapping[str, Any] = {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "method": method,
-            "params": params or {},
-        }
+        # Create a new client for this request (bound to current event loop)
+        client = await self._create_client()
 
-        # Prepare headers
-        headers: MutableMapping[str, str] = {}
-        if self._session_id:
-            headers["Mcp-Session-Id"] = self._session_id
-
-        # Send the request
         try:
-            response = await self._client.post(
+            # Create the JSON-RPC request
+            request_id = str(self._jsonrpc_id_counter)
+            self._jsonrpc_id_counter += 1
+
+            # Update the counter in the global store
+            with _global_session_lock:
+                server_key = self._server_key
+                if server_key in _global_session_store:
+                    _global_session_store[server_key]["jsonrpc_counter"] = (
+                        self._jsonrpc_id_counter
+                    )
+
+            request: MutableMapping[str, Any] = {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "method": method,
+                "params": params or {},
+            }
+
+            # Prepare headers
+            headers: MutableMapping[str, str] = {}
+            if self._session_id:
+                headers["Mcp-Session-Id"] = self._session_id
+
+            # Send the request
+            response = await client.post(
                 self.mcp_endpoint, json=request, headers=headers
             )
 
@@ -416,11 +558,34 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 self._session_id = response.headers["Mcp-Session-Id"]
                 self._logger.debug(f"Session established with ID: {self._session_id}")
 
+                # Update session ID in global store
+                with _global_session_lock:
+                    server_key = self._server_key
+                    if server_key in _global_session_store:
+                        _global_session_store[server_key]["session_id"] = (
+                            self._session_id
+                        )
+                    else:
+                        _global_session_store[server_key] = {
+                            "session_id": self._session_id,
+                            "last_event_id": self._last_event_id,
+                            "jsonrpc_counter": self._jsonrpc_id_counter,
+                        }
+
             # Handle different response types
             if response.status_code == 404 and self._session_id:
                 # Session expired, we need to reconnect
                 self._logger.warning("Session expired, reconnecting...")
                 self._session_id = None
+                self._initialized = False
+
+                # Clear session from global store
+                with _global_session_lock:
+                    server_key = self._server_key
+                    if server_key in _global_session_store:
+                        del _global_session_store[server_key]
+
+                # Reconnect and retry the request
                 await self.connect_async()  # Reconnect
                 return await self._send_request(method, params)  # Retry the request
 
@@ -475,93 +640,13 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         except httpx.RequestError as e:
             self._logger.error(f"HTTP request error: {e}")
             raise
-
-    async def _send_notification(self, notification: MutableMapping[str, Any]) -> None:
-        """
-        Send a JSON-RPC notification to the server.
-
-        Args:
-            notification (MutableMapping[str, Any]): The JSON-RPC notification to send
-
-        Raises:
-            ConnectionError: If the server is not connected
-            httpx.RequestError: If there's an error during the HTTP request
-        """
-        if self._client is None:
-            raise ConnectionError("Server not connected")
-
-        # Prepare headers
-        headers: MutableMapping[str, str] = {}
-        if self._session_id:
-            headers["Mcp-Session-Id"] = self._session_id
-
-        # Send the notification
-        try:
-            response = await self._client.post(
-                self.mcp_endpoint, json=notification, headers=headers
-            )
-
-            # Expect 202 Accepted for notifications
-            if response.status_code != 202:
-                self._logger.warning(
-                    f"Unexpected status code for notification: {response.status_code}"
-                )
-
-            # Check for session ID in response
-            if "Mcp-Session-Id" in response.headers and not self._session_id:
-                self._session_id = response.headers["Mcp-Session-Id"]
-                self._logger.debug(f"Session established with ID: {self._session_id}")
-
-        except httpx.RequestError as e:
-            self._logger.error(f"HTTP request error: {e}")
+        except ConnectionError:
+            # Re-raise connection errors
             raise
-
-    async def _open_sse_stream(self) -> httpx.Response:
-        """
-        Open an SSE stream for server-initiated messages.
-
-        Returns:
-            httpx.Response: The HTTP response with the SSE stream
-
-        Raises:
-            ConnectionError: If the server is not connected
-            httpx.RequestError: If there's an error during the HTTP request
-        """
-        if self._client is None:
-            raise ConnectionError("Server not connected")
-
-        # Prepare headers
-        headers: MutableMapping[str, str] = {"Accept": "text/event-stream"}
-
-        if self._session_id:
-            headers["Mcp-Session-Id"] = self._session_id
-
-        if self._last_event_id:
-            headers["Last-Event-ID"] = self._last_event_id
-
-        # Open the SSE stream
-        try:
-            response = await self._client.get(self.mcp_endpoint, headers=headers)
-
-            if response.status_code == 405:
-                self._logger.warning(
-                    "Server does not support SSE streams via GET method"
-                )
-                raise ValueError("Server does not support SSE streams via GET method")
-
-            if response.status_code != 200:
-                raise ConnectionError(
-                    f"Failed to open SSE stream: HTTP {response.status_code}"
-                )
-
-            content_type = response.headers.get("Content-Type", "")
-            if "text/event-stream" not in content_type:
-                raise ValueError(
-                    f"Expected text/event-stream response, got {content_type}"
-                )
-
-            return response
-
-        except httpx.RequestError as e:
-            self._logger.error(f"HTTP request error: {e}")
-            raise
+        except Exception as e:
+            # Handle other exceptions
+            self._logger.error(f"Error sending request: {e}")
+            raise ConnectionError(f"Error sending request: {e}")
+        finally:
+            # Always close the client
+            await client.aclose()
