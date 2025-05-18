@@ -9,12 +9,10 @@ substitute the server URLs and commands with your actual server information.
 """
 
 from agentle.agents.agent import Agent
-from agentle.generations.providers.google.google_genai_generation_provider import (
-    GoogleGenaiGenerationProvider,
+from agentle.generations.providers.google.google_generation_provider import (
+    GoogleGenerationProvider,
 )
 from agentle.mcp.servers.streamable_http_mcp_server import StreamableHTTPMCPServer
-
-provider = GoogleGenaiGenerationProvider()
 
 http_server = StreamableHTTPMCPServer(
     server_name="Everything MCP",
@@ -33,7 +31,7 @@ for tool in sse_tools:
 agent = Agent(
     name="MCP-Augmented Assistant",
     description="An assistant that can access files and weather information via MCP servers",
-    generation_provider=provider,
+    generation_provider=GoogleGenerationProvider(),
     model="gemini-2.0-flash",
     instructions="""You are a helpful assistant with access to external tools
     Use tools only when necessary.""",
