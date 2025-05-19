@@ -587,7 +587,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         return len(self.tools) > 0
 
     @contextmanager
-    def with_mcp_servers(self) -> Generator[None, None, None]:
+    def start_mcp_servers(self) -> Generator[None, None, None]:
         """
         Context manager to connect and clean up MCP servers.
 
@@ -599,7 +599,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         Example:
             ```python
-            async with agent.with_mcp_servers():
+            async with agent.start_mcp_servers():
                 # Operations that require connection to MCP servers
                 result = await agent.run_async("Query to server")
             # Servers are automatically disconnected here
@@ -614,7 +614,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 server.cleanup()
 
     @asynccontextmanager
-    async def with_mcp_servers_async(self) -> AsyncGenerator[None, None]:
+    async def start_mcp_servers_async(self) -> AsyncGenerator[None, None]:
         """
         Asynchronous context manager to connect and clean up MCP servers.
 
@@ -626,7 +626,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         Example:
             ```python
-            async with agent.with_mcp_servers():
+            async with agent.start_mcp_servers():
                 # Operations that require connection to MCP servers
                 result = await agent.run_async("Query to server")
             # Servers are automatically disconnected here
@@ -846,14 +846,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
         )
 
-        mcp_tools: MutableSequence[MCPTool] = []
+        mcp_tools: MutableSequence[tuple[MCPServerProtocol, MCPTool]] = []
         if bool(self.mcp_servers):
             _logger.bind_optional(
                 lambda log: log.debug("Getting tools from MCP servers")
             )
             for server in self.mcp_servers:
                 tools = await server.list_tools_async()
-                mcp_tools.extend(tools)
+                mcp_tools.extend((server, tool) for tool in tools)
             _logger.bind_optional(
                 lambda log: log.debug("Got %d tools from MCP servers", len(mcp_tools))
             )
@@ -891,7 +891,8 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         # Agent has tools. We must iterate until generate the final answer.
 
         all_tools: MutableSequence[Tool[Any]] = [
-            Tool.from_mcp_tool(tool) for tool in mcp_tools
+            Tool.from_mcp_tool(mcp_tool=tool, server=server)
+            for server, tool in mcp_tools
         ] + [
             Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
         ]
@@ -915,29 +916,35 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     self.config.maxIterations,
                 )
             )
+
             # Remove the filtering of tools that have already been called
             # since we want to allow calling the same tool multiple times
+            called_tools_prompt: UserMessage | str = ""
+            if called_tools:
+                called_tools_prompt_parts: MutableSequence[TextPart | FilePart] = []
+                for suggestion, result in called_tools.values():
+                    if isinstance(result, FilePart):
+                        called_tools_prompt_parts.append(result)
+                    else:
+                        called_tools_prompt_parts.append(
+                            TextPart(
+                                text="""<info>
+                                The following are the other tool calls made by the agent:
+                                </info>"""
+                                + "\n"
+                                + "\n".join(
+                                    [
+                                        f"""<tool_execution>
+                                <tool_name>{suggestion.tool_name}</tool_name>
+                                <args>{suggestion.args}</args>
+                                <result>{result}</result>
+                            </tool_execution>"""
+                                    ]
+                                )
+                            )
+                        )
 
-            called_tools_prompt: str = (
-                (
-                    """<info>
-                    The following are the other tool calls made by the agent:
-                    </info>"""
-                    + "\n"
-                    + "\n".join(
-                        [
-                            f"""<tool_execution>
-                    <tool_name>{suggestion.tool_name}</tool_name>
-                    <args>{suggestion.args}</args>
-                    <result>{result}</result>
-                </tool_execution>"""
-                            for suggestion, result in called_tools.values()
-                        ]
-                    )
-                )
-                if called_tools
-                else ""
-            )
+                called_tools_prompt = UserMessage(parts=called_tools_prompt_parts)
 
             # We no longer decide if there are no more tools since we allow repeated tool calls
             # Instead, we'll rely on the agent to stop calling tools when it has all needed information
@@ -950,7 +957,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 .append_before_last_message(called_tools_prompt)
                 .elements,
                 generation_config=self.config.generationConfig,
-                tools=all_tools,  # Use all tools in every iteration
+                tools=all_tools,
             )
             _logger.bind_optional(
                 lambda log: log.debug(
@@ -1008,13 +1015,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         tool_execution_suggestion.args,
                     )
                 )
-                tool_result = available_tools[tool_execution_suggestion.tool_name].call(
-                    **tool_execution_suggestion.args
-                )
+
+                selected_tool = available_tools[tool_execution_suggestion.tool_name]
+
+                tool_result = selected_tool.call(**tool_execution_suggestion.args)
                 _logger.bind_optional(
                     lambda log: log.debug("Tool execution result: %s", tool_result)
                 )
-                called_tools[tool_execution_suggestion.id] = (  # here
+                called_tools[tool_execution_suggestion.id] = (
                     tool_execution_suggestion,
                     tool_result,
                 )

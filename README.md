@@ -433,8 +433,8 @@ agent = Agent(
     mcp_servers=[stdio_server, sse_server],
 )
 
-# Use the with_mcp_servers context manager for proper connection handling
-with agent.with_mcp_servers():
+# Use the start_mcp_servers context manager for proper connection handling
+with agent.start_mcp_servers():
     # Query that uses MCP server tools
     response = agent.run("What's the weather like in Tokyo today?")
     print(response.generation.text)
@@ -445,7 +445,7 @@ The Model Context Protocol (MCP) provides a standardized way for LLMs to access 
 - **StdioMCPServer**: Launches and communicates with local MCP servers over stdin/stdout
 - **StreamableHTTPMCPServer**: Connects to remote HTTP servers with support for Server-Sent Events (SSE)
 
-Using the `with_mcp_servers()` context manager ensures proper connection handling and resource cleanup.
+Using the `start_mcp_servers()` context manager ensures proper connection handling and resource cleanup.
 
 ### Flexible Input Types
 

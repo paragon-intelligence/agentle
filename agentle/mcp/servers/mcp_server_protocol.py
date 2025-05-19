@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
+from rsb.models.config_dict import ConfigDict
 
 if TYPE_CHECKING:
     from mcp.types import (
@@ -36,6 +37,8 @@ class MCPServerProtocol(BaseModel, abc.ABC):
     Implementing classes must provide concrete implementations for all abstract
     methods defined in this interface.
     """
+
+    model_config = ConfigDict(frozen=True)
 
     @property
     @abc.abstractmethod

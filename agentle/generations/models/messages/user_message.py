@@ -10,10 +10,10 @@ from rsb.models.field import Field
 
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
-from agentle.generations.tools.tool import Tool
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
 )
+from agentle.generations.tools.tool import Tool
 
 
 class UserMessage(BaseModel):

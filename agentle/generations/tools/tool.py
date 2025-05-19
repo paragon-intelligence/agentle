@@ -35,14 +35,19 @@ print(result)  # "The weather in Tokyo is sunny. Temperature is 25°C"
 
 from __future__ import annotations
 
+import base64
 import inspect
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, MutableSequence
 from typing import TYPE_CHECKING, Any, Literal
 
+from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 from rsb.models.private_attr import PrivateAttr
+
+from agentle.generations.models.message_parts.file import FilePart
+from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
 if TYPE_CHECKING:
     from mcp.types import Tool as MCPTool
@@ -134,13 +139,17 @@ class Tool[T_Output = Any](BaseModel):
         ],
     )
 
-    _callable_ref: Callable[..., T_Output] | None = PrivateAttr(default=None)
-
     needs_human_confirmation: bool = Field(
         default=False,
         description="Flag indicating whether human confirmation is required before executing this tool.",
         examples=[True, False],
     )
+
+    _callable_ref: (
+        Callable[..., T_Output] | Callable[..., Awaitable[T_Output]] | None
+    ) = PrivateAttr(default=None)
+
+    _server: MCPServerProtocol | None = PrivateAttr(default=None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
@@ -197,15 +206,53 @@ class Tool[T_Output = Any](BaseModel):
             print(result)  # Output: 8
             ```
         """
+        ret = run_sync(self.call_async, timeout=None, **kwargs)
+        return ret
+
+    async def call_async(self, **kwargs: object) -> T_Output:
+        """
+        Executes the underlying function asynchronously with the provided arguments.
+
+        This method calls the function referenced by the `_callable_ref` attribute
+        with the provided keyword arguments. It raises a ValueError if the Tool
+        was not created with a callable reference.
+
+        Args:
+            **kwargs: Keyword arguments to pass to the underlying function.
+
+        Returns:
+            T_Output: The result of calling the underlying function.
+
+        Raises:
+            ValueError: If the Tool does not have a callable reference.
+
+        Example:
+            ```python
+            async def async_add(a: int, b: int) -> int:
+                \"\"\"Add two numbers\"\"\"
+                return a + b
+
+            add_tool = Tool.from_callable(async_add)
+            result = await add_tool.call_async(a=5, b=3)
+            print(result)  # Output: 8
+            ```
+        """
         if self._callable_ref is None:
             raise ValueError(
                 'Tool is not callable because the "_callable_ref" instance variable is not set'
             )
 
-        return self._callable_ref(**kwargs)
+        if inspect.iscoroutinefunction(self._callable_ref):
+            ret: T_Output = await self._callable_ref(**kwargs)  # type: ignore
+            return ret
+        else:
+            ret: T_Output = self._callable_ref(**kwargs)  # type: ignore
+            return ret
 
     @classmethod
-    def from_mcp_tool(cls, mcp_tool: MCPTool) -> Tool[T_Output]:
+    def from_mcp_tool(
+        cls, mcp_tool: MCPTool, server: MCPServerProtocol
+    ) -> Tool[T_Output]:
         """
         Creates a Tool instance from an MCP Tool.
 
@@ -232,11 +279,57 @@ class Tool[T_Output = Any](BaseModel):
             search_tool = Tool.from_mcp_tool(mcp_tool)
             ```
         """
-        return cls(
+        from mcp.types import (
+            BlobResourceContents,
+            CallToolResult,
+            EmbeddedResource,
+            ImageContent,
+            TextContent,
+            TextResourceContents,
+        )
+
+        tool = cls(
             name=mcp_tool.name,
             description=mcp_tool.description,
             parameters=mcp_tool.inputSchema,
         )
+        tool._server = server
+
+        async def _callable_ref(**kwargs: object) -> Any:
+            call_tool_result: CallToolResult = await server.call_tool_async(
+                tool_name=mcp_tool.name,
+                arguments=kwargs,
+            )
+
+            contents: MutableSequence[str | FilePart] = []
+
+            for content in call_tool_result.content:
+                match content:
+                    case TextContent():
+                        contents.append(content.text)
+                    case ImageContent():
+                        contents.append(
+                            FilePart(
+                                data=base64.b64decode(content.data),
+                                mime_type=content.mimeType,
+                            )
+                        )
+                    case EmbeddedResource():
+                        match content.resource:
+                            case TextResourceContents():
+                                contents.append(content.resource.text)
+                            case BlobResourceContents():
+                                contents.append(
+                                    FilePart(
+                                        data=base64.b64decode(content.resource.blob),
+                                        mime_type="application/octet-stream",
+                                    )
+                                )
+
+            return contents
+
+        tool._callable_ref = _callable_ref
+        return tool
 
     @classmethod
     def from_callable(

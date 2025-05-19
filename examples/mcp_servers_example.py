@@ -67,9 +67,9 @@ agent = Agent(
     mcp_servers=[stdio_server, http_server],
 )
 
-# Use the with_mcp_servers context manager to automatically connect and cleanup
+# Use the start_mcp_servers context manager to automatically connect and cleanup
 print("\n=== RUNNING AGENT QUERIES ===")
-with agent.with_mcp_servers():
+with agent.start_mcp_servers():
     # Example 1: Query that might use the file system tool
     print("\n--- FILE SYSTEM QUERY ---")
     file_query = "Can you show me the contents of the README.md file?"

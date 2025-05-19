@@ -280,7 +280,7 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
 
                 You can provide input as a simple string, a structured message, or a sequence of messages.
                 """
-                async with agent.with_mcp_servers_async():
+                async with agent.start_mcp_servers_async():
                     result = await agent.run_async(cast(AgentInput, input.value.input))
                     return result
 

@@ -39,7 +39,7 @@ agent = Agent(
 )
 
 # Use ONLY the context manager for all MCP operations
-with agent.with_mcp_servers():
+with agent.start_mcp_servers():
     # Get the tools from the server
     print(f"\n🔧 Tools from {http_server.name}:")
     sse_tools = http_server.list_tools()
