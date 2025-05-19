@@ -86,8 +86,13 @@ class OpenaiGenerationProvider(GenerationProvider):
         self.default_query = default_query
         self.http_client = http_client
 
+    @property
     @override
+    def default_model(self) -> str:
+        return "gpt-4o"
+
     @observe
+    @override
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
@@ -153,11 +158,6 @@ class OpenaiGenerationProvider(GenerationProvider):
             str: The organization identifier, which is "openai" for this provider.
         """
         return "openai"
-
-    @property
-    @override
-    def default_model(self) -> str:
-        return "gpt-4o"
 
     @override
     def price_per_million_tokens_input(
