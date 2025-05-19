@@ -211,31 +211,34 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
-<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knowledge_integration.html">Knowledge Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agent_composition.html">Agent Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Deployment &amp; Operations</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/agents.html">Agents API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/generations.html">Generations API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/prompts.html">Prompts API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/rag.html">RAG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html">MCP API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/stt.html">Speech-to-Text API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/tts.html">Text-to-Speech API</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/agent.html">Agent API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/tools.html">Tools API</a></li>
+</li>
 </ul>
 
 </div>
@@ -294,7 +297,7 @@
 </ul>
 <p>Through this thoughtful approach to architecture, Agentle aims to provide a framework that’s both powerful and elegant for building the next generation of AI agents.</p>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#basic-installation">Basic Installation</a></li>
@@ -318,11 +321,13 @@
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#next-steps">Next Steps</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#core-concepts">Core Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#agent-composition">Agent Composition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#deployment-options">Deployment Options</a></li>
 </ul>
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
-<ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="agents.html#basic-agent-creation">Basic Agent Creation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="agents.html#agent-parameters">Agent Parameters</a></li>
@@ -330,14 +335,6 @@
 <li class="toctree-l2"><a class="reference internal" href="agents.html#running-agents">Running Agents</a></li>
 <li class="toctree-l2"><a class="reference internal" href="agents.html#agent-response-structure">Agent Response Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="agents.html#advanced-agent-configuration">Advanced Agent Configuration</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tools.html#basic-tool-integration">Basic Tool Integration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html#function-docstrings-and-type-hints">Function Docstrings and Type Hints</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html#adding-multiple-tools">Adding Multiple Tools</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html#advanced-tool-usage">Advanced Tool Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html#best-practices-for-tools">Best Practices for Tools</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a><ul>
@@ -349,11 +346,29 @@
 <li class="toctree-l2"><a class="reference internal" href="inputs.html#automatic-type-conversion">Automatic Type Conversion</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tools.html#basic-tool-integration">Basic Tool Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html#function-docstrings-and-type-hints">Function Docstrings and Type Hints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html#adding-multiple-tools">Adding Multiple Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html#advanced-tool-usage">Advanced Tool Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tools.html#best-practices-for-tools">Best Practices for Tools</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#basic-structured-output">Basic Structured Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#working-with-complex-models">Working with Complex Models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#combining-with-tools">Combining with Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="structured_outputs.html#best-practices">Best Practices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#basic-prompt-management">Basic Prompt Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#creating-prompt-templates">Creating Prompt Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#prompt-providers">Prompt Providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#using-prompts-with-agents">Using Prompts with Agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#advanced-prompt-templates">Advanced Prompt Templates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#creating-custom-prompt-providers">Creating Custom Prompt Providers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#best-practices">Best Practices</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="knowledge_integration.html">Knowledge Integration</a><ul>
@@ -372,16 +387,6 @@
 <li class="toctree-l2"><a class="reference internal" href="agent_composition.html#best-practices">Best Practices</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#basic-prompt-management">Basic Prompt Management</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#creating-prompt-templates">Creating Prompt Templates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#prompt-providers">Prompt Providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#using-prompts-with-agents">Using Prompts with Agents</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#advanced-prompt-templates">Advanced Prompt Templates</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#creating-custom-prompt-providers">Creating Custom Prompt Providers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="prompt_management.html#best-practices">Best Practices</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="a2a.html#what-is-a2a">What is A2A?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="a2a.html#basic-a2a-usage">Basic A2A Usage</a></li>
@@ -394,16 +399,13 @@
 <li class="toctree-l2"><a class="reference internal" href="a2a.html#best-practices">Best Practices</a></li>
 </ul>
 </li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Deployment &amp; Operations</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="deployment.html#web-api-with-blacksheep">Web API with BlackSheep</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment.html#interactive-ui-with-streamlit">Interactive UI with Streamlit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment.html#custom-integrations">Custom Integrations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deployment.html#production-considerations">Production Considerations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mcp.html">Model Context Protocol (MCP)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mcp.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcp.html#server-implementations">Server Implementations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcp.html#session-management">Session Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcp.html#using-mcp-servers-with-agents">Using MCP Servers with Agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcp.html#creating-custom-session-managers">Creating Custom Session Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mcp.html#best-practices">Best Practices</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a><ul>
@@ -416,28 +418,40 @@
 <li class="toctree-l2"><a class="reference internal" href="observability.html#best-practices">Best Practices</a></li>
 </ul>
 </li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/agent.html">Agent API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/agent.html#agent-class">Agent Class</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/agent.html#core-methods">Core Methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/agent.html#other-methods">Other Methods</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/agent.html#agentrunresult">AgentRunResult</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/agent.html#example-usage">Example Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/agent.html#advanced-configuration">Advanced Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#web-api-with-blacksheep">Web API with BlackSheep</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#interactive-ui-with-streamlit">Interactive UI with Streamlit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#custom-integrations">Custom Integrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html#production-considerations">Production Considerations</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/tools.html">Tools API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/tools.html#tool-classes">Tool Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/tools.html#creating-tools">Creating Tools</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/tools.html#using-tools-with-agents">Using Tools with Agents</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/tools.html#tool-docstring-and-signature">Tool Docstring and Signature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/tools.html#working-with-tool-results">Working with Tool Results</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/tools.html#advanced-tool-usage">Advanced Tool Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/tools.html#best-practices">Best Practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#agent-creation">Agent Creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#static-knowledge-integration">Static Knowledge Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#tool-integration">Tool Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#structured-outputs">Structured Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#agent-pipelines">Agent Pipelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#agent-teams">Agent Teams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#web-api-with-blacksheep">Web API with BlackSheep</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#development-setup">Development Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#code-standards">Code Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#documentation">Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-changes">Submitting Changes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/agents.html">Agents API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/generations.html">Generations API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/prompts.html">Prompts API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/rag.html">RAG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html">MCP API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/stt.html">Speech-to-Text API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/tts.html">Text-to-Speech API</a></li>
 </ul>
 </li>
 </ul>

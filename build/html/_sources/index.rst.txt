@@ -27,37 +27,25 @@ Through this thoughtful approach to architecture, Agentle aims to provide a fram
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting Started
+   :caption: Contents:
 
    installation
    quickstart
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Core Concepts
-
+   usage
    agents
-   tools
    inputs
+   tools
    structured_outputs
+   prompt_management
    knowledge_integration
    agent_composition
-   prompt_management
    a2a
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Deployment & Operations
-
-   deployment
+   mcp
    observability
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference
-
-   api/agent
-   api/tools
+   deployment
+   examples
+   contributing
+   api/index
 
 Indices and tables
 ==================

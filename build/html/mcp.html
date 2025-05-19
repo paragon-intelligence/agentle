@@ -1,0 +1,590 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Observability" href="observability.html" /><link rel="prev" title="A2A" href="a2a.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>Model Context Protocol (MCP) - Agentle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #2980B9;
+  --color-brand-content: #2980B9;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DA3E2;
+  --color-brand-content: #4DA3E2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DA3E2;
+  --color-brand-content: #4DA3E2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     This is a preview of Agentle's documentation (Release date: May 16, 2025) 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">Agentle 0.1.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Agentle 0.1.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">Agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prompt_management.html">Prompt Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="knowledge_integration.html">Knowledge Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent_composition.html">Agent Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a2a.html">A2A</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">Observability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/agents.html">Agents API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/generations.html">Generations API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/prompts.html">Prompts API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/rag.html">RAG API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/mcp.html">MCP API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/stt.html">Speech-to-Text API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/tts.html">Text-to-Speech API</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/mcp.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="model-context-protocol-mcp">
+<h1>Model Context Protocol (MCP)<a class="headerlink" href="#model-context-protocol-mcp" title="Link to this heading">¶</a></h1>
+<p>The Model Context Protocol (MCP) provides a standardized way for AI agents to access external data sources and tools. Agentle’s MCP implementation enables your agents to communicate with both local and remote MCP servers, giving them access to real-time data and specialized capabilities.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id1">Overview</a></p></li>
+<li><p><a class="reference internal" href="#server-implementations" id="id2">Server Implementations</a></p>
+<ul>
+<li><p><a class="reference internal" href="#stdiomcpserver" id="id3">StdioMCPServer</a></p></li>
+<li><p><a class="reference internal" href="#streamablehttpmcpserver" id="id4">StreamableHTTPMCPServer</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#session-management" id="id5">Session Management</a></p>
+<ul>
+<li><p><a class="reference internal" href="#inmemorysessionmanager" id="id6">InMemorySessionManager</a></p></li>
+<li><p><a class="reference internal" href="#redissessionmanager" id="id7">RedisSessionManager</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#using-mcp-servers-with-agents" id="id8">Using MCP Servers with Agents</a></p></li>
+<li><p><a class="reference internal" href="#creating-custom-session-managers" id="id9">Creating Custom Session Managers</a></p></li>
+<li><p><a class="reference internal" href="#best-practices" id="id10">Best Practices</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>MCP servers provide tools and resources to AI agents, allowing them to:</p>
+<ul class="simple">
+<li><p>Access external data sources</p></li>
+<li><p>Execute specialized computation</p></li>
+<li><p>Retrieve information from APIs and databases</p></li>
+<li><p>Interact with file systems and other resources</p></li>
+</ul>
+<p>Agentle implements the Model Context Protocol by providing:</p>
+<ol class="arabic simple">
+<li><p>A standardized protocol interface (<code class="docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code>)</p></li>
+<li><p>Multiple server implementations for different transport layers</p></li>
+<li><p>Session management for robustness in production environments</p></li>
+<li><p>Seamless integration with Agentle agents</p></li>
+</ol>
+</section>
+<section id="server-implementations">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Server Implementations</a><a class="headerlink" href="#server-implementations" title="Link to this heading">¶</a></h2>
+<p>Agentle provides two main MCP server implementations:</p>
+<section id="stdiomcpserver">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">StdioMCPServer</a><a class="headerlink" href="#stdiomcpserver" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">StdioMCPServer</span></code> launches and communicates with local MCP servers over standard input/output streams:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.mcp.servers.stdio_mcp_server</span><span class="w"> </span><span class="kn">import</span> <span class="n">StdioMCPServer</span>
+
+<span class="c1"># Create a stdio-based MCP server</span>
+<span class="n">stdio_server</span> <span class="o">=</span> <span class="n">StdioMCPServer</span><span class="p">(</span>
+    <span class="n">server_name</span><span class="o">=</span><span class="s2">&quot;File System MCP&quot;</span><span class="p">,</span>
+    <span class="n">command</span><span class="o">=</span><span class="s2">&quot;/path/to/filesystem_mcp_server&quot;</span><span class="p">,</span>
+    <span class="n">server_env</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">},</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/optional/working/directory&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This implementation is ideal for:</p>
+<ul class="simple">
+<li><p>Local tool execution</p></li>
+<li><p>File system operations</p></li>
+<li><p>Integration with CLI-based tools</p></li>
+</ul>
+</section>
+<section id="streamablehttpmcpserver">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">StreamableHTTPMCPServer</a><a class="headerlink" href="#streamablehttpmcpserver" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">StreamableHTTPMCPServer</span></code> connects to remote HTTP servers with support for Server-Sent Events (SSE):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.mcp.servers.streamable_http_mcp_server</span><span class="w"> </span><span class="kn">import</span> <span class="n">StreamableHTTPMCPServer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.mcp.session_management</span><span class="w"> </span><span class="kn">import</span> <span class="n">RedisSessionManager</span>
+
+<span class="c1"># Create a session manager for production environments</span>
+<span class="n">session_manager</span> <span class="o">=</span> <span class="n">RedisSessionManager</span><span class="p">(</span>
+    <span class="n">redis_url</span><span class="o">=</span><span class="s2">&quot;redis://localhost:6379/0&quot;</span><span class="p">,</span>
+    <span class="n">key_prefix</span><span class="o">=</span><span class="s2">&quot;agentle_mcp:&quot;</span><span class="p">,</span>
+    <span class="n">expiration_seconds</span><span class="o">=</span><span class="mi">3600</span>  <span class="c1"># 1 hour cache</span>
+<span class="p">)</span>
+
+<span class="c1"># Create an HTTP-based MCP server with Redis session management</span>
+<span class="n">http_server</span> <span class="o">=</span> <span class="n">StreamableHTTPMCPServer</span><span class="p">(</span>
+    <span class="n">server_name</span><span class="o">=</span><span class="s2">&quot;Weather API MCP&quot;</span><span class="p">,</span>
+    <span class="n">server_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:3000&quot;</span><span class="p">,</span>
+    <span class="n">mcp_endpoint</span><span class="o">=</span><span class="s2">&quot;/mcp&quot;</span><span class="p">,</span>
+    <span class="n">session_manager</span><span class="o">=</span><span class="n">session_manager</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This implementation is suitable for:</p>
+<ul class="simple">
+<li><p>Remote API integrations</p></li>
+<li><p>Web services</p></li>
+<li><p>Cloud-based tools</p></li>
+<li><p>Multi-process production environments</p></li>
+</ul>
+</section>
+</section>
+<section id="session-management">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Session Management</a><a class="headerlink" href="#session-management" title="Link to this heading">¶</a></h2>
+<p>Agentle provides a flexible session management system for MCP servers, particularly important for the <code class="docutils literal notranslate"><span class="pre">StreamableHTTPMCPServer</span></code> in production environments.</p>
+<p>The session management system includes:</p>
+<ul class="simple">
+<li><p>Abstract <code class="docutils literal notranslate"><span class="pre">SessionManager</span></code> interface</p></li>
+<li><p>Thread-safe in-memory implementation for development</p></li>
+<li><p>Redis-backed implementation for production</p></li>
+</ul>
+<section id="inmemorysessionmanager">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">InMemorySessionManager</a><a class="headerlink" href="#inmemorysessionmanager" title="Link to this heading">¶</a></h3>
+<p>For development or single-process applications:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.mcp.session_management</span><span class="w"> </span><span class="kn">import</span> <span class="n">InMemorySessionManager</span>
+
+<span class="c1"># Create an in-memory session manager (thread-safe but process-local)</span>
+<span class="n">memory_session</span> <span class="o">=</span> <span class="n">InMemorySessionManager</span><span class="p">()</span>
+
+<span class="c1"># Use with StreamableHTTPMCPServer</span>
+<span class="n">server</span> <span class="o">=</span> <span class="n">StreamableHTTPMCPServer</span><span class="p">(</span>
+    <span class="n">server_name</span><span class="o">=</span><span class="s2">&quot;Development API&quot;</span><span class="p">,</span>
+    <span class="n">server_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:3000&quot;</span><span class="p">,</span>
+    <span class="n">session_manager</span><span class="o">=</span><span class="n">memory_session</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="redissessionmanager">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">RedisSessionManager</a><a class="headerlink" href="#redissessionmanager" title="Link to this heading">¶</a></h3>
+<p>For production, multi-process environments:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.mcp.session_management</span><span class="w"> </span><span class="kn">import</span> <span class="n">RedisSessionManager</span>
+
+<span class="c1"># Create a Redis-backed session manager for cross-process state</span>
+<span class="n">redis_session</span> <span class="o">=</span> <span class="n">RedisSessionManager</span><span class="p">(</span>
+    <span class="n">redis_url</span><span class="o">=</span><span class="s2">&quot;redis://localhost:6379/0&quot;</span><span class="p">,</span>
+    <span class="n">key_prefix</span><span class="o">=</span><span class="s2">&quot;my_app_mcp:&quot;</span><span class="p">,</span>
+    <span class="n">expiration_seconds</span><span class="o">=</span><span class="mi">3600</span>  <span class="c1"># 1 hour session lifetime</span>
+<span class="p">)</span>
+
+<span class="c1"># Use with StreamableHTTPMCPServer</span>
+<span class="n">server</span> <span class="o">=</span> <span class="n">StreamableHTTPMCPServer</span><span class="p">(</span>
+    <span class="n">server_name</span><span class="o">=</span><span class="s2">&quot;Production API&quot;</span><span class="p">,</span>
+    <span class="n">server_url</span><span class="o">=</span><span class="s2">&quot;https://api.example.com&quot;</span><span class="p">,</span>
+    <span class="n">session_manager</span><span class="o">=</span><span class="n">redis_session</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="using-mcp-servers-with-agents">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Using MCP Servers with Agents</a><a class="headerlink" href="#using-mcp-servers-with-agents" title="Link to this heading">¶</a></h2>
+<p>You can use MCP servers with Agentle agents using the <code class="docutils literal notranslate"><span class="pre">start_mcp_servers()</span></code> context manager:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.mcp.servers.streamable_http_mcp_server</span><span class="w"> </span><span class="kn">import</span> <span class="n">StreamableHTTPMCPServer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenaiGenerationProvider</span>
+
+<span class="c1"># Create an agent with MCP server</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;MCP-Enhanced Assistant&quot;</span><span class="p">,</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You&#39;re an assistant with access to external tools.&quot;</span><span class="p">,</span>
+    <span class="n">mcp_servers</span><span class="o">=</span><span class="p">[</span><span class="n">StreamableHTTPMCPServer</span><span class="p">(</span>
+        <span class="n">server_name</span><span class="o">=</span><span class="s2">&quot;Data API&quot;</span><span class="p">,</span>
+        <span class="n">server_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:3000&quot;</span>
+    <span class="p">)]</span>
+<span class="p">)</span>
+
+<span class="c1"># Use the context manager to handle connection lifecycle</span>
+<span class="k">with</span> <span class="n">agent</span><span class="o">.</span><span class="n">start_mcp_servers</span><span class="p">():</span>
+    <span class="c1"># Agent can now use tools from the MCP server</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What&#39;s in the /documents folder?&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For async usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">agent</span><span class="o">.</span><span class="n">start_mcp_servers_async</span><span class="p">():</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="s2">&quot;What&#39;s in the /documents folder?&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="creating-custom-session-managers">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Creating Custom Session Managers</a><a class="headerlink" href="#creating-custom-session-managers" title="Link to this heading">¶</a></h2>
+<p>You can implement custom session managers by extending the <code class="docutils literal notranslate"><span class="pre">SessionManager</span></code> abstract base class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.mcp.session_management</span><span class="w"> </span><span class="kn">import</span> <span class="n">SessionManager</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyCustomSessionManager</span><span class="p">(</span><span class="n">SessionManager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom session manager implementation.&quot;&quot;&quot;</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="c1"># Implement session retrieval</span>
+        <span class="o">...</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">store_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">session_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Implement session storage</span>
+        <span class="o">...</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Implement session deletion</span>
+        <span class="o">...</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Implement resource cleanup</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Choose the right session manager for your deployment</strong>:
+- Use <code class="docutils literal notranslate"><span class="pre">InMemorySessionManager</span></code> for development and testing
+- Use <code class="docutils literal notranslate"><span class="pre">RedisSessionManager</span></code> for production with multiple servers/workers</p></li>
+<li><p><strong>Always use context managers</strong> for proper connection lifecycle:
+- <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">agent.start_mcp_servers()</span></code> for synchronous code
+- <code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span> <span class="pre">agent.start_mcp_servers_async()</span></code> for asynchronous code</p></li>
+<li><p><strong>Set appropriate timeouts</strong> based on your operations:
+- <code class="docutils literal notranslate"><span class="pre">timeout_s</span></code> for HTTP requests
+- <code class="docutils literal notranslate"><span class="pre">expiration_seconds</span></code> for Redis sessions</p></li>
+<li><p><strong>Handle errors gracefully</strong>:
+- Connection errors
+- Session expiration
+- Tool execution failures</p></li>
+</ol>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="observability.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Observability</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="a2a.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">A2A</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, Agentle Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Model Context Protocol (MCP)</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#server-implementations">Server Implementations</a><ul>
+<li><a class="reference internal" href="#stdiomcpserver">StdioMCPServer</a></li>
+<li><a class="reference internal" href="#streamablehttpmcpserver">StreamableHTTPMCPServer</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#session-management">Session Management</a><ul>
+<li><a class="reference internal" href="#inmemorysessionmanager">InMemorySessionManager</a></li>
+<li><a class="reference internal" href="#redissessionmanager">RedisSessionManager</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-mcp-servers-with-agents">Using MCP Servers with Agents</a></li>
+<li><a class="reference internal" href="#creating-custom-session-managers">Creating Custom Session Managers</a></li>
+<li><a class="reference internal" href="#best-practices">Best Practices</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=38b66d78"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>
