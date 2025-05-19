@@ -55,7 +55,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Mapping, TypedDict
+from typing import TYPE_CHECKING, Any, Mapping, TypedDict, cast
 
 from rsb.adapters.adapter import Adapter
 
@@ -84,8 +84,8 @@ class JSONSchemaDict(TypedDict, total=False):
     type: str
     description: str | None
     default: Any
-    properties: dict[str, JSONObject]
-    items: JSONObject | list[JSONObject]
+    properties: dict[str, "JSONSchemaDict"]
+    items: "JSONSchemaDict" | list["JSONSchemaDict"]
     required: list[str]
     minItems: int | None
     maxItems: int | None
@@ -234,7 +234,7 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
             items_schema = schema_dict.get("items", {})
             if isinstance(items_schema, dict):
                 schema.items = self._create_schema_from_json_schema(
-                    items_schema, f"{param_name}[items]"
+                    cast(Mapping[str, Any], items_schema), f"{param_name}[items]"
                 )
             else:
                 # Default to string items if items schema is not an object
@@ -255,7 +255,7 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
                 if not isinstance(prop_schema, dict):
                     continue
                 schema_properties[prop_name] = self._create_schema_from_json_schema(
-                    prop_schema,
+                    cast(Mapping[str, Any], prop_schema),
                     f"{param_name}.{prop_name}" if param_name else prop_name,
                 )
 
