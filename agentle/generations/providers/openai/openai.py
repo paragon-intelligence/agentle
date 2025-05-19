@@ -86,8 +86,8 @@ class OpenaiGenerationProvider(GenerationProvider):
         self.default_query = default_query
         self.http_client = http_client
 
-    @observe
     @override
+    @observe
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,

@@ -13,7 +13,7 @@ import functools
 import inspect
 from collections.abc import Callable, Coroutine
 from datetime import datetime
-from typing import Any, ParamSpec, cast
+from typing import Any, cast
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
@@ -23,12 +23,10 @@ from agentle.generations.tracing.contracts.stateful_observability_client import 
 )
 from agentle.generations.tracing.tracing_manager import TracingManager
 
-P = ParamSpec("P")
 
-
-def observe[**P](
-    func: Callable[P, Coroutine[Any, Any, Generation[Any]]],
-) -> Callable[P, Coroutine[Any, Any, Generation[Any]]]:
+def observe[**P, R](
+    func: Callable[P, Coroutine[Any, Any, Generation[R]]],
+) -> Callable[P, Coroutine[Any, Any, Generation[R]]]:
     """
     Decorator that adds observability to provider generation methods.
 
@@ -61,7 +59,7 @@ def observe[**P](
     """
 
     @functools.wraps(func)
-    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Generation[Any]:
+    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Generation[R]:
         # Get the provider instance (self)
         provider_self = args[0]
 
