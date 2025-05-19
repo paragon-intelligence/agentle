@@ -15,10 +15,15 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.autosummary",
 ]
 
+# Configure autosummary to automatically generate stub files
+autosummary_generate = True
+autosummary_imported_members = True
+
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns: list[str] = []
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "furo"  # Changed from sphinx_rtd_theme to furo
@@ -43,6 +48,10 @@ html_theme_options = {
 
 # -- Extension configuration -------------------------------------------------
 autodoc_member_order = "bysource"
+autodoc_typehints = "description"
+autodoc_typehints_format = "short"
+add_module_names = False
+
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 napoleon_include_init_with_doc = True

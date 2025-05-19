@@ -3,10 +3,6 @@ Model Context Protocol (MCP)
 
 The Model Context Protocol (MCP) provides a standardized way for AI agents to access external data sources and tools. Agentle's MCP implementation enables your agents to communicate with both local and remote MCP servers, giving them access to real-time data and specialized capabilities.
 
-.. contents:: Contents
-   :local:
-   :depth: 2
-
 Overview
 --------
 
