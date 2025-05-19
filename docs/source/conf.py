@@ -35,7 +35,7 @@ html_favicon = "../../docs/favicon.ico"
 html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
-    "announcement": "This is a preview of Agentle's documentation (Release date: May 16, 2025)",
+    # "announcement": "This is a preview of Agentle's documentation (Release date: May 16, 2025)",
     "light_css_variables": {
         "color-brand-primary": "#2980B9",
         "color-brand-content": "#2980B9",
