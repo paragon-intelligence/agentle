@@ -18,7 +18,7 @@ API requirements, while maintaining the common interface for framework consumers
 
 import abc
 from collections.abc import Sequence
-from typing import cast
+from typing import Any, cast
 
 from rsb.containers.maybe import Maybe
 from rsb.contracts.maybe_protocol import MaybeProtocol
@@ -32,6 +32,7 @@ from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
 )
+from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
 from agentle.generations.models.messages.user_message import UserMessage
@@ -241,10 +242,10 @@ class GenerationProvider(abc.ABC):
         self,
         *,
         model: str | None = None,
-        messages: Sequence[Message],
+        messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
-        tools: Sequence[Tool] | None = None,
+        tools: Sequence[Tool[Any]] | None = None,
     ) -> Generation[T]:
         """
         Create a generation from a message sequence asynchronously.

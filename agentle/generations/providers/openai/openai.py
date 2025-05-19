@@ -18,6 +18,10 @@ from agentle.generations.providers.openai.adapters.chat_completion_to_generation
     ChatCompletionToGenerationAdapter,
 )
 from agentle.generations.tools.tool import Tool
+from agentle.generations.tracing.contracts.stateful_observability_client import (
+    StatefulObservabilityClient,
+)
+from agentle.generations.tracing.decorators import observe
 
 type WithoutStructuredOutput = None
 
@@ -54,6 +58,7 @@ class OpenaiGenerationProvider(GenerationProvider):
         self,
         api_key: str,
         *,
+        tracing_client: StatefulObservabilityClient | None = None,
         organization_name: str | None = None,
         project_name: str | None = None,
         base_url: str | httpx.URL | None = None,
@@ -64,6 +69,7 @@ class OpenaiGenerationProvider(GenerationProvider):
         default_query: Mapping[str, object] | None = None,
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
+        super().__init__(tracing_client=tracing_client)
         from openai._types import NOT_GIVEN as OPENAI_NOT_GIVEN
 
         if timeout is NOT_GIVEN:
@@ -80,6 +86,7 @@ class OpenaiGenerationProvider(GenerationProvider):
         self.default_query = default_query
         self.http_client = http_client
 
+    @observe
     @override
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
@@ -90,6 +97,23 @@ class OpenaiGenerationProvider(GenerationProvider):
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool[Any]] | None = None,
     ) -> Generation[T]:
+        """
+        Create a generation asynchronously using an OpenAI model.
+
+        This method sends the provided messages to the OpenAI API and processes
+        the response. With the @observe decorator, all the observability and tracing
+        is handled automatically.
+
+        Args:
+            model: The OpenAI model to use for generation (e.g., "gpt-4o")
+            messages: The sequence of messages to send to the model
+            response_schema: Optional schema for structured output parsing
+            generation_config: Optional configuration for the generation
+            tools: Optional tools for function calling
+
+        Returns:
+            Generation[T]: An Agentle Generation object containing the response
+        """
         from openai import AsyncOpenAI
         from openai.types.chat.chat_completion import ChatCompletion
 
@@ -119,7 +143,16 @@ class OpenaiGenerationProvider(GenerationProvider):
 
         return output_adapter.adapt(chat_completion)
 
-        raise NotImplementedError
+    @property
+    @override
+    def organization(self) -> str:
+        """
+        Get the provider organization identifier.
+
+        Returns:
+            str: The organization identifier, which is "openai" for this provider.
+        """
+        return "openai"
 
     @property
     @override
@@ -132,8 +165,26 @@ class OpenaiGenerationProvider(GenerationProvider):
     ) -> float:
         """
         Get the price per million tokens for input/prompt tokens.
+
+        Uses OpenAI's pricing structure.
+
+        Args:
+            model: The model identifier
+            estimate_tokens: Optional estimate of token count
+
+        Returns:
+            float: Price per million tokens for the specified model
         """
-        return 0.0
+        # Default pricing for popular models
+        model_pricing = {
+            "gpt-4o": 5.0,
+            "gpt-4o-mini": 2.0,
+            "gpt-4": 30.0,
+            "gpt-4-turbo": 10.0,
+            "gpt-3.5-turbo": 0.5,
+        }
+
+        return model_pricing.get(model, 0.0)
 
     @override
     def price_per_million_tokens_output(
@@ -141,5 +192,23 @@ class OpenaiGenerationProvider(GenerationProvider):
     ) -> float:
         """
         Get the price per million tokens for output/completion tokens.
+
+        Uses OpenAI's pricing structure.
+
+        Args:
+            model: The model identifier
+            estimate_tokens: Optional estimate of token count
+
+        Returns:
+            float: Price per million tokens for the specified model
         """
-        return 0.0
+        # Default pricing for popular models
+        model_pricing = {
+            "gpt-4o": 15.0,
+            "gpt-4o-mini": 6.0,
+            "gpt-4": 60.0,
+            "gpt-4-turbo": 30.0,
+            "gpt-3.5-turbo": 1.5,
+        }
+
+        return model_pricing.get(model, 0.0)
