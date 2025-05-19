@@ -14,10 +14,6 @@
   <a href="https://badge.fury.io/py/agentle"><img src="https://badge.fury.io/py/agentle.svg" alt="PyPI version"></a>
 </p>
 
-<p align="center">
-  <b>🚀 OFFICIAL RELEASE: MAY 16 - 2025 🚀</b>
-</p>
-
 ---
 
 Agentle makes it effortless to create, compose, and deploy intelligent AI agents - from simple task-focused agents to complex multi-agent systems. Built with developer productivity and type safety in mind, Agentle provides a clean, intuitive API for transforming cutting-edge AI capabilities into production-ready applications.
