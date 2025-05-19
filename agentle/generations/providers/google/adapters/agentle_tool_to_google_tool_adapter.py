@@ -54,6 +54,7 @@ response = model.generate_content(
 from __future__ import annotations
 
 import logging
+import re
 from typing import TYPE_CHECKING, Any, cast
 import json
 
@@ -63,6 +64,12 @@ from agentle.generations.tools.tool import Tool
 
 if TYPE_CHECKING:
     from google.genai import types
+
+# Constants for validation
+MAX_FUNCTION_NAME_LENGTH = 64
+FUNCTION_NAME_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_\.\-]*$")
+MAX_PARAM_NAME_LENGTH = 64
+PARAM_NAME_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 
 class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
@@ -115,65 +122,38 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
         super().__init__()
         self._logger = logging.getLogger(__name__)
 
-    def adapt(self, agentle_tool: Tool[Any]) -> "types.Tool":
-        """
-        Convert an Agentle Tool to a Google AI Tool.
-
-        This method transforms an Agentle Tool object into Google's Tool format,
-        which consists of FunctionDeclaration objects containing parameter schemas.
-        The conversion process involves mapping parameter types, handling required fields,
-        and converting any special formats between the two systems.
-
-        Args:
-            agentle_tool: The Agentle Tool object to convert. This should be a fully
-                defined Tool instance with name, description, and parameters.
-
-        Returns:
-            types.Tool: A Google AI Tool object containing one or more function
-                declarations that represent the Agentle tool's functionality.
-
-        Implementation details:
-            - String-based types in Agentle (e.g., "string", "int") are mapped to
-              Google's Type enum values (e.g., Type.STRING, Type.INTEGER)
-            - Required parameters are tracked and added to the schema's required list
-            - Default values are preserved in the conversion
-            - Array types get a simplified items schema (currently defaulting to string items)
-            - Unknown types default to Type.OBJECT
-
-        Example:
-            ```python
-            # Import necessary components
-            from google.genai import types
-
-            # Create an Agentle tool
-            calculator_tool = Tool(
-                name="calculate",
-                description="Perform a calculation",
-                parameters={
-                    "expression": {
-                        "type": "string",
-                        "description": "The mathematical expression to evaluate",
-                        "required": True
-                    }
-                }
+    def _validate_function_name(self, name: str) -> None:
+        """Validate function name according to Google's requirements."""
+        if not name:
+            raise ValueError("Function name cannot be empty")
+        if len(name) > MAX_FUNCTION_NAME_LENGTH:
+            raise ValueError(
+                f"Function name cannot exceed {MAX_FUNCTION_NAME_LENGTH} characters"
+            )
+        if not FUNCTION_NAME_PATTERN.match(name):
+            raise ValueError(
+                "Function name must start with a letter or underscore and contain only "
+                + "letters, numbers, underscores, dots, or dashes"
             )
 
-            # Convert to Google format
-            adapter = AgentleToolToGoogleToolAdapter()
-            google_tool = adapter.adapt(calculator_tool)
-
-            # The resulting tool can be used with Google's API
-            from google.genai import GenerativeModel
-            model = GenerativeModel("gemini-1.5-pro")
-            response = model.generate_content(
-                "Calculate 15 + 27",
-                tools=[google_tool]
+    def _validate_parameter_name(self, name: str) -> None:
+        """Validate parameter name according to Google's requirements."""
+        if not name:
+            raise ValueError("Parameter name cannot be empty")
+        if len(name) > MAX_PARAM_NAME_LENGTH:
+            raise ValueError(
+                f"Parameter name cannot exceed {MAX_PARAM_NAME_LENGTH} characters"
             )
-            ```
-        """
+        if not PARAM_NAME_PATTERN.match(name):
+            raise ValueError(
+                "Parameter name must start with a letter or underscore and contain only "
+                + "letters, numbers, or underscores"
+            )
+
+    def _get_google_type(self, param_type_str: str, param_name: str) -> "types.Type":
+        """Convert Agentle type string to Google Type enum."""
         from google.genai import types
 
-        # Mapeamento de tipos de string para google.genai.types.Type
         type_mapping = {
             "str": types.Type.STRING,
             "string": types.Type.STRING,
@@ -189,101 +169,198 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
             "object": types.Type.OBJECT,
         }
 
+        google_type = type_mapping.get(str(param_type_str).lower())
+        if google_type is None:
+            self._logger.warning(
+                f"Unknown parameter type '{param_type_str}' for parameter '{param_name}', "
+                + "defaulting to OBJECT type"
+            )
+            google_type = types.Type.OBJECT
+
+        return google_type
+
+    def _create_array_schema(
+        self, param_info: dict[str, Any], param_name: str
+    ) -> "types.Schema":
+        """Create schema for array type parameters with proper item type handling."""
+        from google.genai import types
+
+        # Get item type if specified, default to string
+        items_type = param_info.get("items", {}).get("type", "string")
+        items_google_type = self._get_google_type(items_type, f"{param_name}[items]")
+
+        return types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(type=items_google_type),
+            description=param_info.get("description"),
+            min_items=param_info.get("min_items"),
+            max_items=param_info.get("max_items"),
+        )
+
+    def _create_object_schema(
+        self, param_info: dict[str, Any], param_name: str
+    ) -> "types.Schema":
+        """Create schema for object type parameters with nested properties."""
+        from google.genai import types
+
         properties: dict[str, types.Schema] = {}
         required: list[str] = []
 
-        for param_name, param_info_obj in agentle_tool.parameters.items():
-            # Handle different parameter types
-            if isinstance(param_info_obj, str):
-                # If parameter is a string, treat it as a simple string type parameter
-                properties[param_name] = types.Schema(type=types.Type.STRING)
-                # Consider string parameters as required by default
-                required.append(param_name)
-            elif isinstance(param_info_obj, list):
-                # If parameter is a list, treat it as an array of strings
-                properties[param_name] = types.Schema(
-                    type=types.Type.ARRAY, items=types.Schema(type=types.Type.STRING)
+        if "properties" in param_info:
+            for prop_name, prop_info in param_info["properties"].items():
+                self._validate_parameter_name(prop_name)
+                prop_type = prop_info.get("type", "object")
+                google_type = self._get_google_type(
+                    prop_type, f"{param_name}.{prop_name}"
                 )
-                # Lists are not required by default
-            elif isinstance(param_info_obj, dict):
-                # Regular dictionary parameter handling
+
+                if prop_info.get("required", False):
+                    required.append(prop_name)
+
+                properties[prop_name] = types.Schema(
+                    type=google_type,
+                    description=prop_info.get("description"),
+                    default=prop_info.get("default"),
+                )
+
+        schema = types.Schema(
+            type=types.Type.OBJECT,
+            properties=properties,
+            description=param_info.get("description"),
+        )
+        if required:
+            schema.required = required
+
+        return schema
+
+    def adapt(self, agentle_tool: Tool[Any]) -> "types.Tool":
+        """
+        Convert an Agentle Tool to a Google AI Tool.
+
+        Args:
+            agentle_tool: The Agentle Tool object to convert.
+
+        Returns:
+            types.Tool: A Google AI Tool object.
+
+        Raises:
+            ValueError: If the tool name or parameters are invalid.
+        """
+        from google.genai import types
+
+        # Validate function name
+        self._validate_function_name(agentle_tool.name)
+
+        properties: dict[str, types.Schema] = {}
+        required: list[str] = []
+
+        # Process parameters
+        for param_name, param_info_obj in agentle_tool.parameters.items():
+            self._validate_parameter_name(param_name)
+
+            # Handle string parameters
+            if isinstance(param_info_obj, str):
+                properties[param_name] = types.Schema(
+                    type=types.Type.STRING,
+                    description=f"String parameter: {param_name}",
+                )
+                required.append(param_name)
+                continue
+
+            # Handle list parameters
+            if isinstance(param_info_obj, list):
+                properties[param_name] = types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(type=types.Type.STRING),
+                    description=f"Array parameter: {param_name}",
+                )
+                continue
+
+            # Handle dictionary parameters
+            if isinstance(param_info_obj, dict):
                 param_info = cast(dict[str, Any], param_info_obj)
-
-                # Get parameter type
                 param_type_str = param_info.get("type", "object")
-                google_type = type_mapping.get(
-                    str(param_type_str).lower(), types.Type.OBJECT
-                )  # Default to OBJECT if type unknown
+                google_type = self._get_google_type(param_type_str, param_name)
 
-                # Create parameter schema
+                # Validate description is provided
+                if "description" not in param_info:
+                    self._logger.warning(
+                        f"No description provided for parameter '{param_name}', "
+                        + "this may affect model performance"
+                    )
+
+                # Handle different types
                 if google_type == types.Type.ARRAY:
-                    # Handle array type with items schema
-                    # Assume array of strings as default
-                    properties[param_name] = types.Schema(
-                        type=google_type, items=types.Schema(type=types.Type.STRING)
+                    properties[param_name] = self._create_array_schema(
+                        param_info, param_name
+                    )
+                elif google_type == types.Type.OBJECT:
+                    properties[param_name] = self._create_object_schema(
+                        param_info, param_name
                     )
                 else:
                     # Handle scalar types
-                    # Default value must be of the correct type for the parameter
+                    schema = types.Schema(
+                        type=google_type,
+                        description=param_info.get("description"),
+                    )
+
+                    # Handle enums
+                    if "enum" in param_info:
+                        schema.enum = param_info["enum"]
+
+                    # Handle default value
                     if "default" in param_info:
-                        properties[param_name] = types.Schema(
-                            type=google_type, default=param_info["default"]
-                        )
-                    else:
-                        properties[param_name] = types.Schema(type=google_type)
+                        schema.default = param_info["default"]
+
+                    properties[param_name] = schema
 
                 if param_info.get("required", False):
                     required.append(param_name)
-            else:
-                # For more complex types, try to infer a better type based on Python type
-                if isinstance(param_info_obj, (int, float)):
-                    # Numeric types
-                    if isinstance(param_info_obj, int):
-                        properties[param_name] = types.Schema(type=types.Type.INTEGER)
-                        self._logger.info(f"Inferred integer type for {param_name}")
-                    else:
-                        properties[param_name] = types.Schema(type=types.Type.NUMBER)
-                        self._logger.info(f"Inferred number type for {param_name}")
-                elif isinstance(param_info_obj, bool):
-                    # Boolean type
-                    properties[param_name] = types.Schema(type=types.Type.BOOLEAN)
-                    self._logger.info(f"Inferred boolean type for {param_name}")
-                elif isinstance(param_info_obj, (set, tuple, frozenset)):
-                    # Collection types that aren't already handled
-                    properties[param_name] = types.Schema(
-                        type=types.Type.ARRAY,
-                        items=types.Schema(type=types.Type.STRING),
-                    )
-                    self._logger.info(f"Inferred array type for {param_name}")
-                else:
-                    # Default to object for complex types, string for primitives
-                    try:
-                        # Check if it's a primitive type or something more complex
-                        # Just trying to serialize - we don't need to store the result
-                        json.dumps(param_info_obj)
-                        # If we can convert to JSON without error, it's likely an object
-                        properties[param_name] = types.Schema(type=types.Type.OBJECT)
-                        self._logger.info(f"Inferred object type for {param_name}")
-                    except (TypeError, OverflowError, ValueError):
-                        # Primitive or unconvertible types default to string
-                        properties[param_name] = types.Schema(type=types.Type.STRING)
-                        self._logger.warning(
-                            f"Unknown parameter type for {param_name}, defaulting to string"
-                        )
+                continue
 
-        # Criar o schema principal para os parâmetros da função
+            # Handle other types by inferring from Python type
+            if isinstance(param_info_obj, (int, float, bool)):
+                if isinstance(param_info_obj, bool):
+                    properties[param_name] = types.Schema(type=types.Type.BOOLEAN)
+                elif isinstance(param_info_obj, int):
+                    properties[param_name] = types.Schema(type=types.Type.INTEGER)
+                else:
+                    properties[param_name] = types.Schema(type=types.Type.NUMBER)
+                self._logger.info(f"Inferred type for {param_name} from Python type")
+                continue
+
+            # Handle collection types
+            if isinstance(param_info_obj, (set, tuple, frozenset)):
+                properties[param_name] = types.Schema(
+                    type=types.Type.ARRAY,
+                    items=types.Schema(type=types.Type.STRING),
+                )
+                self._logger.info(f"Inferred array type for {param_name}")
+                continue
+
+            # Try to handle complex types
+            try:
+                json.dumps(param_info_obj)
+                properties[param_name] = types.Schema(type=types.Type.OBJECT)
+                self._logger.info(f"Inferred object type for {param_name}")
+            except (TypeError, OverflowError, ValueError):
+                properties[param_name] = types.Schema(type=types.Type.STRING)
+                self._logger.warning(
+                    f"Unknown parameter type for {param_name}, defaulting to string"
+                )
+
+        # Create parameters schema
         parameters_schema = types.Schema(type=types.Type.OBJECT, properties=properties)
-        # Só adicionar 'required' se a lista não estiver vazia
         if required:
             parameters_schema.required = required
 
-        # Criar a declaração da função
+        # Create function declaration
         function_declaration = types.FunctionDeclaration(
             name=agentle_tool.name,
-            description=agentle_tool.description
-            or "",  # Usar string vazia se a descrição for None
+            description=agentle_tool.description or "",
             parameters=parameters_schema,
         )
 
-        # Criar e retornar a ferramenta do Google
+        # Create and return tool
         return types.Tool(function_declarations=[function_declaration])
