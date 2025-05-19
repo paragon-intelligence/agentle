@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 import logging
 import re
-import threading
 from collections.abc import AsyncIterator, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
@@ -24,6 +23,7 @@ from rsb.models.field import Field
 from rsb.models.private_attr import PrivateAttr
 
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+from agentle.mcp.session_management import SessionManager, InMemorySessionManager
 
 if TYPE_CHECKING:
     from mcp.types import (
@@ -33,11 +33,6 @@ if TYPE_CHECKING:
         TextResourceContents,
         Tool,
     )
-
-# Module-level lock to protect the global session store
-_global_session_lock = threading.RLock()
-# Global state to maintain session information across event loops
-_global_session_store: Dict[str, Dict[str, Any]] = {}
 
 
 class StreamableHTTPMCPServer(MCPServerProtocol):
@@ -55,6 +50,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         mcp_endpoint (str): The endpoint path for MCP requests (e.g., "/mcp")
         headers (MutableMapping[str, str]): HTTP headers to include with each request
         timeout_s (float): Request timeout in seconds
+        session_manager (SessionManager): Manager for storing session information
 
     Usage:
         server = StreamableHTTPMCPServer(server_name="Example MCP", server_url="http://example.com", mcp_endpoint="/mcp")
@@ -80,12 +76,16 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
     timeout_s: float = Field(
         default=100.0, description="Timeout in seconds for HTTP requests"
     )
+    session_manager: SessionManager = Field(
+        default_factory=InMemorySessionManager,
+        description="Session manager for storing session state",
+    )
 
-    # Internal state (NOT stored as a client instance to avoid event loop issues)
+    # Internal state
     _logger: logging.Logger = PrivateAttr(
         default_factory=lambda: logging.getLogger(__name__),
     )
-    # Session state stored as primitives to avoid cross-loop issues
+    # Session state stored as primitives
     _session_id: Optional[str] = PrivateAttr(default=None)
     _last_event_id: Optional[str] = PrivateAttr(default=None)
     _jsonrpc_id_counter: int = PrivateAttr(default=1)
@@ -104,7 +104,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
     @property
     def _server_key(self) -> str:
         """
-        Get a unique key for this server for global session tracking.
+        Get a unique key for this server for session tracking.
 
         Returns:
             str: A unique identifier for this server instance
@@ -146,17 +146,17 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
         """
         self._logger.info(f"Connecting to HTTP server: {self.server_url}")
 
-        # Check if we have existing session information for this server
+        # Check if we have existing session information
         server_key = self._server_key
-        with _global_session_lock:
-            if server_key in _global_session_store:
-                session_info = _global_session_store[server_key]
-                self._logger.debug(f"Found existing session for {server_key}")
-                self._session_id = session_info.get("session_id")
-                self._last_event_id = session_info.get("last_event_id")
-                self._jsonrpc_id_counter = session_info.get("jsonrpc_counter", 1)
-                self._initialized = True
-                return
+        session_data = await self.session_manager.get_session(server_key)
+
+        if session_data is not None:
+            self._logger.debug(f"Found existing session for {server_key}")
+            self._session_id = session_data.get("session_id")
+            self._last_event_id = session_data.get("last_event_id")
+            self._jsonrpc_id_counter = session_data.get("jsonrpc_counter", 1)
+            self._initialized = True
+            return
 
         # Create a new client for this operation
         client = await self._create_client()
@@ -259,13 +259,15 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             }
             await client.post(self.mcp_endpoint, json=notification, headers=headers)
 
-            # Store session info in the global store
-            with _global_session_lock:
-                _global_session_store[server_key] = {
+            # Store session info using session manager
+            await self.session_manager.store_session(
+                server_key,
+                {
                     "session_id": self._session_id,
                     "last_event_id": self._last_event_id,
                     "jsonrpc_counter": self._jsonrpc_id_counter,
-                }
+                },
+            )
 
             self._initialized = True
             self._logger.info("MCP protocol initialized successfully")
@@ -299,11 +301,9 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 await client.delete(self.mcp_endpoint, headers=headers)
                 self._logger.debug(f"Session terminated: {self._session_id}")
 
-                # Remove from global store
+                # Remove from session manager
                 server_key = self._server_key
-                with _global_session_lock:
-                    if server_key in _global_session_store:
-                        del _global_session_store[server_key]
+                await self.session_manager.delete_session(server_key)
 
             except Exception as e:
                 self._logger.warning(f"Failed to terminate session: {e}")
@@ -311,6 +311,9 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 # Always close the client
                 if client:
                     await client.aclose()
+
+        # Close the session manager
+        await self.session_manager.close()
 
         self._session_id = None
         self._last_event_id = None
@@ -458,13 +461,16 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                         # Track the last event ID for potential resumability
                         if event_id:
                             self._last_event_id = event_id
-                            # Update global store with new event ID
-                            with _global_session_lock:
-                                server_key = self._server_key
-                                if server_key in _global_session_store:
-                                    _global_session_store[server_key][
-                                        "last_event_id"
-                                    ] = event_id
+
+                            # Update session data
+                            server_key = self._server_key
+                            session_data = (
+                                await self.session_manager.get_session(server_key) or {}
+                            )
+                            session_data["last_event_id"] = event_id
+                            await self.session_manager.store_session(
+                                server_key, session_data
+                            )
                     except json.JSONDecodeError:
                         yield {
                             "id": event_id,
@@ -528,13 +534,11 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             request_id = str(self._jsonrpc_id_counter)
             self._jsonrpc_id_counter += 1
 
-            # Update the counter in the global store
-            with _global_session_lock:
-                server_key = self._server_key
-                if server_key in _global_session_store:
-                    _global_session_store[server_key]["jsonrpc_counter"] = (
-                        self._jsonrpc_id_counter
-                    )
+            # Update the counter in session data
+            server_key = self._server_key
+            session_data = await self.session_manager.get_session(server_key) or {}
+            session_data["jsonrpc_counter"] = self._jsonrpc_id_counter
+            await self.session_manager.store_session(server_key, session_data)
 
             request: MutableMapping[str, Any] = {
                 "jsonrpc": "2.0",
@@ -558,19 +562,11 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 self._session_id = response.headers["Mcp-Session-Id"]
                 self._logger.debug(f"Session established with ID: {self._session_id}")
 
-                # Update session ID in global store
-                with _global_session_lock:
-                    server_key = self._server_key
-                    if server_key in _global_session_store:
-                        _global_session_store[server_key]["session_id"] = (
-                            self._session_id
-                        )
-                    else:
-                        _global_session_store[server_key] = {
-                            "session_id": self._session_id,
-                            "last_event_id": self._last_event_id,
-                            "jsonrpc_counter": self._jsonrpc_id_counter,
-                        }
+                # Update session ID in session data
+                server_key = self._server_key
+                session_data = await self.session_manager.get_session(server_key) or {}
+                session_data["session_id"] = self._session_id
+                await self.session_manager.store_session(server_key, session_data)
 
             # Handle different response types
             if response.status_code == 404 and self._session_id:
@@ -579,11 +575,8 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 self._session_id = None
                 self._initialized = False
 
-                # Clear session from global store
-                with _global_session_lock:
-                    server_key = self._server_key
-                    if server_key in _global_session_store:
-                        del _global_session_store[server_key]
+                # Clear session
+                await self.session_manager.delete_session(server_key)
 
                 # Reconnect and retry the request
                 await self.connect_async()  # Reconnect

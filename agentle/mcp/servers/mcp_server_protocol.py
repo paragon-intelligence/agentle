@@ -38,7 +38,7 @@ class MCPServerProtocol(BaseModel, abc.ABC):
     methods defined in this interface.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
     @property
     @abc.abstractmethod
