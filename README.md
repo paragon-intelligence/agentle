@@ -407,6 +407,7 @@ from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
 from agentle.mcp.servers.streamable_http_mcp_server import StreamableHTTPMCPServer
 from agentle.mcp.servers.stdio_mcp_server import StdioMCPServer
+from agentle.mcp.session_management import RedisSessionManager
 
 # Set up provider
 provider = GoogleGenaiGenerationProvider()
@@ -418,9 +419,23 @@ stdio_server = StdioMCPServer(
     server_env={"DEBUG": "1"},
 )
 
-sse_server = StreamableHTTPMCPServer(
+# For development (single-process environments)
+sse_server_dev = StreamableHTTPMCPServer(
     server_name="Weather API MCP",
     server_url="http://localhost:3000",  # Replace with actual server URL
+)
+
+# For production (multi-process environments)
+redis_session = RedisSessionManager(
+    redis_url="redis://redis-server:6379/0",
+    key_prefix="agentle_mcp:",
+    expiration_seconds=3600  # 1 hour session lifetime
+)
+
+sse_server_prod = StreamableHTTPMCPServer(
+    server_name="Weather API MCP",
+    server_url="https://api.example.com",
+    session_manager=redis_session
 )
 
 # Create agent with MCP servers
@@ -430,7 +445,7 @@ agent = Agent(
     generation_provider=provider,
     model="gemini-2.0-flash",
     instructions="You are a helpful assistant with access to external tools.",
-    mcp_servers=[stdio_server, sse_server],
+    mcp_servers=[stdio_server, sse_server_dev],
 )
 
 # Use the start_mcp_servers context manager for proper connection handling
@@ -444,6 +459,11 @@ The Model Context Protocol (MCP) provides a standardized way for LLMs to access 
 
 - **StdioMCPServer**: Launches and communicates with local MCP servers over stdin/stdout
 - **StreamableHTTPMCPServer**: Connects to remote HTTP servers with support for Server-Sent Events (SSE)
+
+Agentle now offers robust session management for MCP servers, especially important for production environments:
+
+- **InMemorySessionManager** (default): Thread-safe for single-process development use
+- **RedisSessionManager**: Production-ready for multi-worker/process deployments
 
 Using the `start_mcp_servers()` context manager ensures proper connection handling and resource cleanup.
 
