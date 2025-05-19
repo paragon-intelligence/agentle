@@ -469,7 +469,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                                     "mime_type": "text/plain",
                                 }
                             )
-                            st.success(f"Added text/URL snippet to session knowledge.")
+                            st.success("Added text/URL snippet to session knowledge.")
                             st.session_state.new_knowledge_text_url_input = ""
                             added_something = True
                         if new_knowledge_file is not None:
@@ -876,7 +876,7 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                             new_instructions=final_instructions_for_run
                         )
 
-                        with temp_agent_for_run.with_mcp_servers():
+                        with temp_agent_for_run.start_mcp_servers():
                             result = temp_agent_for_run.run(final_agent_input)
 
                         generation = result.generation
