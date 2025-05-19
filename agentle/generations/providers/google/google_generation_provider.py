@@ -293,17 +293,19 @@ class GoogleGenerationProvider(GenerationProvider):
                 "ignore_call_history", False
             )
 
+            _tools: types.ToolListUnion | None = (
+                [AgentleToolToGoogleToolAdapter().adapt(tool) for tool in final_tools]
+                if final_tools
+                else None
+            )
+
             config = types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 temperature=_generation_config.temperature,
                 top_p=_generation_config.top_p,
                 top_k=_generation_config.top_k,
                 candidate_count=_generation_config.n,
-                tools=[
-                    AgentleToolToGoogleToolAdapter().adapt(tool) for tool in final_tools
-                ]
-                if final_tools
-                else None,
+                tools=_tools,
                 max_output_tokens=_generation_config.max_output_tokens,
                 response_schema=response_schema if bool(response_schema) else None,
                 response_mime_type="application/json"
