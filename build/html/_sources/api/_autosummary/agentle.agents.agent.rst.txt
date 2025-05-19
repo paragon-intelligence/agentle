@@ -1,0 +1,66 @@
+agentle.agents.agent
+====================
+
+.. automodule:: agentle.agents.agent
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+      asynccontextmanager
+      cast
+      contextmanager
+      file_parser_default_factory
+      is_module_available
+      run_sync
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Agent
+      AgentConfig
+      AgentRunOutput
+      AgentSkill
+      Any
+      AssistantMessage
+      AsyncGenerator
+      Authentication
+      BaseModel
+      BytesIO
+      Callable
+      Capabilities
+      ConfigDict
+      Context
+      DeveloperMessage
+      DocumentParser
+      FilePart
+      Generation
+      GenerationProvider
+      Generator
+      MCPServerProtocol
+      Maybe
+      MessageSequence
+      MutableMapping
+      MutableSequence
+      ParsedDocument
+      Path
+      Prompt
+      RunState
+      Sequence
+      StaticKnowledge
+      StringIO
+      TextPart
+      Tool
+      ToolExecutionSuggestion
+      TraceParams
+      UserMessage
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      MaxToolCallsExceededError
+   
