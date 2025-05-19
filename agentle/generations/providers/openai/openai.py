@@ -132,7 +132,7 @@ class OpenaiGenerationProvider(GenerationProvider):
 
         input_message_adapter = AgentleMessageToOpenaiMessageAdapter()
 
-        chat_completion: ChatCompletion = await client.chat.completions.create(  # type: ignore
+        chat_completion: ChatCompletion = await client.chat.completions.create(
             messages=[input_message_adapter.adapt(message) for message in messages],
             model=model or self.default_model,
         )
