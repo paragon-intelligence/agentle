@@ -14,7 +14,7 @@ import inspect
 from collections.abc import Callable, Coroutine
 from datetime import datetime
 from typing import Any, TypeVar, cast
-
+from rsb.coroutines.fire_and_forget import fire_and_forget
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
 from agentle.generations.providers.base.generation_provider import GenerationProvider
@@ -216,7 +216,8 @@ def observe(
             if cost_details:
                 final_output["cost_details"] = cost_details
 
-            await tracing_manager.complete_trace(
+            fire_and_forget(
+                tracing_manager.complete_trace,
                 trace_client=trace_client,
                 generation_config=generation_config,
                 output_data=final_output,

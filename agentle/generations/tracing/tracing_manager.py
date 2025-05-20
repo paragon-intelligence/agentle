@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Optional, cast
+from rsb.coroutines.fire_and_forget import fire_and_forget
 
 from agentle.generations.models.generation.generation_config import GenerationConfig
 from agentle.generations.providers.base.generation_provider import GenerationProvider
@@ -346,7 +347,9 @@ class TracingManager:
                 actual_tracing_client = self.tracing_client
                 
             if actual_tracing_client:
-                await actual_tracing_client.flush()
+                fire_and_forget(
+                    actual_tracing_client.flush,
+                )
 
             # Clean up trace_params
             trace_params = generation_config.trace_params
@@ -391,7 +394,8 @@ class TracingManager:
             )
 
         # Complete the trace with error
-        await self.complete_trace(
+        fire_and_forget(
+            self.complete_trace,
             trace_client=trace_client,
             generation_config=generation_config,
             output_data={"error": error_str},

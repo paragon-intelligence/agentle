@@ -25,7 +25,7 @@ import logging
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, cast, override
-
+from rsb.coroutines.fire_and_forget import fire_and_forget
 from rsb.adapters.adapter import Adapter
 
 from agentle.generations.models.generation.generation import Generation
@@ -397,11 +397,12 @@ class GoogleGenerationProvider(GenerationProvider):
                 "usage": usage_details,
                 "cost_details": cost_details,  # Include costs in proper format
             }
-            await self.tracing_manager.complete_trace(
-                trace_client=trace_client,
-                generation_config=_generation_config,
-                output_data=final_output,
-                success=True,
+            fire_and_forget(
+                self.tracing_manager.complete_trace,
+                    trace_client=trace_client,
+                    generation_config=_generation_config,
+                    output_data=final_output,
+                    success=True,
             )
 
             return response
