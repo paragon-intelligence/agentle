@@ -1,0 +1,1125 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>agentle.mcp.servers.stdio_mcp_server - Agentle 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #2980B9;
+  --color-brand-content: #2980B9;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DA3E2;
+  --color-brand-content: #4DA3E2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DA3E2;
+  --color-brand-content: #4DA3E2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../index.html"><div class="brand">Agentle 0.1.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Agentle 0.1.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../agents.html">Agents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../inputs.html">Inputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../structured_outputs.html">Structured Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../prompt_management.html">Prompt Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../knowledge_integration.html">Knowledge Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../agent_composition.html">Agent Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../a2a.html">A2A</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../mcp.html">Model Context Protocol (MCP)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../observability.html">Observability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../deployment.html">Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../api/index.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../api/agents.html">Agents API</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Agents API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.html">agentle.agents</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of agentle.agents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.html">agentle.agents.a2a</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.a2a_interface.html">agentle.agents.a2a.a2a_interface</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.a2a_interface_options.html">agentle.agents.a2a.a2a_interface_options</a></li>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.html">agentle.agents.a2a.message_parts</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.message_parts</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.adapters.html">agentle.agents.a2a.message_parts.adapters</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.message_parts.adapters</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l7"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.adapters.agent_part_to_generation_part_adapter.html">agentle.agents.a2a.message_parts.adapters.agent_part_to_generation_part_adapter</a></li>
+<li class="toctree-l7"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.adapters.generation_part_to_agent_part_adapter.html">agentle.agents.a2a.message_parts.adapters.generation_part_to_agent_part_adapter</a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.data_part.html">agentle.agents.a2a.message_parts.data_part</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.file_part.html">agentle.agents.a2a.message_parts.file_part</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.text_part.html">agentle.agents.a2a.message_parts.text_part</a></li>
+</ul>
+</li>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.messages.html">agentle.agents.a2a.messages</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.messages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.messages.generation_message_to_message_adapter.html">agentle.agents.a2a.messages.generation_message_to_message_adapter</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.messages.message.html">agentle.agents.a2a.messages.message</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.messages.message_to_generation_message_adapter.html">agentle.agents.a2a.messages.message_to_generation_message_adapter</a></li>
+</ul>
+</li>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.html">agentle.agents.a2a.models</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.models</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.agent_skill.html">agentle.agents.a2a.models.agent_skill</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.agent_usage_statistics.html">agentle.agents.a2a.models.agent_usage_statistics</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.artifact.html">agentle.agents.a2a.models.artifact</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.authentication.html">agentle.agents.a2a.models.authentication</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.capabilities.html">agentle.agents.a2a.models.capabilities</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.file.html">agentle.agents.a2a.models.file</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.json_rpc_error.html">agentle.agents.a2a.models.json_rpc_error</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.json_rpc_response.html">agentle.agents.a2a.models.json_rpc_response</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.run_state.html">agentle.agents.a2a.models.run_state</a></li>
+</ul>
+</li>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.notifications.html">agentle.agents.a2a.notifications</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.notifications</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.notifications.push_notification_config.html">agentle.agents.a2a.notifications.push_notification_config</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.notifications.task_push_notification_config.html">agentle.agents.a2a.notifications.task_push_notification_config</a></li>
+</ul>
+</li>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.resources.html">agentle.agents.a2a.resources</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.resources</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.resources.push_notification_resource.html">agentle.agents.a2a.resources.push_notification_resource</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.resources.task_resource.html">agentle.agents.a2a.resources.task_resource</a></li>
+</ul>
+</li>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.html">agentle.agents.a2a.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.managment.html">agentle.agents.a2a.tasks.managment</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks.managment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l7"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.managment.in_memory.html">agentle.agents.a2a.tasks.managment.in_memory</a></li>
+<li class="toctree-l7"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.managment.task_manager.html">agentle.agents.a2a.tasks.managment.task_manager</a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.send_task_request.html">agentle.agents.a2a.tasks.send_task_request</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.send_task_response.html">agentle.agents.a2a.tasks.send_task_response</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task.html">agentle.agents.a2a.tasks.task</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_artifact_update_event.html">agentle.agents.a2a.tasks.task_artifact_update_event</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_get_result.html">agentle.agents.a2a.tasks.task_get_result</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_query_params.html">agentle.agents.a2a.tasks.task_query_params</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_send_params.html">agentle.agents.a2a.tasks.task_send_params</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_state.html">agentle.agents.a2a.tasks.task_state</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_status.html">agentle.agents.a2a.tasks.task_status</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_status_update_event.html">agentle.agents.a2a.tasks.task_status_update_event</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent.html">agentle.agents.agent</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_config.html">agentle.agents.agent_config</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_input.html">agentle.agents.agent_input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_pipeline.html">agentle.agents.agent_pipeline</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_run_output.html">agentle.agents.agent_run_output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_team.html">agentle.agents.agent_team</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.asgi.html">agentle.agents.asgi</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of agentle.agents.asgi</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.asgi.blacksheep.html">agentle.agents.asgi.blacksheep</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.context.html">agentle.agents.context</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.errors.max_tool_calls_exceeded_error.html">agentle.agents.errors.max_tool_calls_exceeded_error</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.knowledge.html">agentle.agents.knowledge</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of agentle.agents.knowledge</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.knowledge.document_knowledge.html">agentle.agents.knowledge.document_knowledge</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.knowledge.static_knowledge.html">agentle.agents.knowledge.static_knowledge</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.knowledge.url_knowledge.html">agentle.agents.knowledge.url_knowledge</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.step.html">agentle.agents.step</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.ui.html">agentle.agents.ui</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.ui</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.ui.streamlit.html">agentle.agents.ui.streamlit</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent.html">agentle.agents.agent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_pipeline.html">agentle.agents.agent_pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_team.html">agentle.agents.agent_team</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.context.html">agentle.agents.context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_config.html">agentle.agents.agent_config</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_input.html">agentle.agents.agent_input</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.agent_run_output.html">agentle.agents.agent_run_output</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.knowledge.html">agentle.agents.knowledge</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of agentle.agents.knowledge</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.knowledge.document_knowledge.html">agentle.agents.knowledge.document_knowledge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.knowledge.static_knowledge.html">agentle.agents.knowledge.static_knowledge</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.knowledge.url_knowledge.html">agentle.agents.knowledge.url_knowledge</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.html">agentle.agents.a2a</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.a2a_interface.html">agentle.agents.a2a.a2a_interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.a2a_interface_options.html">agentle.agents.a2a.a2a_interface_options</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.html">agentle.agents.a2a.message_parts</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.message_parts</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.adapters.html">agentle.agents.a2a.message_parts.adapters</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.message_parts.adapters</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.adapters.agent_part_to_generation_part_adapter.html">agentle.agents.a2a.message_parts.adapters.agent_part_to_generation_part_adapter</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.adapters.generation_part_to_agent_part_adapter.html">agentle.agents.a2a.message_parts.adapters.generation_part_to_agent_part_adapter</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.data_part.html">agentle.agents.a2a.message_parts.data_part</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.file_part.html">agentle.agents.a2a.message_parts.file_part</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.message_parts.text_part.html">agentle.agents.a2a.message_parts.text_part</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.messages.html">agentle.agents.a2a.messages</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.messages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.messages.generation_message_to_message_adapter.html">agentle.agents.a2a.messages.generation_message_to_message_adapter</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.messages.message.html">agentle.agents.a2a.messages.message</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.messages.message_to_generation_message_adapter.html">agentle.agents.a2a.messages.message_to_generation_message_adapter</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.html">agentle.agents.a2a.models</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.models</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.agent_skill.html">agentle.agents.a2a.models.agent_skill</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.agent_usage_statistics.html">agentle.agents.a2a.models.agent_usage_statistics</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.artifact.html">agentle.agents.a2a.models.artifact</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.authentication.html">agentle.agents.a2a.models.authentication</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.capabilities.html">agentle.agents.a2a.models.capabilities</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.file.html">agentle.agents.a2a.models.file</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.json_rpc_error.html">agentle.agents.a2a.models.json_rpc_error</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.json_rpc_response.html">agentle.agents.a2a.models.json_rpc_response</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.models.run_state.html">agentle.agents.a2a.models.run_state</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.notifications.html">agentle.agents.a2a.notifications</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.notifications</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.notifications.push_notification_config.html">agentle.agents.a2a.notifications.push_notification_config</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.notifications.task_push_notification_config.html">agentle.agents.a2a.notifications.task_push_notification_config</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.resources.html">agentle.agents.a2a.resources</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.resources</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.resources.push_notification_resource.html">agentle.agents.a2a.resources.push_notification_resource</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.resources.task_resource.html">agentle.agents.a2a.resources.task_resource</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.html">agentle.agents.a2a.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.managment.html">agentle.agents.a2a.tasks.managment</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks.managment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.managment.in_memory.html">agentle.agents.a2a.tasks.managment.in_memory</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.managment.task_manager.html">agentle.agents.a2a.tasks.managment.task_manager</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.send_task_request.html">agentle.agents.a2a.tasks.send_task_request</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.send_task_response.html">agentle.agents.a2a.tasks.send_task_response</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task.html">agentle.agents.a2a.tasks.task</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_artifact_update_event.html">agentle.agents.a2a.tasks.task_artifact_update_event</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_get_result.html">agentle.agents.a2a.tasks.task_get_result</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_query_params.html">agentle.agents.a2a.tasks.task_query_params</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_send_params.html">agentle.agents.a2a.tasks.task_send_params</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_state.html">agentle.agents.a2a.tasks.task_state</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_status.html">agentle.agents.a2a.tasks.task_status</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.agents.a2a.tasks.task_status_update_event.html">agentle.agents.a2a.tasks.task_status_update_event</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../api/generations.html">Generations API</a><input class="toctree-checkbox" id="toctree-checkbox-27" name="toctree-checkbox-27" role="switch" type="checkbox"/><label for="toctree-checkbox-27"><div class="visually-hidden">Toggle navigation of Generations API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/generated/agentle.generations.html">agentle.generations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/generated/agentle.generations.providers.html">agentle.generations.providers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/generated/agentle.generations.providers.google.html">agentle.generations.providers.google</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/generated/agentle.generations.providers.openai.html">agentle.generations.providers.openai</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/prompts.html">Prompts API</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../api/mcp.html">MCP API</a><input class="toctree-checkbox" id="toctree-checkbox-28" name="toctree-checkbox-28" role="switch" type="checkbox"/><label for="toctree-checkbox-28"><div class="visually-hidden">Toggle navigation of MCP API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.html">agentle.mcp</a><input class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of agentle.mcp</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.errors.html">agentle.mcp.errors</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of agentle.mcp.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.errors.error_code.html">agentle.mcp.errors.error_code</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.html">agentle.mcp.models</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of agentle.mcp.models</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.annotations.html">agentle.mcp.models.annotations</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.blob_resource_contents.html">agentle.mcp.models.blob_resource_contents</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.call_tool_result.html">agentle.mcp.models.call_tool_result</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.embedded_resource.html">agentle.mcp.models.embedded_resource</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.image_content.html">agentle.mcp.models.image_content</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.resource_contents.html">agentle.mcp.models.resource_contents</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.role.html">agentle.mcp.models.role</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.text_content.html">agentle.mcp.models.text_content</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.models.text_resource_contents.html">agentle.mcp.models.text_resource_contents</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.prompts.html">agentle.mcp.prompts</a><input class="toctree-checkbox" id="toctree-checkbox-32" name="toctree-checkbox-32" role="switch" type="checkbox"/><label for="toctree-checkbox-32"><div class="visually-hidden">Toggle navigation of agentle.mcp.prompts</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.prompts.prompt.html">agentle.mcp.prompts.prompt</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.prompts.prompt_argument.html">agentle.mcp.prompts.prompt_argument</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.html">agentle.mcp.resources</a><input class="toctree-checkbox" id="toctree-checkbox-33" name="toctree-checkbox-33" role="switch" type="checkbox"/><label for="toctree-checkbox-33"><div class="visually-hidden">Toggle navigation of agentle.mcp.resources</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.binary_resources.html">agentle.mcp.resources.binary_resources</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of agentle.mcp.resources.binary_resources</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.binary_resources.audio_files.html">agentle.mcp.resources.binary_resources.audio_files</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.binary_resources.base64_convertible.html">agentle.mcp.resources.binary_resources.base64_convertible</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.binary_resources.image.html">agentle.mcp.resources.binary_resources.image</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.binary_resources.pdfs.html">agentle.mcp.resources.binary_resources.pdfs</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.binary_resources.video_files.html">agentle.mcp.resources.binary_resources.video_files</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.resource_content.html">agentle.mcp.resources.resource_content</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.resource_description.html">agentle.mcp.resources.resource_description</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.resource_description_with_template.html">agentle.mcp.resources.resource_description_with_template</a></li>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.text_resources.html">agentle.mcp.resources.text_resources</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of agentle.mcp.resources.text_resources</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.text_resources.configuration_file.html">agentle.mcp.resources.text_resources.configuration_file</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.text_resources.json_data.html">agentle.mcp.resources.text_resources.json_data</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.text_resources.log_file.html">agentle.mcp.resources.text_resources.log_file</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.text_resources.plain_text.html">agentle.mcp.resources.text_resources.plain_text</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.text_resources.source_code.html">agentle.mcp.resources.text_resources.source_code</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.text_resources.textfyable.html">agentle.mcp.resources.text_resources.textfyable</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.resources.text_resources.xml_data.html">agentle.mcp.resources.text_resources.xml_data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.roots.html">agentle.mcp.roots</a><input class="toctree-checkbox" id="toctree-checkbox-36" name="toctree-checkbox-36" role="switch" type="checkbox"/><label for="toctree-checkbox-36"><div class="visually-hidden">Toggle navigation of agentle.mcp.roots</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.roots.root.html">agentle.mcp.roots.root</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.html">agentle.mcp.sampling</a><input class="toctree-checkbox" id="toctree-checkbox-37" name="toctree-checkbox-37" role="switch" type="checkbox"/><label for="toctree-checkbox-37"><div class="visually-hidden">Toggle navigation of agentle.mcp.sampling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.completion_result.html">agentle.mcp.sampling.completion_result</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.hint.html">agentle.mcp.sampling.hint</a></li>
+<li class="toctree-l5 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.messages.html">agentle.mcp.sampling.messages</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of agentle.mcp.sampling.messages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.messages.assistant_message.html">agentle.mcp.sampling.messages.assistant_message</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.messages.image_message_content.html">agentle.mcp.sampling.messages.image_message_content</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.messages.message.html">agentle.mcp.sampling.messages.message</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.messages.text_message_content.html">agentle.mcp.sampling.messages.text_message_content</a></li>
+<li class="toctree-l6"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.messages.user_message.html">agentle.mcp.sampling.messages.user_message</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.model_preferences.html">agentle.mcp.sampling.model_preferences</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.sampling.request.html">agentle.mcp.sampling.request</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.servers.html">agentle.mcp.servers</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of agentle.mcp.servers</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.servers.mcp_server_protocol.html">agentle.mcp.servers.mcp_server_protocol</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.servers.stdio_mcp_server.html">agentle.mcp.servers.stdio_mcp_server</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.servers.streamable_http_mcp_server.html">agentle.mcp.servers.streamable_http_mcp_server</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.session_management.html">agentle.mcp.session_management</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of agentle.mcp.session_management</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.session_management.in_memory.html">agentle.mcp.session_management.in_memory</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.session_management.redis.html">agentle.mcp.session_management.redis</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.session_management.session_manager.html">agentle.mcp.session_management.session_manager</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.tools.html">agentle.mcp.tools</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of agentle.mcp.tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.tools.input_schema.html">agentle.mcp.tools.input_schema</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.tools.mcp_tool.html">agentle.mcp.tools.mcp_tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.servers.html">agentle.mcp.servers</a><input class="toctree-checkbox" id="toctree-checkbox-42" name="toctree-checkbox-42" role="switch" type="checkbox"/><label for="toctree-checkbox-42"><div class="visually-hidden">Toggle navigation of agentle.mcp.servers</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.servers.mcp_server_protocol.html">agentle.mcp.servers.mcp_server_protocol</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.servers.stdio_mcp_server.html">agentle.mcp.servers.stdio_mcp_server</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.servers.streamable_http_mcp_server.html">agentle.mcp.servers.streamable_http_mcp_server</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.session_management.html">agentle.mcp.session_management</a><input class="toctree-checkbox" id="toctree-checkbox-43" name="toctree-checkbox-43" role="switch" type="checkbox"/><label for="toctree-checkbox-43"><div class="visually-hidden">Toggle navigation of agentle.mcp.session_management</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.session_management.in_memory.html">agentle.mcp.session_management.in_memory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.session_management.redis.html">agentle.mcp.session_management.redis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../api/_autosummary/agentle.mcp.session_management.session_manager.html">agentle.mcp.session_management.session_manager</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/rag.html">RAG API</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../api/stt.html">Speech-to-Text API</a><input class="toctree-checkbox" id="toctree-checkbox-44" name="toctree-checkbox-44" role="switch" type="checkbox"/><label for="toctree-checkbox-44"><div class="visually-hidden">Toggle navigation of Speech-to-Text API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/generated/agentle.stt.html">agentle.stt</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../api/tts.html">Text-to-Speech API</a><input class="toctree-checkbox" id="toctree-checkbox-45" name="toctree-checkbox-45" role="switch" type="checkbox"/><label for="toctree-checkbox-45"><div class="visually-hidden">Toggle navigation of Text-to-Speech API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/generated/agentle.tts.html">agentle.tts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for agentle.mcp.servers.stdio_mcp_server</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Stdio implementation of the Model Context Protocol (MCP) server client.</span>
+
+<span class="sd">This module provides a client implementation for interacting with MCP servers over</span>
+<span class="sd">standard input/output streams. It enables connection management, tool discovery,</span>
+<span class="sd">resource querying, and tool execution through stdin/stdout communication.</span>
+
+<span class="sd">The implementation follows the MCPServerProtocol interface and uses asyncio streams</span>
+<span class="sd">for communication.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">NotRequired</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">override</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">rsb.models.field</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rsb.models.private_attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrivateAttr</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.mcp.servers.mcp_server_protocol</span><span class="w"> </span><span class="kn">import</span> <span class="n">MCPServerProtocol</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">BlobResourceContents</span><span class="p">,</span>
+        <span class="n">CallToolResult</span><span class="p">,</span>
+        <span class="n">Resource</span><span class="p">,</span>
+        <span class="n">TextResourceContents</span><span class="p">,</span>
+        <span class="n">Tool</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># TypedDict definitions for JSON-RPC messages</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_JsonRpcRequestParams</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parameters for a JSON-RPC request.&quot;&quot;&quot;</span>
+
+    <span class="n">protocolVersion</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">clientInfo</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
+    <span class="n">capabilities</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span>
+    <span class="n">uri</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">tool</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">arguments</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_JsonRpcRequest</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A JSON-RPC request message.&quot;&quot;&quot;</span>
+
+    <span class="n">jsonrpc</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">_JsonRpcRequestParams</span><span class="p">]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_JsonRpcNotification</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A JSON-RPC notification message.&quot;&quot;&quot;</span>
+
+    <span class="n">jsonrpc</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">params</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_JsonRpcResponse</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A JSON-RPC response message.&quot;&quot;&quot;</span>
+
+    <span class="n">jsonrpc</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">result</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+    <span class="n">error</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="StdioMCPServer">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StdioMCPServer</span><span class="p">(</span><span class="n">MCPServerProtocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stdio implementation of the MCP (Model Context Protocol) server client.</span>
+
+<span class="sd">    This class provides a client implementation for interacting with MCP servers</span>
+<span class="sd">    over standard input/output streams. It handles connection management, tool discovery,</span>
+<span class="sd">    resource management, and tool invocation through stdin/stdout communication.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        server_name (str): A human-readable name for the server</span>
+<span class="sd">        command (str): The command to run the server executable</span>
+<span class="sd">        server_env (MutableMapping[str, str]): Environment variables to pass to the server process</span>
+<span class="sd">        working_dir (str): Working directory for the server process</span>
+
+<span class="sd">    Usage:</span>
+<span class="sd">        server = StdioMCPServer(</span>
+<span class="sd">            server_name=&quot;Example MCP&quot;,</span>
+<span class="sd">            command=&quot;path/to/server&quot;,</span>
+<span class="sd">            server_env={&quot;DEBUG&quot;: &quot;1&quot;},</span>
+<span class="sd">            working_dir=&quot;/path/to/working/dir&quot;</span>
+<span class="sd">        )</span>
+<span class="sd">        await server.connect()</span>
+<span class="sd">        tools = await server.list_tools()</span>
+<span class="sd">        result = await server.call_tool(&quot;tool_name&quot;, {&quot;param&quot;: &quot;value&quot;})</span>
+<span class="sd">        await server.cleanup()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Required configuration fields</span>
+    <span class="n">server_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Human-readable name for the MCP server&quot;</span><span class="p">)</span>
+    <span class="n">command</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Command to run the MCP server process&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Optional configuration fields</span>
+    <span class="n">server_env</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Environment variables to pass to the server process&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">working_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Working directory for the server process&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">request_timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout in seconds for requests&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Internal state</span>
+    <span class="n">_process</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Process</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_stdin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">StreamWriter</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_stdout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">StreamReader</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_next_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">_pending_requests</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">[</span><span class="n">_JsonRpcResponse</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">_logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">_read_task</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StdioMCPServer.connect_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.connect_async">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">connect_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Connect to the MCP server over stdin/stdout.</span>
+
+<span class="sd">        Launches the server process and sets up communication channels.</span>
+<span class="sd">        Initializes the MCP protocol.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: If the server process cannot be started</span>
+<span class="sd">            TimeoutError: If the initialization takes too long</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting MCP server process: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Prepare environment variables</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_env</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Split command into args if provided as a string</span>
+            <span class="n">cmd_args</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span>
+
+            <span class="c1"># Start the server process</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_subprocess_exec</span><span class="p">(</span>
+                <span class="o">*</span><span class="n">cmd_args</span><span class="p">,</span>
+                <span class="n">stdin</span><span class="o">=</span><span class="n">asyncio</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">stdout</span><span class="o">=</span><span class="n">asyncio</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">stderr</span><span class="o">=</span><span class="n">asyncio</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed to open stdin/stdout pipes to server process&quot;</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdin</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdout</span>
+
+            <span class="c1"># Start background task to read from stdout</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_read_responses</span><span class="p">())</span>
+
+            <span class="c1"># Initialize the MCP protocol</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_protocol</span><span class="p">()</span>
+
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to start server process: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanup_async</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not start server process: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a readable name for the server.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The human-readable server name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span>
+
+<div class="viewcode-block" id="StdioMCPServer.cleanup_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.cleanup_async">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">cleanup_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clean up the server connection.</span>
+
+<span class="sd">        Terminates the server process and cleans up resources.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Cancel the read task if it exists</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span>
+            <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Close pipes</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Terminate the process</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Terminating MCP server process: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">wait</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Server process did not terminate, killing it&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
+                <span class="c1"># Process already terminated</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the MCP protocol with the server.</span>
+
+<span class="sd">        Sends the initialize request and waits for the response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing MCP protocol&quot;</span><span class="p">)</span>
+
+        <span class="n">initialize_request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialize&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;protocolVersion&quot;</span><span class="p">:</span> <span class="s2">&quot;0.9.0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;clientInfo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;agentle-mcp-client&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;capabilities&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;resources&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;prompts&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">initialize_request</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Failed to initialize MCP protocol: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Send initialized notification</span>
+        <span class="n">initialized_notification</span><span class="p">:</span> <span class="n">_JsonRpcNotification</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialized&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">}</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_notification</span><span class="p">(</span><span class="n">initialized_notification</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MCP protocol initialized successfully&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_read_responses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Background task to read responses from the server.</span>
+
+<span class="sd">        Continuously reads JSON-RPC messages from stdout and resolves pending requests.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Read a line from stdout</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Server closed stdout&quot;</span><span class="p">)</span>
+                    <span class="k">break</span>
+
+                <span class="c1"># Parse the JSON-RPC message</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">message_str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">message_str</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received message: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Handle response to a request</span>
+                    <span class="k">if</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
+                        <span class="n">request_id</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">request_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="p">:</span>
+                            <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">)</span>
+                            <span class="n">future</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Received response for unknown request ID: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="p">)</span>
+
+                    <span class="c1"># Handle notification or request from server</span>
+                    <span class="k">elif</span> <span class="s2">&quot;method&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
+                        <span class="c1"># TODO: Implement handling of server requests and notifications if needed</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Received notification or request: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">message_str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to parse JSON from server: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">, line: </span><span class="si">{</span><span class="n">message_str</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+            <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+                <span class="c1"># Task was cancelled, exit gracefully</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading from server: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="c1"># Continue reading, don&#39;t break the loop on errors</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_JsonRpcResponse</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send a request to the server and wait for the response.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            request (_JsonRpcRequest): The JSON-RPC request to send</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            _JsonRpcResponse: The JSON-RPC response</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: If the server is not connected</span>
+<span class="sd">            TimeoutError: If the request times out</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Server not connected&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Set up a future to receive the response</span>
+        <span class="n">request_id</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="n">response_future</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">[</span><span class="n">_JsonRpcResponse</span><span class="p">]</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="p">[</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">response_future</span>
+
+        <span class="c1"># Send the request</span>
+        <span class="n">request_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">request_json</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">drain</span><span class="p">()</span>
+
+        <span class="c1"># Wait for the response with timeout</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span>
+                <span class="n">response_future</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">request_timeout_s</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Request timed out after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">request_timeout_s</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_notification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notification</span><span class="p">:</span> <span class="n">_JsonRpcNotification</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Send a notification to the server.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            notification (_JsonRpcNotification): The JSON-RPC notification to send</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: If the server is not connected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Server not connected&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Send the notification</span>
+        <span class="n">notification_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">notification</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">notification_json</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">drain</span><span class="p">()</span>
+
+<div class="viewcode-block" id="StdioMCPServer.list_tools_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_tools_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_tools_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List the tools available on the server.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Sequence[Tool]: A list of Tool objects available on the server</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: If the server is not connected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
+
+        <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;listTools&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to list tools: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;tools&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;tools&#39; in result&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">Tool</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;tools&quot;</span><span class="p">]]</span></div>
+
+
+<div class="viewcode-block" id="StdioMCPServer.list_resources_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_resources_async">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resources_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Resource</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List the resources available on the server.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Sequence[Resource]: A list of Resource objects available on the server</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: If the server is not connected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resource</span>
+
+        <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;listResources&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to list resources: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;resources&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;resources&#39; in result&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">Resource</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;resources&quot;</span><span class="p">]</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="StdioMCPServer.list_resource_contents_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_resource_contents_async">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resource_contents_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TextResourceContents</span> <span class="o">|</span> <span class="n">BlobResourceContents</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List contents of a specific resource.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            uri (str): The URI of the resource to retrieve contents for</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Sequence[TextResourceContents | BlobResourceContents]: A list of resource contents</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: If the server is not connected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobResourceContents</span><span class="p">,</span> <span class="n">TextResourceContents</span>
+
+        <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;readResource&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="n">uri</span><span class="p">},</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to read resource contents: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;contents&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;contents&#39; in result&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">TextResourceContents</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span>
+            <span class="k">else</span> <span class="n">BlobResourceContents</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;contents&quot;</span><span class="p">]</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="StdioMCPServer.call_tool_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.call_tool_async">[docs]</a>
+    <span class="nd">@override</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_tool_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CallToolResult&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Invoke a tool on the server.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tool_name (str): The name of the tool to call</span>
+<span class="sd">            arguments (MutableMapping[str, object] | None): The arguments to pass to the tool</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            CallToolResult: The result of the tool invocation</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ConnectionError: If the server is not connected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallToolResult</span>
+
+        <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;callTool&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="n">tool_name</span><span class="p">,</span> <span class="s2">&quot;arguments&quot;</span><span class="p">:</span> <span class="n">arguments</span> <span class="ow">or</span> <span class="p">{}},</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to call tool: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;result&#39;&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">CallToolResult</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span></div>
+</div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025, Agentle Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

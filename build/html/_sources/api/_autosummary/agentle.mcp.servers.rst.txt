@@ -1,0 +1,22 @@
+agentle.mcp.servers
+===================
+
+.. automodule:: agentle.mcp.servers
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      MCPServerProtocol
+      StreamableHTTPMCPServer
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   mcp_server_protocol
+   stdio_mcp_server
+   streamable_http_mcp_server
