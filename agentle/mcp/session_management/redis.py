@@ -8,9 +8,6 @@ suitable for use in multi-process applications and production environments.
 import json
 from typing import Dict, Optional, Any, cast
 
-import redis.asyncio as redis_async
-from redis.exceptions import RedisError
-
 from agentle.mcp.session_management.session_manager import SessionManager
 
 
@@ -37,6 +34,7 @@ class RedisSessionManager(SessionManager):
             key_prefix: Prefix for Redis keys to avoid collisions
             expiration_seconds: Time in seconds before sessions expire
         """
+        import redis.asyncio as redis_async
         self._redis = redis_async.from_url(redis_url)
         self._key_prefix = key_prefix
         self._expiration_seconds = expiration_seconds
@@ -63,6 +61,8 @@ class RedisSessionManager(SessionManager):
         Returns:
             Optional[Dict[str, Any]]: The session data if it exists, None otherwise
         """
+        from redis.exceptions import RedisError
+
         try:
             redis_key = self._get_redis_key(server_key)
             data = await self._redis.get(redis_key)
@@ -85,6 +85,7 @@ class RedisSessionManager(SessionManager):
             server_key: A unique identifier for the server connection
             session_data: The session data to store
         """
+        from redis.exceptions import RedisError
         try:
             redis_key = self._get_redis_key(server_key)
             serialized_data = json.dumps(session_data)
@@ -103,6 +104,8 @@ class RedisSessionManager(SessionManager):
         Args:
             server_key: A unique identifier for the server connection
         """
+        from redis.exceptions import RedisError
+
         try:
             redis_key = self._get_redis_key(server_key)
             await self._redis.delete(redis_key)

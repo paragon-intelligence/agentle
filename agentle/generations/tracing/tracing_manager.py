@@ -20,6 +20,7 @@ from agentle.generations.providers.base.generation_provider import GenerationPro
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
+from rsb.contracts.maybe_protocol import MaybeProtocol
 
 import logging
 
@@ -39,7 +40,7 @@ class TracingManager:
     def __init__(
         self,
         *,
-        tracing_client: Optional[StatefulObservabilityClient] = None,
+        tracing_client: Optional[StatefulObservabilityClient] | MaybeProtocol[StatefulObservabilityClient] = None,
         provider: GenerationProvider,
     ) -> None:
         """
@@ -81,6 +82,34 @@ class TracingManager:
         if not self.tracing_client:
             return None, None
 
+        # Get the actual tracing client from Maybe container if needed
+        actual_tracing_client: Optional[StatefulObservabilityClient] = None
+        
+        # If it's a Maybe container, try to get the value
+        if isinstance(self.tracing_client, MaybeProtocol):
+            # Try to unwrap the Maybe if it has a value
+            if hasattr(self.tracing_client, "unwrap"):
+                try:
+                    actual_tracing_client = cast(
+                        StatefulObservabilityClient, 
+                        self.tracing_client.unwrap()
+                    )
+                except Exception:
+                    return None, None
+            # Fallback if unwrap is not available
+            elif hasattr(self.tracing_client, "value_or"):
+                actual_tracing_client = cast(
+                    StatefulObservabilityClient,
+                    self.tracing_client.value_or(None)
+                )
+        else:
+            # Not a Maybe container, use directly
+            actual_tracing_client = self.tracing_client
+        
+        # If we couldn't get a valid client, return None
+        if actual_tracing_client is None:
+            return None, None
+
         trace_params = generation_config.trace_params
         user_id = trace_params.get("user_id", "anonymous")
         session_id = trace_params.get("session_id")
@@ -93,7 +122,7 @@ class TracingManager:
         try:
             if parent_trace_id:
                 # Use existing trace ID with parent_trace_id
-                trace_client = await self.tracing_client.trace(
+                trace_client = await actual_tracing_client.trace(
                     name=trace_params.get("name"),
                     user_id=user_id,
                     session_id=session_id,
@@ -104,7 +133,7 @@ class TracingManager:
                     "name", f"{self.provider.organization}_{model}_conversation"
                 )
 
-                trace_client = await self.tracing_client.trace(
+                trace_client = await actual_tracing_client.trace(
                     name=trace_name,
                     user_id=user_id,
                     session_id=session_id,
@@ -301,8 +330,27 @@ class TracingManager:
             )
 
             # Flush events and clean up
-            if self.tracing_client:
-                await self.tracing_client.flush()
+            actual_tracing_client: Optional[StatefulObservabilityClient] = None
+            
+            if isinstance(self.tracing_client, MaybeProtocol):
+                if hasattr(self.tracing_client, "unwrap"):
+                    try:
+                        actual_tracing_client = cast(
+                            StatefulObservabilityClient,
+                            self.tracing_client.unwrap()
+                        )
+                    except Exception:
+                        pass
+                elif hasattr(self.tracing_client, "value_or"):
+                    actual_tracing_client = cast(
+                        StatefulObservabilityClient,
+                        self.tracing_client.value_or(None)
+                    )
+            else:
+                actual_tracing_client = self.tracing_client
+                
+            if actual_tracing_client:
+                await actual_tracing_client.flush()
 
             # Clean up trace_params
             trace_params = generation_config.trace_params

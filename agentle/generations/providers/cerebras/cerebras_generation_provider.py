@@ -259,7 +259,7 @@ class CerebrasGenerationProvider(GenerationProvider):
         Returns:
             float: The price per million input tokens for the specified model.
         """
-        return 0.0  # TODO(arthur)
+        return 1.0  # TODO(arthur)
 
     @override
     def price_per_million_tokens_output(
@@ -275,4 +275,4 @@ class CerebrasGenerationProvider(GenerationProvider):
         Returns:
             float: The price per million output tokens for the specified model.
         """
-        return 0.0  # TODO(arthur)
+        return 1.0  # TODO(arthur)
