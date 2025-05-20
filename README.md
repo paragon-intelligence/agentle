@@ -172,7 +172,7 @@ These scores are automatically calculated and attached to your traces, making it
 - Track model performance over time
 
 <p align="center">
-  <img width="1000" alt="Trace Scores" src="https://github.com/user-attachments/assets/94937238-405c-4011-83e2-147cec5cf3e7" />
+  <img width="1000" alt="Trace Scores" src="https://github.com/user-attachments/assets/f0aab337-ead3-417b-97ef-0126c833d347" />
 </p>
 
 ## ✨ Key Features
