@@ -60,7 +60,6 @@ class TracingManager:
         generation_config: GenerationConfig,
         model: str,
         input_data: dict[str, Any],
-        is_final_generation: bool = False,
     ) -> tuple[
         Optional[StatefulObservabilityClient], Optional[StatefulObservabilityClient]
     ]:
@@ -74,7 +73,6 @@ class TracingManager:
             generation_config: The configuration for the generation.
             model: The model being used for generation.
             input_data: The input data for the generation.
-            is_final_generation: Whether this is the final generation in a sequence.
 
         Returns:
             A tuple containing (trace_client, generation_client) for tracing, both may be None.
@@ -153,11 +151,9 @@ class TracingManager:
                 )
 
                 # Store trace_id for future calls if not final generation
-                if trace_client and not is_final_generation:
-                    # Check if trace_client has an id attribute and access it safely
-                    trace_id = self._get_trace_id(trace_client)
-                    if trace_id:
-                        trace_params["parent_trace_id"] = trace_id
+                trace_id = self._get_trace_id(trace_client)
+                if trace_id:
+                    trace_params["parent_trace_id"] = trace_id
         except Exception as e:
             # Fall back to no tracing if we encounter errors
             trace_client = None

@@ -97,9 +97,6 @@ def observe(
         )
         tools = bound_args.arguments.get("tools")
 
-        # Check if this is the final generation
-        is_final_generation = response_schema is not None
-
         # Prepare input data for tracing
         input_data: dict[str, Any] = {
             "messages": [
@@ -127,7 +124,6 @@ def observe(
             generation_config=generation_config,
             model=model,
             input_data=input_data,
-            is_final_generation=is_final_generation,
         )
 
         # Extract trace metadata if available
@@ -211,22 +207,21 @@ def observe(
             )
 
             # If this is the final generation, complete the trace
-            if is_final_generation:
-                final_output = {
-                    "final_response": getattr(response, "text", str(response)),
-                    "structured_output": getattr(response, "parsed", None),
-                }
-                if usage_details:
-                    final_output["usage"] = usage_details
-                if cost_details:
-                    final_output["cost_details"] = cost_details
+            final_output = {
+                "final_response": getattr(response, "text", str(response)),
+                "structured_output": getattr(response, "parsed", None),
+            }
+            if usage_details:
+                final_output["usage"] = usage_details
+            if cost_details:
+                final_output["cost_details"] = cost_details
 
-                await tracing_manager.complete_trace(
-                    trace_client=trace_client,
-                    generation_config=generation_config,
-                    output_data=final_output,
-                    success=True,
-                )
+            await tracing_manager.complete_trace(
+                trace_client=trace_client,
+                generation_config=generation_config,
+                output_data=final_output,
+                success=True,
+            )
 
             return response
 

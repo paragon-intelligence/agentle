@@ -205,7 +205,6 @@ class GoogleGenerationProvider(GenerationProvider):
         start = datetime.now()
         used_model = model or self.default_model
         _generation_config = generation_config or GenerationConfig()
-        is_final_generation = response_schema is not None
 
         # Prepare input data for tracing
         input_data: dict[str, Any] = {
@@ -232,7 +231,6 @@ class GoogleGenerationProvider(GenerationProvider):
             generation_config=_generation_config,
             model=used_model,
             input_data=input_data,
-            is_final_generation=is_final_generation,
         )
 
         # Extract trace metadata if available
@@ -391,21 +389,20 @@ class GoogleGenerationProvider(GenerationProvider):
             )
 
             # If this is the final generation, complete the trace
-            if is_final_generation:
-                final_output = {
-                    "final_response": response.text,
-                    "structured_output": response.parsed
-                    if hasattr(response, "parsed")
-                    else None,
-                    "usage": usage_details,
-                    "cost_details": cost_details,  # Include costs in proper format
-                }
-                await self.tracing_manager.complete_trace(
-                    trace_client=trace_client,
-                    generation_config=_generation_config,
-                    output_data=final_output,
-                    success=True,
-                )
+            final_output = {
+                "final_response": response.text,
+                "structured_output": response.parsed
+                if hasattr(response, "parsed")
+                else None,
+                "usage": usage_details,
+                "cost_details": cost_details,  # Include costs in proper format
+            }
+            await self.tracing_manager.complete_trace(
+                trace_client=trace_client,
+                generation_config=_generation_config,
+                output_data=final_output,
+                success=True,
+            )
 
             return response
 
