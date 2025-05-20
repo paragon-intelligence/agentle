@@ -156,6 +156,25 @@ response = agent.run(
   <img width="1000" alt="Detailed Trace View" src="https://github.com/user-attachments/assets/c38429db-982c-4158-864f-f03e7118618e" />
 </p>
 
+### Automatic Scoring System
+
+Agentle automatically generates scores for your traces to help you better understand and filter your agent's performance:
+
+- **Model Tier Score**: Evaluates the capability tier of the model used
+- **Tool Usage Score**: Measures how effectively the agent uses available tools
+- **Token Efficiency Score**: Analyzes the balance between input and output tokens
+- **Cost Efficiency Score**: Tracks the cost-effectiveness of each generation
+
+These scores are automatically calculated and attached to your traces, making it easy to:
+- Filter traces by performance metrics
+- Identify patterns in tool usage
+- Optimize token usage and costs
+- Track model performance over time
+
+<p align="center">
+  <img width="1000" alt="Trace Scores" src="https://github.com/user-attachments/assets/94937238-405c-4011-83e2-147cec5cf3e7" />
+</p>
+
 ## ✨ Key Features
 
 - 🧠 **Simple Agent Creation** - Build powerful AI agents with minimal code
