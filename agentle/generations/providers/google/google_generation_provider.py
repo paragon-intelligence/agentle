@@ -391,13 +391,111 @@ class GoogleGenerationProvider(GenerationProvider):
             # If this is the final generation, complete the trace
             if trace_client:
                 try:
+                    # Success score (already implemented)
                     await trace_client.score_trace(
                         name="trace_success",
                         value=1.0,
                         comment="Generation completed successfully"
                     )
+                    
+                    # Calculate latency score based on response time
+                    latency_seconds = (datetime.now() - start).total_seconds()
+                    latency_score = 0.0
+                    if latency_seconds < 1.0:
+                        latency_score = 1.0  # Excellent (sub-second)
+                    elif latency_seconds < 3.0:
+                        latency_score = 0.8  # Good (1-3 seconds)
+                    elif latency_seconds < 6.0:
+                        latency_score = 0.6  # Acceptable (3-6 seconds) 
+                    elif latency_seconds < 10.0:
+                        latency_score = 0.4  # Slow (6-10 seconds)
+                    else:
+                        latency_score = 0.2  # Very slow (>10 seconds)
+                    
+                    await trace_client.score_trace(
+                        name="latency_score",
+                        value=latency_score,
+                        comment=f"Response time: {latency_seconds:.2f}s"
+                    )
+                    
+                    # Model tier score - categorize models by capability level
+                    model_tier = 0.5  # Default for basic models
+                    model_name = used_model.lower()
+                    
+                    # Advanced models get higher scores
+                    if any(premium in model_name for premium in ["gpt-4", "claude-3-opus", "claude-3-sonnet", "gemini-1.5-pro", "gemini-2.0-pro", "claude-3-7"]):
+                        model_tier = 1.0
+                    elif any(mid in model_name for mid in ["gemini-1.5-flash", "gemini-2.0-flash", "claude-3-haiku", "gpt-3.5"]):
+                        model_tier = 0.7
+                    
+                    await trace_client.score_trace(
+                        name="model_tier",
+                        value=model_tier,
+                        comment=f"Model capability tier: {used_model}"
+                    )
+                    
+                    # Add tool usage score if tools were provided
+                    if tools is not None and len(tools) > 0:
+                        # Use the Generation's API to access tool calls
+                        tool_calls = response.tool_calls
+                        
+                        # Score based on whether tools were used when available
+                        tool_usage_score = 0.0
+                        if tool_calls and len(tool_calls) > 0:
+                            tool_usage_score = 1.0  # Tools were used
+                            tool_comment = f"Tools were used ({len(tool_calls)} function calls)"
+                        else:
+                            # Tools were available but not used
+                            tool_usage_score = 0.0
+                            tool_comment = "Tools were available but not used"
+                        
+                        await trace_client.score_trace(
+                            name="tool_usage",
+                            value=tool_usage_score,
+                            comment=tool_comment
+                        )
+                    
+                    # Token efficiency and cost scores (when token data is available)
+                    if prompt_tokens > 0 and completion_tokens > 0:
+                        # Token efficiency score (balance between input and useful output)
+                        ratio = min(1.0, float(completion_tokens) / max(1, float(prompt_tokens)))
+                        efficiency_score = 0.0
+                        
+                        if 0.2 <= ratio <= 0.8:
+                            # Ideal range gets highest score
+                            efficiency_score = 1.0 - abs(0.5 - ratio)
+                        else:
+                            # Outside ideal range gets lower scores
+                            efficiency_score = max(0.0, 0.5 - abs(0.5 - ratio))
+                        
+                        await trace_client.score_trace(
+                            name="token_efficiency",
+                            value=efficiency_score,
+                            comment=f"Token ratio (output/input): {ratio:.2f}"
+                        )
+                    
+                    # Cost efficiency score
+                    if total_cost > 0:
+                        # Score inversely proportional to cost
+                        cost_score = 0.0
+                        if total_cost < 0.001:
+                            cost_score = 1.0  # Very inexpensive (<$0.001)
+                        elif total_cost < 0.01:
+                            cost_score = 0.8  # Inexpensive ($0.001-$0.01)
+                        elif total_cost < 0.05:
+                            cost_score = 0.6  # Moderate ($0.01-$0.05)
+                        elif total_cost < 0.1:
+                            cost_score = 0.4  # Expensive ($0.05-$0.1)
+                        else:
+                            cost_score = 0.2  # Very expensive (>$0.1)
+                        
+                        await trace_client.score_trace(
+                            name="cost_efficiency",
+                            value=cost_score,
+                            comment=f"Cost: ${total_cost:.4f}"
+                        )
                 except Exception as e:
-                    logger.warning(f"Failed to add trace success score: {e}")
+                    logger.warning(f"Failed to add trace scores: {e}")
 
             fire_and_forget(
                 self.tracing_manager.complete_trace,
@@ -415,13 +513,63 @@ class GoogleGenerationProvider(GenerationProvider):
                 try:
                     error_type = type(e).__name__
                     error_str = str(e)
+                    
+                    # Main trace success score (already implemented)
                     await trace_client.score_trace(
                         name="trace_success",
                         value=0.0,
                         comment=f"Error: {error_type} - {error_str[:100]}"
                     )
+                    
+                    # Add error category score for better filtering
+                    error_category = "other"
+                    
+                    # Categorize common error types
+                    if "timeout" in error_str.lower() or "time" in error_type.lower():
+                        error_category = "timeout"
+                    elif "connection" in error_str.lower() or "network" in error_str.lower():
+                        error_category = "network"
+                    elif "auth" in error_str.lower() or "key" in error_str.lower() or "credential" in error_str.lower():
+                        error_category = "authentication"
+                    elif "limit" in error_str.lower() or "quota" in error_str.lower() or "rate" in error_str.lower():
+                        error_category = "rate_limit"
+                    elif "value" in error_type.lower() or "type" in error_type.lower() or "attribute" in error_type.lower():
+                        error_category = "validation"
+                    elif "memory" in error_str.lower() or "resource" in error_str.lower():
+                        error_category = "resource"
+                    
+                    await trace_client.score_trace(
+                        name="error_category",
+                        value=error_category,
+                        comment=f"Error classified as: {error_category}"
+                    )
+                    
+                    # Add error severity score
+                    severity = 0.7  # Default medium-high severity
+                    
+                    # Adjust severity based on error type
+                    if error_category in ["timeout", "network", "rate_limit"]:
+                        # Transient errors - lower severity
+                        severity = 0.5
+                    elif error_category in ["authentication", "validation"]:
+                        # Configuration/code errors - higher severity
+                        severity = 0.9
+                    
+                    await trace_client.score_trace(
+                        name="error_severity",
+                        value=severity,
+                        comment=f"Error severity: {severity:.1f}"
+                    )
+                    
+                    # Calculate latency until error
+                    error_latency = (datetime.now() - start).total_seconds()
+                    await trace_client.score_trace(
+                        name="error_latency",
+                        value=error_latency,
+                        comment=f"Time until error: {error_latency:.2f}s"
+                    )
                 except Exception as scoring_error:
-                    logger.warning(f"Failed to add trace error score: {scoring_error}")
+                    logger.warning(f"Failed to add trace error scores: {scoring_error}")
 
             # Handle errors using the tracing manager
             await self.tracing_manager.handle_error(
