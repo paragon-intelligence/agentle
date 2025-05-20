@@ -206,21 +206,14 @@ def observe(
                 cost_details=cost_details,
             )
 
-            # If this is the final generation, complete the trace
-            final_output = {
-                "final_response": getattr(response, "text", str(response)),
-                "structured_output": getattr(response, "parsed", None),
-            }
-            if usage_details:
-                final_output["usage"] = usage_details
-            if cost_details:
-                final_output["cost_details"] = cost_details
+            parsed = getattr(response, "parsed", None)
+            text = getattr(response, "text", str(response))
 
             fire_and_forget(
                 tracing_manager.complete_trace,
                 trace_client=trace_client,
                 generation_config=generation_config,
-                output_data=final_output,
+                output_data=parsed or text,
                 success=True,
             )
 

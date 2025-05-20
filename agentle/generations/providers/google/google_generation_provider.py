@@ -389,19 +389,11 @@ class GoogleGenerationProvider(GenerationProvider):
             )
 
             # If this is the final generation, complete the trace
-            final_output = {
-                "final_response": response.text,
-                "structured_output": response.parsed
-                if hasattr(response, "parsed")
-                else None,
-                "usage": usage_details,
-                "cost_details": cost_details,  # Include costs in proper format
-            }
             fire_and_forget(
                 self.tracing_manager.complete_trace,
                     trace_client=trace_client,
                     generation_config=_generation_config,
-                    output_data=final_output,
+                    output_data=response.parsed if bool(response.parsed) else response.text,
                     success=True,
             )
 

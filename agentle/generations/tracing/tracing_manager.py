@@ -301,7 +301,7 @@ class TracingManager:
         *,
         trace_client: Optional[StatefulObservabilityClient],
         generation_config: GenerationConfig,
-        output_data: dict[str, Any],
+        output_data: dict[str, Any] | str,
         success: bool = True,
     ) -> None:
         """
