@@ -613,3 +613,42 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
             self._logger.debug("Successfully flushed all events to Langfuse")
         except Exception as e:
             self._logger.error(f"Error flushing events to Langfuse: {e}")
+
+    @override
+    async def score_trace(
+        self,
+        *,
+        name: str,
+        value: float | str,
+        trace_id: str | None = None,
+        comment: str | None = None,
+    ) -> None:
+        """
+        Add a score to a trace.
+
+        This method adds a score to a trace in Langfuse, which can be used for
+        evaluating and filtering traces in the UI.
+
+        Args:
+            name: The name of the score (e.g., "trace_success", "response_quality").
+            value: The score value (float for numeric scores, string for categorical).
+            trace_id: Optional trace ID. If not provided, uses the current trace.
+            comment: Optional comment or explanation for the score.
+        """
+        try:
+            target_trace_id = trace_id or self._trace_id
+            
+            if not target_trace_id:
+                self._logger.warning("Cannot add score: No trace ID available")
+                return
+                
+            if self._client:
+                self._client.score(
+                    trace_id=target_trace_id,
+                    name=name,
+                    value=value,
+                    comment=comment
+                )
+                self._logger.debug(f"Added score '{name}' with value '{value}' to trace {target_trace_id}")
+        except Exception as e:
+            self._logger.error(f"Error adding score to trace: {e}")

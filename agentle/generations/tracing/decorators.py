@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import functools
 import inspect
+import logging
 from collections.abc import Callable, Coroutine
 from datetime import datetime
 from typing import Any, TypeVar, cast
@@ -25,6 +26,8 @@ from agentle.generations.tracing.tracing_manager import TracingManager
 
 T = TypeVar('T')
 P = TypeVar('P', bound=dict[str, Any])
+
+logger = logging.getLogger(__name__)
 
 def observe(
     func: Callable[..., Coroutine[Any, Any, Generation[Any]]],
@@ -209,6 +212,17 @@ def observe(
             parsed = getattr(response, "parsed", None)
             text = getattr(response, "text", str(response))
 
+            # Add trace success score when the operation completes successfully
+            if trace_client:
+                try:
+                    await trace_client.score_trace(
+                        name="trace_success",
+                        value=1.0,
+                        comment="Generation completed successfully"
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to add trace success score: {e}")
+
             fire_and_forget(
                 tracing_manager.complete_trace,
                 trace_client=trace_client,
@@ -220,6 +234,19 @@ def observe(
             return response
 
         except Exception as e:
+            # Add trace error score
+            if trace_client:
+                try:
+                    error_type = type(e).__name__
+                    error_str = str(e)
+                    await trace_client.score_trace(
+                        name="trace_success",
+                        value=0.0,
+                        comment=f"Error: {error_type} - {error_str[:100]}"
+                    )
+                except Exception as scoring_error:
+                    logger.warning(f"Failed to add trace error score: {scoring_error}")
+            
             # Handle errors using the tracing manager
             await tracing_manager.handle_error(
                 generation_client=generation_client,

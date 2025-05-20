@@ -389,6 +389,16 @@ class GoogleGenerationProvider(GenerationProvider):
             )
 
             # If this is the final generation, complete the trace
+            if trace_client:
+                try:
+                    await trace_client.score_trace(
+                        name="trace_success",
+                        value=1.0,
+                        comment="Generation completed successfully"
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to add trace success score: {e}")
+
             fire_and_forget(
                 self.tracing_manager.complete_trace,
                     trace_client=trace_client,
@@ -400,6 +410,19 @@ class GoogleGenerationProvider(GenerationProvider):
             return response
 
         except Exception as e:
+            # Add a trace error score
+            if trace_client:
+                try:
+                    error_type = type(e).__name__
+                    error_str = str(e)
+                    await trace_client.score_trace(
+                        name="trace_success",
+                        value=0.0,
+                        comment=f"Error: {error_type} - {error_str[:100]}"
+                    )
+                except Exception as scoring_error:
+                    logger.warning(f"Failed to add trace error score: {scoring_error}")
+
             # Handle errors using the tracing manager
             await self.tracing_manager.handle_error(
                 generation_client=generation_client,

@@ -332,6 +332,40 @@ class StatefulObservabilityClient(abc.ABC):
         """
         ...
 
+    @abc.abstractmethod
+    async def score_trace(
+        self,
+        *,
+        name: str,
+        value: float | str,
+        trace_id: str | None = None,
+        comment: str | None = None,
+    ) -> None:
+        """
+        Add a score to a trace.
+
+        Scores provide quantitative or categorical assessments of trace quality or performance. 
+        They can be used for filtering, sorting, and analysis in the observability platform.
+
+        Args:
+            name: Identifier for the score (e.g., "trace_success", "response_quality").
+            value: The score value, which can be:
+                - A float (typically 0.0-1.0) for numeric scores
+                - A string for categorical scores
+            trace_id: Optional ID of the trace to score. If not provided, uses the current trace.
+            comment: Optional explanation or context for the score.
+
+        Example:
+            ```python
+            # Mark a trace as successful
+            await client.score_trace(name="trace_success", value=1.0, comment="Completed without errors")
+            
+            # Categorize a trace
+            await client.score_trace(name="response_type", value="detailed", comment="Comprehensive answer")
+            ```
+        """
+        ...
+
     # Helper methods that build on the abstract methods
 
     async def model_generation(

@@ -320,6 +320,16 @@ class TracingManager:
             return
 
         try:
+            # Add a trace success score
+            success_value = 1.0 if success else 0.0
+            success_comment = "Trace completed successfully" if success else "Trace encountered an error"
+            
+            await trace_client.score_trace(
+                name="trace_success",
+                value=success_value,
+                comment=success_comment
+            )
+
             # Complete the trace
             await trace_client.end(
                 output=output_data,
@@ -383,21 +393,22 @@ class TracingManager:
             trace_metadata: Additional metadata for the trace.
         """
         error_str = str(error) if error else "Unknown error"
+        error_type = type(error).__name__ if error else "UnknownError"
 
         # Complete generation with error
         if generation_client:
             await generation_client.complete_with_error(
                 error=error_str,
                 start_time=start_time,
-                error_type="Exception",
+                error_type=error_type,
                 metadata=trace_metadata or {},
             )
 
-        # Complete the trace with error
+        # Complete the trace with error and add trace error score
         fire_and_forget(
             self.complete_trace,
             trace_client=trace_client,
             generation_config=generation_config,
-            output_data={"error": error_str},
+            output_data={"error": error_str, "error_type": error_type},
             success=False,
         )
