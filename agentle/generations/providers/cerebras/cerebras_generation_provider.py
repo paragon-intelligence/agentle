@@ -47,6 +47,7 @@ from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
+from agentle.generations.tracing.decorators import observe
 
 if TYPE_CHECKING:
     from cerebras.cloud.sdk.types.chat.completion_create_params import (
@@ -106,7 +107,7 @@ class CerebrasGenerationProvider(GenerationProvider):
         tracing_client: StatefulObservabilityClient | None = None,
         api_key: str | None = None,
         base_url: str | httpx.URL | None = None,
-        timeout: float | httpx.Timeout | None,
+        timeout: float | httpx.Timeout | None = None,
         max_retries: int = 2,
         default_headers: Mapping[str, str] | None = None,
         default_query: Mapping[str, object] | None = None,
@@ -170,6 +171,7 @@ class CerebrasGenerationProvider(GenerationProvider):
         return "llama-3.3-70b"
 
     @override
+    @observe
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,

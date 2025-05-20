@@ -21,6 +21,7 @@ from agentle.generations.tracing.contracts.stateful_observability_client import 
     StatefulObservabilityClient,
 )
 
+import logging
 
 class TracingManager:
     """
@@ -50,6 +51,7 @@ class TracingManager:
         """
         self.tracing_client = tracing_client
         self.provider = provider
+        self._logger = logging.getLogger(f"{__name__}.{provider.organization}")
 
     async def setup_trace(
         self,
@@ -127,9 +129,11 @@ class TracingManager:
                     trace_id = self._get_trace_id(trace_client)
                     if trace_id:
                         trace_params["parent_trace_id"] = trace_id
-        except Exception:
+        except Exception as e:
             # Fall back to no tracing if we encounter errors
             trace_client = None
+            self._logger.error(f"Error setting up trace: {e}")
+
 
         # Set up generation tracing
         generation_client = None

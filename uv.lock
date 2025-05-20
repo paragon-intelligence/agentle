@@ -4,10 +4,9 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "agentle"
-version = "0.1.6"
+version = "0.1.9"
 source = { editable = "." }
 dependencies = [
-    { name = "google-genai" },
     { name = "mcp", extra = ["cli"] },
     { name = "rock-solid-base" },
 ]
@@ -100,7 +99,6 @@ streamlit = [
 
 [package.metadata]
 requires-dist = [
-    { name = "google-genai", specifier = ">=1.14.0" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.6.0" },
     { name = "rock-solid-base", specifier = ">=0.0.28" },
 ]

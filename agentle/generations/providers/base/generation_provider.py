@@ -106,7 +106,7 @@ class GenerationProvider(abc.ABC):
         *,
         model: str | None = None,
         prompt: str | Prompt | Part | Sequence[Part],
-        developer_prompt: str | Prompt,
+        developer_prompt: str | Prompt | None = None,
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool] | None = None,
@@ -145,7 +145,7 @@ class GenerationProvider(abc.ABC):
         *,
         model: str | None = None,
         prompt: str | Prompt | Part | Sequence[Part],
-        developer_prompt: str | Prompt,
+        developer_prompt: str | Prompt | None = None,
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
         tools: Sequence[Tool] | None = None,
@@ -187,6 +187,8 @@ class GenerationProvider(abc.ABC):
                 developer_message_parts = [TextPart(text=developer_prompt)]
             case Prompt():
                 developer_message_parts = [TextPart(text=developer_prompt.content)]
+            case _:
+                developer_message_parts = [TextPart(text="You are a helpful assistant.")]
 
         user_message = UserMessage(parts=user_message_parts)
         developer_message = DeveloperMessage(
