@@ -1,13 +1,10 @@
 [project]
 name = "agentle"
-version = "v0.1.9"
+version = "v0.2.0"
 description = "..."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "mcp[cli]>=1.6.0",
-    "rock-solid-base>=0.0.28",
-]
+dependencies = ["mcp[cli]>=1.6.0", "rock-solid-base>=0.0.28"]
 
 [[project.authors]]
 name = "Arthur Brenno"
@@ -25,62 +22,7 @@ packages = ["agentle"]
 
 [dependency-groups]
 cache = ["aiocache>=0.12.3"]
-dev = [
-    "aiocache>=0.12.3",
-    "aiofiles>=24.1.0",
-    "aiohttp>=3.11.18",
-    "aiomysql>=0.2.0",
-    "aioodbc>=0.5.0",
-    "aiopg>=1.4.0",
-    "aiosqlite>=0.21.0",
-    "asyncmy>=0.2.10",
-    "asyncpg>=0.30.0",
-    "blacksheep>=2.2.0",
-    "cassandra-driver>=3.29.2",
-    "cerebras-cloud-sdk>=1.29.0",
-    "couchbase>=4.3.5",
-    "furo>=2024.8.6",
-    "google-genai>=1.11.0",
-    "influxdb-client>=1.48.0",
-    "ipykernel>=6.29.5",
-    "langfuse>=2.60.3",
-    "mariadb>=1.1.12",
-    "markdownify>=1.1.0",
-    "motor>=3.7.0",
-    "mypy>=1.15.0",
-    "mysql-connector-python>=9.3.0",
-    "openai>=1.77.0",
-    "openai-agents>=0.0.11",
-    "openpyxl>=3.1.5",
-    "oracledb>=3.1.0",
-    "pandas>=2.2.3",
-    "pikepdf>=9.7.0",
-    "pillow>=11.2.1",
-    "playwright>=1.52.0",
-    "psycopg>=3.2.7",
-    "pydantic>=2.11.3",
-    "pydantic-ai>=0.1.3",
-    "pyinstrument>=5.0.1",
-    "pymongo>=4.12.1",
-    "pymssql>=2.3.4",
-    "pymupdf>=1.25.5",
-    "pyodbc>=5.2.0",
-    "pypdf>=5.4.0",
-    "pytest>=8.3.5",
-    "python-docx>=1.1.2",
-    "python-dotenv>=1.1.0",
-    "python-pptx>=1.0.2",
-    "r2r>=3.5.14",
-    "rarfile>=4.2",
-    "redis>=6.0.0",
-    "reportlab>=4.4.1",
-    "rethinkdb>=2.4.10.post1",
-    "sphinx>=8.2.3",
-    "streamlit>=1.45.0",
-    "svg-path>=6.3",
-    "uvicorn>=0.34.1",
-    "weasyprint>=65.1",
-]
+dev = ["aiocache>=0.12.3", "aiofiles>=24.1.0", "aiohttp>=3.11.18", "aiomysql>=0.2.0", "aioodbc>=0.5.0", "aiopg>=1.4.0", "aiosqlite>=0.21.0", "asyncmy>=0.2.10", "asyncpg>=0.30.0", "blacksheep>=2.2.0", "cassandra-driver>=3.29.2", "cerebras-cloud-sdk>=1.29.0", "couchbase>=4.3.5", "furo>=2024.8.6", "google-genai>=1.11.0", "influxdb-client>=1.48.0", "ipykernel>=6.29.5", "langfuse>=2.60.3", "mariadb>=1.1.12", "markdownify>=1.1.0", "motor>=3.7.0", "mypy>=1.15.0", "mysql-connector-python>=9.3.0", "openai>=1.77.0", "openai-agents>=0.0.11", "openpyxl>=3.1.5", "oracledb>=3.1.0", "pandas>=2.2.3", "pikepdf>=9.7.0", "pillow>=11.2.1", "playwright>=1.52.0", "psycopg>=3.2.7", "pydantic>=2.11.3", "pydantic-ai>=0.1.3", "pyinstrument>=5.0.1", "pymongo>=4.12.1", "pymssql>=2.3.4", "pymupdf>=1.25.5", "pyodbc>=5.2.0", "pypdf>=5.4.0", "pytest>=8.3.5", "python-docx>=1.1.2", "python-dotenv>=1.1.0", "python-pptx>=1.0.2", "r2r>=3.5.14", "rarfile>=4.2", "redis>=6.0.0", "reportlab>=4.4.1", "rethinkdb>=2.4.10.post1", "sphinx>=8.2.3", "streamlit>=1.45.0", "svg-path>=6.3", "uvicorn>=0.34.1", "weasyprint>=65.1"]
 dev-db-rel = ["aiomysql>=0.2.0", "aioodbc>=0.5.0", "aiopg>=1.4.0", "aiosqlite>=0.21.0", "asyncmy>=0.2.10", "asyncpg>=0.30.0", "cx-oracle>=8.3.0", "ibm-db>=3.2.6", "mariadb>=1.1.12", "mysql-connector-python>=9.3.0", "oracledb>=3.1.0", "psycopg>=3.2.7", "psycopg2-binary>=2.9.10", "pymssql>=2.3.4", "pymysql>=1.1.1", "pyodbc>=5.2.0"]
 dev-rb-nosql = ["aiocouch>=3.0.1", "aioinflux>=0.9.0", "aiomcache>=0.8.2", "aioredis>=2.0.1", "cassandra-driver>=3.29.2", "couchbase>=4.3.5", "influxdb-client>=1.48.0", "motor>=3.7.0", "pylibmc>=1.6.3", "pymongo>=4.12.1", "python-memcached>=1.62", "redis>=6.0.0", "rethinkdb>=2.4.10.post1"]
 google = ["google-genai>=1.11.0"]
