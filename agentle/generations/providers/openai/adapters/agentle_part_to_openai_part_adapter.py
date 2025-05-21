@@ -38,7 +38,7 @@ class AgentlePartToOpenaiPartAdapter(
 
         match part:
             case TextPart():
-                return ChatCompletionContentPartTextParam(text=part.text, type="text")
+                return ChatCompletionContentPartTextParam(text=str(part), type="text")
             case FilePart():
                 mime_type = part.mime_type
                 if mime_type.startswith("image/"):

@@ -70,13 +70,13 @@ class AgentleMessageToCerebrasMessageAdapter(
         match _f:
             case AssistantMessage():
                 return MessageAssistantMessageRequestTyped(
-                    role="assistant", content="".join(p.text for p in _f.parts)
+                    role="assistant", content="".join(str(p) for p in _f.parts)
                 )
             case DeveloperMessage():
                 return MessageSystemMessageRequestTyped(
-                    role="system", content="".join(p.text for p in _f.parts)
+                    role="system", content="".join(str(p) for p in _f.parts)
                 )
             case UserMessage():
                 return MessageUserMessageRequestTyped(
-                    role="user", content="".join(p.text for p in _f.parts)
+                    role="user", content="".join(str(p) for p in _f.parts)
                 )

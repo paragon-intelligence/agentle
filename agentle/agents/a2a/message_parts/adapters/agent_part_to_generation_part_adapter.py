@@ -70,7 +70,9 @@ class AgentPartToGenerationPartAdapter(
         """
         match _f:
             case TextPart():
-                return GenerationTextPart(text=_f.text)
+                return GenerationTextPart(
+                    text=_f.text if isinstance(_f.text, str) else _f.text.text
+                )
             case DataPart():
                 # Treat DataPart as TextPart for now
                 return GenerationTextPart(text=str(_f.data))

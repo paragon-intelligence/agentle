@@ -13,6 +13,8 @@ from typing import Literal
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
+from agentle.prompts.models.prompt import Prompt
+
 
 class TextPart(BaseModel):
     """
@@ -48,5 +50,5 @@ class TextPart(BaseModel):
     type: Literal["text"] = Field(default="text")
     """The type of the message part, always "text" """
 
-    text: str
+    text: str | Prompt
     """The text content of the message part"""

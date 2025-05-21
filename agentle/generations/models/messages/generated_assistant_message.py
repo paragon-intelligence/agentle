@@ -59,4 +59,7 @@ class GeneratedAssistantMessage[T](BaseModel):
         Returns:
             str: The concatenated text of all message parts.
         """
-        return "".join(part.text for part in self.parts)
+        return "".join(
+            part.text if isinstance(part.text, str) else part.text.text
+            for part in self.parts
+        )

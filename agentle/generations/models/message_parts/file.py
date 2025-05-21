@@ -39,6 +39,9 @@ class FilePart(BaseModel):
         """
         return f"<file>\n{self.mime_type}\n </file>"
 
+    def __str__(self) -> str:
+        return self.text
+
     def __post_init__(self) -> None:
         """
         Validates that the provided MIME type is official.

@@ -144,7 +144,7 @@ class PartToGooglePartAdapter(
 
         match _f:
             case TextPart():
-                return GooglePart(text=_f.text)
+                return GooglePart(text=str(_f))
             case FilePart():
                 return GooglePart(
                     inline_data=Blob(data=_f.data, mime_type=_f.mime_type)

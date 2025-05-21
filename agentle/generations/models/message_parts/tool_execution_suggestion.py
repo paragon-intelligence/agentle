@@ -46,3 +46,6 @@ class ToolExecutionSuggestion(BaseModel):
             str: A text representation containing the tool name and arguments.
         """
         return f"Tool: {self.tool_name}\nArgs: {self.args}"
+
+    def __str__(self) -> str:
+        return self.text

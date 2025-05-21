@@ -415,3 +415,6 @@ class Tool[T_Output = Any](BaseModel):
         instance._callable_ref = _callable
 
         return instance
+
+    def __str__(self) -> str:
+        return self.text
