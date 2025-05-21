@@ -301,7 +301,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     The model to use for the agent's service provider.
     """
 
-    instructions: str | Callable[[], str] | Sequence[str] = Field(
+    instructions: str | Prompt | Callable[[], str] | Sequence[str] = Field(
         default="You are a helpful assistant."
     )
     """
@@ -1158,7 +1158,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         )
 
     def _convert_instructions_to_str(
-        self, instructions: str | Callable[[], str] | Sequence[str]
+        self, instructions: str | Prompt | Callable[[], str] | Sequence[str]
     ) -> str:
         """
         Converts the instructions to a string.
@@ -1174,6 +1174,8 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         """
         if isinstance(instructions, str):
             return instructions
+        elif isinstance(instructions, Prompt):
+            return instructions.text
         elif callable(instructions):
             return instructions()
         else:
