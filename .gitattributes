@@ -29,8 +29,8 @@
 * linguist-vendored
 *.js linguist-vendored=false
 *.css linguist-vendored=false
-*.html linguist-vendored=false
 *.json linguist-vendored=false
 *.md linguist-vendored=false
 *.txt linguist-vendored=false
 *.yaml linguist-vendored=false
+*.py linguist-vendored=false
