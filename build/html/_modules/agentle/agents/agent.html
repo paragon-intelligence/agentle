@@ -855,7 +855,7 @@
 <span class="sd">    The model to use for the agent&#39;s service provider.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Prompt</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
     <span class="p">)</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1736,7 +1736,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_convert_instructions_to_str</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Prompt</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Converts the instructions to a string.</span>
@@ -1752,6 +1752,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instructions</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">instructions</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instructions</span><span class="p">,</span> <span class="n">Prompt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">instructions</span><span class="o">.</span><span class="n">text</span>
         <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">instructions</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">instructions</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
