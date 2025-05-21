@@ -24,10 +24,11 @@ from agentle.generations.tracing.contracts.stateful_observability_client import 
 )
 from agentle.generations.tracing.tracing_manager import TracingManager
 
-T = TypeVar('T')
-P = TypeVar('P', bound=dict[str, Any])
+T = TypeVar("T")
+P = TypeVar("P", bound=dict[str, Any])
 
 logger = logging.getLogger(__name__)
+
 
 def observe(
     func: Callable[..., Coroutine[Any, Any, Generation[Any]]],
@@ -219,9 +220,9 @@ def observe(
                     await trace_client.score_trace(
                         name="trace_success",
                         value=1.0,
-                        comment="Generation completed successfully"
+                        comment="Generation completed successfully",
                     )
-                    
+
                     # Calculate latency score based on response time
                     latency_seconds = (datetime.now() - start_time).total_seconds()
                     latency_score = 0.0
@@ -230,81 +231,103 @@ def observe(
                     elif latency_seconds < 3.0:
                         latency_score = 0.8  # Good (1-3 seconds)
                     elif latency_seconds < 6.0:
-                        latency_score = 0.6  # Acceptable (3-6 seconds) 
+                        latency_score = 0.6  # Acceptable (3-6 seconds)
                     elif latency_seconds < 10.0:
                         latency_score = 0.4  # Slow (6-10 seconds)
                     else:
                         latency_score = 0.2  # Very slow (>10 seconds)
-                    
+
                     await trace_client.score_trace(
                         name="latency_score",
                         value=latency_score,
-                        comment=f"Response time: {latency_seconds:.2f}s"
+                        comment=f"Response time: {latency_seconds:.2f}s",
                     )
-                    
+
                     # Model tier score - categorize models by capability level
                     model_tier = 0.5  # Default for basic models
                     model_name = model.lower()
-                    
+
                     # Advanced models get higher scores
-                    if any(premium in model_name for premium in ["gpt-4", "claude-3-opus", "claude-3-sonnet", "gemini-1.5-pro", "gemini-2.0-pro", "claude-3-7"]):
+                    if any(
+                        premium in model_name
+                        for premium in [
+                            "gpt-4",
+                            "claude-3-opus",
+                            "claude-3-sonnet",
+                            "gemini-1.5-pro",
+                            "gemini-2.0-pro",
+                            "claude-3-7",
+                        ]
+                    ):
                         model_tier = 1.0
-                    elif any(mid in model_name for mid in ["gemini-1.5-flash", "gemini-2.0-flash", "claude-3-haiku", "gpt-3.5"]):
+                    elif any(
+                        mid in model_name
+                        for mid in [
+                            "gemini-1.5-flash",
+                            "gemini-2.0-flash",
+                            "claude-3-haiku",
+                            "gpt-3.5",
+                        ]
+                    ):
                         model_tier = 0.7
-                    
+
                     await trace_client.score_trace(
                         name="model_tier",
                         value=model_tier,
-                        comment=f"Model capability tier: {model}"
+                        comment=f"Model capability tier: {model}",
                     )
-                    
+
                     # Add tool usage score if tools were provided
                     if tools is not None and len(tools) > 0:
                         # Use the Generation's API to access tool calls
                         tool_calls = response.tool_calls
-                        
+
                         # Score based on whether tools were used when available
                         tool_usage_score = 0.0
                         if tool_calls and len(tool_calls) > 0:
                             tool_usage_score = 1.0  # Tools were used
-                            tool_comment = f"Tools were used ({len(tool_calls)} function calls)"
+                            tool_comment = (
+                                f"Tools were used ({len(tool_calls)} function calls)"
+                            )
                         else:
                             # Tools were available but not used
                             tool_usage_score = 0.0
                             tool_comment = "Tools were available but not used"
-                        
+
                         await trace_client.score_trace(
                             name="tool_usage",
                             value=tool_usage_score,
-                            comment=tool_comment
+                            comment=tool_comment,
                         )
-                    
+
                     # Token efficiency and cost scores (when token data is available)
                     if usage_details:
                         input_tokens = int(usage_details.get("input", 0))
                         output_tokens = int(usage_details.get("output", 0))
-                        
+
                         # Only calculate if we have meaningful token counts
                         if input_tokens > 0 and output_tokens > 0:
                             # Token efficiency score (balance between input and useful output)
                             # A ratio of output to input between 0.3 and 0.7 is generally good
                             # Too low means little output for input, too high might mean verbose output
-                            ratio = min(1.0, float(output_tokens) / max(1, float(input_tokens)))
+                            ratio = min(
+                                1.0, float(output_tokens) / max(1, float(input_tokens))
+                            )
                             efficiency_score = 0.0
-                            
+
                             if 0.2 <= ratio <= 0.8:
                                 # Ideal range gets highest score
                                 efficiency_score = 1.0 - abs(0.5 - ratio)
                             else:
                                 # Outside ideal range gets lower scores
                                 efficiency_score = max(0.0, 0.5 - abs(0.5 - ratio))
-                            
+
                             await trace_client.score_trace(
                                 name="token_efficiency",
                                 value=efficiency_score,
-                                comment=f"Token ratio (output/input): {ratio:.2f}"
+                                comment=f"Token ratio (output/input): {ratio:.2f}",
                             )
-                        
+
                         # Cost efficiency score (when cost details are available)
                         if cost_details:
                             total_cost = float(cost_details.get("total", 0))
@@ -323,11 +346,11 @@ def observe(
                                     cost_score = 0.4  # Expensive ($0.05-$0.1)
                                 else:
                                     cost_score = 0.2  # Very expensive (>$0.1)
-                                
+
                                 await trace_client.score_trace(
                                     name="cost_efficiency",
                                     value=cost_score,
-                                    comment=f"Cost: ${total_cost:.4f}"
+                                    comment=f"Cost: ${total_cost:.4f}",
                                 )
                 except Exception as e:
                     logger.warning(f"Failed to add trace scores: {e}")
@@ -348,40 +371,57 @@ def observe(
                 try:
                     error_type = type(e).__name__
                     error_str = str(e)
-                    
+
                     # Main trace success score (already implemented)
                     await trace_client.score_trace(
                         name="trace_success",
                         value=0.0,
-                        comment=f"Error: {error_type} - {error_str[:100]}"
+                        comment=f"Error: {error_type} - {error_str[:100]}",
                     )
-                    
+
                     # Add error category score for better filtering
                     error_category = "other"
-                    
+
                     # Categorize common error types
                     if "timeout" in error_str.lower() or "time" in error_type.lower():
                         error_category = "timeout"
-                    elif "connection" in error_str.lower() or "network" in error_str.lower():
+                    elif (
+                        "connection" in error_str.lower()
+                        or "network" in error_str.lower()
+                    ):
                         error_category = "network"
-                    elif "auth" in error_str.lower() or "key" in error_str.lower() or "credential" in error_str.lower():
+                    elif (
+                        "auth" in error_str.lower()
+                        or "key" in error_str.lower()
+                        or "credential" in error_str.lower()
+                    ):
                         error_category = "authentication"
-                    elif "limit" in error_str.lower() or "quota" in error_str.lower() or "rate" in error_str.lower():
+                    elif (
+                        "limit" in error_str.lower()
+                        or "quota" in error_str.lower()
+                        or "rate" in error_str.lower()
+                    ):
                         error_category = "rate_limit"
-                    elif "value" in error_type.lower() or "type" in error_type.lower() or "attribute" in error_type.lower():
+                    elif (
+                        "value" in error_type.lower()
+                        or "type" in error_type.lower()
+                        or "attribute" in error_type.lower()
+                    ):
                         error_category = "validation"
-                    elif "memory" in error_str.lower() or "resource" in error_str.lower():
+                    elif (
+                        "memory" in error_str.lower() or "resource" in error_str.lower()
+                    ):
                         error_category = "resource"
-                    
+
                     await trace_client.score_trace(
                         name="error_category",
                         value=error_category,
-                        comment=f"Error classified as: {error_category}"
+                        comment=f"Error classified as: {error_category}",
                     )
-                    
+
                     # Add error severity score
                     severity = 0.7  # Default medium-high severity
-                    
+
                     # Adjust severity based on error type
                     if error_category in ["timeout", "network", "rate_limit"]:
                         # Transient errors - lower severity
@@ -389,23 +429,23 @@ def observe(
                     elif error_category in ["authentication", "validation"]:
                         # Configuration/code errors - higher severity
                         severity = 0.9
-                    
+
                     await trace_client.score_trace(
                         name="error_severity",
                         value=severity,
-                        comment=f"Error severity: {severity:.1f}"
+                        comment=f"Error severity: {severity:.1f}",
                     )
-                    
+
                     # Calculate latency until error
                     error_latency = (datetime.now() - start_time).total_seconds()
                     await trace_client.score_trace(
                         name="error_latency",
                         value=error_latency,
-                        comment=f"Time until error: {error_latency:.2f}s"
+                        comment=f"Time until error: {error_latency:.2f}s",
                     )
                 except Exception as scoring_error:
                     logger.warning(f"Failed to add trace error scores: {scoring_error}")
-            
+
             # Handle errors using the tracing manager
             await tracing_manager.handle_error(
                 generation_client=generation_client,

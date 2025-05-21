@@ -25,6 +25,7 @@ from rsb.contracts.maybe_protocol import MaybeProtocol
 
 import logging
 
+
 class TracingManager:
     """
     Manager for tracing AI generation activities across all providers.
@@ -41,7 +42,8 @@ class TracingManager:
     def __init__(
         self,
         *,
-        tracing_client: Optional[StatefulObservabilityClient] | MaybeProtocol[StatefulObservabilityClient] = None,
+        tracing_client: Optional[StatefulObservabilityClient]
+        | MaybeProtocol[StatefulObservabilityClient] = None,
         provider: GenerationProvider,
     ) -> None:
         """
@@ -83,28 +85,26 @@ class TracingManager:
 
         # Get the actual tracing client from Maybe container if needed
         actual_tracing_client: Optional[StatefulObservabilityClient] = None
-        
+
         # If it's a Maybe container, try to get the value
         if isinstance(self.tracing_client, MaybeProtocol):
             # Try to unwrap the Maybe if it has a value
             if hasattr(self.tracing_client, "unwrap"):
                 try:
                     actual_tracing_client = cast(
-                        StatefulObservabilityClient, 
-                        self.tracing_client.unwrap()
+                        StatefulObservabilityClient, self.tracing_client.unwrap()
                     )
                 except Exception:
                     return None, None
             # Fallback if unwrap is not available
             elif hasattr(self.tracing_client, "value_or"):
                 actual_tracing_client = cast(
-                    StatefulObservabilityClient,
-                    self.tracing_client.value_or(None)
+                    StatefulObservabilityClient, self.tracing_client.value_or(None)
                 )
         else:
             # Not a Maybe container, use directly
             actual_tracing_client = self.tracing_client
-        
+
         # If we couldn't get a valid client, return None
         if actual_tracing_client is None:
             return None, None
@@ -159,7 +159,6 @@ class TracingManager:
             # Fall back to no tracing if we encounter errors
             trace_client = None
             self._logger.error(f"Error setting up trace: {e}")
-
 
         # Set up generation tracing
         generation_client = None
@@ -322,12 +321,14 @@ class TracingManager:
         try:
             # Add a trace success score
             success_value = 1.0 if success else 0.0
-            success_comment = "Trace completed successfully" if success else "Trace encountered an error"
-            
+            success_comment = (
+                "Trace completed successfully"
+                if success
+                else "Trace encountered an error"
+            )
+
             await trace_client.score_trace(
-                name="trace_success",
-                value=success_value,
-                comment=success_comment
+                name="trace_success", value=success_value, comment=success_comment
             )
 
             # Complete the trace
@@ -338,24 +339,22 @@ class TracingManager:
 
             # Flush events and clean up
             actual_tracing_client: Optional[StatefulObservabilityClient] = None
-            
+
             if isinstance(self.tracing_client, MaybeProtocol):
                 if hasattr(self.tracing_client, "unwrap"):
                     try:
                         actual_tracing_client = cast(
-                            StatefulObservabilityClient,
-                            self.tracing_client.unwrap()
+                            StatefulObservabilityClient, self.tracing_client.unwrap()
                         )
                     except Exception:
                         pass
                 elif hasattr(self.tracing_client, "value_or"):
                     actual_tracing_client = cast(
-                        StatefulObservabilityClient,
-                        self.tracing_client.value_or(None)
+                        StatefulObservabilityClient, self.tracing_client.value_or(None)
                     )
             else:
                 actual_tracing_client = self.tracing_client
-                
+
             if actual_tracing_client:
                 fire_and_forget(
                     actual_tracing_client.flush,

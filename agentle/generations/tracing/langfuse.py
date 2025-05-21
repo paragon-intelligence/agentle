@@ -552,9 +552,7 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         )
 
         if cost_details and "currency" in cost_details:
-            cost_details = {
-                k: v for k, v in cost_details.items() if k != "currency"
-            }
+            cost_details = {k: v for k, v in cost_details.items() if k != "currency"}
 
         if self._stateful_client:
             if isinstance(
@@ -637,18 +635,17 @@ class LangfuseObservabilityClient(StatefulObservabilityClient):
         """
         try:
             target_trace_id = trace_id or self._trace_id
-            
+
             if not target_trace_id:
                 self._logger.warning("Cannot add score: No trace ID available")
                 return
-                
+
             if self._client:
                 self._client.score(
-                    trace_id=target_trace_id,
-                    name=name,
-                    value=value,
-                    comment=comment
+                    trace_id=target_trace_id, name=name, value=value, comment=comment
                 )
-                self._logger.debug(f"Added score '{name}' with value '{value}' to trace {target_trace_id}")
+                self._logger.debug(
+                    f"Added score '{name}' with value '{value}' to trace {target_trace_id}"
+                )
         except Exception as e:
             self._logger.error(f"Error adding score to trace: {e}")

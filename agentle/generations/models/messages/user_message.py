@@ -2,6 +2,7 @@
 Module defining the UserMessage class representing messages from users.
 """
 
+from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -32,3 +33,19 @@ class UserMessage(BaseModel):
     parts: Sequence[TextPart | FilePart | Tool[Any] | ToolExecutionSuggestion] = Field(
         description="The sequence of message parts that make up this user message.",
     )
+
+    name: str | None = Field(
+        default=None,
+        description="The name of the user. If not provided, it will be set to 'User'.",
+    )
+
+    def prepend_name_to_parts(
+        self,
+    ) -> Sequence[TextPart | FilePart | Tool[Any] | ToolExecutionSuggestion]:
+        return (
+            [TextPart(text=f"<name:{self.name}>")]
+            + list(self.parts)
+            + [TextPart(text=f"</name>")]
+            if self.name
+            else self.parts
+        )

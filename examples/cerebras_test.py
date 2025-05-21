@@ -1,4 +1,6 @@
-from agentle.generations.providers.cerebras.cerebras_generation_provider import CerebrasGenerationProvider
+from agentle.generations.providers.cerebras.cerebras_generation_provider import (
+    CerebrasGenerationProvider,
+)
 from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 
 

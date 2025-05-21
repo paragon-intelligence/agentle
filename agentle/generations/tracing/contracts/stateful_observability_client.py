@@ -344,7 +344,7 @@ class StatefulObservabilityClient(abc.ABC):
         """
         Add a score to a trace.
 
-        Scores provide quantitative or categorical assessments of trace quality or performance. 
+        Scores provide quantitative or categorical assessments of trace quality or performance.
         They can be used for filtering, sorting, and analysis in the observability platform.
 
         Args:
@@ -359,7 +359,7 @@ class StatefulObservabilityClient(abc.ABC):
             ```python
             # Mark a trace as successful
             await client.score_trace(name="trace_success", value=1.0, comment="Completed without errors")
-            
+
             # Categorize a trace
             await client.score_trace(name="response_type", value="detailed", comment="Comprehensive answer")
             ```
@@ -420,7 +420,7 @@ class StatefulObservabilityClient(abc.ABC):
             start_time: Start time for calculating latency
             metadata: Additional metadata
             usage_details: Usage information (tokens, etc.)
-            cost_details: Cost information 
+            cost_details: Cost information
 
         Returns:
             The parent stateful client
@@ -433,7 +433,7 @@ class StatefulObservabilityClient(abc.ABC):
 
         if metadata:
             complete_metadata.update(metadata)
-        
+
         # Make sure that cost_details contains proper field names
         if cost_details and "total" in cost_details:
             # Ensure we have all necessary fields with consistent naming
@@ -441,7 +441,7 @@ class StatefulObservabilityClient(abc.ABC):
                 "input": cost_details.get("input", 0.0),
                 "output": cost_details.get("output", 0.0),
                 "total": cost_details.get("total", 0.0),
-                "currency": cost_details.get("currency", "USD")
+                "currency": cost_details.get("currency", "USD"),
             }
             cost_details = standardized_cost
 

@@ -35,6 +35,7 @@ class RedisSessionManager(SessionManager):
             expiration_seconds: Time in seconds before sessions expire
         """
         import redis.asyncio as redis_async
+
         self._redis = redis_async.from_url(redis_url)
         self._key_prefix = key_prefix
         self._expiration_seconds = expiration_seconds
@@ -86,6 +87,7 @@ class RedisSessionManager(SessionManager):
             session_data: The session data to store
         """
         from redis.exceptions import RedisError
+
         try:
             redis_key = self._get_redis_key(server_key)
             serialized_data = json.dumps(session_data)
