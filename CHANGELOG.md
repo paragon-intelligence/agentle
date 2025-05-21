@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.2.3
+## v0.2.4
 
-- feat: new create_named classmethod in UserMessage to create user messages that have custom names
+- feat: adding support for "Prompt" instances to be in the "text" attribute of "TextPart"
