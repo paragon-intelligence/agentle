@@ -346,10 +346,12 @@ class GoogleGenerationProvider(GenerationProvider):
                 response.usage.completion_tokens if response.usage else 0
             )
 
-            input_cost = self.price_per_million_tokens_input(used_model, prompt_tokens)
+            input_cost = self.price_per_million_tokens_input(
+                used_model, prompt_tokens
+            ) * (prompt_tokens / 1_000_000)
             output_cost = self.price_per_million_tokens_output(
                 used_model, completion_tokens
-            )
+            ) * (completion_tokens / 1_000_000)
             total_cost = input_cost + output_cost
 
             # MODIFY THIS PART - Remove currency field
