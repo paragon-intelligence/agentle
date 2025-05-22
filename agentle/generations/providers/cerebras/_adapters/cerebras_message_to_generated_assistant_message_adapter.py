@@ -98,16 +98,13 @@ class CerebrasMessageToGeneratedAssistantMessageAdapter[T](
             _f.tool_calls
         )
 
-        tool_call_parts: MutableSequence[ToolExecutionSuggestion] = []
-
-        if tool_calls:
-            for tool_call in tool_calls:
-                tool_call_parts.append(
-                    ToolExecutionSuggestion(
-                        tool_name=tool_call.function.name,
-                        args=json.loads(tool_call.function.arguments),
-                    )
-                )
+        tool_call_parts: MutableSequence[ToolExecutionSuggestion] = [
+            ToolExecutionSuggestion(
+                tool_name=tool_call.function.name,
+                args=json.loads(tool_call.function.arguments),
+            )
+            for tool_call in (tool_calls or [])
+        ]
 
         return GeneratedAssistantMessage[T](
             parts=[TextPart(text=content)] + tool_call_parts,
