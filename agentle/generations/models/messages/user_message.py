@@ -41,6 +41,17 @@ class UserMessage(BaseModel):
         parts: Sequence[TextPart | FilePart | Tool[Any] | ToolExecutionSuggestion],
         name: str | None = None,
     ) -> UserMessage:
+        """
+        Creates a user message with a name tag wrapped around the parts.
+
+        Args:
+            parts: The sequence of message parts to include in the message.
+            name: Optional name to tag this message with. If provided, the parts will
+                  be wrapped with <name:{name}> and </name:{name}> tags.
+
+        Returns:
+            A UserMessage instance with the parts wrapped in name tags if a name is provided.
+        """
         return cls(
             role="user",
             parts=[TextPart(text=f"<name:{name}>")]
