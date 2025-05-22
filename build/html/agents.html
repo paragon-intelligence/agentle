@@ -619,6 +619,117 @@
 </table>
 </div>
 </section>
+<section id="using-modelkind-for-provider-independence">
+<h2>Using ModelKind for Provider Independence<a class="headerlink" href="#using-modelkind-for-provider-independence" title="Link to this heading">¶</a></h2>
+<p>Agentle provides a powerful abstraction called <code class="docutils literal notranslate"><span class="pre">ModelKind</span></code> that decouples your code from specific provider model names. Instead of using provider-specific model identifiers, you can use standardized capability categories:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenerationProvider</span>
+
+<span class="c1"># Using provider-specific model name</span>
+<span class="n">agent1</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>  <span class="c1"># Only works with Google</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Using ModelKind for provider-agnostic code</span>
+<span class="n">agent2</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenerationProvider</span><span class="p">(),</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;category_standard&quot;</span><span class="p">,</span>  <span class="c1"># Works with any provider</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<section id="available-modelkind-categories">
+<h3>Available ModelKind Categories<a class="headerlink" href="#available-modelkind-categories" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-given docutils container">
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 70.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ModelKind</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category_nano</span></code></p></td>
+<td><p>Smallest, fastest, most cost-effective models (e.g., GPT-4.1 nano)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category_mini</span></code></p></td>
+<td><p>Small but capable models (e.g., GPT-4.1 mini, Claude Haiku)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category_standard</span></code></p></td>
+<td><p>Mid-range, balanced performance (e.g., Claude Sonnet, Gemini Flash)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category_pro</span></code></p></td>
+<td><p>High performance models (e.g., Gemini Pro, GPT-4 Turbo)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category_flagship</span></code></p></td>
+<td><p>Best available models from each provider (e.g., Claude Opus, GPT-4.5)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category_reasoning</span></code></p></td>
+<td><p>Specialized for complex reasoning tasks</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category_vision</span></code></p></td>
+<td><p>Optimized for multimodal capabilities with image/video processing</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category_coding</span></code></p></td>
+<td><p>Specialized for programming tasks</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category_instruct</span></code></p></td>
+<td><p>Fine-tuned for instruction following</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="benefits-of-modelkind">
+<h3>Benefits of ModelKind<a class="headerlink" href="#benefits-of-modelkind" title="Link to this heading">¶</a></h3>
+<p>Using ModelKind provides several important benefits:</p>
+<ol class="arabic simple">
+<li><p><strong>Provider Independence</strong>: Your code works with any AI provider without modification</p></li>
+<li><p><strong>Future-Proof</strong>: When providers release new models, only the internal mapping tables need to be updated</p></li>
+<li><p><strong>Capability-Based Selection</strong>: Select models based on capabilities rather than provider-specific names</p></li>
+<li><p><strong>Simplified Failover</strong>: When using <code class="docutils literal notranslate"><span class="pre">FailoverGenerationProvider</span></code>, each provider automatically maps to its equivalent model</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a failover provider with multiple underlying providers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.failover.failover_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">FailoverGenerationProvider</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleGenerationProvider</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.openai.openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenaiGenerationProvider</span>
+
+<span class="n">failover</span> <span class="o">=</span> <span class="n">FailoverGenerationProvider</span><span class="p">(</span>
+    <span class="n">generation_providers</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">GoogleGenerationProvider</span><span class="p">(),</span>
+        <span class="n">OpenaiGenerationProvider</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your-openai-key&quot;</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Using a specific model would fail with providers that don&#39;t support it</span>
+<span class="c1"># agent = Agent(generation_provider=failover, model=&quot;gpt-4o&quot;)  # Will fail for Google</span>
+
+<span class="c1"># Using ModelKind ensures compatibility across all providers</span>
+<span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+    <span class="n">generation_provider</span><span class="o">=</span><span class="n">failover</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;category_pro&quot;</span><span class="p">,</span>  <span class="c1"># Mapped to appropriate model by each provider</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="how-modelkind-works">
+<h3>How ModelKind Works<a class="headerlink" href="#how-modelkind-works" title="Link to this heading">¶</a></h3>
+<p>Behind the scenes, Agentle uses a decorator that:</p>
+<ol class="arabic simple">
+<li><p>Intercepts calls to the provider’s <code class="docutils literal notranslate"><span class="pre">create_generation_async</span></code> method</p></li>
+<li><p>Checks if the model parameter is a ModelKind value</p></li>
+<li><p>Calls the provider’s <code class="docutils literal notranslate"><span class="pre">map_model_kind_to_provider_model</span></code> method to get the provider-specific model name</p></li>
+<li><p>Substitutes this mapped value before the actual provider method is called</p></li>
+</ol>
+<p>Each provider implements its own mapping function to translate ModelKind values to the most appropriate model for that provider.</p>
+</section>
+</section>
 <section id="creating-specialized-agents">
 <h2>Creating Specialized Agents<a class="headerlink" href="#creating-specialized-agents" title="Link to this heading">¶</a></h2>
 <p>You can create agents specialized for particular domains by customizing the instructions and other parameters:</p>
@@ -763,6 +874,12 @@
 <li><a class="reference internal" href="#">Agents</a><ul>
 <li><a class="reference internal" href="#basic-agent-creation">Basic Agent Creation</a></li>
 <li><a class="reference internal" href="#agent-parameters">Agent Parameters</a></li>
+<li><a class="reference internal" href="#using-modelkind-for-provider-independence">Using ModelKind for Provider Independence</a><ul>
+<li><a class="reference internal" href="#available-modelkind-categories">Available ModelKind Categories</a></li>
+<li><a class="reference internal" href="#benefits-of-modelkind">Benefits of ModelKind</a></li>
+<li><a class="reference internal" href="#how-modelkind-works">How ModelKind Works</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#creating-specialized-agents">Creating Specialized Agents</a></li>
 <li><a class="reference internal" href="#running-agents">Running Agents</a></li>
 <li><a class="reference internal" href="#agent-response-structure">Agent Response Structure</a></li>
