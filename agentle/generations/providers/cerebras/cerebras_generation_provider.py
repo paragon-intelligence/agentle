@@ -215,6 +215,8 @@ class CerebrasGenerationProvider(GenerationProvider):
             if _generation_config.timeout
             else _generation_config.timeout_s * 1000
             if _generation_config.timeout_s
+            else _generation_config.timeout_m * 60 * 1000
+            if _generation_config.timeout_m
             else None,
             max_retries=self.max_retries,
             default_headers=self.default_headers,

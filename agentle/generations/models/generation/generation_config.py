@@ -98,11 +98,24 @@ class GenerationConfig(BaseModel):
         examples=[10.0, 30.0, 60.0],
     )
 
+    timeout_m: float | None = Field(
+        default=None,
+        description="Maximum time in minutes to wait for a generation response before timing out. Helps prevent indefinite waits for slow or stuck generations. Recommended to set based on expected model and prompt complexity.",
+        gt=0,
+        examples=[1.0, 3.0, 6.0],
+    )
+
     @model_validator(mode="after")
     def validate_timeout(self) -> Self:
         # check if all timeout fields are set. only one of them should be set.
-        if self.timeout is not None and self.timeout_s is not None:
-            raise ValueError("Only one of timeout or timeout_s should be set.")
+        if (
+            self.timeout is not None
+            and self.timeout_s is not None
+            and self.timeout_m is not None
+        ):
+            raise ValueError(
+                "Only one of timeout or timeout_s or timeout_m should be set."
+            )
 
         return self
 

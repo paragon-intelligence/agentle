@@ -257,6 +257,8 @@ class GoogleGenerationProvider(GenerationProvider):
                 if _generation_config.timeout
                 else int(_generation_config.timeout_s * 1000)
                 if _generation_config.timeout_s
+                else int(_generation_config.timeout_m * 60 * 1000)
+                if _generation_config.timeout_m
                 else _http_options.timeout
             )
 

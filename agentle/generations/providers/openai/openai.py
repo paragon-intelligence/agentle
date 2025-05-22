@@ -113,15 +113,22 @@ class OpenaiGenerationProvider(GenerationProvider):
 
         _generation_config = generation_config or GenerationConfig()
 
+        # Calculate timeout based on available timeout parameters with correct priority
+        timeout = None
+        if _generation_config.timeout is not None:
+            timeout = _generation_config.timeout  # Already in milliseconds
+        elif _generation_config.timeout_s is not None:
+            timeout = _generation_config.timeout_s * 1000  # Convert to milliseconds
+        elif _generation_config.timeout_m is not None:
+            timeout = (
+                _generation_config.timeout_m * 60 * 1000
+            )  # Convert to milliseconds
+
         client = AsyncOpenAI(
             api_key=self.api_key,
             base_url=self.base_url,
             websocket_base_url=self.websocket_base_url,
-            timeout=_generation_config.timeout_s
-            if _generation_config.timeout_s
-            else _generation_config.timeout_s * 1000
-            if _generation_config.timeout_s is not None
-            else None,
+            timeout=timeout,
             max_retries=self.max_retries,
             default_headers=self.default_headers,
             default_query=self.default_query,
