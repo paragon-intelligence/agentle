@@ -40,7 +40,7 @@ structured_agent = Agent(
         project=os.getenv("GOOGLE_PROJECT_ID"),
         location=os.getenv("GOOGLE_LOCATION"),
     ),
-    model="gemini-2.0-flash",
+    model="category_standard",
     instructions="You are a weather forecasting assistant. When asked about weather, provide accurate forecasts.",
     response_schema=WeatherForecast,  # This defines the expected response structure
     config=AgentConfig(

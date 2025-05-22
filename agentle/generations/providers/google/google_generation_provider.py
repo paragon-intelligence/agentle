@@ -643,7 +643,7 @@ class GoogleGenerationProvider(GenerationProvider):
         mapping: Mapping[ModelKind, str] = {
             "category_nano": "gemini-2.0-flash-lite",  # smallest, cost-effective flash-lite model [4]
             "category_mini": "gemini-2.0-flash",  # mid-tier flash model [4]
-            "category_standard": "gemini-2.0",  # standard Gemini 2.0 model [4]
+            "category_standard": "gemini-2.0-flash",  # standard Gemini 2.0 model [4]
             "category_pro": "gemini-2.5-pro",  # high performance pro model [4]
             "category_flagship": "gemini-2.5-pro",  # flagship currently same as pro [4]
             "category_reasoning": "gemini-2.5-pro",  # flagship with reasoning capabilities [4]
