@@ -53,6 +53,104 @@ The ``Agent`` class accepts the following key parameters:
    * - ``document_parser``
      - Optional custom parser for knowledge documents
 
+Using ModelKind for Provider Independence
+----------------------------------------
+
+Agentle provides a powerful abstraction called ``ModelKind`` that decouples your code from specific provider model names. Instead of using provider-specific model identifiers, you can use standardized capability categories:
+
+.. code-block:: python
+
+    from agentle.agents.agent import Agent
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+
+    # Using provider-specific model name
+    agent1 = Agent(
+        generation_provider=GoogleGenerationProvider(),
+        model="gemini-2.0-flash",  # Only works with Google
+        instructions="You are a helpful assistant."
+    )
+
+    # Using ModelKind for provider-agnostic code
+    agent2 = Agent(
+        generation_provider=GoogleGenerationProvider(),
+        model="category_standard",  # Works with any provider
+        instructions="You are a helpful assistant."
+    )
+
+Available ModelKind Categories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - ModelKind
+     - Description
+   * - ``category_nano``
+     - Smallest, fastest, most cost-effective models (e.g., GPT-4.1 nano)
+   * - ``category_mini``
+     - Small but capable models (e.g., GPT-4.1 mini, Claude Haiku)
+   * - ``category_standard``
+     - Mid-range, balanced performance (e.g., Claude Sonnet, Gemini Flash)
+   * - ``category_pro``
+     - High performance models (e.g., Gemini Pro, GPT-4 Turbo)
+   * - ``category_flagship``
+     - Best available models from each provider (e.g., Claude Opus, GPT-4.5)
+   * - ``category_reasoning``
+     - Specialized for complex reasoning tasks
+   * - ``category_vision``
+     - Optimized for multimodal capabilities with image/video processing
+   * - ``category_coding``
+     - Specialized for programming tasks
+   * - ``category_instruct``
+     - Fine-tuned for instruction following
+
+Benefits of ModelKind
+~~~~~~~~~~~~~~~~~~~
+
+Using ModelKind provides several important benefits:
+
+1. **Provider Independence**: Your code works with any AI provider without modification
+2. **Future-Proof**: When providers release new models, only the internal mapping tables need to be updated
+3. **Capability-Based Selection**: Select models based on capabilities rather than provider-specific names
+4. **Simplified Failover**: When using ``FailoverGenerationProvider``, each provider automatically maps to its equivalent model
+
+.. code-block:: python
+
+    # Create a failover provider with multiple underlying providers
+    from agentle.generations.providers.failover.failover_generation_provider import FailoverGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+    from agentle.generations.providers.openai.openai import OpenaiGenerationProvider
+
+    failover = FailoverGenerationProvider(
+        generation_providers=[
+            GoogleGenerationProvider(),
+            OpenaiGenerationProvider(api_key="your-openai-key")
+        ]
+    )
+
+    # Using a specific model would fail with providers that don't support it
+    # agent = Agent(generation_provider=failover, model="gpt-4o")  # Will fail for Google
+
+    # Using ModelKind ensures compatibility across all providers
+    agent = Agent(
+        generation_provider=failover,
+        model="category_pro",  # Mapped to appropriate model by each provider
+        instructions="You are a helpful assistant."
+    )
+
+How ModelKind Works
+~~~~~~~~~~~~~~~~~
+
+Behind the scenes, Agentle uses a decorator that:
+
+1. Intercepts calls to the provider's ``create_generation_async`` method
+2. Checks if the model parameter is a ModelKind value
+3. Calls the provider's ``map_model_kind_to_provider_model`` method to get the provider-specific model name
+4. Substitutes this mapped value before the actual provider method is called
+
+Each provider implements its own mapping function to translate ModelKind values to the most appropriate model for that provider.
+
 Creating Specialized Agents
 --------------------------
 

@@ -1,3 +1,27 @@
+"""
+Model capability categories for provider-agnostic model selection.
+
+This module defines the ModelKind type alias, which provides abstract capability
+categories that can be mapped to specific provider models. Using ModelKind values
+instead of provider-specific model names enables:
+
+1. Provider independence: Write code that works with any AI provider
+2. Future-proofing: When providers release new models, only mapping tables need updates
+3. Capability-based selection: Choose models based on capabilities, not names
+4. Simplified failover: When using FailoverGenerationProvider, each provider
+   automatically maps to its equivalent model
+5. Consistency: Standardized categories across all providers
+
+Each provider implements map_model_kind_to_provider_model() to translate these
+abstract categories to their specific models (e.g., "category_pro" → "gpt-4o"
+for OpenAI or "gemini-2.5-pro" for Google).
+
+This abstraction is particularly valuable for:
+- Multi-provider applications that need to work with any AI provider
+- Failover scenarios where requests can seamlessly switch between providers
+- Future-proofing code against model name changes and new model releases
+"""
+
 from typing import Literal, TypeAlias
 
 ModelKind: TypeAlias = Literal[

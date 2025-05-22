@@ -505,16 +505,39 @@ resilient_provider = FailoverGenerationProvider(
         OpenaiGenerationProvider(api_key="your-openai-key"),
         CerebrasGenerationProvider(api_key="your-cerebras-key")
     ],
-    shuffle=True  # Load balance
+    shuffle=True
 )
 
 agent = Agent(
     name="Resilient Assistant",
     generation_provider=resilient_provider,
-    model="gemini-2.0-flash",  # Will use equivalent model on other providers
+    # Use ModelKind instead of specific model names for better compatibility
+    model="category_pro",  # Each provider maps this to their equivalent model
     instructions="You are a helpful assistant."
 )
 ```
+
+#### 🧠 Using ModelKind for Provider Abstraction
+
+Agentle provides a powerful abstraction layer with `ModelKind` that decouples your code from specific provider model names:
+
+```python
+# Instead of hardcoding provider-specific model names:
+agent = Agent(generation_provider=provider, model="gpt-4o")  # Only works with OpenAI
+
+# Use ModelKind for provider-agnostic code:
+agent = Agent(generation_provider=provider, model="category_pro")  # Works with any provider
+```
+
+**Benefits of ModelKind:**
+
+- **Provider independence**: Write code that works with any AI provider
+- **Future-proof**: When providers release new models, only mapping tables need updates
+- **Capability-based selection**: Choose models based on capabilities, not names
+- **Perfect for failover**: Each provider automatically maps to its equivalent model
+- **Consistency**: Standardized categories across all providers
+
+Each provider implements `map_model_kind_to_provider_model()` to translate these abstract categories to their specific models (e.g., "category_pro" → "gpt-4o" for OpenAI or "gemini-2.5-pro" for Google).
 
 ## 🛠️ Advanced Features
 
