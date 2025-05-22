@@ -641,15 +641,26 @@ class GoogleGenerationProvider(GenerationProvider):
         model_kind: ModelKind,
     ) -> str:
         mapping: Mapping[ModelKind, str] = {
-            "category_nano": "gemini-2.0-flash-lite",  # smallest, cost-effective flash-lite model [4]
-            "category_mini": "gemini-2.0-flash",  # mid-tier flash model [4]
-            "category_standard": "gemini-2.0-flash",  # standard Gemini 2.0 model [4]
-            "category_pro": "gemini-2.5-pro",  # high performance pro model [4]
-            "category_flagship": "gemini-2.5-pro",  # flagship currently same as pro [4]
-            "category_reasoning": "gemini-2.5-pro",  # flagship with reasoning capabilities [4]
-            "category_vision": "gemini-2.5-pro-vision",  # multimodal vision-enabled pro model (inferred) [4]
-            "category_coding": "gemini-2.5-pro",  # coding-optimized assumed at pro tier [4]
-            "category_instruct": "gemini-2.0-flash",  # instruction optimized flash model (inferred) [4]
+            # Stable models
+            "category_nano": "gemini-2.0-flash-lite",
+            "category_mini": "gemini-2.0-flash",
+            "category_standard": "gemini-2.0-flash",
+            "category_pro": "gemini-2.5-pro",
+            "category_flagship": "gemini-2.5-pro",
+            "category_reasoning": "gemini-2.5-pro",
+            "category_vision": "gemini-2.5-pro-vision",
+            "category_coding": "gemini-2.5-pro",
+            "category_instruct": "gemini-2.0-flash",
+            # Experimental models
+            "category_nano_experimental": "gemini-2.0-flash-lite",  # no distinct experimental found
+            "category_mini_experimental": "gemini-2.5-flash-preview-05-20",  # real preview model
+            "category_standard_experimental": "gemini-2.5-flash-preview-05-20",  # fallback
+            "category_pro_experimental": "gemini-2.5-pro",  # fallback
+            "category_flagship_experimental": "gemini-2.5-pro",  # fallback
+            "category_reasoning_experimental": "gemini-2.5-pro",  # fallback
+            "category_vision_experimental": "gemini-2.5-pro-vision",  # fallback
+            "category_coding_experimental": "gemini-2.5-pro",  # fallback
+            "category_instruct_experimental": "gemini-2.5-flash-preview-05-20",  # closest preview
         }
 
         return mapping[model_kind]

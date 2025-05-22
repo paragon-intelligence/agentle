@@ -214,6 +214,16 @@ class OpenaiGenerationProvider(GenerationProvider):
             "category_vision": "o3",  # strong visual perception capabilities [3]
             "category_coding": "o3",  # excels at coding tasks [3]
             "category_instruct": "gpt-4.1",  # instruction-following optimized [6][7]
+            # Experimental fallback to stable (no distinct experimental models)
+            "category_nano_experimental": "gpt-4.1-nano",
+            "category_mini_experimental": "o4-mini",
+            "category_standard_experimental": "gpt-4.1",
+            "category_pro_experimental": "gpt-4.5",
+            "category_flagship_experimental": "o3",
+            "category_reasoning_experimental": "o3",
+            "category_vision_experimental": "o3",
+            "category_coding_experimental": "o3",
+            "category_instruct_experimental": "gpt-4.1",
         }
 
         return mapping[model_kind]

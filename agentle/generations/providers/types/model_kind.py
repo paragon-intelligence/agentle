@@ -9,5 +9,15 @@ ModelKind: TypeAlias = Literal[
     "category_reasoning",  # Specialized for complex reasoning (o1, o3-mini, hybrid models)
     "category_vision",  # Multimodal capabilities for image/video processing
     "category_coding",  # Specialized for programming tasks (Claude Code-optimized models)
-    "category_instruct",  # Fine-tuned for instruction following (Turbo-Instruct style)
+    "category_instruct",  # Fine-tuned for instruction following (Turbo-Instruct style),
+    # Experimental variants
+    "category_nano_experimental",
+    "category_mini_experimental",
+    "category_standard_experimental",
+    "category_pro_experimental",
+    "category_flagship_experimental",
+    "category_reasoning_experimental",
+    "category_vision_experimental",
+    "category_coding_experimental",
+    "category_instruct_experimental",
 ]

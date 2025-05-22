@@ -277,6 +277,15 @@ class CerebrasGenerationProvider(GenerationProvider):
             "category_reasoning": "deepseek-r1-distill-llama-70b",
             "category_coding": "qwen-3-32b",
             "category_instruct": "llama-4-scout-17b-16e-instruct",
+            # Experimental fallback to stable
+            "category_nano_experimental": "llama3.1-8b",
+            "category_mini_experimental": "qwen-3-32b",
+            "category_standard_experimental": "llama-4-scout-17b-16e-instruct",
+            "category_pro_experimental": "deepseek-r1-distill-llama-70b",
+            "category_flagship_experimental": "deepseek-r1-distill-llama-70b",
+            "category_reasoning_experimental": "deepseek-r1-distill-llama-70b",
+            "category_coding_experimental": "qwen-3-32b",
+            "category_instruct_experimental": "llama-4-scout-17b-16e-instruct",
         }
 
         return mapping[model_kind]
