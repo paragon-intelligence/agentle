@@ -252,9 +252,11 @@ class GoogleGenerationProvider(GenerationProvider):
             # change so if the timeout is provided in the constructor and the user doesnt inform the timeout in the generation config, the timeout in the constructor is used
             _http_options.timeout = (
                 int(
-                    _generation_config.timeout * 1000
+                    _generation_config.timeout
                 )  # Convertendo de segundos para milissegundos
                 if _generation_config.timeout
+                else int(_generation_config.timeout_s * 1000)
+                if _generation_config.timeout_s
                 else _http_options.timeout
             )
 

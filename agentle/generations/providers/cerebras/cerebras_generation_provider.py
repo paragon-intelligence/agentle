@@ -40,6 +40,9 @@ from agentle.generations.providers.base.generation_provider import (
 from agentle.generations.providers.cerebras._adapters.agentle_message_to_cerebras_message_adapter import (
     AgentleMessageToCerebrasMessageAdapter,
 )
+from agentle.generations.providers.cerebras._adapters.agentle_tool_to_cerebras_tool_adapter import (
+    AgentleToolToCerebrasToolAdapter,
+)
 from agentle.generations.providers.cerebras._adapters.completion_to_generation_adapter import (
     CerebrasCompletionToGenerationAdapter,
 )
@@ -89,7 +92,6 @@ class CerebrasGenerationProvider(GenerationProvider):
     tracing_client: MaybeProtocol[StatefulObservabilityClient]
     api_key: str | None
     base_url: str | httpx.URL | None
-    timeout: float | httpx.Timeout | None
     max_retries: int
     default_headers: Mapping[str, str] | None
     default_query: Mapping[str, object] | None
@@ -107,7 +109,6 @@ class CerebrasGenerationProvider(GenerationProvider):
         tracing_client: StatefulObservabilityClient | None = None,
         api_key: str | None = None,
         base_url: str | httpx.URL | None = None,
-        timeout: float | httpx.Timeout | None = None,
         max_retries: int = 2,
         default_headers: Mapping[str, str] | None = None,
         default_query: Mapping[str, object] | None = None,
@@ -140,7 +141,6 @@ class CerebrasGenerationProvider(GenerationProvider):
         super().__init__(tracing_client=tracing_client)
         self.api_key = api_key
         self.base_url = base_url
-        self.timeout = timeout
         self.max_retries = max_retries
         self.default_headers = default_headers
         self.default_query = default_query
@@ -207,10 +207,15 @@ class CerebrasGenerationProvider(GenerationProvider):
         from cerebras.cloud.sdk import AsyncCerebras
         from cerebras.cloud.sdk.types.chat.chat_completion import ChatCompletionResponse
 
+        _generation_config = generation_config or GenerationConfig()
         client = AsyncCerebras(
             api_key=self.api_key,
             base_url=self.base_url,
-            timeout=self.timeout,
+            timeout=_generation_config.timeout
+            if _generation_config.timeout
+            else _generation_config.timeout_s * 1000
+            if _generation_config.timeout_s
+            else None,
             max_retries=self.max_retries,
             default_headers=self.default_headers,
             default_query=self.default_query,
@@ -219,11 +224,14 @@ class CerebrasGenerationProvider(GenerationProvider):
             warm_tcp_connection=self.warm_tcp_connection,
         )
 
+        tool_adapter = AgentleToolToCerebrasToolAdapter()
+
         cerebras_completion = cast(
             ChatCompletionResponse,
             await client.chat.completions.create(
                 messages=[self.message_adapter.adapt(message) for message in messages],
                 model=model or self.default_model,
+                tools=[tool_adapter.adapt(tool) for tool in tools] if tools else None,
                 response_format={
                     "type": "json_schema",
                     "json_schema": {

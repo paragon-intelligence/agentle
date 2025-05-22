@@ -13,12 +13,18 @@ format regardless of the underlying provider.
 
 from __future__ import annotations
 
+from collections.abc import MutableSequence, Sequence
+import json
 from typing import TYPE_CHECKING, cast
 
+from rsb.adapters.adapter import Adapter
+
+from agentle.generations.models.message_parts.tool_execution_suggestion import (
+    ToolExecutionSuggestion,
+)
 from agentle.generations.models.messages.generated_assistant_message import (
     GeneratedAssistantMessage,
 )
-from rsb.adapters.adapter import Adapter
 
 if TYPE_CHECKING:
     from cerebras.cloud.sdk.types.chat.chat_completion import (
@@ -78,14 +84,32 @@ class CerebrasMessageToGeneratedAssistantMessageAdapter[T](
         """
         # Implementation would extract the content from the Cerebras message
         # and create a GeneratedAssistantMessage, potentially with structured data
+        from cerebras.cloud.sdk.types.chat.chat_completion import (
+            ChatCompletionResponseChoiceMessageToolCall,
+        )
+
         from agentle.generations.models.message_parts.text import TextPart
 
         # The structured data would be None unless a response schema was provided
         # and the response contained valid JSON matching that schema
         parsed_data = cast(T, None)  # Properly cast None to type T for type checking
         content = _f.content or ""
+        tool_calls: Sequence[ChatCompletionResponseChoiceMessageToolCall] | None = (
+            _f.tool_calls
+        )
+
+        tool_call_parts: MutableSequence[ToolExecutionSuggestion] = []
+
+        if tool_calls:
+            for tool_call in tool_calls:
+                tool_call_parts.append(
+                    ToolExecutionSuggestion(
+                        tool_name=tool_call.function.name,
+                        args=json.loads(tool_call.function.arguments),
+                    )
+                )
 
         return GeneratedAssistantMessage[T](
-            parts=[TextPart(text=content)],
+            parts=[TextPart(text=content)] + tool_call_parts,
             parsed=parsed_data,
         )

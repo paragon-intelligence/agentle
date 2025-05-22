@@ -12,10 +12,13 @@ behavior and easy switching between providers.
 """
 
 from __future__ import annotations
+from typing import Self
 
-from agentle.generations.models.generation.trace_params import TraceParams
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
+from rsb.models.model_validator import model_validator
+
+from agentle.generations.models.generation.trace_params import TraceParams
 
 
 class GenerationConfig(BaseModel):
@@ -80,12 +83,28 @@ class GenerationConfig(BaseModel):
         default_factory=lambda: TraceParams(),
         description="Configuration for tracing and observability of the generation process. Controls what metadata is captured about the generation for monitoring, debugging, and analysis purposes.",
     )
+
     timeout: float | None = Field(
+        default=None,
+        description="Maximum time in milliseconds to wait for a generation response before timing out. Helps prevent indefinite waits for slow or stuck generations. Recommended to set based on expected model and prompt complexity.",
+        gt=0,
+        examples=[10000, 30000, 60000],
+    )
+
+    timeout_s: float | None = Field(
         default=None,
         description="Maximum time in seconds to wait for a generation response before timing out. Helps prevent indefinite waits for slow or stuck generations. Recommended to set based on expected model and prompt complexity.",
         gt=0,
         examples=[10.0, 30.0, 60.0],
     )
+
+    @model_validator(mode="after")
+    def validate_timeout(self) -> Self:
+        # check if all timeout fields are set. only one of them should be set.
+        if self.timeout is not None and self.timeout_s is not None:
+            raise ValueError("Only one of timeout or timeout_s should be set.")
+
+        return self
 
     def clone(
         self,
