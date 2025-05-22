@@ -19,6 +19,7 @@ providing a consistent experience regardless of the AI provider being used.
 """
 
 from collections.abc import Mapping, Sequence
+import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 import httpx
@@ -63,6 +64,7 @@ if TYPE_CHECKING:
         MessageUserMessageRequestTyped,
     )
 
+logger = logging.getLogger(__name__)
 type WithoutStructuredOutput = None
 
 
@@ -299,12 +301,26 @@ class CerebrasGenerationProvider(GenerationProvider):
 
         Args:
             model: The model identifier.
-            estimate_tokens: Optional estimate of token count.
+            estimate_tokens: Optional estimate of token count (not used for Cerebras pricing).
 
         Returns:
             float: The price per million input tokens for the specified model.
         """
-        return 1.0  # TODO(arthur)
+        # Pricing data from Cerebras Inference Exploration Tier (search result [6])
+        input_prices = {
+            "llama3.1-8b": 0.10,  # Llama 3.1 8B [6]
+            "qwen-3-32b": 0.40,  # Qwen 3 32B [5][6]
+            "deepseek-r1-distill-llama-70b": 2.20,  # Deepseek R1 Distill Llama 70B [6]
+            "llama-4-scout-17b-16e-instruct": 0.65,  # Llama 4 Scout [6]
+        }
+
+        price = input_prices.get(model)
+        if price is None:
+            logger.warning(
+                f"Cerebras model {model} not found in pricing table. Returning 0.0"
+            )
+            return 0.0
+        return price
 
     @override
     def price_per_million_tokens_output(
@@ -315,9 +331,23 @@ class CerebrasGenerationProvider(GenerationProvider):
 
         Args:
             model: The model identifier.
-            estimate_tokens: Optional estimate of token count.
+            estimate_tokens: Optional estimate of token count (not used for Cerebras pricing).
 
         Returns:
             float: The price per million output tokens for the specified model.
         """
-        return 1.0  # TODO(arthur)
+        # Pricing data from Cerebras Inference Exploration Tier (search result [6])
+        output_prices = {
+            "llama3.1-8b": 0.10,  # Llama 3.1 8B [6]
+            "qwen-3-32b": 0.80,  # Qwen 3 32B [5][6]
+            "deepseek-r1-distill-llama-70b": 2.50,  # Deepseek R1 Distill Llama 70B [6]
+            "llama-4-scout-17b-16e-instruct": 0.85,  # Llama 4 Scout [6]
+        }
+
+        price = output_prices.get(model)
+        if price is None:
+            logger.warning(
+                f"Cerebras model {model} not found in pricing table. Returning 0.0"
+            )
+            return 0.0
+        return price

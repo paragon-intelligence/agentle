@@ -680,38 +680,17 @@ class GoogleGenerationProvider(GenerationProvider):
             float: The price per million input tokens for the specified model.
         """
         # Pricing in USD per million tokens (from https://cloud.google.com/vertex-ai/generative-ai/pricing)
-        # Standard pricing for most models
+        # Format: (low_tier_price, high_tier_price, threshold) for tiered models
         model_to_price_per_million: Mapping[str, float | tuple[float, float, int]] = {
-            # Gemini 2.5 models with tiered pricing: (price_low_tier, price_high_tier, threshold)
-            "gemini-2.5-pro": (1.25, 2.5, 200_000),  # <= 200K: $1.25, > 200K: $2.5
-            "gemini-2.5-flash": (0.15, 0.15, 200_000),  # Same price for both tiers
-            # Gemini models
-            "gemini-1.0-pro": 3.50,
-            "gemini-1.0-pro-vision": 3.50,
-            "gemini-1.5-flash": 0.35,
-            "gemini-1.5-pro": 7.00,
-            "gemini-2.0-flash": 0.40,
-            "gemini-2.0-pro": 6.00,
-            # Claude models (Anthropic)
-            "claude-3-5-sonnet": 3.00,
-            "claude-3-5-sonnet-v2": 3.00,
-            "claude-3-5-haiku": 0.80,
-            "claude-3-7-sonnet": 3.00,
-            "claude-3-haiku": 0.25,
-            "claude-3-opus": 15.00,
-            # Llama models (Meta)
-            "llama-3-1-405b": 5.00,
-            "llama-3-3-70b": 0.72,
-            "llama-4-scout": 0.25,
-            "llama-4-maverick": 0.35,
-            # Mistral models
-            "mistral-small-3-1": 0.10,
-            "mistral-large-24-11": 2.00,
-            "mistral-nemo": 0.15,
-            "codestral-25-01": 0.30,
-            # AI21 models
-            "jamba-1-5-large": 2.00,
-            "jamba-1-5-mini": 0.20,
+            # Gemini 2.5 Pro family (tiered pricing at 200K tokens)
+            "gemini-2.5-pro": (1.25, 2.50, 200_000),
+            "gemini-2.5-pro-vision": (1.25, 2.50, 200_000),
+            # Gemini 2.5 Flash family
+            "gemini-2.5-flash": 0.15,
+            "gemini-2.5-flash-preview-05-20": 0.15,  # Assuming same as standard 2.5 Flash
+            # Gemini 2.0 Flash family
+            "gemini-2.0-flash": 0.15,
+            "gemini-2.0-flash-lite": 0.075,
         }
 
         price_info = model_to_price_per_million.get(model)
@@ -734,12 +713,12 @@ class GoogleGenerationProvider(GenerationProvider):
 
             # If tokens exceed threshold, use the higher tier price
             if estimate_tokens > threshold:
-                return high_tier_price * (estimate_tokens / 1_000_000)
+                return high_tier_price
             else:
-                return low_tier_price * (estimate_tokens / 1_000_000)
+                return low_tier_price
         else:
             # Standard pricing for non-tiered models
-            return price_info * (estimate_tokens / 1_000_000)
+            return price_info
 
     @override
     def price_per_million_tokens_output(
@@ -756,38 +735,17 @@ class GoogleGenerationProvider(GenerationProvider):
             float: The price per million output tokens for the specified model.
         """
         # Pricing in USD per million tokens (from https://cloud.google.com/vertex-ai/generative-ai/pricing)
-        # Standard pricing for most models
+        # Note: For Gemini 2.5 Pro, output pricing depends on input token count, but we use conservative estimates
         model_to_price_per_million: Mapping[str, float | tuple[float, float, int]] = {
-            # Gemini 2.5 models with tiered pricing: (price_low_tier, price_high_tier, threshold)
-            "gemini-2.5-pro": (10.0, 15.0, 200_000),  # <= 200K: $10, > 200K: $15
-            "gemini-2.5-flash": (0.60, 0.60, 200_000),  # Same price for both tiers
-            # Gemini models
-            "gemini-1.0-pro": 10.50,
-            "gemini-1.0-pro-vision": 10.50,
-            "gemini-1.5-flash": 1.05,
-            "gemini-1.5-pro": 21.00,
-            "gemini-2.0-flash": 1.20,
-            "gemini-2.0-pro": 18.00,
-            # Claude models (Anthropic)
-            "claude-3-5-sonnet": 15.00,
-            "claude-3-5-sonnet-v2": 15.00,
-            "claude-3-5-haiku": 4.00,
-            "claude-3-7-sonnet": 15.00,
-            "claude-3-haiku": 1.25,
-            "claude-3-opus": 75.00,
-            # Llama models (Meta)
-            "llama-3-1-405b": 16.00,
-            "llama-3-3-70b": 0.72,
-            "llama-4-scout": 0.70,
-            "llama-4-maverick": 1.15,
-            # Mistral models
-            "mistral-small-3-1": 0.30,
-            "mistral-large-24-11": 6.00,
-            "mistral-nemo": 0.15,
-            "codestral-25-01": 0.90,
-            # AI21 models
-            "jamba-1-5-large": 8.00,
-            "jamba-1-5-mini": 0.40,
+            # Gemini 2.5 Pro family (tiered pricing - using lower tier as conservative estimate)
+            "gemini-2.5-pro": 10.0,  # Conservative estimate, could be 15.0 for >200K input
+            "gemini-2.5-pro-vision": 10.0,
+            # Gemini 2.5 Flash family (standard text output, not reasoning)
+            "gemini-2.5-flash": 0.60,  # Standard text output (3.50 for thinking/reasoning)
+            "gemini-2.5-flash-preview-05-20": 0.60,  # Assuming same as standard 2.5 Flash
+            # Gemini 2.0 Flash family
+            "gemini-2.0-flash": 0.60,
+            "gemini-2.0-flash-lite": 0.30,
         }
 
         price_info = model_to_price_per_million.get(model)
@@ -797,20 +755,8 @@ class GoogleGenerationProvider(GenerationProvider):
             )
             return 0.0
 
-        # If estimate_tokens is None, return the base price (or lower tier price for tiered models)
-        if estimate_tokens is None:
-            if isinstance(price_info, tuple):
-                # Return the lower tier price for tiered models
-                return price_info[0]
-            return price_info
-
-        # For tiered models
+        # For output tokens, we return the base price since output pricing complexity
+        # cannot be properly handled without knowing input token count
         if isinstance(price_info, tuple):
-            # Note: According to docs, if input exceeds threshold, both input AND output
-            # are charged at higher tier. Without knowing input tokens here, we can't
-            # determine this accurately. For now, use the lower tier price.
-            low_tier_price = price_info[0]
-            return low_tier_price * (estimate_tokens / 1_000_000)
-        else:
-            # Standard pricing for non-tiered models
-            return price_info * (estimate_tokens / 1_000_000)
+            return price_info[0]
+        return price_info
