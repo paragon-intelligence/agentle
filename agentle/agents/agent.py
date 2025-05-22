@@ -79,6 +79,7 @@ from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
+from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
@@ -296,7 +297,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     """
 
     # Library-specific fields
-    model: str | None = Field(default=None)
+    model: str | ModelKind | None = Field(default=None)
     """
     The model to use for the agent's service provider.
     """

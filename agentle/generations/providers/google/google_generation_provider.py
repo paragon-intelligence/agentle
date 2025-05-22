@@ -37,6 +37,9 @@ from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
+from agentle.generations.providers.decorators.model_kind_mapper import (
+    override_model_kind,
+)
 from agentle.generations.providers.google.adapters.agentle_tool_to_google_tool_adapter import (
     AgentleToolToGoogleToolAdapter,
 )
@@ -49,6 +52,7 @@ from agentle.generations.providers.google.adapters.message_to_google_content_ada
 from agentle.generations.providers.google.function_calling_config import (
     FunctionCallingConfig,
 )
+from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
@@ -172,10 +176,11 @@ class GoogleGenerationProvider(GenerationProvider):
         return "google"
 
     @override
+    @override_model_kind
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str | None = None,
+        model: str | ModelKind | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -629,6 +634,25 @@ class GoogleGenerationProvider(GenerationProvider):
             raise
 
     def _create_med_lm_generation(self) -> GenerateContentResponse: ...
+
+    @override
+    def map_model_kind_to_provider_model(
+        self,
+        model_kind: ModelKind,
+    ) -> str:
+        mapping: Mapping[ModelKind, str] = {
+            "category_nano": "gemini-2.0-flash-lite",  # smallest, cost-effective flash-lite model [4]
+            "category_mini": "gemini-2.0-flash",  # mid-tier flash model [4]
+            "category_standard": "gemini-2.0",  # standard Gemini 2.0 model [4]
+            "category_pro": "gemini-2.5-pro",  # high performance pro model [4]
+            "category_flagship": "gemini-2.5-pro",  # flagship currently same as pro [4]
+            "category_reasoning": "gemini-2.5-pro",  # flagship with reasoning capabilities [4]
+            "category_vision": "gemini-2.5-pro-vision",  # multimodal vision-enabled pro model (inferred) [4]
+            "category_coding": "gemini-2.5-pro",  # coding-optimized assumed at pro tier [4]
+            "category_instruct": "gemini-2.0-flash",  # instruction optimized flash model (inferred) [4]
+        }
+
+        return mapping[model_kind]
 
     @override
     def price_per_million_tokens_input(

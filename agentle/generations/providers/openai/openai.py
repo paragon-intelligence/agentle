@@ -11,12 +11,17 @@ from agentle.generations.models.messages.assistant_message import AssistantMessa
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.decorators import override_model_kind
 from agentle.generations.providers.openai.adapters.agentle_message_to_openai_message_adapter import (
     AgentleMessageToOpenaiMessageAdapter,
+)
+from agentle.generations.providers.openai.adapters.agentle_tool_to_openai_tool_adapter import (
+    AgentleToolToOpenaiToolAdapter,
 )
 from agentle.generations.providers.openai.adapters.chat_completion_to_generation_adapter import (
     ChatCompletionToGenerationAdapter,
 )
+from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
@@ -82,10 +87,11 @@ class OpenaiGenerationProvider(GenerationProvider):
 
     @observe
     @override
+    @override_model_kind
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str | None = None,
+        model: str | ModelKind | None = None,
         messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -110,6 +116,7 @@ class OpenaiGenerationProvider(GenerationProvider):
         """
         from openai import AsyncOpenAI
         from openai.types.chat.chat_completion import ChatCompletion
+        from openai._types import NOT_GIVEN as OPENAI_NOT_GIVEN
 
         _generation_config = generation_config or GenerationConfig()
 
@@ -138,10 +145,14 @@ class OpenaiGenerationProvider(GenerationProvider):
         )
 
         input_message_adapter = AgentleMessageToOpenaiMessageAdapter()
+        openai_tool_adapter = AgentleToolToOpenaiToolAdapter()
 
         chat_completion: ChatCompletion = await client.chat.completions.create(
             messages=[input_message_adapter.adapt(message) for message in messages],
             model=model or self.default_model,
+            tools=[openai_tool_adapter.adapt(tool) for tool in tools]
+            if tools
+            else OPENAI_NOT_GIVEN,
         )
 
         output_adapter = ChatCompletionToGenerationAdapter[T](
@@ -187,6 +198,25 @@ class OpenaiGenerationProvider(GenerationProvider):
         }
 
         return model_pricing.get(model, 0.0)
+
+    @override
+    def map_model_kind_to_provider_model(
+        self,
+        model_kind: ModelKind,
+    ) -> str:
+        mapping: Mapping[ModelKind, str] = {
+            "category_nano": "gpt-4.1-nano",  # smallest, cost-effective nano model [7]
+            "category_mini": "o4-mini",  # fast, cost-efficient reasoning model [3]
+            "category_standard": "gpt-4.1",  # balanced, standard GPT-4.1 model [7][6]
+            "category_pro": "gpt-4.5",  # high performance, latest GPT-4.5 research preview [2][3]
+            "category_flagship": "o3",  # most powerful reasoning model, SOTA on coding/math/science [3][8]
+            "category_reasoning": "o3",  # same as flagship, specialized for complex reasoning [3]
+            "category_vision": "o3",  # strong visual perception capabilities [3]
+            "category_coding": "o3",  # excels at coding tasks [3]
+            "category_instruct": "gpt-4.1",  # instruction-following optimized [6][7]
+        }
+
+        return mapping[model_kind]
 
     @override
     def price_per_million_tokens_output(

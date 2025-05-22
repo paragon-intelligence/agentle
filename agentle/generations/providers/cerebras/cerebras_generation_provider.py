@@ -46,6 +46,10 @@ from agentle.generations.providers.cerebras._adapters.agentle_tool_to_cerebras_t
 from agentle.generations.providers.cerebras._adapters.completion_to_generation_adapter import (
     CerebrasCompletionToGenerationAdapter,
 )
+from agentle.generations.providers.decorators.model_kind_mapper import (
+    override_model_kind,
+)
+from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
@@ -172,10 +176,11 @@ class CerebrasGenerationProvider(GenerationProvider):
 
     @override
     @observe
+    @override_model_kind
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str | None = None,
+        model: str | ModelKind | None = None,
         messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -254,6 +259,27 @@ class CerebrasGenerationProvider(GenerationProvider):
             response_schema=response_schema,
             model=model or self.default_model,
         ).adapt(cerebras_completion)
+
+    @override
+    def map_model_kind_to_provider_model(
+        self,
+        model_kind: ModelKind,
+    ) -> str:
+        if model_kind == "category_vision":
+            self._raise_unsuported_model_kind(model_kind)
+
+        mapping: Mapping[ModelKind, str] = {
+            "category_nano": "llama3.1-8b",
+            "category_mini": "qwen-3-32b",
+            "category_standard": "llama-4-scout-17b-16e-instruct",
+            "category_pro": "deepseek-r1-distill-llama-70b",
+            "category_flagship": "deepseek-r1-distill-llama-70b",
+            "category_reasoning": "deepseek-r1-distill-llama-70b",
+            "category_coding": "qwen-3-32b",
+            "category_instruct": "llama-4-scout-17b-16e-instruct",
+        }
+
+        return mapping[model_kind]
 
     @override
     def price_per_million_tokens_input(

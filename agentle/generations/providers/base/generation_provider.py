@@ -18,7 +18,7 @@ API requirements, while maintaining the common interface for framework consumers
 
 import abc
 from collections.abc import Sequence
-from typing import Any, cast
+from typing import Any, Never, cast
 
 from rsb.containers.maybe import Maybe
 from rsb.contracts.maybe_protocol import MaybeProtocol
@@ -36,6 +36,7 @@ from agentle.generations.models.messages.assistant_message import AssistantMessa
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
 from agentle.generations.models.messages.user_message import UserMessage
+from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
@@ -104,7 +105,7 @@ class GenerationProvider(abc.ABC):
     def create_generation_by_prompt[T = WithoutStructuredOutput](
         self,
         *,
-        model: str | None = None,
+        model: str | ModelKind | None = None,
         prompt: str | Prompt | Part | Sequence[Part],
         developer_prompt: str | Prompt | None = None,
         response_schema: type[T] | None = None,
@@ -143,7 +144,7 @@ class GenerationProvider(abc.ABC):
     async def create_generation_by_prompt_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str | None = None,
+        model: str | ModelKind | None = None,
         prompt: str | Prompt | Part | Sequence[Part],
         developer_prompt: str | Prompt | None = None,
         response_schema: type[T] | None = None,
@@ -208,7 +209,7 @@ class GenerationProvider(abc.ABC):
     def create_generation[T = WithoutStructuredOutput](
         self,
         *,
-        model: str | None = None,
+        model: str | ModelKind | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -245,7 +246,7 @@ class GenerationProvider(abc.ABC):
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str | None = None,
+        model: str | ModelKind | None = None,
         messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -306,3 +307,21 @@ class GenerationProvider(abc.ABC):
             float: The price in USD per million output tokens.
         """
         ...
+
+    @abc.abstractmethod
+    def map_model_kind_to_provider_model(self, model_kind: ModelKind) -> str:
+        """
+        Map a model kind to a provider-specific model identifier.
+
+        Args:
+            model_kind: The kind of model to map.
+
+        Returns:
+            str: The provider-specific model identifier.
+        """
+        ...
+
+    def _raise_unsuported_model_kind(self, model_kind: ModelKind) -> Never:
+        raise NotImplementedError(
+            f"Model kind {model_kind} is not supported by {self.__class__.__name__}"
+        )
