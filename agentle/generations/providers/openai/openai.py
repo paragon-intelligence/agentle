@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Literal, Sequence, cast, override
+from typing import Any, Literal, Sequence, override
 
 import httpx
 
@@ -26,10 +26,6 @@ from agentle.generations.tracing.decorators import observe
 type WithoutStructuredOutput = None
 
 
-if TYPE_CHECKING:
-    from openai._types import NotGiven
-
-
 class NotGivenSentinel:
     def __bool__(self) -> Literal[False]:
         return False
@@ -48,7 +44,6 @@ class OpenaiGenerationProvider(GenerationProvider):
     project_name: str | None
     base_url: str | httpx.URL | None
     websocket_base_url: str | httpx.URL | None
-    timeout: float | httpx.Timeout | None | NotGiven
     max_retries: int
     default_headers: Mapping[str, str] | None
     default_query: Mapping[str, object] | None
@@ -63,24 +58,18 @@ class OpenaiGenerationProvider(GenerationProvider):
         project_name: str | None = None,
         base_url: str | httpx.URL | None = None,
         websocket_base_url: str | httpx.URL | None = None,
-        timeout: float | httpx.Timeout | None | NotGiven | NotGivenSentinel = NOT_GIVEN,
         max_retries: int = 2,
         default_headers: Mapping[str, str] | None = None,
         default_query: Mapping[str, object] | None = None,
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
         super().__init__(tracing_client=tracing_client)
-        from openai._types import NOT_GIVEN as OPENAI_NOT_GIVEN
-
-        if timeout is NOT_GIVEN:
-            timeout = OPENAI_NOT_GIVEN
 
         self.api_key = api_key
         self.organization_name = organization_name
         self.project_name = project_name
         self.base_url = base_url
         self.websocket_base_url = websocket_base_url
-        self.timeout = cast(float | httpx.Timeout | None | NotGiven, timeout)
         self.max_retries = max_retries
         self.default_headers = default_headers
         self.default_query = default_query
@@ -122,11 +111,17 @@ class OpenaiGenerationProvider(GenerationProvider):
         from openai import AsyncOpenAI
         from openai.types.chat.chat_completion import ChatCompletion
 
+        _generation_config = generation_config or GenerationConfig()
+
         client = AsyncOpenAI(
             api_key=self.api_key,
             base_url=self.base_url,
             websocket_base_url=self.websocket_base_url,
-            timeout=self.timeout,
+            timeout=_generation_config.timeout_s
+            if _generation_config.timeout_s
+            else _generation_config.timeout_s * 1000
+            if _generation_config.timeout_s is not None
+            else None,
             max_retries=self.max_retries,
             default_headers=self.default_headers,
             default_query=self.default_query,
