@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     from google.genai.client import (
         DebugConfig,
     )
-    from google.genai.types import Content, HttpOptions
+    from google.genai.types import Content, HttpOptions, GenerateContentResponse
 
 
 type WithoutStructuredOutput = None
@@ -317,10 +317,12 @@ class GoogleGenerationProvider(GenerationProvider):
             )
 
             contents = [self.message_adapter.adapt(message) for message in messages]
-            generate_content_response = await client.aio.models.generate_content(
-                model=used_model,
-                contents=cast(types.ContentListUnion, contents),
-                config=config,
+            generate_content_response: types.GenerateContentResponse = (
+                await client.aio.models.generate_content(
+                    model=used_model,
+                    contents=cast(types.ContentListUnion, contents),
+                    config=config,
+                )
             )
 
             # Create the response
@@ -621,6 +623,8 @@ class GoogleGenerationProvider(GenerationProvider):
             )
             # Re-raise the exception
             raise
+
+    def _create_med_lm_generation(self) -> GenerateContentResponse: ...
 
     @override
     def price_per_million_tokens_input(
