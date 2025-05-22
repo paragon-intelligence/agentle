@@ -27,6 +27,7 @@ from agentle.generations.models.messages.message import Message
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
 )
+from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
@@ -119,7 +120,7 @@ class FailoverGenerationProvider(GenerationProvider):
     async def create_generation_async[T = WithoutStructuredOutput](
         self,
         *,
-        model: str | None = None,
+        model: str | ModelKind | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | None = None,
@@ -168,3 +169,12 @@ class FailoverGenerationProvider(GenerationProvider):
             raise RuntimeError("Exception is None and the for loop went out.")
 
         raise exceptions[0]
+
+    @override
+    def map_model_kind_to_provider_model(
+        self,
+        model_kind: ModelKind,
+    ) -> str:
+        raise NotImplementedError(
+            "This method should not be called on the FailoverGenerationProvider."
+        )
