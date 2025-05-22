@@ -1,5 +1,3 @@
-# 🤖 Agentle
-
 <div align="center">
   <img src="/docs/logo.png" alt="Agentle Logo" width="200"/>
   
