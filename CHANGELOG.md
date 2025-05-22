@@ -1,6 +1,7 @@
 # Changelog
 
-## v0.2.5
+## v0.2.6
 
-- feat: new timeout_s and timeout_m parameter in GenerationConfig class to provide an easier way to declare timeouts.
-- feat: new tool calling capabilities in cerebras provider
+- feat: new way to use models of the same kind with an interface compatible with all providers (ModelKind TypeAlias)
+- fix: wrong input/output token calculation in GoogleGenerationProvider
+- feat: tool support in OpenAI and Cerebras
