@@ -313,7 +313,7 @@ class CerebrasGenerationProvider(GenerationProvider):
             "qwen-3-32b": 0.40,  # Qwen 3 32B [5][6]
             "deepseek-r1-distill-llama-70b": 2.20,  # Deepseek R1 Distill Llama 70B [6]
             "llama-4-scout-17b-16e-instruct": 0.65,  # Llama 4 Scout [6],
-            "llama-3.3-70b": 0.10,  # Llama 3.3 70B [6]
+            "llama-3.3-70b": 0.85,  # Llama 3.3 70B [6]
         }
 
         price = input_prices.get(model)
@@ -344,6 +344,7 @@ class CerebrasGenerationProvider(GenerationProvider):
             "qwen-3-32b": 0.80,  # Qwen 3 32B [5][6]
             "deepseek-r1-distill-llama-70b": 2.50,  # Deepseek R1 Distill Llama 70B [6]
             "llama-4-scout-17b-16e-instruct": 0.85,  # Llama 4 Scout [6]
+            "llama-3.3-70b": 1.20,  # Llama 3.3 70B [6]
         }
 
         price = output_prices.get(model)
