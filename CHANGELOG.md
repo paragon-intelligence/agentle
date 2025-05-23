@@ -1,6 +1,5 @@
 # Changelog
 
-## v0.2.8
+## v0.2.9
 
-- fix: wrong pricing mapping when a type of ModelKind is provided to providers
-
+- feat: new `__add__` magic method added to GenerationProvider class
