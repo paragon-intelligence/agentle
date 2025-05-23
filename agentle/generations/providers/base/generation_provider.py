@@ -16,9 +16,11 @@ this base class and implement the abstract methods according to each provider's 
 API requirements, while maintaining the common interface for framework consumers.
 """
 
+from __future__ import annotations
+
 import abc
 from collections.abc import Sequence
-from typing import Any, Never, cast
+from typing import TYPE_CHECKING, Any, Never, cast
 
 from rsb.containers.maybe import Maybe
 from rsb.contracts.maybe_protocol import MaybeProtocol
@@ -44,6 +46,11 @@ from agentle.generations.tracing.contracts.stateful_observability_client import 
 from agentle.prompts.models.prompt import Prompt
 
 type WithoutStructuredOutput = None
+
+if TYPE_CHECKING:
+    from agentle.generations.providers.failover.failover_generation_provider import (
+        FailoverGenerationProvider,
+    )
 
 
 class GenerationProvider(abc.ABC):
@@ -324,4 +331,14 @@ class GenerationProvider(abc.ABC):
     def _raise_unsuported_model_kind(self, model_kind: ModelKind) -> Never:
         raise NotImplementedError(
             f"Model kind {model_kind} is not supported by {self.__class__.__name__}"
+        )
+
+    def __add__(self, other: GenerationProvider) -> FailoverGenerationProvider:
+        from agentle.generations.providers.failover.failover_generation_provider import (
+            FailoverGenerationProvider,
+        )
+
+        return FailoverGenerationProvider(
+            generation_providers=[self, other],
+            tracing_client=self.tracing_client.unwrap(),
         )
