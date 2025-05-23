@@ -274,7 +274,7 @@ class CerebrasGenerationProvider(GenerationProvider):
         mapping: Mapping[ModelKind, str] = {
             "category_nano": "llama3.1-8b",
             "category_mini": "qwen-3-32b",
-            "category_standard": "llama-4-scout-17b-16e-instruct",
+            "category_standard": "llama-3.3-70b",
             "category_pro": "deepseek-r1-distill-llama-70b",
             "category_flagship": "deepseek-r1-distill-llama-70b",
             "category_reasoning": "deepseek-r1-distill-llama-70b",
@@ -312,7 +312,8 @@ class CerebrasGenerationProvider(GenerationProvider):
             "llama3.1-8b": 0.10,  # Llama 3.1 8B [6]
             "qwen-3-32b": 0.40,  # Qwen 3 32B [5][6]
             "deepseek-r1-distill-llama-70b": 2.20,  # Deepseek R1 Distill Llama 70B [6]
-            "llama-4-scout-17b-16e-instruct": 0.65,  # Llama 4 Scout [6]
+            "llama-4-scout-17b-16e-instruct": 0.65,  # Llama 4 Scout [6],
+            "llama-3.3-70b": 0.10,  # Llama 3.3 70B [6]
         }
 
         price = input_prices.get(model)
