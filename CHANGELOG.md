@@ -1,5 +1,6 @@
 # Changelog
 
-## v0.2.7
+## v0.2.8
 
-- feat: structured outputs for cerebras
+- fix: wrong pricing mapping when a type of ModelKind is provided to providers
+
