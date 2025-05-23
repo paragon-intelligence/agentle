@@ -116,6 +116,7 @@ class JsonSchemaBuilder:
         target_type: Type[Any],
         remove_examples: bool = False,
         schema_draft_uri: str = "http://json-schema.org/draft-07/schema#",
+        use_defs_instead_of_definitions: bool = False,
     ) -> None:
         """
         Initialize a JSON Schema builder for a specific Python type.
@@ -124,13 +125,27 @@ class JsonSchemaBuilder:
             target_type: The Python type to generate a schema for.
             remove_examples: Whether to remove example data from the generated schema.
             schema_draft_uri: The URI of the JSON Schema draft to use.
+            use_defs_instead_of_definitions: If True, use '$defs' instead of 'definitions'
+                for schema definitions. This is required by some providers and is the
+                standard for JSON Schema Draft 2019-09 and later.
         """
         self._target_type = target_type
         self.remove_examples = remove_examples
         self.schema_draft_uri = schema_draft_uri
+        self.use_defs_instead_of_definitions = use_defs_instead_of_definitions
         self._definitions = {}
         self._definitions_mapping = {}
         self._processing = set()
+
+    @property
+    def _definitions_key(self) -> str:
+        """Get the correct key for definitions based on schema draft."""
+        return "$defs" if self.use_defs_instead_of_definitions else "definitions"
+
+    @property
+    def _reference_prefix(self) -> str:
+        """Get the correct reference prefix based on schema draft."""
+        return "#/$defs/" if self.use_defs_instead_of_definitions else "#/definitions/"
 
     def build(self, *, dereference: bool = False) -> dict[str, Any]:
         """
@@ -180,9 +195,13 @@ class JsonSchemaBuilder:
         # Add definitions section if it's populated
         if self._definitions:
             # Sort definitions for deterministic output
-            final_schema["definitions"] = dict(sorted(self._definitions.items()))
+            final_schema[self._definitions_key] = dict(
+                sorted(self._definitions.items())
+            )
             # Garantir que todas as definições tenham propriedades
-            self._ensure_all_definitions_have_properties(final_schema["definitions"])
+            self._ensure_all_definitions_have_properties(
+                final_schema[self._definitions_key]
+            )
 
         if self.remove_examples:
             self._remove_key_recursive(final_schema, "examples")
@@ -194,7 +213,7 @@ class JsonSchemaBuilder:
                 dereferenced_schema = dict(final_schema)
 
                 # Extrai as definições
-                definitions = final_schema.get("definitions", {})
+                definitions = final_schema.get(self._definitions_key, {})
 
                 # Função para resolver referências recursivamente
                 def resolve_refs(obj: Any) -> Any:
@@ -202,7 +221,7 @@ class JsonSchemaBuilder:
                         # Se for uma referência, substitui pelo objeto referenciado
                         if "$ref" in obj and len(obj) == 1:  # type: ignore
                             ref = obj["$ref"]
-                            if ref.startswith("#/definitions/"):
+                            if ref.startswith(self._reference_prefix):
                                 def_name = ref.split("/")[-1]
                                 if def_name in definitions:
                                     # Copia para evitar referências circulares
@@ -229,7 +248,7 @@ class JsonSchemaBuilder:
                 # Resolve a referência principal, se houver
                 if "$ref" in dereferenced_schema:
                     ref = dereferenced_schema["$ref"]
-                    if ref.startswith("#/definitions/"):
+                    if ref.startswith(self._reference_prefix):
                         def_name = ref.split("/")[-1]
                         if def_name in definitions:
                             # Extrai propriedades da definição
@@ -247,11 +266,13 @@ class JsonSchemaBuilder:
                 final_schema = dereferenced_schema
 
                 # Mantém as definições para compatibilidade com testes, mas resolve referências dentro delas
-                if "definitions" in final_schema:
+                if self._definitions_key in final_schema:
                     resolved_defs = {}
-                    for def_name, def_schema in final_schema["definitions"].items():
+                    for def_name, def_schema in final_schema[
+                        self._definitions_key
+                    ].items():
                         resolved_defs[def_name] = resolve_refs(def_schema)
-                    final_schema["definitions"] = resolved_defs
+                    final_schema[self._definitions_key] = resolved_defs
 
             except Exception as e:
                 # Catch potential errors during dereferencing
@@ -277,7 +298,7 @@ class JsonSchemaBuilder:
             # Caso 1: Autoreferência direta ($ref para si mesmo)
             if (
                 "$ref" in def_schema
-                and def_schema["$ref"] == f"#/definitions/{def_name}"
+                and def_schema["$ref"] == f"{self._reference_prefix}{def_name}"
             ):
                 # Corrigir autoreferência substituindo pelo schema real
                 corrected_schema = {
@@ -289,7 +310,7 @@ class JsonSchemaBuilder:
                 # Encontrar o tipo original, se possível
                 original_type = None
                 for typ, ref in self._definitions_mapping.items():
-                    if ref == f"#/definitions/{def_name}":
+                    if ref == f"{self._reference_prefix}{def_name}":
                         original_type = typ
                         break
 
@@ -329,7 +350,7 @@ class JsonSchemaBuilder:
                                         corrected_schema["properties"][field_name] = {  # type: ignore
                                             "type": "array",
                                             "items": {
-                                                "$ref": f"#/definitions/{def_name}"
+                                                "$ref": f"{self._reference_prefix}{def_name}"
                                             },
                                         }
                                     else:
@@ -354,7 +375,7 @@ class JsonSchemaBuilder:
                                             ] = {
                                                 "anyOf": [
                                                     {
-                                                        "$ref": f"#/definitions/{def_name}"
+                                                        "$ref": f"{self._reference_prefix}{def_name}"
                                                     },
                                                     {"type": "null"},
                                                 ]
@@ -575,7 +596,7 @@ class JsonSchemaBuilder:
             # --- Mark as processing and prepare definition ---
             self._processing.add(cls_type)
             definition_name = self._get_unique_definition_name(cls_type.__name__)
-            ref_path = f"#/definitions/{definition_name}"
+            ref_path = f"{self._reference_prefix}{definition_name}"
             # Add to mapping *before* calling the builder function to handle recursion correctly
             self._definitions_mapping[cls_type] = ref_path
             # Adicionar um placeholder no definitions para evitar problemas com recursão
@@ -1450,7 +1471,8 @@ class JsonSchemaBuilder:
     ) -> Dict[str, Any]:
         try:
             # Use by_alias=False if needed, ref_template is key
-            schema_dict = cls_type.schema(ref_template="#/definitions/{model}")
+            ref_template = f"{self._reference_prefix}{{model}}"
+            schema_dict = cls_type.schema(ref_template=ref_template)
             # Pydantic v1 uses 'definitions'
             if "definitions" in schema_dict:
                 pydantic_defs = schema_dict.pop("definitions")
@@ -1484,7 +1506,8 @@ class JsonSchemaBuilder:
                         # Isso ocorre quando um schema refere a si mesmo diretamente com $ref
                         if (
                             "$ref" in def_schema
-                            and def_schema["$ref"] == f"#/definitions/{def_name}"
+                            and def_schema["$ref"]
+                            == f"{self._reference_prefix}{def_name}"
                         ):
                             # Substituir por um schema real com propriedades
                             # Primeiro verificamos se tem um schema alternativo para o modelo
@@ -1575,7 +1598,7 @@ class JsonSchemaBuilder:
 
             # Detectar e corrigir referência recursiva direta no schema principal
             if "$ref" in schema_dict and schema_dict["$ref"].startswith(
-                "#/definitions/"
+                self._reference_prefix
             ):
                 ref_name = schema_dict["$ref"].split("/")[-1]
                 # Verificar se a definição existe e tem properties
@@ -1735,9 +1758,8 @@ class JsonSchemaBuilder:
         try:
             # ref_template uses $defs for draft 7+ compatibility apparently
             # Use correct template based on draft? Assume #/definitions for now for Draft 7 target
-            schema_dict = cls_type.model_json_schema(
-                ref_template="#/definitions/{model}"
-            )
+            ref_template = f"{self._reference_prefix}{{model}}"
+            schema_dict = cls_type.model_json_schema(ref_template=ref_template)
             # Pydantic v2 uses '$defs' (consistent with Draft 2019-09+) but we map to 'definitions' for Draft 7
             if "$defs" in schema_dict:
                 pydantic_defs = schema_dict.pop("$defs")
@@ -1808,7 +1830,7 @@ class JsonSchemaBuilder:
                                 original_model = None
                                 # Busca na lista de tipos já processados
                                 for typ, ref in self._definitions_mapping.items():
-                                    if ref == f"#/definitions/{def_name}":
+                                    if ref == f"{self._reference_prefix}{def_name}":
                                         original_model = typ
                                         break
 
@@ -1900,7 +1922,7 @@ class JsonSchemaBuilder:
 
             # Detectar e corrigir referência recursiva direta no schema principal
             if "$ref" in schema_dict and schema_dict["$ref"].startswith(
-                "#/definitions/"
+                self._reference_prefix
             ):
                 ref_name = schema_dict["$ref"].split("/")[-1]
                 # Verificar se a definição existe e tem properties
@@ -2250,7 +2272,7 @@ class JsonSchemaBuilder:
             temp_name in self._definitions
             or temp_name in self._definitions_mapping.values()
             or any(
-                ref == f"#/definitions/{temp_name}"
+                ref == f"{self._reference_prefix}{temp_name}"
                 for ref in self._definitions_mapping.values()
             )
         ):

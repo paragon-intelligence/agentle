@@ -92,7 +92,6 @@ class CerebrasMessageToGeneratedAssistantMessageAdapter[T](
 
         # The structured data would be None unless a response schema was provided
         # and the response contained valid JSON matching that schema
-        parsed_data = cast(T, None)  # Properly cast None to type T for type checking
         content = _f.content or ""
         tool_calls: Sequence[ChatCompletionResponseChoiceMessageToolCall] | None = (
             _f.tool_calls
@@ -108,5 +107,7 @@ class CerebrasMessageToGeneratedAssistantMessageAdapter[T](
 
         return GeneratedAssistantMessage[T](
             parts=[TextPart(text=content)] + tool_call_parts,
-            parsed=parsed_data,
+            parsed=self.response_schema(**json.loads(content))
+            if self.response_schema
+            else cast(T, None),
         )
