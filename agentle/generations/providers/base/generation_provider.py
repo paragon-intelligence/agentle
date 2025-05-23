@@ -340,5 +340,6 @@ class GenerationProvider(abc.ABC):
 
         return FailoverGenerationProvider(
             generation_providers=[self, other],
-            tracing_client=self.tracing_client.unwrap(),
+            tracing_client=self.tracing_client.unwrap()
+            or other.tracing_client.unwrap(),
         )
