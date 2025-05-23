@@ -14,11 +14,12 @@ import inspect
 import logging
 from collections.abc import Callable, Coroutine
 from datetime import datetime
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar, cast, get_args
 from rsb.coroutines.fire_and_forget import fire_and_forget
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
 from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
@@ -94,6 +95,15 @@ def observe(
 
         # Extract the parameters we need for tracing
         model = bound_args.arguments.get("model") or provider_self.default_model
+
+        # Check if model is a ModelKind and map it to provider model if needed
+        model_kind_values = get_args(ModelKind)
+
+        if model in model_kind_values:
+            # Cast to ModelKind and map to actual provider model
+            model_kind = cast(ModelKind, model)
+            model = provider_self.map_model_kind_to_provider_model(model_kind)
+
         messages = bound_args.arguments.get("messages", [])
         response_schema = bound_args.arguments.get("response_schema")
         generation_config = (
