@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.2.11
+## v0.2.12
 
-- refactor: changing cerebras standart to llama3.3-70b
+- fix: wrong pricing on llama-3.370b on cerebras
