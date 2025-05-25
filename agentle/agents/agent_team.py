@@ -220,6 +220,228 @@ class AgentTeam(BaseModel):
         """
         return self + other
 
+    async def resume_async(
+        self, resumption_token: str, approval_data: dict[str, Any] | None = None
+    ) -> AgentRunOutput[Any]:
+        """
+        Resume a suspended team execution.
+
+        This method resumes a team that was suspended due to a tool requiring
+        human approval. It retrieves the team state and continues execution
+        from where it left off.
+
+        Args:
+            resumption_token: Token from a suspended team execution
+            approval_data: Optional approval data to pass to the resumed execution
+
+        Returns:
+            AgentRunOutput with the completed or newly suspended execution
+
+        Raises:
+            ValueError: If the resumption token is invalid or not for a team
+        """
+        if not self.agents:
+            raise ValueError("AgentTeam must have at least one agent")
+
+        # Resume the agent execution first
+        # We need to get the suspended agent and resume it
+        # For now, we'll delegate to the first agent's resume method
+        resumed_result = await self.agents[0].resume_async(
+            resumption_token, approval_data
+        )
+
+        # Check if we have team state to continue from
+        team_state = resumed_result.context.get_checkpoint_data("team_state")
+        if not team_state:
+            # If no team state, just return the resumed result
+            return resumed_result
+
+        # Extract team state
+        iteration_count = team_state.get("iteration_count", 0)
+        max_iterations = team_state.get(
+            "max_iterations", self.team_config.maxIterations
+        )
+        current_input = team_state.get("current_input", "")
+        conversation_history = team_state.get("conversation_history", [])
+        original_input = team_state.get("original_input", "")
+
+        # Recreate agent map
+        agent_map = {str(agent.uid): agent for agent in self.agents}
+
+        # Create orchestrator agent (same as in run_async)
+        agent_descriptions: MutableSequence[str] = []
+        for agent in self.agents:
+            skills_desc = (
+                ", ".join([skill.name for skill in agent.skills])
+                if agent.skills
+                else "No specific skills defined"
+            )
+            agent_desc = f"""
+            Agent ID: {agent.uid}
+            Name: {agent.name}
+            Description: {agent.description}
+            Skills: {skills_desc}
+            """
+            agent_descriptions.append(agent_desc)
+
+        agents_info = "\n".join(agent_descriptions)
+
+        orchestrator_agent = Agent(
+            name="Orchestrator",
+            generation_provider=self.orchestrator_provider,
+            model=self.orchestrator_model,
+            instructions=f"""You are an orchestrator agent that analyzes tasks and determines which agent
+            should handle them. Examine the input carefully and select the most appropriate agent based on 
+            its capabilities and expertise. You should also determine if the task is complete.
+            
+            Here are the available agents you can choose from:
+            {agents_info}
+            
+            For each task you are given, you must:
+            1. Analyze the task requirements thoroughly
+            2. Select the most appropriate agent by its ID based on its capabilities
+            3. Determine if the task is complete (set task_done to true if it is)
+            
+            If you believe the task has been fully addressed, set task_done to true.
+            If you believe the task requires further processing, select the appropriate agent and set task_done to false.
+            """,
+            response_schema=_OrchestratorOutput,
+            config=self.team_config,
+        )
+
+        # Update conversation history with the resumed result
+        if resumed_result.generation and resumed_result.generation.text:
+            conversation_history.append(
+                f"Resumed execution: {resumed_result.generation.text}"
+            )
+            current_input = resumed_result.generation.text
+
+        task_done = False
+        last_output = resumed_result
+
+        # Continue the team execution loop
+        while not task_done and iteration_count < max_iterations:
+            iteration_count += 1
+
+            # Format orchestrator input with task history
+            orchestrator_input = current_input
+            if conversation_history:
+                history_text = "\n\n".join(conversation_history)
+                if isinstance(current_input, str):
+                    orchestrator_input = f"""
+Task Context/History:
+{history_text}
+
+Current input:
+{current_input}
+"""
+
+            # Use the orchestrator to decide which agent should handle the task
+            orchestrator_result = await orchestrator_agent.run_async(orchestrator_input)
+            orchestrator_output = orchestrator_result.parsed
+
+            if not orchestrator_output:
+                logger.warning(
+                    "Orchestrator failed to produce structured output, using first agent as fallback"
+                )
+                return await self.agents[0].run_async(current_input)
+
+            # Check if the task is done
+            task_done = orchestrator_output.task_done
+            if task_done:
+                logger.info(
+                    f"Task marked as complete by orchestrator after {iteration_count} iterations (resumed)"
+                )
+                return last_output
+
+            # Get the chosen agent
+            agent_id = str(orchestrator_output.agent_id)
+            if agent_id not in agent_map:
+                logger.warning(
+                    f"Orchestrator selected unknown agent ID: {agent_id}, using first agent as fallback"
+                )
+                return await self.agents[0].run_async(current_input)
+
+            chosen_agent = agent_map[agent_id]
+            logger.info(
+                f"Resumed iteration {iteration_count}: Orchestrator selected agent '{chosen_agent.name}'"
+            )
+
+            # Run the chosen agent with the current input
+            agent_output = await chosen_agent.run_async(current_input)
+            last_output = agent_output
+
+            # Check if the agent execution was suspended again
+            if agent_output.is_suspended:
+                suspension_msg = (
+                    f"Team execution suspended again at iteration {iteration_count} "
+                    + f"(Agent '{chosen_agent.name}'): {agent_output.suspension_reason}"
+                )
+                logger.info(suspension_msg)
+
+                # Update team state for the new suspension point
+                if agent_output.context:
+                    agent_output.context.set_checkpoint_data(
+                        "team_state",
+                        {
+                            "iteration_count": iteration_count,
+                            "max_iterations": max_iterations,
+                            "current_input": current_input,
+                            "conversation_history": conversation_history,
+                            "agent_map": {
+                                str(uid): agent.name for uid, agent in agent_map.items()
+                            },
+                            "last_selected_agent_id": agent_id,
+                            "original_input": original_input,
+                        },
+                    )
+
+                return agent_output
+
+            # Update the conversation history
+            if isinstance(current_input, str):
+                conversation_history.append(f"User/Task: {current_input}")
+            if agent_output.generation and agent_output.generation.text:
+                conversation_history.append(
+                    f"Agent '{chosen_agent.name}': {agent_output.generation.text}"
+                )
+
+            # Update the input with the agent's response for the next iteration
+            if agent_output.generation and agent_output.generation.text:
+                current_input = agent_output.generation.text
+            else:
+                logger.warning(
+                    f"Agent '{chosen_agent.name}' produced no text output, returning current output"
+                )
+                return agent_output
+
+        # If we've reached max iterations, return the last output
+        if iteration_count >= max_iterations:
+            logger.warning(
+                f"Warning: AgentTeam reached maximum iterations ({max_iterations}) without completion (resumed)"
+            )
+
+        return last_output
+
+    def resume(
+        self, resumption_token: str, approval_data: dict[str, Any] | None = None
+    ) -> AgentRunOutput[Any]:
+        """
+        Resume a suspended team execution synchronously.
+
+        Args:
+            resumption_token: Token from a suspended team execution
+            approval_data: Optional approval data to pass to the resumed execution
+
+        Returns:
+            AgentRunOutput with the completed or newly suspended execution
+        """
+        return run_sync(
+            self.resume_async,
+            resumption_token=resumption_token,
+            approval_data=approval_data,
+        )
+
     def run(self, input: AgentInput | Any) -> AgentRunOutput[Any]:
         """
         Run the agent team synchronously with the provided input.
@@ -425,16 +647,44 @@ Current input:
             agent_output = await chosen_agent.run_async(current_input)
             last_output = agent_output
 
+            # Check if the agent execution was suspended
+            if agent_output.is_suspended:
+                suspension_msg = (
+                    f"Team execution suspended at iteration {iteration_count} "
+                    + f"(Agent '{chosen_agent.name}'): {agent_output.suspension_reason}"
+                )
+                logger.info(suspension_msg)
+
+                # Store team state in the context for resumption
+                if agent_output.context:
+                    agent_output.context.set_checkpoint_data(
+                        "team_state",
+                        {
+                            "iteration_count": iteration_count,
+                            "max_iterations": max_iterations,
+                            "current_input": current_input,
+                            "conversation_history": conversation_history,
+                            "agent_map": {
+                                str(uid): agent.name for uid, agent in agent_map.items()
+                            },
+                            "last_selected_agent_id": agent_id,
+                            "original_input": input,
+                        },
+                    )
+
+                # Return the suspended output immediately
+                return agent_output
+
             # Update the conversation history
             if isinstance(current_input, str):
                 conversation_history.append(f"User/Task: {current_input}")
-            if agent_output.generation.text:
+            if agent_output.generation and agent_output.generation.text:
                 conversation_history.append(
                     f"Agent '{chosen_agent.name}': {agent_output.generation.text}"
                 )
 
             # Update the input with the agent's response for the next iteration
-            if agent_output.generation.text:
+            if agent_output.generation and agent_output.generation.text:
                 current_input = agent_output.generation.text
             else:
                 # If we don't have text output, use the original input again

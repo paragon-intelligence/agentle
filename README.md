@@ -1054,10 +1054,175 @@ agent = Agent(
 
 This HITL integration makes Agentle suitable for production environments where AI agents handle sensitive operations that require human judgment and approval.
 
+#### 🔀 Complex HITL Scenarios: Pipelines and Teams
+
+Agentle's HITL system seamlessly handles complex multi-agent scenarios including **Agent Pipelines** and **Agent Teams** with sophisticated suspension and resumption capabilities:
+
+##### 🔗 Pipeline Suspension & Resumption
+
+When an agent in a pipeline requires approval, the entire pipeline suspends while preserving its state:
+
+```python
+from agentle.agents.agent_pipeline import AgentPipeline
+from agentle.agents.errors.tool_suspension_error import ToolSuspensionError
+
+def compliance_check(analysis_type: str) -> str:
+    """Financial analysis that requires compliance approval."""
+    if analysis_type in ["merger_analysis", "insider_trading"]:
+        raise ToolSuspensionError(
+            reason=f"Analysis type '{analysis_type}' requires compliance approval",
+            approval_data={"analysis_type": analysis_type, "risk_level": "high"},
+            timeout_seconds=7200  # 2 hours
+        )
+    return f"Analysis completed: {analysis_type}"
+
+# Create a financial analysis pipeline
+data_agent = Agent(name="Data Agent", tools=[data_access_tool], ...)
+analysis_agent = Agent(name="Analysis Agent", tools=[compliance_check], ...)
+report_agent = Agent(name="Report Agent", tools=[report_generation_tool], ...)
+
+pipeline = AgentPipeline(agents=[data_agent, analysis_agent, report_agent])
+
+# Pipeline execution suspends at analysis step
+result = await pipeline.run_async("Analyze TechCorp for merger potential")
+
+if result.is_suspended:
+    print(f"Pipeline suspended: {result.suspension_reason}")
+    # Pipeline state preserved: current step, intermediate outputs, context
+    
+    # Hours later, after compliance approval...
+    await suspension_manager.approve_request(result.resumption_token, approved=True)
+    
+    # Resume from exact suspension point
+    final_result = await pipeline.resume_async(result.resumption_token)
+    print(f"Pipeline completed: {final_result.text}")
+```
+
+**Pipeline Suspension Features:**
+- ✅ **State Preservation**: Current step, intermediate outputs, and full context maintained
+- ✅ **Exact Resumption**: Continues from the next step after approval
+- ✅ **Multiple Suspensions**: Single pipeline can suspend multiple times
+- ✅ **Debug Support**: Full visibility into suspension points when debug_mode=True
+
+##### 👥 Team Suspension & Orchestration
+
+Agent Teams maintain conversation history and orchestration state during suspensions:
+
+```python
+from agentle.agents.agent_team import AgentTeam
+
+# Create specialized agents with HITL tools
+risk_agent = Agent(name="Risk Agent", tools=[financial_analysis_tool], ...)
+governance_agent = Agent(name="Governance Agent", tools=[data_access_tool], ...)
+legal_agent = Agent(name="Legal Agent", tools=[report_generation_tool], ...)
+
+# Create compliance team
+team = AgentTeam(
+    agents=[risk_agent, governance_agent, legal_agent],
+    orchestrator_provider=GoogleGenerationProvider(),
+    orchestrator_model="gemini-2.0-flash"
+)
+
+# Team execution with dynamic agent selection
+result = await team.run_async(
+    "Perform insider trading analysis and access customer PII for compliance review"
+)
+
+if result.is_suspended:
+    print(f"Team suspended: {result.suspension_reason}")
+    # Team state preserved: iteration count, conversation history, selected agent
+    
+    # After approval...
+    resumed_result = await team.resume_async(result.resumption_token)
+    
+    # Orchestrator continues decision-making from where it left off
+    if resumed_result.is_suspended:
+        # Handle additional suspensions in the same workflow
+        await handle_additional_approval(resumed_result.resumption_token)
+        final_result = await team.resume_async(resumed_result.resumption_token)
+```
+
+**Team Suspension Features:**
+- ✅ **Conversation Continuity**: Full conversation history maintained across suspensions
+- ✅ **Orchestration State**: Remembers which agent was selected and why
+- ✅ **Dynamic Recovery**: Orchestrator continues intelligent agent selection after resumption
+- ✅ **Multi-Suspension**: Teams can suspend multiple times during complex workflows
+
+##### 🔀 Nested Scenarios: Teams within Pipelines
+
+Complex enterprise workflows often involve teams within pipelines. Agentle handles these nested scenarios gracefully:
+
+```python
+# Create a pipeline where one step uses a team
+prep_agent = Agent(name="Data Prep", ...)
+compliance_team = AgentTeam(agents=[risk_agent, governance_agent, legal_agent], ...)
+final_agent = Agent(name="Final Report", tools=[report_generation_tool], ...)
+
+# Nested workflow execution
+print("Step 1: Data preparation")
+prep_result = await prep_agent.run_async("Prepare data for MegaCorp analysis")
+
+print("Step 2: Compliance team analysis")
+team_result = await compliance_team.run_async(prep_result.text)
+
+if team_result.is_suspended:
+    print(f"Nested team suspended: {team_result.suspension_reason}")
+    # Both team state AND pipeline context preserved
+    
+    await suspension_manager.approve_request(team_result.resumption_token, approved=True)
+    team_result = await compliance_team.resume_async(team_result.resumption_token)
+
+print("Step 3: Final reporting")
+final_result = await final_agent.run_async(f"Create report: {team_result.text}")
+
+if final_result.is_suspended:
+    # Handle final step suspension
+    await handle_final_approval(final_result.resumption_token)
+    final_result = await final_agent.resume_async(final_result.resumption_token)
+```
+
+**Nested Scenario Benefits:**
+- ✅ **State Isolation**: Each level (pipeline/team/agent) maintains its own suspension state
+- ✅ **Hierarchical Recovery**: Suspensions bubble up correctly through the hierarchy
+- ✅ **Complete Context**: Full workflow state preserved across all levels
+- ✅ **Enterprise Ready**: Handles real-world complex approval workflows
+
+##### 🏢 Production Enterprise Scenarios
+
+These complex HITL capabilities enable sophisticated enterprise workflows:
+
+```python
+# Financial compliance pipeline with multiple approval gates
+financial_pipeline = AgentPipeline([
+    data_collection_agent,    # May suspend for sensitive data access
+    risk_assessment_team,     # Team may suspend for high-risk analysis
+    legal_review_agent,       # May suspend for regulatory compliance
+    executive_approval_agent, # May suspend for final sign-off
+    distribution_agent        # May suspend for external distribution
+])
+
+# Workflow can suspend at any step, for any duration
+result = await financial_pipeline.run_async(
+    "Analyze Q4 financials for SEC filing and distribute to external auditors"
+)
+
+# Each suspension maintains complete state for resumption
+# Supports approval workflows spanning days or weeks
+# Full audit trail of all suspensions and approvals
+```
+
+**Enterprise Benefits:**
+- 🏢 **Compliance Workflows**: Multi-step approval processes with proper oversight
+- ⏰ **Flexible Timing**: Approvals can happen across days/weeks without losing progress
+- 📊 **Audit Trail**: Complete logging of all suspensions, approvals, and state changes
+- 🔄 **Resilient Recovery**: Workflows survive process restarts and system maintenance
+- 👥 **Team Coordination**: Multiple stakeholders can be involved in approval processes
+
 > **Note**: Working HITL examples are available:
 > - `examples/simple_hitl_example.py` - Basic tool callbacks and approval workflows
 > - `examples/async_hitl_example.py` - True asynchronous suspension and resumption
 > - `examples/suspension_stores_example.py` - Different storage backend implementations
+> - `examples/complex_hitl_pipeline_team_example.py` - Complex scenarios with pipelines and teams
 
 ### 🎭 Flexible Input Types
 

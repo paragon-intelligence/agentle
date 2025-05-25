@@ -122,7 +122,7 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
     The complete conversation context at the end of execution.
     """
 
-    parsed: T_StructuredOutput | None = Field(default=None)
+    parsed: T_StructuredOutput
     """
     Structured data extracted from the agent's response when a response schema was provided.
     Will be None if no schema was specified or if execution is suspended.

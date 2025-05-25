@@ -880,6 +880,9 @@ class AgentToStreamlit(Adapter[Agent, "Callable[[], None]"]):
                             result = temp_agent_for_run.run(final_agent_input)
 
                         generation = result.generation
+                        if generation is None:
+                            st.error("No generation found")
+                            return
                         response_text = generation.text or "..."
 
                         response_metadata_agent: Dict[str, Any] = {}

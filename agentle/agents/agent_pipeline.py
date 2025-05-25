@@ -142,6 +142,142 @@ class AgentPipeline(BaseModel):
         description="When True, enables detailed logging of pipeline execution steps.",
     )
 
+    async def resume_async(
+        self, resumption_token: str, approval_data: dict[str, Any] | None = None
+    ) -> AgentRunOutput[Any]:
+        """
+        Resume a suspended pipeline execution.
+
+        This method resumes a pipeline that was suspended due to a tool requiring
+        human approval. It retrieves the pipeline state and continues execution
+        from where it left off.
+
+        Args:
+            resumption_token: Token from a suspended pipeline execution
+            approval_data: Optional approval data to pass to the resumed execution
+
+        Returns:
+            AgentRunOutput with the completed or newly suspended execution
+
+        Raises:
+            ValueError: If the resumption token is invalid or not for a pipeline
+        """
+        if not self.agents:
+            raise ValueError("Pipeline must contain at least one agent")
+
+        # Resume the agent execution first
+        # We need to get the suspended agent and resume it
+        # For now, we'll delegate to the first agent's resume method
+        # In a more sophisticated implementation, we'd track which specific agent was suspended
+        resumed_result = await self.agents[0].resume_async(
+            resumption_token, approval_data
+        )
+
+        # Check if we have pipeline state to continue from
+        pipeline_state = resumed_result.context.get_checkpoint_data("pipeline_state")
+        if not pipeline_state:
+            # If no pipeline state, just return the resumed result
+            return resumed_result
+
+        # Extract pipeline state
+        current_step = pipeline_state.get("current_step", 0)
+        current_input = pipeline_state.get("current_input", "")
+        intermediate_outputs_data = pipeline_state.get("intermediate_outputs", [])
+        debug_mode = pipeline_state.get("debug_mode", self.debug_mode)
+
+        # Reconstruct intermediate outputs for debugging
+        intermediate_outputs: MutableSequence[tuple[str, AgentRunOutput[Any]]] = []
+
+        # Continue from the next step after the suspended one
+        next_step = current_step + 1
+
+        # Use the resumed result as the current input for the next step
+        if resumed_result.generation and resumed_result.generation.text:
+            current_input = resumed_result.generation.text
+
+        last_output = resumed_result
+
+        # Continue processing remaining agents
+        for i in range(next_step, len(self.agents)):
+            agent = self.agents[i]
+
+            if debug_mode:
+                logger.info(
+                    f"Pipeline resume step {i + 1}/{len(self.agents)}: Running agent '{agent.name}'"
+                )
+
+            # Run the current agent with the current input
+            output = await agent.run_async(current_input)
+            last_output = output
+
+            # Check if this agent also gets suspended
+            if output.is_suspended:
+                if debug_mode:
+                    suspension_msg = (
+                        f"Pipeline suspended again at step {i + 1}/{len(self.agents)} "
+                        f"(Agent '{agent.name}'): {output.suspension_reason}"
+                    )
+                    logger.info(suspension_msg)
+
+                # Update pipeline state for the new suspension point
+                if output.context:
+                    output.context.set_checkpoint_data(
+                        "pipeline_state",
+                        {
+                            "current_step": i,
+                            "total_steps": len(self.agents),
+                            "current_input": current_input,
+                            "intermediate_outputs": intermediate_outputs_data
+                            + [
+                                {
+                                    "agent_name": agent.name,
+                                    "output_text": resumed_result.generation.text
+                                    if resumed_result.generation
+                                    else "",
+                                }
+                            ],
+                            "debug_mode": debug_mode,
+                        },
+                    )
+
+                return output
+
+            # Store intermediate output if in debug mode
+            if debug_mode:
+                intermediate_outputs.append((agent.name, output))
+
+            # If this is not the last agent, prepare input for the next agent
+            if i < len(self.agents) - 1:
+                if output.generation and output.generation.text:
+                    current_input = output.generation.text
+                else:
+                    if debug_mode:
+                        logger.warning(
+                            f"Agent '{agent.name}' produced no text output. Pipeline terminated early."
+                        )
+                    break
+
+        return last_output
+
+    def resume(
+        self, resumption_token: str, approval_data: dict[str, Any] | None = None
+    ) -> AgentRunOutput[Any]:
+        """
+        Resume a suspended pipeline execution synchronously.
+
+        Args:
+            resumption_token: Token from a suspended pipeline execution
+            approval_data: Optional approval data to pass to the resumed execution
+
+        Returns:
+            AgentRunOutput with the completed or newly suspended execution
+        """
+        return run_sync(
+            self.resume_async,
+            resumption_token=resumption_token,
+            approval_data=approval_data,
+        )
+
     def run(self, input: AgentInput | Any) -> AgentRunOutput[Any]:
         """
         Run the agent pipeline synchronously with the provided input.
@@ -232,6 +368,39 @@ class AgentPipeline(BaseModel):
             output = await agent.run_async(current_input)
             last_output = output
 
+            # Check if the agent execution was suspended
+            if output.is_suspended:
+                if self.debug_mode:
+                    suspension_msg = (
+                        f"Pipeline suspended at step {i + 1}/{len(self.agents)} "
+                        f"(Agent '{agent.name}'): {output.suspension_reason}"
+                    )
+                    logger.info(suspension_msg)
+
+                # Store pipeline state in the context for resumption
+                if output.context:
+                    output.context.set_checkpoint_data(
+                        "pipeline_state",
+                        {
+                            "current_step": i,
+                            "total_steps": len(self.agents),
+                            "current_input": current_input,
+                            "intermediate_outputs": [
+                                {
+                                    "agent_name": name,
+                                    "output_text": out.generation.text
+                                    if out.generation
+                                    else "",
+                                }
+                                for name, out in intermediate_outputs
+                            ],
+                            "debug_mode": self.debug_mode,
+                        },
+                    )
+
+                # Return the suspended output immediately
+                return output
+
             # Store intermediate output if in debug mode
             if self.debug_mode:
                 intermediate_outputs.append((agent.name, output))
@@ -239,7 +408,7 @@ class AgentPipeline(BaseModel):
             # If this is not the last agent, prepare input for the next agent
             if i < len(self.agents) - 1:
                 # Use the text output as input to the next agent
-                if output.generation.text:
+                if output.generation and output.generation.text:
                     current_input = output.generation.text
                 else:
                     # If no text output, we can't continue the pipeline
@@ -257,9 +426,14 @@ class AgentPipeline(BaseModel):
         if self.debug_mode and intermediate_outputs:
             logger.debug(f"Pipeline completed with {len(intermediate_outputs)} steps:")
             for i, (name, output) in enumerate(intermediate_outputs):
+                output_text = (
+                    output.generation.text
+                    if output.generation and output.generation.text
+                    else ""
+                )
                 logger.debug(
                     f"  Step {i + 1}: Agent '{name}' - "
-                    + f"Output: {output.generation.text[:50]}{'...' if len(output.generation.text or '') > 50 else ''}"
+                    + f"Output: {output_text[:50]}{'...' if len(output_text) > 50 else ''}"
                 )
 
         return last_output

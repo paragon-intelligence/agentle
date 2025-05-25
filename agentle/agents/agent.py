@@ -769,7 +769,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             return AgentRunOutput(
                 generation=None,
                 context=context,
-                parsed=None,
+                parsed=cast(T_Schema, None),
                 is_suspended=False,
                 suspension_reason=f"Request denied: {approval_result.get('approval_data', {}).get('reason', 'No reason provided')}",
             )
@@ -785,7 +785,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             return AgentRunOutput(
                 generation=None,  # No new generation for resumed execution
                 context=context,
-                parsed=None,
+                parsed=cast(T_Schema, None),
                 is_suspended=False,
             )
         except Exception as e:
@@ -793,7 +793,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             return AgentRunOutput(
                 generation=None,
                 context=context,
-                parsed=None,
+                parsed=cast(T_Schema, None),
                 is_suspended=False,
                 suspension_reason=str(e),
             )
@@ -1278,7 +1278,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     return AgentRunOutput(
                         generation=None,
                         context=context,
-                        parsed=None,
+                        parsed=cast(T_Schema, None),
                         is_suspended=True,
                         suspension_reason=suspension_error.reason,
                         resumption_token=resumption_token,
