@@ -608,17 +608,26 @@ context.messages = list(context.messages) + [</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssistantMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from an assistant in the system.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code>(*, message_history[, steps])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code>(*, message_history[, steps])</p></td>
 <td><p>Container for contextual information that guides an agent's behavior.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeveloperMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from a developer in the system.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
 <td><p>All the operations on a read-write sequence.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Step</span></code>(*[, timestamp])</p></td>
 <td><p>Represents a single execution step in an agent's reasoning process.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from a user in the system.</p></td>
 </tr>
 </tbody>
 </table>

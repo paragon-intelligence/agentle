@@ -630,7 +630,6 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.messages.assistant_message</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssistantMessage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.messages.developer_message</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeveloperMessage</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.messages.message</span><span class="w"> </span><span class="kn">import</span> <span class="n">Message</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.messages.user_message</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserMessage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.base.generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">GenerationProvider</span><span class="p">,</span>
@@ -1862,15 +1861,7 @@
                     <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
                         <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                             <span class="n">developer_message</span><span class="p">,</span>
-                            <span class="n">UserMessage</span><span class="p">(</span>
-                                <span class="n">parts</span><span class="o">=</span><span class="p">[</span>
-                                    <span class="n">TextPart</span><span class="p">(</span>
-                                        <span class="n">text</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span>
-                                            <span class="n">cast</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">input</span><span class="p">)</span>
-                                        <span class="p">)</span>
-                                    <span class="p">)</span>
-                                <span class="p">]</span>
-                            <span class="p">),</span>
+                            <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="nb">input</span><span class="p">))]),</span>
                         <span class="p">]</span>
                     <span class="p">)</span>
             <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -2010,7 +2001,11 @@
             <span class="p">):</span>
                 <span class="c1"># Sequence of Messages</span>
                 <span class="c1"># Ensure it&#39;s a list of Messages for type consistency</span>
-                <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">message_history</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="nb">input</span><span class="p">)))</span>
+                <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
+                    <span class="n">message_history</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
+                        <span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">DeveloperMessage</span> <span class="o">|</span> <span class="n">UserMessage</span><span class="p">],</span> <span class="nb">input</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
             <span class="k">elif</span> <span class="nb">input</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">TextPart</span><span class="p">,</span> <span class="n">FilePart</span><span class="p">,</span> <span class="n">Tool</span><span class="p">)):</span>
                 <span class="c1"># Sequence of Parts</span>
                 <span class="c1"># Ensure it&#39;s a list of the correct Part types</span>

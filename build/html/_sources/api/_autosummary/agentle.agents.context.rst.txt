@@ -14,8 +14,11 @@ agentle.agents.context
 
    .. autosummary::
    
+      AssistantMessage
       BaseModel
       Context
+      DeveloperMessage
       MutableSequence
       Step
+      UserMessage
    
