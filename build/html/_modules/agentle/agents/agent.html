@@ -630,6 +630,8 @@
     <span class="n">SuspensionManager</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">NO_CACHE</span><span class="p">,</span> <span class="n">StaticKnowledge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.parsing.cache.cache_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">CacheStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.parsing.cache.in_memory_cache_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">InMemoryCacheStore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.step</span><span class="w"> </span><span class="kn">import</span> <span class="n">Step</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.collections.message_sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageSequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.generation.generation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generation</span>
@@ -792,6 +794,23 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A document parser to be used by the agent. This will be used to parse the static</span>
 <span class="sd">    knowledge documents, if provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cache_store</span><span class="p">:</span> <span class="n">CacheStore</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A cache store to be used by the agent for caching parsed documents.</span>
+<span class="sd">    If None, a default InMemoryCacheStore will be used.</span>
+<span class="sd">    </span>
+<span class="sd">    Example:</span>
+<span class="sd">    ```python</span>
+<span class="sd">    from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore</span>
+<span class="sd">    </span>
+<span class="sd">    # Use in-memory cache (default)</span>
+<span class="sd">    agent = Agent(cache_store=InMemoryCacheStore())</span>
+<span class="sd">    </span>
+<span class="sd">    # Use Redis cache for distributed environments</span>
+<span class="sd">    agent = Agent(cache_store=RedisCacheStore(redis_url=&quot;redis://localhost:6379/0&quot;))</span>
+<span class="sd">    ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">generation_provider</span><span class="p">:</span> <span class="n">GenerationProvider</span>
@@ -1442,6 +1461,10 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">static_knowledge</span><span class="p">:</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span><span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Processing static knowledge&quot;</span><span class="p">))</span>
             <span class="n">knowledge_contents</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># Get or create cache store</span>
+            <span class="n">cache_store</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_store</span> <span class="ow">or</span> <span class="n">InMemoryCacheStore</span><span class="p">()</span>
+
             <span class="k">for</span> <span class="n">knowledge_item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">static_knowledge</span><span class="p">:</span>
                 <span class="c1"># Convert string to StaticKnowledge with NO_CACHE</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">knowledge_item</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1452,7 +1475,6 @@
                 <span class="c1"># Process the knowledge item based on its content type</span>
                 <span class="n">content_to_parse</span> <span class="o">=</span> <span class="n">knowledge_item</span><span class="o">.</span><span class="n">content</span>
                 <span class="n">parsed_content</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="n">cache_key</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="n">parser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">document_parser</span> <span class="ow">or</span> <span class="n">file_parser_default_factory</span><span class="p">(</span>
                     <span class="n">visual_description_provider</span><span class="o">=</span><span class="n">generation_provider</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_visual_description_provider</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -1466,34 +1488,38 @@
                 <span class="c1"># Check if caching is enabled</span>
                 <span class="k">if</span> <span class="n">knowledge_item</span><span class="o">.</span><span class="n">cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">NO_CACHE</span><span class="p">:</span>
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using cache for knowledge item&quot;</span><span class="p">)</span>
+                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using cache store for knowledge item&quot;</span><span class="p">)</span>
                     <span class="p">)</span>
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="c1"># Import aiocache only when needed</span>
-                        <span class="kn">from</span><span class="w"> </span><span class="nn">aiocache</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached</span>
 
-                        <span class="c1"># Create a cache key based on the content</span>
-                        <span class="n">cache_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;static_knowledge_</span><span class="si">{</span><span class="nb">hash</span><span class="p">(</span><span class="n">content_to_parse</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="c1"># Generate cache key</span>
+                    <span class="n">cache_key</span> <span class="o">=</span> <span class="n">cache_store</span><span class="o">.</span><span class="n">get_cache_key</span><span class="p">(</span>
+                        <span class="n">content_to_parse</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+                    <span class="p">)</span>
 
-                        <span class="c1"># Define a cached version of the parse function</span>
-                        <span class="nd">@cached</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-                            <span class="n">ttl</span><span class="o">=</span><span class="kc">None</span>
-                            <span class="k">if</span> <span class="n">knowledge_item</span><span class="o">.</span><span class="n">cache</span> <span class="o">==</span> <span class="s2">&quot;infinite&quot;</span>
-                            <span class="k">else</span> <span class="n">knowledge_item</span><span class="o">.</span><span class="n">cache</span><span class="p">,</span>
-                            <span class="n">key</span><span class="o">=</span><span class="n">cache_key</span><span class="p">,</span>
+                    <span class="c1"># Try to get from cache first</span>
+                    <span class="n">parsed_content</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cache_store</span><span class="o">.</span><span class="n">get_async</span><span class="p">(</span><span class="n">cache_key</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">parsed_content</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1"># Not in cache, parse and store</span>
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cache miss, parsing and storing&quot;</span><span class="p">)</span>
                         <span class="p">)</span>
-                        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_cached_parsed_content</span><span class="p">(</span>
-                            <span class="n">content_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-                        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParsedDocument</span><span class="p">:</span>
-                            <span class="k">return</span> <span class="k">await</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_async</span><span class="p">(</span><span class="n">content_path</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">knowledge_item</span><span class="o">.</span><span class="n">is_url</span><span class="p">():</span>
+                            <span class="n">parsed_content</span> <span class="o">=</span> <span class="k">await</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_async</span><span class="p">(</span><span class="n">content_to_parse</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">knowledge_item</span><span class="o">.</span><span class="n">is_file_path</span><span class="p">():</span>
+                            <span class="n">parsed_content</span> <span class="o">=</span> <span class="k">await</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_async</span><span class="p">(</span><span class="n">content_to_parse</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Raw text - don&#39;t cache raw text</span>
+                            <span class="n">parsed_content</span> <span class="o">=</span> <span class="kc">None</span>
 
-                        <span class="c1"># Get parsed content, either from cache or newly parsed</span>
-                        <span class="n">parsed_content</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_cached_parsed_content</span><span class="p">(</span>
-                            <span class="n">content_to_parse</span>
+                        <span class="c1"># Store in cache if we parsed something</span>
+                        <span class="k">if</span> <span class="n">parsed_content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">await</span> <span class="n">cache_store</span><span class="o">.</span><span class="n">set_async</span><span class="p">(</span>
+                                <span class="n">cache_key</span><span class="p">,</span> <span class="n">parsed_content</span><span class="p">,</span> <span class="n">ttl</span><span class="o">=</span><span class="n">knowledge_item</span><span class="o">.</span><span class="n">cache</span>
+                            <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cache hit for knowledge item&quot;</span><span class="p">)</span>
                         <span class="p">)</span>
-                    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-                        <span class="c1"># If aiocache is not installed, just parse normally</span>
-                        <span class="n">parsed_content</span> <span class="o">=</span> <span class="kc">None</span>
 
                 <span class="c1"># If no cached content (either cache not enabled or cache miss), parse directly</span>
                 <span class="k">if</span> <span class="n">parsed_content</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1926,6 +1952,7 @@
         <span class="n">new_generation_provider</span><span class="p">:</span> <span class="n">GenerationProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_suspension_manager</span><span class="p">:</span> <span class="n">SuspensionManager</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_cache_store</span><span class="p">:</span> <span class="n">CacheStore</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates a clone of the current agent with optionally modified attributes.</span>
@@ -1950,6 +1977,7 @@
 <span class="sd">            new_generation_provider: New generation provider for the agent.</span>
 <span class="sd">            new_url: New URL for the agent.</span>
 <span class="sd">            new_suspension_manager: New suspension manager for the agent.</span>
+<span class="sd">            new_cache_store: New cache store for the agent.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Agent[T_Schema]: A new agent with the specified attributes modified.</span>
@@ -1980,6 +2008,7 @@
             <span class="n">generation_provider</span><span class="o">=</span><span class="n">new_generation_provider</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_provider</span><span class="p">,</span>
             <span class="n">url</span><span class="o">=</span><span class="n">new_url</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
             <span class="n">suspension_manager</span><span class="o">=</span><span class="n">new_suspension_manager</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">suspension_manager</span><span class="p">,</span>
+            <span class="n">cache_store</span><span class="o">=</span><span class="n">new_cache_store</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_store</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 

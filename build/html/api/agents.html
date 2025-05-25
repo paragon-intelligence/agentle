@@ -639,7 +639,7 @@ tools=[get_weather],</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="agentle.agents.agent.Agent">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name='Agent'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description='An</span> <span class="pre">AI</span> <span class="pre">agent'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url='in-memory'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_knowledge=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_parser=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generation_provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_visual_description_provider=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_audio_description_provider=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version='0.0.1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documentationUrl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capabilities=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authentication=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultInputModes=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultOutputModes=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skills=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instructions='You</span> <span class="pre">are</span> <span class="pre">a</span> <span class="pre">helpful</span> <span class="pre">assistant.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_schema=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mcp_servers=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suspension_manager=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uid=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name='Agent'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description='An</span> <span class="pre">AI</span> <span class="pre">agent'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url='in-memory'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_knowledge=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_parser=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_store=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generation_provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_visual_description_provider=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_audio_description_provider=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version='0.0.1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoint=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">documentationUrl=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capabilities=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authentication=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultInputModes=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defaultOutputModes=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skills=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instructions='You</span> <span class="pre">are</span> <span class="pre">a</span> <span class="pre">helpful</span> <span class="pre">assistant.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_schema=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mcp_servers=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suspension_manager=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generic" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code></a></p>
 <p>The main class of the Agentle framework that represents an intelligent agent.</p>
 <p>An Agent is an entity that can process various types of input,
@@ -658,6 +658,7 @@ the expected output structure.</p>
 <li><p><strong>url</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
 <li><p><strong>static_knowledge</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.13)"><em>Sequence</em></a><em>[</em><em>StaticKnowledge</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>)</p></li>
 <li><p><strong>document_parser</strong> (<em>DocumentParser</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>cache_store</strong> (<em>CacheStore</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>generation_provider</strong> (<em>GenerationProvider</em>)</p></li>
 <li><p><strong>file_visual_description_provider</strong> (<em>GenerationProvider</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>file_audio_description_provider</strong> (<em>GenerationProvider</em><em> | </em><em>None</em>)</p></li>
@@ -958,8 +959,23 @@ knowledge documents, if provided.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id24">
-<span class="sig-name descname"><span class="pre">generation_provider</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">GenerationProvider</span></em><a class="headerlink" href="#id24" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="agentle.agents.agent.Agent.cache_store">
+<span class="sig-name descname"><span class="pre">cache_store</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">CacheStore</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#agentle.agents.agent.Agent.cache_store" title="Link to this definition">¶</a></dt>
+<dd><p>A cache store to be used by the agent for caching parsed documents.
+If None, a default InMemoryCacheStore will be used.</p>
+<p>Example:
+<a href="#id24"><span class="problematic" id="id25">``</span></a><a href="#id26"><span class="problematic" id="id27">`</span></a>python
+from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore</p>
+<p># Use in-memory cache (default)
+agent = Agent(cache_store=InMemoryCacheStore())</p>
+<p># Use Redis cache for distributed environments
+agent = Agent(cache_store=RedisCacheStore(redis_url=”redis://localhost:6379/0”))
+<a href="#id28"><span class="problematic" id="id29">``</span></a><a href="#id30"><span class="problematic" id="id31">`</span></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id32">
+<span class="sig-name descname"><span class="pre">generation_provider</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">GenerationProvider</span></em><a class="headerlink" href="#id32" title="Link to this definition">¶</a></dt>
 <dd><p>The service provider of the agent</p>
 </dd></dl>
 
@@ -976,89 +992,89 @@ knowledge documents, if provided.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id25">
-<span class="sig-name descname"><span class="pre">version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#id25" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id33">
+<span class="sig-name descname"><span class="pre">version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#id33" title="Link to this definition">¶</a></dt>
 <dd><p>The version of the agent - format is up to the provider. (e.g. “1.0.0”)</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id26">
-<span class="sig-name descname"><span class="pre">endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#id26" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id34">
+<span class="sig-name descname"><span class="pre">endpoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#id34" title="Link to this definition">¶</a></dt>
 <dd><p>The endpoint of the agent</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id27">
-<span class="sig-name descname"><span class="pre">documentationUrl</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#id27" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id35">
+<span class="sig-name descname"><span class="pre">documentationUrl</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#id35" title="Link to this definition">¶</a></dt>
 <dd><p>A URL to documentation for the agent.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id28">
-<span class="sig-name descname"><span class="pre">capabilities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Capabilities</span></em><a class="headerlink" href="#id28" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id36">
+<span class="sig-name descname"><span class="pre">capabilities</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Capabilities</span></em><a class="headerlink" href="#id36" title="Link to this definition">¶</a></dt>
 <dd><p>Optional capabilities supported by the agent.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id29">
-<span class="sig-name descname"><span class="pre">authentication</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Authentication</span></em><a class="headerlink" href="#id29" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id37">
+<span class="sig-name descname"><span class="pre">authentication</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Authentication</span></em><a class="headerlink" href="#id37" title="Link to this definition">¶</a></dt>
 <dd><p>Authentication requirements for the agent.
 Intended to match OpenAPI authentication structure.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id30">
-<span class="sig-name descname"><span class="pre">defaultInputModes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">MimeType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id30" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id38">
+<span class="sig-name descname"><span class="pre">defaultInputModes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">MimeType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id38" title="Link to this definition">¶</a></dt>
 <dd><p>The set of interaction modes that the agent
 supports across all skills. This can be overridden per-skill.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id31">
-<span class="sig-name descname"><span class="pre">defaultOutputModes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">MimeType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id31" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id39">
+<span class="sig-name descname"><span class="pre">defaultOutputModes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">MimeType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id39" title="Link to this definition">¶</a></dt>
 <dd><p>The set of interaction modes that the agent
 supports across all skills. This can be overridden per-skill.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id32">
-<span class="sig-name descname"><span class="pre">skills</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentSkill</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id32" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id40">
+<span class="sig-name descname"><span class="pre">skills</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">AgentSkill</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id40" title="Link to this definition">¶</a></dt>
 <dd><p>Skills are a unit of capability that an agent can perform.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id33">
-<span class="sig-name descname"><span class="pre">model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ModelKind</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#id33" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id41">
+<span class="sig-name descname"><span class="pre">model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ModelKind</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#id41" title="Link to this definition">¶</a></dt>
 <dd><p>The model to use for the agent’s service provider.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id34">
-<span class="sig-name descname"><span class="pre">instructions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Prompt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id34" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id42">
+<span class="sig-name descname"><span class="pre">instructions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Prompt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id42" title="Link to this definition">¶</a></dt>
 <dd><p>The instructions to use for the agent.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id35">
-<span class="sig-name descname"><span class="pre">response_schema</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.13)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><span class="pre">T_Schema</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#id35" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id43">
+<span class="sig-name descname"><span class="pre">response_schema</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.13)"><span class="pre">type</span></a><span class="p"><span class="pre">[</span></span><span class="pre">T_Schema</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#id43" title="Link to this definition">¶</a></dt>
 <dd><p>The schema of the response to be returned by the agent.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id36">
-<span class="sig-name descname"><span class="pre">mcp_servers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="mcp.html#agentle.mcp.servers.mcp_server_protocol.MCPServerProtocol" title="agentle.mcp.servers.mcp_server_protocol.MCPServerProtocol"><span class="pre">MCPServerProtocol</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id36" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id44">
+<span class="sig-name descname"><span class="pre">mcp_servers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="mcp.html#agentle.mcp.servers.mcp_server_protocol.MCPServerProtocol" title="agentle.mcp.servers.mcp_server_protocol.MCPServerProtocol"><span class="pre">MCPServerProtocol</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id44" title="Link to this definition">¶</a></dt>
 <dd><p>The MCP servers to use for the agent.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id37">
-<span class="sig-name descname"><span class="pre">tools</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tool</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><span class="pre">object</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id37" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id45">
+<span class="sig-name descname"><span class="pre">tools</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tool</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><span class="pre">object</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id45" title="Link to this definition">¶</a></dt>
 <dd><p>The tools to use for the agent.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id38">
-<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AgentConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">AgentConfigDict</span></em><a class="headerlink" href="#id38" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id46">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AgentConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">AgentConfigDict</span></em><a class="headerlink" href="#id46" title="Link to this definition">¶</a></dt>
 <dd><p>The configuration for the agent.</p>
 </dd></dl>
 
@@ -1111,7 +1127,7 @@ generation provider class if available.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id39"><span class="problematic" id="id40">``</span></a><a href="#id41"><span class="problematic" id="id42">`</span></a>python
+<p><a href="#id47"><span class="problematic" id="id48">``</span></a><a href="#id49"><span class="problematic" id="id50">`</span></a>python
 # Load an agent card from a file
 with open(“agent_card.json”, “r”) as f:</p>
 <blockquote>
@@ -1119,7 +1135,7 @@ with open(“agent_card.json”, “r”) as f:</p>
 </div></blockquote>
 <p># Create an agent from the card
 agent = Agent.from_agent_card(agent_card)
-<a href="#id43"><span class="problematic" id="id44">``</span></a><a href="#id45"><span class="problematic" id="id46">`</span></a></p>
+<a href="#id51"><span class="problematic" id="id52">``</span></a><a href="#id53"><span class="problematic" id="id54">`</span></a></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1138,7 +1154,7 @@ authentication, and skills.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id47"><span class="problematic" id="id48">``</span></a><a href="#id49"><span class="problematic" id="id50">`</span></a>python
+<p><a href="#id55"><span class="problematic" id="id56">``</span></a><a href="#id57"><span class="problematic" id="id58">`</span></a>python
 # Create an agent
 agent = Agent(</p>
 <blockquote>
@@ -1165,7 +1181,7 @@ with open(“agent_card.json”, “w”) as f:</p>
 <blockquote>
 <div><p>json.dump(agent_card, f, indent=2)</p>
 </div></blockquote>
-<p><a href="#id51"><span class="problematic" id="id52">``</span></a><a href="#id53"><span class="problematic" id="id54">`</span></a></p>
+<p><a href="#id59"><span class="problematic" id="id60">``</span></a><a href="#id61"><span class="problematic" id="id62">`</span></a></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1197,14 +1213,14 @@ code block is executed and cleaned up after completion, even in case of exceptio
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id55"><span class="problematic" id="id56">``</span></a><a href="#id57"><span class="problematic" id="id58">`</span></a>python
+<p><a href="#id63"><span class="problematic" id="id64">``</span></a><a href="#id65"><span class="problematic" id="id66">`</span></a>python
 async with agent.start_mcp_servers():</p>
 <blockquote>
 <div><p># Operations that require connection to MCP servers
 result = await agent.run_async(“Query to server”)</p>
 </div></blockquote>
 <p># Servers are automatically disconnected here
-<a href="#id59"><span class="problematic" id="id60">``</span></a><a href="#id61"><span class="problematic" id="id62">`</span></a></p>
+<a href="#id67"><span class="problematic" id="id68">``</span></a><a href="#id69"><span class="problematic" id="id70">`</span></a></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1222,14 +1238,14 @@ code block is executed and cleaned up after completion, even in case of exceptio
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id63"><span class="problematic" id="id64">``</span></a><a href="#id65"><span class="problematic" id="id66">`</span></a>python
+<p><a href="#id71"><span class="problematic" id="id72">``</span></a><a href="#id73"><span class="problematic" id="id74">`</span></a>python
 async with agent.start_mcp_servers():</p>
 <blockquote>
 <div><p># Operations that require connection to MCP servers
 result = await agent.run_async(“Query to server”)</p>
 </div></blockquote>
 <p># Servers are automatically disconnected here
-<a href="#id67"><span class="problematic" id="id68">``</span></a><a href="#id69"><span class="problematic" id="id70">`</span></a></p>
+<a href="#id75"><span class="problematic" id="id76">``</span></a><a href="#id77"><span class="problematic" id="id78">`</span></a></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1254,7 +1270,7 @@ easy use in synchronous contexts.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id71"><span class="problematic" id="id72">``</span></a><a href="#id73"><span class="problematic" id="id74">`</span></a>python
+<p><a href="#id79"><span class="problematic" id="id80">``</span></a><a href="#id81"><span class="problematic" id="id82">`</span></a>python
 # Input as string
 result = agent.run(“What is the weather in London?”)</p>
 <p># Input as UserMessage object
@@ -1262,7 +1278,7 @@ from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.models.message_parts.text import TextPart</p>
 <p>message = UserMessage(parts=[TextPart(text=”What is the weather in London?”)])
 result = agent.run(message)
-<a href="#id75"><span class="problematic" id="id76">``</span></a><a href="#id77"><span class="problematic" id="id78">`</span></a></p>
+<a href="#id83"><span class="problematic" id="id84">``</span></a><a href="#id85"><span class="problematic" id="id86">`</span></a></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1338,7 +1354,7 @@ tools that can perform iterative calls to solve complex tasks.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id79"><span class="problematic" id="id80">``</span></a><a href="#id81"><span class="problematic" id="id82">`</span></a>python
+<p><a href="#id87"><span class="problematic" id="id88">``</span></a><a href="#id89"><span class="problematic" id="id90">`</span></a>python
 # Asynchronous use
 result = await agent.run_async(“What’s the weather like in London?”)</p>
 <p># Processing the response
@@ -1350,12 +1366,12 @@ if result.parsed:</p>
 <div><p>location = result.parsed.location
 weather = result.parsed.weather</p>
 </div></blockquote>
-<p><a href="#id83"><span class="problematic" id="id84">``</span></a><a href="#id85"><span class="problematic" id="id86">`</span></a></p>
+<p><a href="#id91"><span class="problematic" id="id92">``</span></a><a href="#id93"><span class="problematic" id="id94">`</span></a></p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="agentle.agents.agent.Agent.clone">
-<span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_instructions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_documentation_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_capabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_authentication</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_default_input_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_default_output_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_skills</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_mcp_servers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_generation_provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_suspension_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent.clone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent.clone" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_instructions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_documentation_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_capabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_authentication</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_default_input_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_default_output_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_skills</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_mcp_servers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_generation_provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_suspension_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_cache_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent.clone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent.clone" title="Link to this definition">¶</a></dt>
 <dd><p>Creates a clone of the current agent with optionally modified attributes.</p>
 <p>This method facilitates creating variations of an agent without modifying the original.
 Unspecified parameters will retain the values from the original agent.</p>
@@ -1378,6 +1394,7 @@ Unspecified parameters will retain the values from the original agent.</p>
 <li><p><strong>new_generation_provider</strong> (<em>GenerationProvider</em><em> | </em><em>None</em>) – New generation provider for the agent.</p></li>
 <li><p><strong>new_url</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – New URL for the agent.</p></li>
 <li><p><strong>new_suspension_manager</strong> (<em>SuspensionManager</em><em> | </em><em>None</em>) – New suspension manager for the agent.</p></li>
+<li><p><strong>new_cache_store</strong> (<em>CacheStore</em><em> | </em><em>None</em>) – New cache store for the agent.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1388,15 +1405,15 @@ Unspecified parameters will retain the values from the original agent.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id87"><span class="problematic" id="id88">``</span></a><a href="#id89"><span class="problematic" id="id90">`</span></a>python
+<p><a href="#id95"><span class="problematic" id="id96">``</span></a><a href="#id97"><span class="problematic" id="id98">`</span></a>python
 # Create a variation of the agent with different instructions
 weather_agent_fr = weather_agent.clone(</p>
 <blockquote>
 <div><p>new_name=”French Weather Agent”,
 new_instructions=”You are a weather agent that can answer questions about the weather in French.”</p>
 </div></blockquote>
-<section id="id91">
-<h3>)<a class="headerlink" href="#id91" title="Link to this heading">¶</a></h3>
+<section id="id99">
+<h3>)<a class="headerlink" href="#id99" title="Link to this heading">¶</a></h3>
 </section>
 </dd></dl>
 
@@ -1418,7 +1435,7 @@ predictable execution flow. This is particularly useful for workflows where:</p>
 <li><p>A clear division of responsibility between agents is needed</p></li>
 </ol>
 <p>Example:
-<a href="#id92"><span class="problematic" id="id93">``</span></a><a href="#id94"><span class="problematic" id="id95">`</span></a>python
+<a href="#id100"><span class="problematic" id="id101">``</span></a><a href="#id102"><span class="problematic" id="id103">`</span></a>python
 from agentle.agents.agent import Agent
 from agentle.agents.pipelines.agent_pipeline import AgentPipeline
 from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider</p>
@@ -1452,7 +1469,7 @@ pipeline = AgentPipeline(agents=[research_agent, analysis_agent, summary_agent])
 <p># Run the pipeline
 result = pipeline.run(“Tell me about renewable energy technologies”)
 print(result.generation.text)
-<a href="#id96"><span class="problematic" id="id97">``</span></a><a href="#id98"><span class="problematic" id="id99">`</span></a></p>
+<a href="#id104"><span class="problematic" id="id105">``</span></a><a href="#id106"><span class="problematic" id="id107">`</span></a></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AgentPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent_pipeline.html#AgentPipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline" title="Link to this definition">¶</a></dt>
@@ -1498,7 +1515,7 @@ from one to the next.</p>
 </dd></dl>
 
 <p class="rubric">Examples</p>
-<p><a href="#id100"><span class="problematic" id="id101">``</span></a><a href="#id102"><span class="problematic" id="id103">`</span></a>python
+<p><a href="#id108"><span class="problematic" id="id109">``</span></a><a href="#id110"><span class="problematic" id="id111">`</span></a>python
 # Create a simple translation pipeline
 english_to_french = Agent(</p>
 <blockquote>
@@ -1523,9 +1540,9 @@ translation_pipeline = AgentPipeline(</p>
 <p># Run the pipeline
 result = translation_pipeline.run(“Hello, how are you?”)
 # Result will be “Hola, ¿cómo estás?” after passing through both agents
-<a href="#id104"><span class="problematic" id="id105">``</span></a><a href="#id106"><span class="problematic" id="id107">`</span></a></p>
+<a href="#id112"><span class="problematic" id="id113">``</span></a><a href="#id114"><span class="problematic" id="id115">`</span></a></p>
 <p>Creating a complex analysis pipeline:
-<a href="#id108"><span class="problematic" id="id109">``</span></a><a href="#id110"><span class="problematic" id="id111">`</span></a>python
+<a href="#id116"><span class="problematic" id="id117">``</span></a><a href="#id118"><span class="problematic" id="id119">`</span></a>python
 # Data extraction agent
 extractor = Agent(name=”Extractor”, instructions=”Extract key data points…”)</p>
 <p># Analysis agent
@@ -1541,15 +1558,15 @@ debug_mode=True  # Enable logging for debugging</p>
 <p>)</p>
 <p># Run pipeline with initial data
 result = analysis_pipeline.run(“Raw data: …”)
-<a href="#id112"><span class="problematic" id="id113">``</span></a><a href="#id114"><span class="problematic" id="id115">`</span></a></p>
+<a href="#id120"><span class="problematic" id="id121">``</span></a><a href="#id122"><span class="problematic" id="id123">`</span></a></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id116">
-<span class="sig-name descname"><span class="pre">agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.13)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#agentle.agents.agent.Agent" title="agentle.agents.agent.Agent"><span class="pre">Agent</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id116" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id124">
+<span class="sig-name descname"><span class="pre">agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.13)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#agentle.agents.agent.Agent" title="agentle.agents.agent.Agent"><span class="pre">Agent</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id124" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id117">
-<span class="sig-name descname"><span class="pre">debug_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><a class="headerlink" href="#id117" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id125">
+<span class="sig-name descname"><span class="pre">debug_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><a class="headerlink" href="#id125" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -1617,7 +1634,7 @@ Can be a string, UserMessage, Context, or any supported AgentInput type.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id118"><span class="problematic" id="id119">``</span></a><a href="#id120"><span class="problematic" id="id121">`</span></a>python
+<p><a href="#id126"><span class="problematic" id="id127">``</span></a><a href="#id128"><span class="problematic" id="id129">`</span></a>python
 pipeline = AgentPipeline(agents=[agent1, agent2, agent3])</p>
 <p># Simple string input
 result = pipeline.run(“Analyze this text”)</p>
@@ -1626,7 +1643,7 @@ from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.models.message_parts.text import TextPart</p>
 <p>message = UserMessage(parts=[TextPart(text=”Analyze this data”)])
 result = pipeline.run(message)
-<a href="#id122"><span class="problematic" id="id123">``</span></a><a href="#id124"><span class="problematic" id="id125">`</span></a></p>
+<a href="#id130"><span class="problematic" id="id131">``</span></a><a href="#id132"><span class="problematic" id="id133">`</span></a></p>
 </dd></dl>
 
 <dl class="py method">
@@ -1654,7 +1671,7 @@ the final agent in the pipeline, or the last agent that successfully produced ou
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id126"><span class="problematic" id="id127">``</span></a><a href="#id128"><span class="problematic" id="id129">`</span></a>python
+<p><a href="#id134"><span class="problematic" id="id135">``</span></a><a href="#id136"><span class="problematic" id="id137">`</span></a>python
 pipeline = AgentPipeline(agents=[agent1, agent2, agent3])</p>
 <p># Using with async/await
 import asyncio</p>
@@ -1664,7 +1681,7 @@ return result.generation.text</p>
 </dd>
 </dl>
 <p>final_result = asyncio.run(process_data())
-<a href="#id130"><span class="problematic" id="id131">``</span></a><a href="#id132"><span class="problematic" id="id133">`</span></a></p>
+<a href="#id138"><span class="problematic" id="id139">``</span></a><a href="#id140"><span class="problematic" id="id141">`</span></a></p>
 <p class="rubric">Notes</p>
 <ul class="simple">
 <li><p>If an agent in the middle of the pipeline produces no text output,
@@ -1699,7 +1716,7 @@ This provides greater flexibility and adaptability, particularly for complex wor
 <li><p>The task completion criteria can only be determined at runtime</p></li>
 </ol>
 <p>Example:
-<a href="#id134"><span class="problematic" id="id135">``</span></a><a href="#id136"><span class="problematic" id="id137">`</span></a>python
+<a href="#id142"><span class="problematic" id="id143">``</span></a><a href="#id144"><span class="problematic" id="id145">`</span></a>python
 from agentle.agents.agent import Agent
 from agentle.agents.agent_team import AgentTeam
 from agentle.agents.agent_config import AgentConfig
@@ -1746,7 +1763,7 @@ team_config=AgentConfig(maxIterations=10)</p>
 <p># Run the team with a task
 result = team.run(“Research the latest advancements in quantum computing and summarize them.”)
 print(result.generation.text)
-<a href="#id138"><span class="problematic" id="id139">``</span></a><a href="#id140"><span class="problematic" id="id141">`</span></a></p>
+<a href="#id146"><span class="problematic" id="id147">``</span></a><a href="#id148"><span class="problematic" id="id149">`</span></a></p>
 <dl class="py class">
 <dt class="sig sig-object py" id="agentle.agents.agent_team.AgentTeam">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AgentTeam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orchestrator_provider=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orchestrator_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_config=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent_team.html#AgentTeam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_team.AgentTeam" title="Link to this definition">¶</a></dt>
@@ -1818,7 +1835,7 @@ content of intermediate responses.</p>
 </dd></dl>
 
 <p class="rubric">Examples</p>
-<p><a href="#id142"><span class="problematic" id="id143">``</span></a><a href="#id144"><span class="problematic" id="id145">`</span></a>python
+<p><a href="#id150"><span class="problematic" id="id151">``</span></a><a href="#id152"><span class="problematic" id="id153">`</span></a>python
 # Create a basic team with several specialized agents
 provider = GoogleGenaiGenerationProvider()</p>
 <dl class="simple">
@@ -1848,9 +1865,9 @@ orchestrator_model=”gemini-2.0-flash”</p>
 <p>)</p>
 <p># Run the team on a task
 result = team.run(“Translate the phrase ‘The square root of 144 is 12’ into French”)
-<a href="#id146"><span class="problematic" id="id147">``</span></a><a href="#id148"><span class="problematic" id="id149">`</span></a></p>
+<a href="#id154"><span class="problematic" id="id155">``</span></a><a href="#id156"><span class="problematic" id="id157">`</span></a></p>
 <p>Creating a team with custom configuration:
-<a href="#id150"><span class="problematic" id="id151">``</span></a><a href="#id152"><span class="problematic" id="id153">`</span></a>python
+<a href="#id158"><span class="problematic" id="id159">``</span></a><a href="#id160"><span class="problematic" id="id161">`</span></a>python
 # Create a team with custom configuration
 custom_team = AgentTeam(</p>
 <blockquote>
@@ -1867,25 +1884,25 @@ maxToolCalls=20    # Allow more tool calls if agents use tools</p>
 <p>)</p>
 <p># Run the team with a complex multi-step task
 result = custom_team.run(“Research, analyze, and summarize recent developments in AI safety”)
-<a href="#id154"><span class="problematic" id="id155">``</span></a><a href="#id156"><span class="problematic" id="id157">`</span></a></p>
+<a href="#id162"><span class="problematic" id="id163">``</span></a><a href="#id164"><span class="problematic" id="id165">`</span></a></p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id158">
-<span class="sig-name descname"><span class="pre">agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#agentle.agents.agent.Agent" title="agentle.agents.agent.Agent"><span class="pre">Agent</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id158" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id166">
+<span class="sig-name descname"><span class="pre">agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#agentle.agents.agent.Agent" title="agentle.agents.agent.Agent"><span class="pre">Agent</span></a><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id166" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id159">
-<span class="sig-name descname"><span class="pre">orchestrator_provider</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">GenerationProvider</span></em><a class="headerlink" href="#id159" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id167">
+<span class="sig-name descname"><span class="pre">orchestrator_provider</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">GenerationProvider</span></em><a class="headerlink" href="#id167" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id160">
-<span class="sig-name descname"><span class="pre">orchestrator_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#id160" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id168">
+<span class="sig-name descname"><span class="pre">orchestrator_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#id168" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id161">
-<span class="sig-name descname"><span class="pre">team_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AgentConfig</span></em><a class="headerlink" href="#id161" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id169">
+<span class="sig-name descname"><span class="pre">team_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">AgentConfig</span></em><a class="headerlink" href="#id169" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
@@ -1978,7 +1995,7 @@ Can be a string, UserMessage, Context, or any supported AgentInput type.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id162"><span class="problematic" id="id163">``</span></a><a href="#id164"><span class="problematic" id="id165">`</span></a>python
+<p><a href="#id170"><span class="problematic" id="id171">``</span></a><a href="#id172"><span class="problematic" id="id173">`</span></a>python
 team = AgentTeam(</p>
 <blockquote>
 <div><p>agents=[research_agent, writing_agent, code_agent],
@@ -1990,7 +2007,7 @@ orchestrator_model=”gemini-2.0-flash”</p>
 result = team.run(“Create a Python function to calculate the Fibonacci sequence”)</p>
 <p># Access the result
 final_text = result.generation.text
-<a href="#id166"><span class="problematic" id="id167">``</span></a><a href="#id168"><span class="problematic" id="id169">`</span></a></p>
+<a href="#id174"><span class="problematic" id="id175">``</span></a><a href="#id176"><span class="problematic" id="id177">`</span></a></p>
 </dd></dl>
 
 <dl class="py method">
@@ -2023,7 +2040,7 @@ iterations is reached.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id170"><span class="problematic" id="id171">``</span></a><a href="#id172"><span class="problematic" id="id173">`</span></a>python
+<p><a href="#id178"><span class="problematic" id="id179">``</span></a><a href="#id180"><span class="problematic" id="id181">`</span></a>python
 # Using the team with async/await
 import asyncio</p>
 <dl>
@@ -2039,7 +2056,7 @@ return result.generation.text</p>
 </dd>
 </dl>
 <p>final_result = asyncio.run(process_complex_task())
-<a href="#id174"><span class="problematic" id="id175">``</span></a><a href="#id176"><span class="problematic" id="id177">`</span></a></p>
+<a href="#id182"><span class="problematic" id="id183">``</span></a><a href="#id184"><span class="problematic" id="id185">`</span></a></p>
 <p class="rubric">Notes</p>
 <ul class="simple">
 <li><p>The team_config.maxIterations parameter controls the maximum number of
@@ -2068,7 +2085,7 @@ When adding another AgentTeam, all its agents are added to the current team.</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<p><a href="#id178"><span class="problematic" id="id179">``</span></a><a href="#id180"><span class="problematic" id="id181">`</span></a>python
+<p><a href="#id186"><span class="problematic" id="id187">``</span></a><a href="#id188"><span class="problematic" id="id189">`</span></a>python
 # Create initial team
 basic_team = AgentTeam(</p>
 <blockquote>
@@ -2083,7 +2100,7 @@ expanded_team = basic_team + specialized_agent</p>
 other_team = AgentTeam(agents=[agent3, agent4], …)
 combined_team = expanded_team + other_team</p>
 <p># The combined team now contains all agents from both teams
-<a href="#id182"><span class="problematic" id="id183">``</span></a><a href="#id184"><span class="problematic" id="id185">`</span></a></p>
+<a href="#id190"><span class="problematic" id="id191">``</span></a><a href="#id192"><span class="problematic" id="id193">`</span></a></p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2180,23 +2197,24 @@ combined_team = expanded_team + other_team</p>
 <li><a class="reference internal" href="#id18"><code class="docutils literal notranslate"><span class="pre">Agent.url</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.static_knowledge"><code class="docutils literal notranslate"><span class="pre">Agent.static_knowledge</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.document_parser"><code class="docutils literal notranslate"><span class="pre">Agent.document_parser</span></code></a></li>
-<li><a class="reference internal" href="#id24"><code class="docutils literal notranslate"><span class="pre">Agent.generation_provider</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent.Agent.cache_store"><code class="docutils literal notranslate"><span class="pre">Agent.cache_store</span></code></a></li>
+<li><a class="reference internal" href="#id32"><code class="docutils literal notranslate"><span class="pre">Agent.generation_provider</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.file_visual_description_provider"><code class="docutils literal notranslate"><span class="pre">Agent.file_visual_description_provider</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.file_audio_description_provider"><code class="docutils literal notranslate"><span class="pre">Agent.file_audio_description_provider</span></code></a></li>
-<li><a class="reference internal" href="#id25"><code class="docutils literal notranslate"><span class="pre">Agent.version</span></code></a></li>
-<li><a class="reference internal" href="#id26"><code class="docutils literal notranslate"><span class="pre">Agent.endpoint</span></code></a></li>
-<li><a class="reference internal" href="#id27"><code class="docutils literal notranslate"><span class="pre">Agent.documentationUrl</span></code></a></li>
-<li><a class="reference internal" href="#id28"><code class="docutils literal notranslate"><span class="pre">Agent.capabilities</span></code></a></li>
-<li><a class="reference internal" href="#id29"><code class="docutils literal notranslate"><span class="pre">Agent.authentication</span></code></a></li>
-<li><a class="reference internal" href="#id30"><code class="docutils literal notranslate"><span class="pre">Agent.defaultInputModes</span></code></a></li>
-<li><a class="reference internal" href="#id31"><code class="docutils literal notranslate"><span class="pre">Agent.defaultOutputModes</span></code></a></li>
-<li><a class="reference internal" href="#id32"><code class="docutils literal notranslate"><span class="pre">Agent.skills</span></code></a></li>
-<li><a class="reference internal" href="#id33"><code class="docutils literal notranslate"><span class="pre">Agent.model</span></code></a></li>
-<li><a class="reference internal" href="#id34"><code class="docutils literal notranslate"><span class="pre">Agent.instructions</span></code></a></li>
-<li><a class="reference internal" href="#id35"><code class="docutils literal notranslate"><span class="pre">Agent.response_schema</span></code></a></li>
-<li><a class="reference internal" href="#id36"><code class="docutils literal notranslate"><span class="pre">Agent.mcp_servers</span></code></a></li>
-<li><a class="reference internal" href="#id37"><code class="docutils literal notranslate"><span class="pre">Agent.tools</span></code></a></li>
-<li><a class="reference internal" href="#id38"><code class="docutils literal notranslate"><span class="pre">Agent.config</span></code></a></li>
+<li><a class="reference internal" href="#id33"><code class="docutils literal notranslate"><span class="pre">Agent.version</span></code></a></li>
+<li><a class="reference internal" href="#id34"><code class="docutils literal notranslate"><span class="pre">Agent.endpoint</span></code></a></li>
+<li><a class="reference internal" href="#id35"><code class="docutils literal notranslate"><span class="pre">Agent.documentationUrl</span></code></a></li>
+<li><a class="reference internal" href="#id36"><code class="docutils literal notranslate"><span class="pre">Agent.capabilities</span></code></a></li>
+<li><a class="reference internal" href="#id37"><code class="docutils literal notranslate"><span class="pre">Agent.authentication</span></code></a></li>
+<li><a class="reference internal" href="#id38"><code class="docutils literal notranslate"><span class="pre">Agent.defaultInputModes</span></code></a></li>
+<li><a class="reference internal" href="#id39"><code class="docutils literal notranslate"><span class="pre">Agent.defaultOutputModes</span></code></a></li>
+<li><a class="reference internal" href="#id40"><code class="docutils literal notranslate"><span class="pre">Agent.skills</span></code></a></li>
+<li><a class="reference internal" href="#id41"><code class="docutils literal notranslate"><span class="pre">Agent.model</span></code></a></li>
+<li><a class="reference internal" href="#id42"><code class="docutils literal notranslate"><span class="pre">Agent.instructions</span></code></a></li>
+<li><a class="reference internal" href="#id43"><code class="docutils literal notranslate"><span class="pre">Agent.response_schema</span></code></a></li>
+<li><a class="reference internal" href="#id44"><code class="docutils literal notranslate"><span class="pre">Agent.mcp_servers</span></code></a></li>
+<li><a class="reference internal" href="#id45"><code class="docutils literal notranslate"><span class="pre">Agent.tools</span></code></a></li>
+<li><a class="reference internal" href="#id46"><code class="docutils literal notranslate"><span class="pre">Agent.config</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.debug"><code class="docutils literal notranslate"><span class="pre">Agent.debug</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.suspension_manager"><code class="docutils literal notranslate"><span class="pre">Agent.suspension_manager</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.model_config"><code class="docutils literal notranslate"><span class="pre">Agent.model_config</span></code></a></li>
@@ -2219,8 +2237,8 @@ combined_team = expanded_team + other_team</p>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline"><code class="docutils literal notranslate"><span class="pre">AgentPipeline</span></code></a><ul>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.agents"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.agents</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.debug_mode"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.debug_mode</span></code></a></li>
-<li><a class="reference internal" href="#id116"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.agents</span></code></a></li>
-<li><a class="reference internal" href="#id117"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.debug_mode</span></code></a></li>
+<li><a class="reference internal" href="#id124"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.agents</span></code></a></li>
+<li><a class="reference internal" href="#id125"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.debug_mode</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.resume_async"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.resume_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.resume"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.resume()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.run"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.run()</span></code></a></li>
@@ -2236,10 +2254,10 @@ combined_team = expanded_team + other_team</p>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.orchestrator_provider"><code class="docutils literal notranslate"><span class="pre">AgentTeam.orchestrator_provider</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.orchestrator_model"><code class="docutils literal notranslate"><span class="pre">AgentTeam.orchestrator_model</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.team_config"><code class="docutils literal notranslate"><span class="pre">AgentTeam.team_config</span></code></a></li>
-<li><a class="reference internal" href="#id158"><code class="docutils literal notranslate"><span class="pre">AgentTeam.agents</span></code></a></li>
-<li><a class="reference internal" href="#id159"><code class="docutils literal notranslate"><span class="pre">AgentTeam.orchestrator_provider</span></code></a></li>
-<li><a class="reference internal" href="#id160"><code class="docutils literal notranslate"><span class="pre">AgentTeam.orchestrator_model</span></code></a></li>
-<li><a class="reference internal" href="#id161"><code class="docutils literal notranslate"><span class="pre">AgentTeam.team_config</span></code></a></li>
+<li><a class="reference internal" href="#id166"><code class="docutils literal notranslate"><span class="pre">AgentTeam.agents</span></code></a></li>
+<li><a class="reference internal" href="#id167"><code class="docutils literal notranslate"><span class="pre">AgentTeam.orchestrator_provider</span></code></a></li>
+<li><a class="reference internal" href="#id168"><code class="docutils literal notranslate"><span class="pre">AgentTeam.orchestrator_model</span></code></a></li>
+<li><a class="reference internal" href="#id169"><code class="docutils literal notranslate"><span class="pre">AgentTeam.team_config</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.Config"><code class="docutils literal notranslate"><span class="pre">AgentTeam.Config</span></code></a><ul>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.Config.arbitrary_types_allowed"><code class="docutils literal notranslate"><span class="pre">AgentTeam.Config.arbitrary_types_allowed</span></code></a></li>
 </ul>

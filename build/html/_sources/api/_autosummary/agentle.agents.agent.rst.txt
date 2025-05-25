@@ -32,6 +32,7 @@ agentle.agents.agent
       Authentication
       BaseModel
       BytesIO
+      CacheStore
       Callable
       Capabilities
       ConfigDict
@@ -42,6 +43,7 @@ agentle.agents.agent
       Generation
       GenerationProvider
       Generator
+      InMemoryCacheStore
       MCPServerProtocol
       Maybe
       MessageSequence
