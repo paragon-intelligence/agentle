@@ -1423,9 +1423,11 @@
         <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_input_to_context</span><span class="p">(</span>
             <span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span>
         <span class="p">)</span>
+
         <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">&quot;Converted input to context with </span><span class="si">%d</span><span class="s2"> messages&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span>
+                <span class="s2">&quot;Converted input to context with </span><span class="si">%d</span><span class="s2"> messages&quot;</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
@@ -1459,7 +1461,7 @@
                 <span class="n">T_Schema</span>
             <span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
                 <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">messages</span><span class="p">,</span>
+                <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>
                 <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                 <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span>
                 <span class="k">if</span> <span class="n">trace_params</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -1553,7 +1555,7 @@
             <span class="p">)</span>
             <span class="n">tool_call_generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
                 <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                <span class="n">messages</span><span class="o">=</span><span class="n">MessageSequence</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span>
+                <span class="n">messages</span><span class="o">=</span><span class="n">MessageSequence</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">append_before_last_message</span><span class="p">(</span><span class="n">called_tools_prompt</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">elements</span><span class="p">,</span>
                 <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
@@ -1580,7 +1582,7 @@
                     <span class="p">)</span>
                     <span class="n">generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
                         <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">messages</span><span class="p">,</span>
+                        <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>
                         <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                         <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -1806,11 +1808,11 @@
             <span class="k">return</span> <span class="nb">input</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">UserMessage</span><span class="p">):</span>
             <span class="c1"># If it&#39;s a UserMessage, prepend the developer instructions.</span>
-            <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="p">[</span><span class="n">developer_message</span><span class="p">,</span> <span class="nb">input</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">message_history</span><span class="o">=</span><span class="p">[</span><span class="n">developer_message</span><span class="p">,</span> <span class="nb">input</span><span class="p">])</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="c1"># Handle plain string input</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
                     <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="nb">input</span><span class="p">)]),</span>
                 <span class="p">]</span>
@@ -1818,7 +1820,7 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">(</span><span class="n">TextPart</span><span class="p">,</span> <span class="n">FilePart</span><span class="p">,</span> <span class="n">Tool</span><span class="p">)):</span>
             <span class="c1"># Handle single message parts</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
                     <span class="n">UserMessage</span><span class="p">(</span>
                         <span class="n">parts</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">TextPart</span> <span class="o">|</span> <span class="n">FilePart</span> <span class="o">|</span> <span class="n">Tool</span><span class="p">],</span> <span class="p">[</span><span class="nb">input</span><span class="p">])</span>
@@ -1828,9 +1830,9 @@
         <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">Tool</span><span class="p">):</span>
             <span class="c1"># Handle callable input (that&#39;s not a Tool)</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
-                    <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="nb">input</span><span class="p">())]),</span>
+                    <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">input</span><span class="p">()))]),</span>
                 <span class="p">]</span>
             <span class="p">)</span>
         <span class="c1"># Handle pandas DataFrame if available</span>
@@ -1841,7 +1843,7 @@
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
                     <span class="c1"># Convert DataFrame to Markdown</span>
                     <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                        <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                             <span class="n">developer_message</span><span class="p">,</span>
                             <span class="n">UserMessage</span><span class="p">(</span>
                                 <span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)]</span>
@@ -1858,9 +1860,17 @@
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
                     <span class="c1"># Convert NumPy array to string representation</span>
                     <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                        <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                             <span class="n">developer_message</span><span class="p">,</span>
-                            <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="nb">input</span><span class="p">))]),</span>
+                            <span class="n">UserMessage</span><span class="p">(</span>
+                                <span class="n">parts</span><span class="o">=</span><span class="p">[</span>
+                                    <span class="n">TextPart</span><span class="p">(</span>
+                                        <span class="n">text</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span>
+                                            <span class="n">cast</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">input</span><span class="p">)</span>
+                                        <span class="p">)</span>
+                                    <span class="p">)</span>
+                                <span class="p">]</span>
+                            <span class="p">),</span>
                         <span class="p">]</span>
                     <span class="p">)</span>
             <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -1892,7 +1902,7 @@
                     <span class="p">)</span>
 
                     <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                        <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                             <span class="n">developer_message</span><span class="p">,</span>
                             <span class="n">UserMessage</span><span class="p">(</span>
                                 <span class="n">parts</span><span class="o">=</span><span class="p">[</span>
@@ -1913,7 +1923,7 @@
             <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
                 <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Input is binary data of size </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes.&quot;</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
                     <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)]),</span>
                 <span class="p">]</span>
@@ -1921,7 +1931,7 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">time</span><span class="p">)):</span>
             <span class="c1"># Convert datetime objects to ISO format string</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
                     <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">isoformat</span><span class="p">())]),</span>
                 <span class="p">]</span>
@@ -1932,7 +1942,7 @@
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">file_content</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
                     <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                        <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                             <span class="n">developer_message</span><span class="p">,</span>
                             <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">file_content</span><span class="p">)]),</span>
                         <span class="p">]</span>
@@ -1940,7 +1950,7 @@
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="c1"># Fallback to string representation if reading fails</span>
                     <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                        <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                             <span class="n">developer_message</span><span class="p">,</span>
                             <span class="n">UserMessage</span><span class="p">(</span>
                                 <span class="n">parts</span><span class="o">=</span><span class="p">[</span>
@@ -1954,14 +1964,14 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># If it&#39;s not a file or doesn&#39;t exist, use the string representation</span>
                 <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                         <span class="n">developer_message</span><span class="p">,</span>
                         <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="nb">input</span><span class="p">))]),</span>
                     <span class="p">]</span>
                 <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">Prompt</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
                     <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">text</span><span class="p">)]),</span>
                 <span class="p">]</span>
@@ -1978,14 +1988,14 @@
             <span class="k">else</span><span class="p">:</span>  <span class="c1"># str</span>
                 <span class="n">text</span> <span class="o">=</span> <span class="n">content</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
                     <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)]),</span>
                 <span class="p">]</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">ParsedDocument</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
                     <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">md</span><span class="p">)]),</span>
                 <span class="p">]</span>
@@ -2000,13 +2010,13 @@
             <span class="p">):</span>
                 <span class="c1"># Sequence of Messages</span>
                 <span class="c1"># Ensure it&#39;s a list of Messages for type consistency</span>
-                <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="nb">input</span><span class="p">)))</span>
+                <span class="k">return</span> <span class="n">Context</span><span class="p">(</span><span class="n">message_history</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="nb">input</span><span class="p">)))</span>
             <span class="k">elif</span> <span class="nb">input</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">TextPart</span><span class="p">,</span> <span class="n">FilePart</span><span class="p">,</span> <span class="n">Tool</span><span class="p">)):</span>
                 <span class="c1"># Sequence of Parts</span>
                 <span class="c1"># Ensure it&#39;s a list of the correct Part types</span>
                 <span class="n">valid_parts</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">TextPart</span> <span class="o">|</span> <span class="n">FilePart</span> <span class="o">|</span> <span class="n">Tool</span><span class="p">],</span> <span class="nb">input</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                         <span class="n">developer_message</span><span class="p">,</span>
                         <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">valid_parts</span><span class="p">)),</span>
                     <span class="p">]</span>
@@ -2021,7 +2031,7 @@
                     <span class="c1"># Convert Pydantic model to JSON string</span>
                     <span class="n">text</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
                     <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                        <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                             <span class="n">developer_message</span><span class="p">,</span>
                             <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;```json</span><span class="se">\n</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="se">\n</span><span class="s2">```&quot;</span><span class="p">)]),</span>
                         <span class="p">]</span>
@@ -2038,9 +2048,9 @@
                 <span class="p">)</span>  <span class="c1"># Add default=str for non-serializable</span>
             <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
                 <span class="c1"># Fallback to string representation if json fails</span>
-                <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Input is a collection: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Input is a collection: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span><span class="w"> </span><span class="nb">input</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>
-                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                     <span class="n">developer_message</span><span class="p">,</span>
                     <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;```json</span><span class="se">\n</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="se">\n</span><span class="s2">```&quot;</span><span class="p">)]),</span>
                 <span class="p">]</span>
@@ -2060,7 +2070,7 @@
             <span class="n">text</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Input of type </span><span class="si">{</span><span class="n">input_type_name</span><span class="si">}</span><span class="s2"> could not be converted to string&quot;</span>
 
         <span class="k">return</span> <span class="n">Context</span><span class="p">(</span>  <span class="c1"># type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]</span>
-            <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">message_history</span><span class="o">=</span><span class="p">[</span>
                 <span class="n">developer_message</span><span class="p">,</span>
                 <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)]),</span>  <span class="c1"># type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]</span>
             <span class="p">]</span>

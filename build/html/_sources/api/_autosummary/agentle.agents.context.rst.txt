@@ -16,6 +16,6 @@ agentle.agents.context
    
       BaseModel
       Context
-      Sequence
+      MutableSequence
       Step
    

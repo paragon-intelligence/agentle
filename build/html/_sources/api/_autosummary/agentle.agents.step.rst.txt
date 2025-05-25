@@ -4,6 +4,12 @@ agentle.agents.step
 .. automodule:: agentle.agents.step
 
    
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+   
    .. rubric:: Classes
 
    .. autosummary::
@@ -12,4 +18,5 @@ agentle.agents.step
       Sequence
       Step
       ToolExecutionSuggestion
+      datetime
    
