@@ -301,6 +301,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.context.html">agentle.agents.context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.context_state.html">agentle.agents.context_state</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.errors.max_tool_calls_exceeded_error.html">agentle.agents.errors.max_tool_calls_exceeded_error</a></li>
 </ul>
@@ -310,6 +311,7 @@
 <li class="toctree-l5"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.exceptions.stop_agent_error.html">agentle.agents.exceptions.stop_agent_error</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.execution_state.html">agentle.agents.execution_state</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.knowledge.html">agentle.agents.knowledge</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.knowledge</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.knowledge.document_knowledge.html">agentle.agents.knowledge.document_knowledge</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.knowledge.static_knowledge.html">agentle.agents.knowledge.static_knowledge</a></li>
@@ -1461,6 +1463,17 @@
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No tools available, generating direct response&quot;</span><span class="p">)</span>
             <span class="p">)</span>
+
+            <span class="c1"># Create a step to track the direct generation</span>
+            <span class="n">step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
+                <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;generation&quot;</span><span class="p">,</span>
+                <span class="n">iteration</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">tool_execution_suggestions</span><span class="o">=</span><span class="p">[],</span>  <span class="c1"># No tools called</span>
+                <span class="n">generation_text</span><span class="o">=</span><span class="s2">&quot;Generating direct response...&quot;</span><span class="p">,</span>
+                <span class="n">token_usage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Will be updated after generation</span>
+            <span class="p">)</span>
+
             <span class="n">generation</span><span class="p">:</span> <span class="n">Generation</span><span class="p">[</span>
                 <span class="n">T_Schema</span>
             <span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
@@ -1478,6 +1491,17 @@
                     <span class="s2">&quot;Generated response with </span><span class="si">%d</span><span class="s2"> tokens&quot;</span><span class="p">,</span> <span class="n">generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span>
                 <span class="p">)</span>
             <span class="p">)</span>
+
+            <span class="c1"># Update the step with the actual generation results</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">generation_text</span> <span class="o">=</span> <span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">token_usage</span> <span class="o">=</span> <span class="n">generation</span><span class="o">.</span><span class="n">usage</span>
+            <span class="n">step_duration</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">step_start_time</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># Convert to milliseconds</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span><span class="n">duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">)</span>
+
+            <span class="c1"># Add the step to context</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
 
             <span class="c1"># Update context with final generation and complete execution</span>
             <span class="n">context</span><span class="o">.</span><span class="n">update_token_usage</span><span class="p">(</span><span class="n">generation</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
@@ -1587,6 +1611,17 @@
                         <span class="s2">&quot;Agent didn&#39;t call any tool, generating final response&quot;</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
+                <span class="c1"># Create a step for the final generation (no tools called)</span>
+                <span class="n">final_step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">final_step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
+                    <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;generation&quot;</span><span class="p">,</span>
+                    <span class="n">iteration</span><span class="o">=</span><span class="n">current_iteration</span><span class="p">,</span>
+                    <span class="n">tool_execution_suggestions</span><span class="o">=</span><span class="p">[],</span>  <span class="c1"># No tools called in this final step</span>
+                    <span class="n">generation_text</span><span class="o">=</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">text</span>
+                    <span class="ow">or</span> <span class="s2">&quot;Generating final response...&quot;</span><span class="p">,</span>
+                    <span class="n">token_usage</span><span class="o">=</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">,</span>
+                <span class="p">)</span>
+
                 <span class="c1"># Only make another call if we need structured output or didn&#39;t get text</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
@@ -1601,6 +1636,14 @@
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Final generation complete&quot;</span><span class="p">)</span>
                     <span class="p">)</span>
+
+                    <span class="c1"># Update the step with the final generation results</span>
+                    <span class="n">final_step</span><span class="o">.</span><span class="n">generation_text</span> <span class="o">=</span> <span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+                    <span class="n">final_step</span><span class="o">.</span><span class="n">token_usage</span> <span class="o">=</span> <span class="n">generation</span><span class="o">.</span><span class="n">usage</span>
+                    <span class="n">final_step_duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">final_step_start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                    <span class="n">final_step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span><span class="n">duration_ms</span><span class="o">=</span><span class="n">final_step_duration</span><span class="p">)</span>
+                    <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">final_step</span><span class="p">)</span>
+
                     <span class="c1"># Update context with final generation and complete execution</span>
                     <span class="n">context</span><span class="o">.</span><span class="n">update_token_usage</span><span class="p">(</span><span class="n">generation</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
                     <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
@@ -1612,6 +1655,12 @@
                 <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                     <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using existing text response&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
+
+                <span class="c1"># Complete the final step and add to context</span>
+                <span class="n">final_step_duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">final_step_start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                <span class="n">final_step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span><span class="n">duration_ms</span><span class="o">=</span><span class="n">final_step_duration</span><span class="p">)</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">final_step</span><span class="p">)</span>
+
                 <span class="c1"># Complete execution before returning</span>
                 <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
