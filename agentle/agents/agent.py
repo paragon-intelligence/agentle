@@ -1116,7 +1116,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
                 # Time the tool execution
                 tool_start_time = time.time()
-                tool_result = selected_tool.call(**tool_execution_suggestion.args)
+                tool_result = selected_tool.call(
+                    context=context, **tool_execution_suggestion.args
+                )
                 tool_execution_time = (
                     time.time() - tool_start_time
                 ) * 1000  # Convert to milliseconds

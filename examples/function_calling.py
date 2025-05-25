@@ -69,5 +69,5 @@ agent_response = agent_with_tools.run(
     "What's the weather like in Tokyo? Also, Calculate the monthly payment for a $300,000 mortgage at 4.5% interest for 30 years. Answer in CAPS LOCK."
 )
 print("Agent response:")
-print(agent_response.text)
+print(agent_response)
 print("\n" + "-" * 50 + "\n")

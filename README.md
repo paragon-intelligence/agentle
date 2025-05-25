@@ -541,6 +541,401 @@ Each provider implements `map_model_kind_to_provider_model()` to translate these
 
 ## 🛠️ Advanced Features
 
+### 🤝 Human-in-the-Loop (HITL) Integration
+
+Agentle provides powerful support for Human-in-the-Loop workflows, where human oversight and approval are integrated into AI agent execution. This is crucial for production systems that require human judgment for critical decisions, compliance, or safety.
+
+#### 🔄 Tool-Level Human Approval
+
+Use `before_call` and `after_call` callbacks to implement approval workflows:
+
+```python
+import asyncio
+from datetime import datetime
+from agentle.agents.agent import Agent
+from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+from agentle.generations.tools.tool import Tool
+
+# Simulated approval system (in production, this would be a database/queue)
+pending_approvals = {}
+approval_results = {}
+
+async def request_human_approval(tool_name: str, **kwargs) -> bool:
+    """Request human approval before executing a sensitive tool."""
+    approval_id = f"approval_{datetime.now().timestamp()}"
+    
+    # Store the pending approval
+    pending_approvals[approval_id] = {
+        "tool_name": tool_name,
+        "arguments": kwargs,
+        "timestamp": datetime.now(),
+        "status": "pending"
+    }
+    
+    print(f"🔔 Human approval requested for {tool_name}")
+    print(f"   Approval ID: {approval_id}")
+    print(f"   Arguments: {kwargs}")
+    print(f"   Waiting for approval...")
+    
+    # In a real system, this would:
+    # 1. Send notification to human operator
+    # 2. Store request in database
+    # 3. Return immediately, resuming later when approved
+    
+    # For demo: simulate waiting for approval
+    while approval_id not in approval_results:
+        await asyncio.sleep(1)  # Check every second
+    
+    approved = approval_results[approval_id]
+    print(f"✅ Approval {approval_id}: {'APPROVED' if approved else 'DENIED'}")
+    return approved
+
+def log_tool_execution(tool_name: str, result: any, **kwargs):
+    """Log tool execution for audit trail."""
+    print(f"📝 Tool executed: {tool_name}")
+    print(f"   Result: {str(result)[:100]}...")
+    print(f"   Timestamp: {datetime.now()}")
+
+# Define a sensitive tool that requires approval
+def transfer_funds(from_account: str, to_account: str, amount: float) -> str:
+    """Transfer funds between accounts - requires human approval."""
+    return f"Transferred ${amount} from {from_account} to {to_account}"
+
+def send_email(to: str, subject: str, body: str) -> str:
+    """Send an email - requires human approval."""
+    return f"Email sent to {to} with subject '{subject}'"
+
+# Create tools with HITL callbacks
+transfer_tool = Tool.from_callable(
+    transfer_funds,
+    before_call=lambda **kwargs: asyncio.create_task(
+        request_human_approval("transfer_funds", **kwargs)
+    ),
+    after_call=lambda result, **kwargs: log_tool_execution(
+        "transfer_funds", result, **kwargs
+    )
+)
+
+email_tool = Tool.from_callable(
+    send_email,
+    before_call=lambda **kwargs: asyncio.create_task(
+        request_human_approval("send_email", **kwargs)
+    ),
+    after_call=lambda result, **kwargs: log_tool_execution(
+        "send_email", result, **kwargs
+    )
+)
+
+# Create agent with HITL-enabled tools
+financial_agent = Agent(
+    name="Financial Assistant",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="""You are a financial assistant that can transfer funds and send notifications.
+    Always confirm the details before executing any financial operations.""",
+    tools=[transfer_tool, email_tool]
+)
+
+# Simulate the approval process
+async def simulate_human_operator():
+    """Simulate a human operator approving/denying requests."""
+    await asyncio.sleep(2)  # Simulate human response time
+    
+    # In a real system, this would be a web interface or mobile app
+    for approval_id in list(pending_approvals.keys()):
+        if approval_id not in approval_results:
+            # Simulate human decision (in real system, this comes from UI)
+            approval_results[approval_id] = True  # Approve the request
+            print(f"👤 Human operator approved: {approval_id}")
+
+async def main():
+    # Start the human operator simulation
+    operator_task = asyncio.create_task(simulate_human_operator())
+    
+    # Run the agent (this will pause and wait for human approval)
+    response = await financial_agent.run_async(
+        "Transfer $1000 from account A123 to account B456 and send a confirmation email to user@example.com"
+    )
+    
+    print(f"\n🎯 Final response: {response.text}")
+    
+    await operator_task
+
+# Run the example
+# asyncio.run(main())
+```
+
+#### 🏭 Production HITL Workflow
+
+Here's a real-world example of an asynchronous HITL system where users can submit tasks, go about their day, and approve actions later:
+
+```python
+import asyncio
+import uuid
+from datetime import datetime, timedelta
+from typing import Dict, Optional
+from dataclasses import dataclass
+from enum import Enum
+
+from agentle.agents.agent import Agent
+from agentle.agents.context import Context
+from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+
+class ApprovalStatus(Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    DENIED = "denied"
+    EXPIRED = "expired"
+
+@dataclass
+class ApprovalRequest:
+    id: str
+    user_id: str
+    tool_name: str
+    arguments: Dict
+    context_id: str
+    created_at: datetime
+    expires_at: datetime
+    status: ApprovalStatus = ApprovalStatus.PENDING
+    approved_by: Optional[str] = None
+    approved_at: Optional[datetime] = None
+
+class HITLApprovalSystem:
+    """Production-ready Human-in-the-Loop approval system."""
+    
+    def __init__(self):
+        self.pending_requests: Dict[str, ApprovalRequest] = {}
+        self.contexts: Dict[str, Context] = {}
+    
+    async def request_approval(
+        self, 
+        user_id: str, 
+        tool_name: str, 
+        context: Context,
+        **kwargs
+    ) -> str:
+        """Request human approval and pause agent execution."""
+        approval_id = str(uuid.uuid4())
+        
+        # Store the approval request
+        request = ApprovalRequest(
+            id=approval_id,
+            user_id=user_id,
+            tool_name=tool_name,
+            arguments=kwargs,
+            context_id=context.context_id,
+            created_at=datetime.now(),
+            expires_at=datetime.now() + timedelta(days=7)  # 7-day expiry
+        )
+        
+        self.pending_requests[approval_id] = request
+        self.contexts[context.context_id] = context
+        
+        # Pause the context for human approval
+        context.pause_execution(f"Waiting for approval: {tool_name}")
+        context.set_checkpoint_data("approval_id", approval_id)
+        context.set_checkpoint_data("pending_tool", tool_name)
+        context.set_checkpoint_data("pending_args", kwargs)
+        
+        # In production: send notification (email, Slack, mobile push, etc.)
+        await self._send_approval_notification(request)
+        
+        print(f"🔔 Approval requested: {approval_id}")
+        print(f"   Tool: {tool_name}")
+        print(f"   User: {user_id}")
+        print(f"   Context paused until approval")
+        
+        return approval_id
+    
+    async def approve_request(self, approval_id: str, approver_id: str) -> bool:
+        """Approve a pending request and resume agent execution."""
+        if approval_id not in self.pending_requests:
+            return False
+        
+        request = self.pending_requests[approval_id]
+        if request.status != ApprovalStatus.PENDING:
+            return False
+        
+        # Mark as approved
+        request.status = ApprovalStatus.APPROVED
+        request.approved_by = approver_id
+        request.approved_at = datetime.now()
+        
+        # Resume the context
+        context = self.contexts[request.context_id]
+        context.resume_execution()
+        
+        print(f"✅ Request approved: {approval_id}")
+        print(f"   Approved by: {approver_id}")
+        print(f"   Context resumed: {context.context_id}")
+        
+        # In production: continue agent execution
+        await self._resume_agent_execution(request, context)
+        
+        return True
+    
+    async def deny_request(self, approval_id: str, approver_id: str, reason: str = "") -> bool:
+        """Deny a pending request."""
+        if approval_id not in self.pending_requests:
+            return False
+        
+        request = self.pending_requests[approval_id]
+        request.status = ApprovalStatus.DENIED
+        request.approved_by = approver_id
+        request.approved_at = datetime.now()
+        
+        # Mark context as failed
+        context = self.contexts[request.context_id]
+        context.fail_execution(f"Request denied: {reason}")
+        
+        print(f"❌ Request denied: {approval_id}")
+        print(f"   Reason: {reason}")
+        
+        return True
+    
+    async def _send_approval_notification(self, request: ApprovalRequest):
+        """Send notification to user about pending approval."""
+        # In production: integrate with notification systems
+        print(f"📧 Notification sent to user {request.user_id}")
+        print(f"   'Action required: Approve {request.tool_name} operation'")
+    
+    async def _resume_agent_execution(self, request: ApprovalRequest, context: Context):
+        """Resume agent execution after approval."""
+        # In production: this would trigger the agent to continue
+        print(f"🔄 Resuming agent execution for context {context.context_id}")
+        
+        # Execute the approved tool
+        tool_name = request.tool_name
+        args = request.arguments
+        print(f"   Executing: {tool_name}({args})")
+        
+        # Continue with the agent workflow...
+
+# Example usage in a web API
+hitl_system = HITLApprovalSystem()
+
+def create_hitl_tool(tool_func, user_id: str):
+    """Create a tool with HITL approval."""
+    
+    async def before_call_with_approval(context: Context = None, **kwargs):
+        if context is None:
+            raise ValueError("Context required for HITL approval")
+        
+        approval_id = await hitl_system.request_approval(
+            user_id=user_id,
+            tool_name=tool_func.__name__,
+            context=context,
+            **kwargs
+        )
+        
+        # Wait for approval (in production, this would be handled differently)
+        request = hitl_system.pending_requests[approval_id]
+        while request.status == ApprovalStatus.PENDING:
+            await asyncio.sleep(1)
+        
+        if request.status != ApprovalStatus.APPROVED:
+            raise ValueError(f"Tool execution denied: {request.id}")
+        
+        return True
+    
+    return Tool.from_callable(
+        tool_func,
+        before_call=before_call_with_approval
+    )
+
+# Example: Financial operations requiring approval
+def wire_transfer(amount: float, to_account: str, memo: str = "") -> str:
+    """Execute a wire transfer - requires human approval."""
+    return f"Wire transfer of ${amount} to {to_account} completed. Memo: {memo}"
+
+# Create HITL-enabled agent
+async def create_financial_agent(user_id: str) -> Agent:
+    transfer_tool = create_hitl_tool(wire_transfer, user_id)
+    
+    return Agent(
+        name="Financial Agent",
+        generation_provider=GoogleGenerationProvider(),
+        model="gemini-2.0-flash",
+        instructions="You are a financial assistant that requires human approval for all transactions.",
+        tools=[transfer_tool]
+    )
+
+# API endpoint simulation
+async def submit_financial_task(user_id: str, task: str) -> str:
+    """Submit a financial task that may require human approval."""
+    agent = await create_financial_agent(user_id)
+    
+    try:
+        # This will pause when approval is needed
+        response = await agent.run_async(task)
+        return f"Task completed: {response.text}"
+    except Exception as e:
+        return f"Task failed: {str(e)}"
+
+# Approval interface simulation
+async def approve_pending_request(approval_id: str, approver_id: str) -> bool:
+    """Approve a pending request (called from web UI/mobile app)."""
+    return await hitl_system.approve_request(approval_id, approver_id)
+
+# Example workflow:
+# 1. User submits: "Transfer $5000 to account 123-456-789"
+# 2. Agent processes, reaches transfer tool, requests approval
+# 3. User gets notification, goes about their day
+# 4. Later (hours/days), user approves via mobile app
+# 5. Agent resumes and completes the transfer
+```
+
+#### 🎯 Key Benefits of HITL in Agentle
+
+- **🛡️ Safety & Compliance**: Critical operations require human oversight
+- **⏸️ Pausable Execution**: Agents can pause and resume seamlessly
+- **📱 Flexible Approval**: Approve via web, mobile, email, or any interface
+- **🔍 Audit Trail**: Complete logging of all approvals and decisions
+- **⏰ Asynchronous**: Users don't need to wait - approve when convenient
+- **🔄 Context Preservation**: Full conversation state maintained during pauses
+
+#### 🔧 Enhanced Tool Callbacks
+
+Agentle now supports enhanced `before_call` and `after_call` callbacks in tools, with access to the execution context:
+
+```python
+from agentle.generations.tools.tool import Tool
+
+def sensitive_operation(data: str) -> str:
+    """A sensitive operation that requires approval."""
+    return f"Processed: {data}"
+
+async def request_approval(context=None, **kwargs):
+    """Request human approval before tool execution."""
+    print(f"🔔 Approval requested for operation with args: {kwargs}")
+    # In production: send notification, pause context, wait for approval
+    return True
+
+def log_execution(context=None, result=None, **kwargs):
+    """Log tool execution for audit trail."""
+    print(f"📝 Tool executed with result: {result}")
+
+# Create tool with HITL callbacks
+secure_tool = Tool.from_callable(
+    sensitive_operation,
+    before_call=request_approval,  # Called before tool execution
+    after_call=log_execution       # Called after tool execution
+)
+
+# The context is automatically passed to callbacks when available
+agent = Agent(
+    name="Secure Agent",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You handle sensitive operations with human oversight.",
+    tools=[secure_tool]
+)
+```
+
+This HITL integration makes Agentle suitable for production environments where AI agents handle sensitive operations that require human judgment and approval.
+
+> **Note**: A working HITL example demonstrating tool callbacks and approval workflows is available in `examples/simple_hitl_example.py`.
+
 ### 🎭 Flexible Input Types
 
 Agentle agents handle any input type seamlessly:

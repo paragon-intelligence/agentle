@@ -51,6 +51,7 @@ from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 
 if TYPE_CHECKING:
     from mcp.types import Tool as MCPTool
+    from agentle.agents.context import Context
 
 
 class Tool[T_Output = Any](BaseModel):
@@ -184,7 +185,7 @@ class Tool[T_Output = Any](BaseModel):
         """
         return f"Tool: {self.name}\nDescription: {self.description}\nParameters: {self.parameters}"
 
-    def call(self, **kwargs: object) -> T_Output:
+    def call(self, context: Context | None = None, **kwargs: object) -> T_Output:
         """
         Executes the underlying function with the provided arguments.
 
@@ -193,6 +194,7 @@ class Tool[T_Output = Any](BaseModel):
         was not created with a callable reference.
 
         Args:
+            context: Optional context object for HITL workflows and state management.
             **kwargs: Keyword arguments to pass to the underlying function.
 
         Returns:
@@ -212,10 +214,12 @@ class Tool[T_Output = Any](BaseModel):
             print(result)  # Output: 8
             ```
         """
-        ret = run_sync(self.call_async, timeout=None, **kwargs)
+        ret = run_sync(self.call_async, timeout=None, context=context, **kwargs)
         return ret
 
-    async def call_async(self, **kwargs: object) -> T_Output:
+    async def call_async(
+        self, context: Context | None = None, **kwargs: object
+    ) -> T_Output:
         """
         Executes the underlying function asynchronously with the provided arguments.
 
@@ -224,6 +228,7 @@ class Tool[T_Output = Any](BaseModel):
         was not created with a callable reference.
 
         Args:
+            context: Optional context object for HITL workflows and state management.
             **kwargs: Keyword arguments to pass to the underlying function.
 
         Returns:
@@ -248,18 +253,39 @@ class Tool[T_Output = Any](BaseModel):
                 'Tool is not callable because the "_callable_ref" instance variable is not set'
             )
 
+        # Execute before_call callback with context if available
         if self.before_call is not None:
-            self.before_call(**kwargs)
+            if inspect.iscoroutinefunction(self.before_call):
+                if context is not None:
+                    await self.before_call(context=context, **kwargs)
+                else:
+                    await self.before_call(**kwargs)
+            else:
+                if context is not None:
+                    self.before_call(context=context, **kwargs)
+                else:
+                    self.before_call(**kwargs)
 
-        if self.after_call is not None:
-            self.after_call(**kwargs)
-
+        # Execute the main function
         if inspect.iscoroutinefunction(self._callable_ref):
             ret: T_Output = await self._callable_ref(**kwargs)  # type: ignore
-            return ret
         else:
             ret: T_Output = self._callable_ref(**kwargs)  # type: ignore
-            return ret
+
+        # Execute after_call callback with context and result if available
+        if self.after_call is not None:
+            if inspect.iscoroutinefunction(self.after_call):
+                if context is not None:
+                    await self.after_call(context=context, result=ret, **kwargs)
+                else:
+                    await self.after_call(result=ret, **kwargs)
+            else:
+                if context is not None:
+                    self.after_call(context=context, result=ret, **kwargs)
+                else:
+                    self.after_call(result=ret, **kwargs)
+
+        return ret
 
     @classmethod
     def from_mcp_tool(
