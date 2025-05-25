@@ -139,14 +139,13 @@ class Tool[T_Output = Any](BaseModel):
         ],
     )
 
-    before_call: Callable[..., T_Output] | None = Field(
+    # change to private
+    _before_call: Callable[..., T_Output] | None = PrivateAttr(
         default=None,
-        description="Function to call before the tool is called.",
     )
 
-    after_call: Callable[..., T_Output] | None = Field(
+    _after_call: Callable[..., T_Output] | None = PrivateAttr(
         default=None,
-        description="Function to call after the tool is called.",
     )
 
     _callable_ref: (
@@ -254,17 +253,17 @@ class Tool[T_Output = Any](BaseModel):
             )
 
         # Execute before_call callback with context if available
-        if self.before_call is not None:
-            if inspect.iscoroutinefunction(self.before_call):
+        if self._before_call is not None:
+            if inspect.iscoroutinefunction(self._before_call):
                 if context is not None:
-                    await self.before_call(context=context, **kwargs)
+                    await self._before_call(context=context, **kwargs)
                 else:
-                    await self.before_call(**kwargs)
+                    await self._before_call(**kwargs)
             else:
                 if context is not None:
-                    self.before_call(context=context, **kwargs)
+                    self._before_call(context=context, **kwargs)
                 else:
-                    self.before_call(**kwargs)
+                    self._before_call(**kwargs)
 
         # Execute the main function
         if inspect.iscoroutinefunction(self._callable_ref):
@@ -273,17 +272,17 @@ class Tool[T_Output = Any](BaseModel):
             ret: T_Output = self._callable_ref(**kwargs)  # type: ignore
 
         # Execute after_call callback with context and result if available
-        if self.after_call is not None:
-            if inspect.iscoroutinefunction(self.after_call):
+        if self._after_call is not None:
+            if inspect.iscoroutinefunction(self._after_call):
                 if context is not None:
-                    await self.after_call(context=context, result=ret, **kwargs)
+                    await self._after_call(context=context, result=ret, **kwargs)
                 else:
-                    await self.after_call(result=ret, **kwargs)
+                    await self._after_call(result=ret, **kwargs)
             else:
                 if context is not None:
-                    self.after_call(context=context, result=ret, **kwargs)
+                    self._after_call(context=context, result=ret, **kwargs)
                 else:
-                    self.after_call(result=ret, **kwargs)
+                    self._after_call(result=ret, **kwargs)
 
         return ret
 
@@ -449,12 +448,12 @@ class Tool[T_Output = Any](BaseModel):
             name=name,
             description=description,
             parameters=parameters,
-            before_call=before_call,
-            after_call=after_call,
         )
 
         # Definir o atributo privado após a criação da instância
         instance._callable_ref = _callable
+        instance._before_call = before_call
+        instance._after_call = after_call
 
         return instance
 
