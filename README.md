@@ -342,7 +342,10 @@ if __name__ == "__main__":
 
 ### 🌐 Deploy Production APIs
 
-Expose your agents as RESTful APIs with automatic documentation:
+Expose your agents, teams, and pipelines as RESTful APIs with automatic documentation:
+
+<details>
+<summary><b>🤖 Single Agent API</b> - Deploy individual agents as REST services</summary>
 
 ```python
 from agentle.agents.agent import Agent
@@ -368,6 +371,171 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
 ```
+
+**Generated API Endpoints:**
+- `POST /api/v1/agents/code_assistant/run` - Execute the agent
+- `POST /api/v1/agents/code_assistant/run/resume` - Resume suspended executions (HITL)
+- `GET /docs` - Interactive API documentation
+- `GET /openapi` - OpenAPI specification
+
+</details>
+
+<details>
+<summary><b>👥 Agent Team API</b> - Deploy dynamic teams with intelligent orchestration</summary>
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.agent_team import AgentTeam
+from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
+from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+
+provider = GoogleGenerationProvider()
+
+# Create specialized agents
+research_agent = Agent(
+    name="Research Agent",
+    description="Specialized in finding and analyzing information",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="You are a research expert focused on gathering accurate information.",
+)
+
+coding_agent = Agent(
+    name="Coding Agent", 
+    description="Specialized in writing and debugging code",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="You are a coding expert that writes clean, efficient code.",
+)
+
+writing_agent = Agent(
+    name="Writing Agent",
+    description="Specialized in creating clear and engaging content",
+    generation_provider=provider,
+    model="gemini-2.0-flash", 
+    instructions="You are a writing expert that creates compelling content.",
+)
+
+# Create a team with intelligent orchestration
+team = AgentTeam(
+    agents=[research_agent, coding_agent, writing_agent],
+    orchestrator_provider=provider,
+    orchestrator_model="gemini-2.0-flash"
+)
+
+# Deploy the team as an API
+app = AgentToBlackSheepApplicationAdapter().adapt(team)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+**Generated API Endpoints:**
+- `POST /api/v1/team/run` - Execute task with dynamic agent selection
+- `POST /api/v1/team/resume` - Resume suspended team executions
+- `GET /docs` - Interactive documentation with team composition details
+
+</details>
+
+<details>
+<summary><b>🔗 Agent Pipeline API</b> - Deploy sequential processing workflows</summary>
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.agent_pipeline import AgentPipeline
+from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
+from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+
+provider = GoogleGenerationProvider()
+
+# Create pipeline stages
+data_processor = Agent(
+    name="Data Processor",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="You process and clean raw data, handling missing values and formatting.",
+)
+
+analyzer = Agent(
+    name="Data Analyzer", 
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="You perform statistical analysis and identify patterns in processed data.",
+)
+
+reporter = Agent(
+    name="Report Generator",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="You create comprehensive reports with insights and visualizations.",
+)
+
+# Create a sequential pipeline
+pipeline = AgentPipeline(
+    agents=[data_processor, analyzer, reporter],
+    debug_mode=True  # Enable detailed logging
+)
+
+# Deploy the pipeline as an API
+app = AgentToBlackSheepApplicationAdapter().adapt(pipeline)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+**Generated API Endpoints:**
+- `POST /api/v1/pipeline/run` - Execute sequential pipeline processing
+- `POST /api/v1/pipeline/resume` - Resume suspended pipeline executions
+- `GET /docs` - Interactive documentation with pipeline stage details
+
+</details>
+
+<details>
+<summary><b>🔄 HITL-Enabled APIs</b> - Production APIs with human approval workflows</summary>
+
+All API types (Agent, Team, Pipeline) automatically support Human-in-the-Loop workflows:
+
+```python
+from agentle.agents.errors.tool_suspension_error import ToolSuspensionError
+
+def sensitive_operation(amount: float, account: str) -> str:
+    """A tool that requires human approval for large amounts."""
+    if amount > 10000:
+        raise ToolSuspensionError(
+            reason=f"Transfer of ${amount} requires approval",
+            approval_data={"amount": amount, "account": account},
+            timeout_seconds=3600  # 1 hour timeout
+        )
+    return f"Transfer completed: ${amount} to {account}"
+
+# Any agent with HITL tools will automatically expose resume endpoints
+agent_with_hitl = Agent(
+    name="Financial Agent",
+    tools=[sensitive_operation],
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You handle financial operations with human oversight.",
+)
+
+app = AgentToBlackSheepApplicationAdapter().adapt(agent_with_hitl)
+```
+
+**HITL API Flow:**
+1. `POST /api/v1/agents/financial_agent/run` - Returns 202 with `resumption_token` if suspended
+2. Human approves via external system (web UI, mobile app, etc.)
+3. `POST /api/v1/agents/financial_agent/run/resume` - Continues execution with approval data
+
+</details>
+
+**🎯 Key API Features:**
+- **📚 Automatic Documentation**: Interactive Scalar UI with detailed endpoint descriptions
+- **🔄 HITL Support**: Built-in suspension/resumption for human approval workflows  
+- **📊 Structured Responses**: Consistent `AgentRunOutput` format across all endpoints
+- **⚡ Async Processing**: Non-blocking execution with proper error handling
+- **🔍 Type Safety**: Full OpenAPI schema generation with request/response validation
+- **🏗️ Production Ready**: Built on BlackSheep ASGI for high-performance deployment
 
 <img width="100%" alt="API Documentation" src="https://github.com/user-attachments/assets/d9d743cb-ad9c-41eb-a059-eda089efa6b6" />
 

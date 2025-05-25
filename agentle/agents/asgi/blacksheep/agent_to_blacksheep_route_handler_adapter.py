@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, Union
 
 from blacksheep.server.controllers import Controller
 from rsb.adapters.adapter import Adapter
@@ -31,6 +31,11 @@ except ImportError:
 
 if TYPE_CHECKING:
     from blacksheep.server.controllers import Controller
+    from agentle.agents.agent_team import AgentTeam
+    from agentle.agents.agent_pipeline import AgentPipeline
+
+# Type alias for all supported agent types
+AgentLike = Union[Agent[Any], "AgentTeam", "AgentPipeline"]
 
 
 class _AgentRunCommand(BaseModel):
@@ -46,6 +51,55 @@ class _AgentRunCommand(BaseModel):
             "Hello, how are you?",
             {"text": "What is the capital of France?", "type": "text"},
             [{"role": "user", "content": "Can you explain how neural networks work?"}],
+        ],
+    )
+
+
+class _TeamRunCommand(BaseModel):
+    input: (
+        str
+        | Sequence[AssistantMessage | DeveloperMessage | UserMessage]
+        | Sequence[TextPart | FilePart | Tool[Any]]
+        | TextPart
+        | FilePart
+    ) = Field(
+        description="Input for the agent team. The orchestrator will analyze the task and select the most appropriate agent.",
+        examples=[
+            "Research the latest developments in quantum computing and write a summary",
+            "Debug this Python code and explain the issue",
+            "Translate this document to French and check for cultural appropriateness",
+        ],
+    )
+
+
+class _PipelineRunCommand(BaseModel):
+    input: (
+        str
+        | Sequence[AssistantMessage | DeveloperMessage | UserMessage]
+        | Sequence[TextPart | FilePart | Tool[Any]]
+        | TextPart
+        | FilePart
+    ) = Field(
+        description="Input for the agent pipeline. The input will be processed sequentially through each stage.",
+        examples=[
+            "Analyze this data and create a comprehensive report",
+            "Process this customer feedback through our analysis pipeline",
+            "Transform this raw text into a structured document",
+        ],
+    )
+
+
+class _ResumeCommand(BaseModel):
+    resumption_token: str = Field(
+        description="Token from a suspended execution to resume",
+        examples=["resume_token_abc123", "suspension_id_xyz789"],
+    )
+    approval_data: dict[str, Any] | None = Field(
+        default=None,
+        description="Optional approval data to pass to the resumed execution",
+        examples=[
+            {"approved": True, "approver_id": "user123"},
+            {"approved": False, "reason": "Insufficient permissions"},
         ],
     )
 
@@ -105,16 +159,52 @@ class _TaskCancelRequest(BaseModel):
     )
 
 
-class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]"]):
-    def adapt(self, _f: Agent[Any] | A2AInterface[Any]) -> type[Controller]:
+class AgentToBlackSheepRouteHandlerAdapter(Adapter[AgentLike, "type[Controller]"]):
+    """
+    Enhanced route handler adapter that creates BlackSheep controllers for
+    Agents, Agent Teams, Agent Pipelines, and A2A interfaces.
+
+    This adapter automatically generates appropriate API endpoints based on the
+    type of agent system being adapted, with proper documentation and error handling.
+    """
+
+    def adapt(self, _f: AgentLike | A2AInterface[Any]) -> type[Controller]:
         """
-        Creates a BlackSheep router for the agent.
+        Creates a BlackSheep controller for the agent system.
+
+        Args:
+            _f: Can be an Agent, AgentTeam, AgentPipeline, or A2AInterface
+
+        Returns:
+            A BlackSheep Controller class with appropriate endpoints
         """
-        match _f:
-            case Agent():
-                return self._adapt_agent(_f)
-            case _:
-                return self._adapt_a2a_interface(_f)
+        if isinstance(_f, Agent):
+            return self._adapt_agent(_f)
+        elif self._is_agent_team(_f):
+            return self._adapt_agent_team(_f)
+        elif self._is_agent_pipeline(_f):
+            return self._adapt_agent_pipeline(_f)
+        elif isinstance(_f, A2AInterface):
+            return self._adapt_a2a_interface(_f)
+        else:
+            raise ValueError(f"Unsupported type for adaptation: {type(_f)}")
+
+    def _is_agent_team(self, obj: Any) -> bool:
+        """Check if object is an AgentTeam without importing (to avoid circular imports)."""
+        return (
+            hasattr(obj, "agents")
+            and hasattr(obj, "orchestrator_provider")
+            and hasattr(obj, "run_async")
+        )
+
+    def _is_agent_pipeline(self, obj: Any) -> bool:
+        """Check if object is an AgentPipeline without importing (to avoid circular imports)."""
+        return (
+            hasattr(obj, "agents")
+            and hasattr(obj, "debug_mode")
+            and hasattr(obj, "run_async")
+            and not hasattr(obj, "orchestrator_provider")
+        )
 
     def _adapt_a2a_interface(self, _f: A2AInterface[Any]) -> type[Controller]:
         """
@@ -235,6 +325,9 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
         return A2A
 
     def _adapt_agent(self, _f: Agent[Any]) -> type[Controller]:
+        """
+        Creates a BlackSheep controller for a single Agent.
+        """
         import blacksheep
         from blacksheep.server.openapi.common import (
             ContentInfo,
@@ -265,7 +358,15 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
                         content=[
                             ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
                         ],
-                    )
+                    ),
+                    202: ResponseInfo(
+                        description="Agent execution suspended (HITL workflow)",
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
+                    ),
+                    400: ResponseInfo(description="Invalid request parameters"),
+                    500: ResponseInfo(description="Agent execution failed"),
                 }
             )
             @blacksheep.post(endpoint)
@@ -275,15 +376,245 @@ class AgentToBlackSheepRouteHandlerAdapter(Adapter[Agent[Any], "type[Controller]
                 """
                 Run the agent with the provided input
 
-                This endpoint allows you to send input to the agent and get a response synchronously.
-                The agent will process your input and return the result immediately.
+                This endpoint allows you to send input to the agent and get a response.
+                The agent will process your input and return the result.
 
                 You can provide input as a simple string, a structured message, or a sequence of messages.
+
+                If the agent uses Human-in-the-Loop (HITL) workflows, the execution may be suspended
+                for approval. In this case, you'll receive a 202 status with a resumption token.
                 """
                 async with agent.start_mcp_servers_async():
                     result = await agent.run_async(cast(AgentInput, input.value.input))
                     return result
 
+            @docs(  # type: ignore
+                responses={
+                    200: ResponseInfo(
+                        description="Agent execution resumed successfully",
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
+                    ),
+                    400: ResponseInfo(
+                        description="Invalid resumption token or approval data"
+                    ),
+                    404: ResponseInfo(
+                        description="Resumption token not found or expired"
+                    ),
+                    500: ResponseInfo(description="Agent execution failed"),
+                }
+            )
+            @blacksheep.post(f"{endpoint}/resume")
+            async def resume(
+                self, input: blacksheep.FromJSON[_ResumeCommand]
+            ) -> AgentRunOutput[dict[str, Any]]:
+                """
+                Resume a suspended agent execution
+
+                This endpoint allows you to resume an agent execution that was suspended
+                for human approval. You need to provide the resumption token that was
+                returned when the execution was suspended.
+
+                Optionally, you can provide approval data that will be passed to the
+                resumed execution.
+                """
+                async with agent.start_mcp_servers_async():
+                    result = await agent.resume_async(
+                        input.value.resumption_token, input.value.approval_data
+                    )
+                    return result
+
         # Rename the class to match the agent name
-        _Run.__name__ = f"{agent.name}Controller"
+        _Run.__name__ = f"{agent.name.replace(' ', '')}Controller"
         return _Run
+
+    def _adapt_agent_team(self, team: Any) -> type[Controller]:
+        """
+        Creates a BlackSheep controller for an AgentTeam.
+        """
+        import blacksheep
+        from blacksheep.server.openapi.common import (
+            ContentInfo,
+            ResponseInfo,
+        )
+        from blacksheep.server.openapi.v3 import OpenAPIHandler
+        from openapidocs.v3 import Info
+
+        docs = OpenAPIHandler(
+            info=Info(
+                title="Agent Team API",
+                version="1.0.0",
+                summary=f"Dynamic team of {len(team.agents)} agents with intelligent orchestration",
+            )
+        )
+
+        class _TeamRun(Controller):
+            @docs(  # type: ignore
+                responses={
+                    200: ResponseInfo(
+                        description="Team execution completed successfully",
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
+                    ),
+                    202: ResponseInfo(
+                        description="Team execution suspended (HITL workflow)",
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
+                    ),
+                    400: ResponseInfo(description="Invalid request parameters"),
+                    500: ResponseInfo(description="Team execution failed"),
+                }
+            )
+            @blacksheep.post("/api/v1/team/run")
+            async def run_team(
+                self, input: blacksheep.FromJSON[_TeamRunCommand]
+            ) -> AgentRunOutput[dict[str, Any]]:
+                """
+                Execute a task using the agent team
+
+                This endpoint submits a task to the agent team. The orchestrator will analyze
+                the task and dynamically select the most appropriate agent(s) to handle it.
+
+                The team can handle complex workflows that require different types of expertise,
+                with the orchestrator making intelligent routing decisions based on the task
+                requirements and agent capabilities.
+
+                If any agent in the team uses HITL workflows, the execution may be suspended
+                for approval. In this case, you'll receive a 202 status with a resumption token.
+                """
+                result = await team.run_async(cast(AgentInput, input.value.input))
+                return result
+
+            @docs(  # type: ignore
+                responses={
+                    200: ResponseInfo(
+                        description="Team execution resumed successfully",
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
+                    ),
+                    400: ResponseInfo(
+                        description="Invalid resumption token or approval data"
+                    ),
+                    404: ResponseInfo(
+                        description="Resumption token not found or expired"
+                    ),
+                    500: ResponseInfo(description="Team execution failed"),
+                }
+            )
+            @blacksheep.post("/api/v1/team/resume")
+            async def resume_team(
+                self, input: blacksheep.FromJSON[_ResumeCommand]
+            ) -> AgentRunOutput[dict[str, Any]]:
+                """
+                Resume a suspended team execution
+
+                This endpoint allows you to resume a team execution that was suspended
+                for human approval. The team will continue from where it left off,
+                maintaining the orchestration state and conversation history.
+                """
+                result = await team.resume_async(
+                    input.value.resumption_token, input.value.approval_data
+                )
+                return result
+
+        return _TeamRun
+
+    def _adapt_agent_pipeline(self, pipeline: Any) -> type[Controller]:
+        """
+        Creates a BlackSheep controller for an AgentPipeline.
+        """
+        import blacksheep
+        from blacksheep.server.openapi.common import (
+            ContentInfo,
+            ResponseInfo,
+        )
+        from blacksheep.server.openapi.v3 import OpenAPIHandler
+        from openapidocs.v3 import Info
+
+        docs = OpenAPIHandler(
+            info=Info(
+                title="Agent Pipeline API",
+                version="1.0.0",
+                summary=f"Sequential pipeline of {len(pipeline.agents)} agents for multi-stage processing",
+            )
+        )
+
+        class _PipelineRun(Controller):
+            @docs(  # type: ignore
+                responses={
+                    200: ResponseInfo(
+                        description="Pipeline execution completed successfully",
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
+                    ),
+                    202: ResponseInfo(
+                        description="Pipeline execution suspended (HITL workflow)",
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
+                    ),
+                    400: ResponseInfo(description="Invalid request parameters"),
+                    500: ResponseInfo(description="Pipeline execution failed"),
+                }
+            )
+            @blacksheep.post("/api/v1/pipeline/run")
+            async def run_pipeline(
+                self, input: blacksheep.FromJSON[_PipelineRunCommand]
+            ) -> AgentRunOutput[dict[str, Any]]:
+                """
+                Execute a task through the agent pipeline
+
+                This endpoint processes input through a sequential pipeline of agents.
+                Each agent in the pipeline specializes in a specific step, and the output
+                of one agent becomes the input to the next.
+
+                The pipeline ensures deterministic processing with clear stage-by-stage
+                progression, making it ideal for workflows where tasks need to be broken
+                down into specialized steps.
+
+                If any agent in the pipeline uses HITL workflows, the execution may be
+                suspended for approval. In this case, you'll receive a 202 status with
+                a resumption token.
+                """
+                result = await pipeline.run_async(cast(AgentInput, input.value.input))
+                return result
+
+            @docs(  # type: ignore
+                responses={
+                    200: ResponseInfo(
+                        description="Pipeline execution resumed successfully",
+                        content=[
+                            ContentInfo(type=AgentRunOutput[Any | dict[str, Any]])
+                        ],
+                    ),
+                    400: ResponseInfo(
+                        description="Invalid resumption token or approval data"
+                    ),
+                    404: ResponseInfo(
+                        description="Resumption token not found or expired"
+                    ),
+                    500: ResponseInfo(description="Pipeline execution failed"),
+                }
+            )
+            @blacksheep.post("/api/v1/pipeline/resume")
+            async def resume_pipeline(
+                self, input: blacksheep.FromJSON[_ResumeCommand]
+            ) -> AgentRunOutput[dict[str, Any]]:
+                """
+                Resume a suspended pipeline execution
+
+                This endpoint allows you to resume a pipeline execution that was suspended
+                for human approval. The pipeline will continue from the exact stage where
+                it was suspended, preserving all intermediate state and outputs.
+                """
+                result = await pipeline.resume_async(
+                    input.value.resumption_token, input.value.approval_data
+                )
+                return result
+
+        return _PipelineRun
