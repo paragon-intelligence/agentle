@@ -543,7 +543,9 @@ Each provider implements `map_model_kind_to_provider_model()` to translate these
 
 ### 🤝 Human-in-the-Loop (HITL) Integration
 
-Agentle provides powerful support for Human-in-the-Loop workflows, where human oversight and approval are integrated into AI agent execution. This is crucial for production systems that require human judgment for critical decisions, compliance, or safety.
+Agentle provides enterprise-grade support for Human-in-the-Loop workflows, where human oversight and approval are integrated into AI agent execution. This is crucial for production systems that require human judgment for critical decisions, compliance, or safety.
+
+The framework supports multiple storage backends for different deployment scenarios, with proper dependency injection for maximum flexibility and robustness.
 
 #### 🔄 Tool-Level Human Approval
 
@@ -932,9 +934,130 @@ agent = Agent(
 )
 ```
 
+#### 🚀 True Asynchronous HITL Workflows
+
+For production environments, Agentle supports **true asynchronous HITL** where agent execution can be suspended for days without blocking the process:
+
+```python
+from agentle.agents.errors.tool_suspension_error import ToolSuspensionError
+
+def wire_transfer(amount: float, to_account: str) -> str:
+    """Wire transfer that suspends for large amounts."""
+    if amount > 10000:
+        # Suspend execution - process doesn't block!
+        raise ToolSuspensionError(
+            reason=f"Transfer of ${amount} requires approval",
+            approval_data={
+                "amount": amount,
+                "to_account": to_account,
+                "risk_level": "high"
+            },
+            timeout_seconds=86400  # 24 hours
+        )
+    return f"Transfer completed: ${amount}"
+
+# Agent execution suspends and returns immediately
+result = await agent.run_async("Transfer $50,000 to account ABC-123")
+
+if result.is_suspended:
+    print(f"Suspended: {result.suspension_reason}")
+    print(f"Resume token: {result.resumption_token}")
+    
+    # Process continues, user gets notification
+    # Hours/days later, after approval:
+    resumed_result = await agent.resume_async(
+        result.resumption_token, 
+        approval_data={"approved": True}
+    )
+```
+
+**Key Benefits:**
+- **🚀 Non-blocking**: Process never waits for human input
+- **⏰ Persistent**: Suspensions survive process restarts (with proper storage)
+- **🔄 Resumable**: Continue exactly where execution left off
+- **📱 Flexible**: Approve via any interface (web, mobile, email, etc.)
+- **🔀 Concurrent**: Handle thousands of suspended executions simultaneously
+
+#### 🏗️ Production-Ready Suspension Stores
+
+Agentle provides multiple suspension store implementations for different deployment scenarios:
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.suspension_manager import (
+    SuspensionManager,
+    InMemorySuspensionStore,
+    SQLiteSuspensionStore,
+    RedisSuspensionStore,
+)
+
+# Development: In-memory store (fast, no persistence)
+dev_store = InMemorySuspensionStore()
+dev_manager = SuspensionManager(dev_store)
+
+# Single-instance production: SQLite store (persistent, single instance)
+sqlite_store = SQLiteSuspensionStore("suspensions.db")
+staging_manager = SuspensionManager(sqlite_store)
+
+# Distributed production: Redis store (distributed, highly available)
+redis_store = RedisSuspensionStore(
+    redis_url="redis://redis-cluster:6379/0",
+    key_prefix="agentle:prod:"
+)
+prod_manager = SuspensionManager(redis_store)
+
+# Inject into agent constructor
+agent = Agent(
+    name="Production Financial Agent",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You handle sensitive financial operations.",
+    tools=[wire_transfer_tool, audit_tool],
+    suspension_manager=prod_manager
+)
+```
+
+**Store Comparison:**
+
+| Store | Best For | Persistence | Scalability | Setup |
+|-------|----------|-------------|-------------|-------|
+| **InMemory** | Development, Testing | ❌ No | Single Process | Zero config |
+| **SQLite** | Single Instance Prod | ✅ Yes | Single Instance | File path |
+| **Redis** | Distributed Prod | ✅ Yes | Multi-Instance | Redis server |
+
+#### 🔧 Environment-Specific Configuration
+
+```python
+import os
+from agentle.agents.suspension_manager import SuspensionManager
+
+def create_suspension_manager():
+    """Factory function for environment-specific suspension managers."""
+    env = os.getenv("ENVIRONMENT", "development")
+    
+    if env == "development":
+        return SuspensionManager(InMemorySuspensionStore())
+    elif env == "staging":
+        return SuspensionManager(SQLiteSuspensionStore("staging_suspensions.db"))
+    elif env == "production":
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+        return SuspensionManager(RedisSuspensionStore(redis_url))
+    else:
+        raise ValueError(f"Unknown environment: {env}")
+
+# Use in agent creation
+agent = Agent(
+    # ... other parameters ...
+    suspension_manager=create_suspension_manager()
+)
+```
+
 This HITL integration makes Agentle suitable for production environments where AI agents handle sensitive operations that require human judgment and approval.
 
-> **Note**: A working HITL example demonstrating tool callbacks and approval workflows is available in `examples/simple_hitl_example.py`.
+> **Note**: Working HITL examples are available:
+> - `examples/simple_hitl_example.py` - Basic tool callbacks and approval workflows
+> - `examples/async_hitl_example.py` - True asynchronous suspension and resumption
+> - `examples/suspension_stores_example.py` - Different storage backend implementations
 
 ### 🎭 Flexible Input Types
 

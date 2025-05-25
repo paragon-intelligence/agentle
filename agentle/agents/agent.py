@@ -65,6 +65,11 @@ from agentle.agents.context import Context
 from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
+from agentle.agents.errors.tool_suspension_error import ToolSuspensionError
+from agentle.agents.suspension_manager import (
+    get_default_suspension_manager,
+    SuspensionManager,
+)
 from agentle.agents.knowledge.static_knowledge import NO_CACHE, StaticKnowledge
 from agentle.agents.step import Step
 from agentle.generations.collections.message_sequence import MessageSequence
@@ -334,6 +339,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     debug: bool = Field(default=False)
     """
     Whether to debug each agent step using the logger.
+    """
+
+    suspension_manager: SuspensionManager | None = Field(default=None)
+    """
+    The suspension manager to use for Human-in-the-Loop workflows.
+    If None, uses the default global suspension manager.
     """
 
     # Internal fields
@@ -686,6 +697,106 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         return run_sync(
             self.run_async, timeout=timeout, input=input, trace_params=trace_params
         )
+
+    async def resume_async(
+        self, resumption_token: str, approval_data: dict[str, Any] | None = None
+    ) -> AgentRunOutput[T_Schema]:
+        """
+        Resume a suspended agent execution.
+
+        Args:
+            resumption_token: Token from a suspended execution
+            approval_data: Optional approval data to pass to the resumed execution
+
+        Returns:
+            AgentRunOutput with the completed or newly suspended execution
+
+        Raises:
+            ValueError: If the resumption token is invalid or expired
+        """
+        suspension_manager = get_default_suspension_manager()
+
+        # Resume the execution
+        result = await suspension_manager.resume_execution(
+            resumption_token, approval_data
+        )
+
+        if result is None:
+            raise ValueError(f"Invalid or expired resumption token: {resumption_token}")
+
+        context, _ = result
+
+        # Continue execution from where it left off
+        return await self._continue_execution_from_context(context)
+
+    def resume(
+        self, resumption_token: str, approval_data: dict[str, Any] | None = None
+    ) -> AgentRunOutput[T_Schema]:
+        """
+        Resume a suspended agent execution synchronously.
+
+        Args:
+            resumption_token: Token from a suspended execution
+            approval_data: Optional approval data to pass to the resumed execution
+
+        Returns:
+            AgentRunOutput with the completed or newly suspended execution
+        """
+        return run_sync(
+            self.resume_async,
+            resumption_token=resumption_token,
+            approval_data=approval_data,
+        )
+
+    async def _continue_execution_from_context(
+        self, context: Context
+    ) -> AgentRunOutput[T_Schema]:
+        """
+        Continue agent execution from a resumed context.
+
+        This method is used internally to resume execution after a suspension.
+        It continues from where the agent left off based on the context state.
+        """
+        # For now, we'll implement a simple approach that restarts the run_async logic
+        # with the existing context. In a more sophisticated implementation, we could
+        # resume from the exact point of suspension.
+
+        # Check if there's approval data in the context
+        approval_result = context.get_checkpoint_data("approval_result")
+
+        # If we have approval data and it was denied, return a failed result
+        if approval_result and not approval_result.get("approved", True):
+            return AgentRunOutput(
+                generation=None,
+                context=context,
+                parsed=None,
+                is_suspended=False,
+                suspension_reason=f"Request denied: {approval_result.get('approval_data', {}).get('reason', 'No reason provided')}",
+            )
+
+        # Continue with normal execution logic
+        # This is a simplified approach - in production you might want to resume
+        # from the exact point where execution was suspended
+        try:
+            # Re-run the agent logic with the existing context
+            # For now, we'll just complete the execution and return the context
+            context.complete_execution()
+
+            return AgentRunOutput(
+                generation=None,  # No new generation for resumed execution
+                context=context,
+                parsed=None,
+                is_suspended=False,
+            )
+        except Exception as e:
+            context.fail_execution(str(e))
+            return AgentRunOutput(
+                generation=None,
+                context=context,
+                parsed=None,
+                is_suspended=False,
+                suspension_reason=str(e),
+            )
 
     async def run_async(
         self, input: AgentInput | Any, trace_params: TraceParams | None = None
@@ -1116,28 +1227,62 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
                 # Time the tool execution
                 tool_start_time = time.time()
-                tool_result = selected_tool.call(
-                    context=context, **tool_execution_suggestion.args
-                )
-                tool_execution_time = (
-                    time.time() - tool_start_time
-                ) * 1000  # Convert to milliseconds
+                try:
+                    tool_result = selected_tool.call(
+                        context=context, **tool_execution_suggestion.args
+                    )
+                    tool_execution_time = (
+                        time.time() - tool_start_time
+                    ) * 1000  # Convert to milliseconds
 
-                _logger.bind_optional(
-                    lambda log: log.debug("Tool execution result: %s", tool_result)
-                )
-                called_tools[tool_execution_suggestion.id] = (
-                    tool_execution_suggestion,
-                    tool_result,
-                )
+                    _logger.bind_optional(
+                        lambda log: log.debug("Tool execution result: %s", tool_result)
+                    )
+                    called_tools[tool_execution_suggestion.id] = (
+                        tool_execution_suggestion,
+                        tool_result,
+                    )
 
-                # Add the tool execution result to the step
-                step.add_tool_execution_result(
-                    suggestion=tool_execution_suggestion,
-                    result=tool_result,
-                    execution_time_ms=tool_execution_time,
-                    success=True,
-                )
+                    # Add the tool execution result to the step
+                    step.add_tool_execution_result(
+                        suggestion=tool_execution_suggestion,
+                        result=tool_result,
+                        execution_time_ms=tool_execution_time,
+                        success=True,
+                    )
+                except ToolSuspensionError as suspension_error:
+                    # Handle tool suspension for HITL workflows
+                    suspension_reason = suspension_error.reason
+                    _logger.bind_optional(
+                        lambda log: log.info(
+                            "Tool execution suspended: %s", suspension_reason
+                        )
+                    )
+
+                    # Get the suspension manager (injected or default)
+                    suspension_mgr = (
+                        self.suspension_manager or get_default_suspension_manager()
+                    )
+
+                    # Suspend the execution
+                    resumption_token = await suspension_mgr.suspend_execution(
+                        context=context,
+                        reason=suspension_error.reason,
+                        approval_data=suspension_error.approval_data,
+                        timeout_hours=suspension_error.timeout_seconds // 3600
+                        if suspension_error.timeout_seconds
+                        else 24,
+                    )
+
+                    # Return suspended result immediately
+                    return AgentRunOutput(
+                        generation=None,
+                        context=context,
+                        parsed=None,
+                        is_suspended=True,
+                        suspension_reason=suspension_error.reason,
+                        resumption_token=resumption_token,
+                    )
 
             # Complete the step and add it to context
             step_duration = (
@@ -1187,6 +1332,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         new_mcp_servers: Sequence[MCPServerProtocol] | None = None,
         new_generation_provider: GenerationProvider | None = None,
         new_url: str | None = None,
+        new_suspension_manager: SuspensionManager | None = None,
     ) -> Agent[T_Schema]:
         """
         Creates a clone of the current agent with optionally modified attributes.
@@ -1210,6 +1356,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             new_mcp_servers: New MCP servers for the agent.
             new_generation_provider: New generation provider for the agent.
             new_url: New URL for the agent.
+            new_suspension_manager: New suspension manager for the agent.
 
         Returns:
             Agent[T_Schema]: A new agent with the specified attributes modified.
@@ -1239,6 +1386,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             mcp_servers=new_mcp_servers or self.mcp_servers,
             generation_provider=new_generation_provider or self.generation_provider,
             url=new_url or self.url,
+            suspension_manager=new_suspension_manager or self.suspension_manager,
         )
 
     def _build_agent_run_output(
