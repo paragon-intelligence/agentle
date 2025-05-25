@@ -1698,7 +1698,9 @@
 
                 <span class="c1"># Time the tool execution</span>
                 <span class="n">tool_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-                <span class="n">tool_result</span> <span class="o">=</span> <span class="n">selected_tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="o">**</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                <span class="n">tool_result</span> <span class="o">=</span> <span class="n">selected_tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
+                    <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span>
+                <span class="p">)</span>
                 <span class="n">tool_execution_time</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tool_start_time</span>
                 <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># Convert to milliseconds</span>
