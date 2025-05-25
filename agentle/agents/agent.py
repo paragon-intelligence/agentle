@@ -75,7 +75,6 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
 )
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
-from agentle.generations.models.messages.message import Message
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
@@ -1278,15 +1277,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     return Context(
                         message_history=[
                             developer_message,
-                            UserMessage(
-                                parts=[
-                                    TextPart(
-                                        text=np.array2string(
-                                            cast(np.ndarray[Any, Any], input)
-                                        )
-                                    )
-                                ]
-                            ),
+                            UserMessage(parts=[TextPart(text=np.array2string(input))]),
                         ]
                     )
             except ImportError:
@@ -1426,7 +1417,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             ):
                 # Sequence of Messages
                 # Ensure it's a list of Messages for type consistency
-                return Context(message_history=list(cast(Sequence[Message], input)))
+                return Context(
+                    message_history=list(
+                        cast(Sequence[DeveloperMessage | UserMessage], input)
+                    )
+                )
             elif input and isinstance(input[0], (TextPart, FilePart, Tool)):
                 # Sequence of Parts
                 # Ensure it's a list of the correct Part types

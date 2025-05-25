@@ -39,7 +39,9 @@ from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
 from agentle.agents.step import Step
-from agentle.generations.models.messages.message import Message
+from agentle.generations.models.messages.assistant_message import AssistantMessage
+from agentle.generations.models.messages.developer_message import DeveloperMessage
+from agentle.generations.models.messages.user_message import UserMessage
 
 
 class Context(BaseModel):
@@ -102,7 +104,7 @@ class Context(BaseModel):
         ```
     """
 
-    message_history: MutableSequence[Message]
+    message_history: MutableSequence[DeveloperMessage | UserMessage | AssistantMessage]
     """
     The sequence of messages exchanged between the user and the agent.
     Represents the full conversation history, including instructions, user queries, and agent responses.
