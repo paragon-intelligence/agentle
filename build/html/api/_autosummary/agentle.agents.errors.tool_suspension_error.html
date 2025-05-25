@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.knowledge" href="agentle.agents.knowledge.html" /><link rel="prev" title="agentle.agents.exceptions.stop_agent_error" href="agentle.agents.exceptions.stop_agent_error.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.exceptions" href="agentle.agents.exceptions.html" /><link rel="prev" title="agentle.agents.errors.max_tool_calls_exceeded_error" href="agentle.agents.errors.max_tool_calls_exceeded_error.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>agentle.agents.execution_state - Agentle 0.1.0 documentation</title>
+        <title>agentle.agents.errors.tool_suspension_error - Agentle 0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
@@ -303,9 +303,9 @@
 </li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.context.html">agentle.agents.context</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.context_state.html">agentle.agents.context_state</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.agents.errors.html">agentle.agents.errors</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.errors.max_tool_calls_exceeded_error.html">agentle.agents.errors.max_tool_calls_exceeded_error</a></li>
-<li class="toctree-l5"><a class="reference internal" href="agentle.agents.errors.tool_suspension_error.html">agentle.agents.errors.tool_suspension_error</a></li>
+<li class="toctree-l5 current current-page"><a class="current reference internal" href="#">agentle.agents.errors.tool_suspension_error</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.exceptions.html">agentle.agents.exceptions</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of agentle.agents.exceptions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -313,7 +313,7 @@
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.exceptions.stop_agent_error.html">agentle.agents.exceptions.stop_agent_error</a></li>
 </ul>
 </li>
-<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">agentle.agents.execution_state</a></li>
+<li class="toctree-l4"><a class="reference internal" href="agentle.agents.execution_state.html">agentle.agents.execution_state</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.knowledge.html">agentle.agents.knowledge</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.knowledge</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.knowledge.document_knowledge.html">agentle.agents.knowledge.document_knowledge</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.knowledge.static_knowledge.html">agentle.agents.knowledge.static_knowledge</a></li>
@@ -543,7 +543,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.execution_state.rst.txt" title="View this page">
+  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.errors.tool_suspension_error.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -563,18 +563,11 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-agentle.agents.execution_state">
-<span id="agentle-agents-execution-state"></span><h1>agentle.agents.execution_state<a class="headerlink" href="#module-agentle.agents.execution_state" title="Link to this heading">¶</a></h1>
-<p class="rubric">Functions</p>
-<div class="table-wrapper autosummary longtable docutils container">
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
-<td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
-</tr>
-</tbody>
-</table>
-</div>
+          <section id="module-agentle.agents.errors.tool_suspension_error">
+<span id="agentle-agents-errors-tool-suspension-error"></span><h1>agentle.agents.errors.tool_suspension_error<a class="headerlink" href="#module-agentle.agents.errors.tool_suspension_error" title="Link to this heading">¶</a></h1>
+<p>Tool suspension error for Human-in-the-Loop workflows.</p>
+<p>This module provides the ToolSuspensionError exception that tools can raise
+to suspend agent execution and wait for external input (e.g., human approval).</p>
 <p class="rubric">Classes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -582,17 +575,15 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
-<td><p>Alias for pydantic.BaseModel.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExecutionState</span></code>(*[, state, ...])</p></td>
-<td><p>Tracks the execution state of an agent context.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
-<td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime</span></code>(year, month, day[, hour[, minute[, ...)</p></td>
-<td><p>The year, month and day arguments are required.</p></td>
+</tbody>
+</table>
+</div>
+<p class="rubric">Exceptions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolSuspensionError</span></code>(reason[, approval_data, ...])</p></td>
+<td><p>Exception raised by tools to suspend agent execution for external input.</p></td>
 </tr>
 </tbody>
 </table>
@@ -604,23 +595,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="agentle.agents.knowledge.html">
+          <a class="next-page" href="agentle.agents.exceptions.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">agentle.agents.knowledge</div>
+                <div class="title">agentle.agents.exceptions</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="agentle.agents.exceptions.stop_agent_error.html">
+          <a class="prev-page" href="agentle.agents.errors.max_tool_calls_exceeded_error.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">agentle.agents.exceptions.stop_agent_error</div>
+                <div class="title">agentle.agents.errors.max_tool_calls_exceeded_error</div>
                 
               </div>
             </a>

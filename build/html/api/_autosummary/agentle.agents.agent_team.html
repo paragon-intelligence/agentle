@@ -305,6 +305,7 @@
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.context_state.html">agentle.agents.context_state</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.errors.max_tool_calls_exceeded_error.html">agentle.agents.errors.max_tool_calls_exceeded_error</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.agents.errors.tool_suspension_error.html">agentle.agents.errors.tool_suspension_error</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.exceptions.html">agentle.agents.exceptions</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of agentle.agents.exceptions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -320,6 +321,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.step.html">agentle.agents.step</a></li>
+<li class="toctree-l4"><a class="reference internal" href="agentle.agents.suspension_manager.html">agentle.agents.suspension_manager</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.ui.html">agentle.agents.ui</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of agentle.agents.ui</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.ui.streamlit.html">agentle.agents.ui.streamlit</a></li>
 </ul>
@@ -654,7 +656,7 @@ print(result.generation.text)
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentConfig</span></code>(*[, generationConfig, ...])</p></td>
 <td><p>Configuration class for Agentle agents.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentRunOutput</span></code>(*, generation, context, parsed)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentRunOutput</span></code>(*[, generation, parsed, ...])</p></td>
 <td><p>Represents the complete result of an agent execution.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="../agents.html#agentle.agents.agent_team.AgentTeam" title="agentle.agents.agent_team.AgentTeam"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentTeam</span></code></a>(*, agents[, ...])</p></td>

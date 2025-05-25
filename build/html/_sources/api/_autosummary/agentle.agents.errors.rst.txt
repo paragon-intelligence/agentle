@@ -17,3 +17,4 @@ agentle.agents.errors
    :recursive:
 
    max_tool_calls_exceeded_error
+   tool_suspension_error

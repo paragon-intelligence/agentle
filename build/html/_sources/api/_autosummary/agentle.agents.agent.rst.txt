@@ -13,6 +13,7 @@ agentle.agents.agent
       cast
       contextmanager
       file_parser_default_factory
+      get_default_suspension_manager
       is_module_available
       run_sync
    
@@ -54,6 +55,7 @@ agentle.agents.agent
       StaticKnowledge
       Step
       StringIO
+      SuspensionManager
       TextPart
       Tool
       ToolExecutionSuggestion
@@ -65,4 +67,5 @@ agentle.agents.agent
    .. autosummary::
    
       MaxToolCallsExceededError
+      ToolSuspensionError
    

@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.knowledge" href="agentle.agents.knowledge.html" /><link rel="prev" title="agentle.agents.exceptions.stop_agent_error" href="agentle.agents.exceptions.stop_agent_error.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.ui" href="agentle.agents.ui.html" /><link rel="prev" title="agentle.agents.step" href="agentle.agents.step.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>agentle.agents.execution_state - Agentle 0.1.0 documentation</title>
+        <title>agentle.agents.suspension_manager - Agentle 0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
@@ -313,7 +313,7 @@
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.exceptions.stop_agent_error.html">agentle.agents.exceptions.stop_agent_error</a></li>
 </ul>
 </li>
-<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">agentle.agents.execution_state</a></li>
+<li class="toctree-l4"><a class="reference internal" href="agentle.agents.execution_state.html">agentle.agents.execution_state</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.knowledge.html">agentle.agents.knowledge</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.knowledge</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.knowledge.document_knowledge.html">agentle.agents.knowledge.document_knowledge</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.knowledge.static_knowledge.html">agentle.agents.knowledge.static_knowledge</a></li>
@@ -321,7 +321,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.step.html">agentle.agents.step</a></li>
-<li class="toctree-l4"><a class="reference internal" href="agentle.agents.suspension_manager.html">agentle.agents.suspension_manager</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">agentle.agents.suspension_manager</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.ui.html">agentle.agents.ui</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of agentle.agents.ui</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.ui.streamlit.html">agentle.agents.ui.streamlit</a></li>
 </ul>
@@ -543,7 +543,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.execution_state.rst.txt" title="View this page">
+  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.suspension_manager.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -563,14 +563,24 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-agentle.agents.execution_state">
-<span id="agentle-agents-execution-state"></span><h1>agentle.agents.execution_state<a class="headerlink" href="#module-agentle.agents.execution_state" title="Link to this heading">¶</a></h1>
+          <section id="module-agentle.agents.suspension_manager">
+<span id="agentle-agents-suspension-manager"></span><h1>agentle.agents.suspension_manager<a class="headerlink" href="#module-agentle.agents.suspension_manager" title="Link to this heading">¶</a></h1>
+<p>Suspension manager for handling suspended agent executions.</p>
+<p>This module provides the SuspensionManager class that handles storing,
+retrieving, and managing suspended agent contexts for Human-in-the-Loop
+workflows where execution needs to be paused for external input.</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
-<td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">abstractmethod</span></code>(funcobj)</p></td>
+<td><p>A decorator indicating abstract methods.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_default_suspension_manager</span></code>()</p></td>
+<td><p>Get the default global suspension manager instance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_default_suspension_manager</span></code>(manager)</p></td>
+<td><p>Set the default global suspension manager instance.</p></td>
 </tr>
 </tbody>
 </table>
@@ -579,20 +589,35 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ABC</span></code>()</p></td>
+<td><p>Helper class that provides a standard way to create an ABC using inheritance.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
-<td><p>Alias for pydantic.BaseModel.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code>(*[, context_id, message_history, ...])</p></td>
+<td><p>Container for contextual information that guides an agent's behavior.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExecutionState</span></code>(*[, state, ...])</p></td>
-<td><p>Tracks the execution state of an agent context.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemorySuspensionStore</span></code>()</p></td>
+<td><p>In-memory implementation of SuspensionStore for development and testing.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
-<td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RedisSuspensionStore</span></code>([redis_url, key_prefix])</p></td>
+<td><p>Redis-based implementation of SuspensionStore for distributed systems.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SQLiteSuspensionStore</span></code>([db_path])</p></td>
+<td><p>SQLite-based implementation of SuspensionStore for persistent storage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SuspensionManager</span></code>([store])</p></td>
+<td><p>Manages suspended agent executions for Human-in-the-Loop workflows.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SuspensionStore</span></code>()</p></td>
+<td><p>Abstract base class for storing suspended execution contexts.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime</span></code>(year, month, day[, hour[, minute[, ...)</p></td>
 <td><p>The year, month and day arguments are required.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">timedelta</span></code></p></td>
+<td><p>Difference between two datetime values.</p></td>
 </tr>
 </tbody>
 </table>
@@ -604,23 +629,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="agentle.agents.knowledge.html">
+          <a class="next-page" href="agentle.agents.ui.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">agentle.agents.knowledge</div>
+                <div class="title">agentle.agents.ui</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="agentle.agents.exceptions.stop_agent_error.html">
+          <a class="prev-page" href="agentle.agents.step.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">agentle.agents.exceptions.stop_agent_error</div>
+                <div class="title">agentle.agents.step</div>
                 
               </div>
             </a>

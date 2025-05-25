@@ -303,6 +303,7 @@
 <li class="toctree-l4"><a class="reference internal" href="api/_autosummary/agentle.agents.context_state.html">agentle.agents.context_state</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="api/_autosummary/agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="api/_autosummary/agentle.agents.errors.max_tool_calls_exceeded_error.html">agentle.agents.errors.max_tool_calls_exceeded_error</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/_autosummary/agentle.agents.errors.tool_suspension_error.html">agentle.agents.errors.tool_suspension_error</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="api/_autosummary/agentle.agents.exceptions.html">agentle.agents.exceptions</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of agentle.agents.exceptions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -318,6 +319,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="api/_autosummary/agentle.agents.step.html">agentle.agents.step</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/_autosummary/agentle.agents.suspension_manager.html">agentle.agents.suspension_manager</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="api/_autosummary/agentle.agents.ui.html">agentle.agents.ui</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of agentle.agents.ui</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="api/_autosummary/agentle.agents.ui.streamlit.html">agentle.agents.ui.streamlit</a></li>
 </ul>
@@ -991,6 +993,13 @@
 </li>
         </ul></li>
         <li>
+    agentle.agents.errors.tool_suspension_error
+
+        <ul>
+          <li><a href="api/_autosummary/agentle.agents.errors.tool_suspension_error.html#module-agentle.agents.errors.tool_suspension_error">module</a>
+</li>
+        </ul></li>
+        <li>
     agentle.agents.exceptions
 
         <ul>
@@ -1054,12 +1063,21 @@
 </li>
         </ul></li>
         <li>
+    agentle.agents.suspension_manager
+
+        <ul>
+          <li><a href="api/_autosummary/agentle.agents.suspension_manager.html#module-agentle.agents.suspension_manager">module</a>
+</li>
+        </ul></li>
+        <li>
     agentle.agents.ui
 
         <ul>
           <li><a href="api/_autosummary/agentle.agents.ui.html#module-agentle.agents.ui">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     agentle.agents.ui.streamlit
 
@@ -1067,8 +1085,6 @@
           <li><a href="api/_autosummary/agentle.agents.ui.streamlit.html#module-agentle.agents.ui.streamlit">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     agentle.generations
 
@@ -1909,6 +1925,8 @@
 </li>
           <li><a href="api/_autosummary/agentle.agents.errors.max_tool_calls_exceeded_error.html#module-agentle.agents.errors.max_tool_calls_exceeded_error">agentle.agents.errors.max_tool_calls_exceeded_error</a>
 </li>
+          <li><a href="api/_autosummary/agentle.agents.errors.tool_suspension_error.html#module-agentle.agents.errors.tool_suspension_error">agentle.agents.errors.tool_suspension_error</a>
+</li>
           <li><a href="api/_autosummary/agentle.agents.exceptions.html#module-agentle.agents.exceptions">agentle.agents.exceptions</a>
 </li>
           <li><a href="api/_autosummary/agentle.agents.exceptions.skip_tool_call_error.html#module-agentle.agents.exceptions.skip_tool_call_error">agentle.agents.exceptions.skip_tool_call_error</a>
@@ -1926,6 +1944,8 @@
           <li><a href="api/_autosummary/agentle.agents.knowledge.url_knowledge.html#module-agentle.agents.knowledge.url_knowledge">agentle.agents.knowledge.url_knowledge</a>
 </li>
           <li><a href="api/_autosummary/agentle.agents.step.html#module-agentle.agents.step">agentle.agents.step</a>
+</li>
+          <li><a href="api/_autosummary/agentle.agents.suspension_manager.html#module-agentle.agents.suspension_manager">agentle.agents.suspension_manager</a>
 </li>
           <li><a href="api/_autosummary/agentle.agents.ui.html#module-agentle.agents.ui">agentle.agents.ui</a>
 </li>
@@ -2110,6 +2130,12 @@
 </li>
         <li><a href="api/agents.html#agentle.agents.agent.Agent.response_schema">response_schema (Agent attribute)</a>, <a href="api/agents.html#id35">[1]</a>
 </li>
+        <li><a href="api/agents.html#agentle.agents.agent.Agent.resume">resume() (Agent method)</a>
+</li>
+        <li><a href="api/agents.html#agentle.agents.agent.Agent.resume_async">resume_async() (Agent method)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/agents.html#agentle.agents.agent.Agent.run">run() (Agent method)</a>
 
         <ul>
@@ -2118,8 +2144,6 @@
           <li><a href="api/agents.html#agentle.agents.agent_team.AgentTeam.run">(AgentTeam method)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/agents.html#agentle.agents.agent.Agent.run_async">run_async() (Agent method)</a>
 
         <ul>
@@ -2152,10 +2176,10 @@
 </li>
         <li><a href="api/agents.html#agentle.agents.agent.Agent.skills">skills (Agent attribute)</a>, <a href="api/agents.html#id32">[1]</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/agents.html#agentle.agents.agent.Agent.start_mcp_servers">start_mcp_servers() (Agent method)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/agents.html#agentle.agents.agent.Agent.start_mcp_servers_async">start_mcp_servers_async() (Agent method)</a>
 </li>
         <li><a href="api/agents.html#agentle.agents.agent.Agent.static_knowledge">static_knowledge (Agent attribute)</a>
@@ -2171,6 +2195,8 @@
 </li>
         </ul></li>
         <li><a href="api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer">StreamableHTTPMCPServer (class in agentle.mcp.servers.streamable_http_mcp_server)</a>
+</li>
+        <li><a href="api/agents.html#agentle.agents.agent.Agent.suspension_manager">suspension_manager (Agent attribute)</a>
 </li>
     </ul></td>
   </tr></table>

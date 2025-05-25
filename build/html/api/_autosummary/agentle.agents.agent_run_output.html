@@ -305,6 +305,7 @@
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.context_state.html">agentle.agents.context_state</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.errors.max_tool_calls_exceeded_error.html">agentle.agents.errors.max_tool_calls_exceeded_error</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.agents.errors.tool_suspension_error.html">agentle.agents.errors.tool_suspension_error</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.exceptions.html">agentle.agents.exceptions</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of agentle.agents.exceptions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -320,6 +321,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.step.html">agentle.agents.step</a></li>
+<li class="toctree-l4"><a class="reference internal" href="agentle.agents.suspension_manager.html">agentle.agents.suspension_manager</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.ui.html">agentle.agents.ui</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of agentle.agents.ui</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.ui.streamlit.html">agentle.agents.ui.streamlit</a></li>
 </ul>
@@ -586,11 +588,21 @@ text_response = result.generation.text
 conversation_steps = result.steps
 structured_data = result.parsed  # If using a response_schema
 <a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
+<td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Classes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentRunOutput</span></code>(*, generation, context, parsed)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentRunOutput</span></code>(*[, generation, parsed, ...])</p></td>
 <td><p>Represents the complete result of an agent execution.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>

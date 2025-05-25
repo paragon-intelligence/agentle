@@ -304,6 +304,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.context_state.html">agentle.agents.context_state</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.errors.max_tool_calls_exceeded_error.html">agentle.agents.errors.max_tool_calls_exceeded_error</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.errors.tool_suspension_error.html">agentle.agents.errors.tool_suspension_error</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.exceptions.html">agentle.agents.exceptions</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of agentle.agents.exceptions</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -319,6 +320,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.step.html">agentle.agents.step</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.suspension_manager.html">agentle.agents.suspension_manager</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.ui.html">agentle.agents.ui</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of agentle.agents.ui</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.ui.streamlit.html">agentle.agents.ui.streamlit</a></li>
 </ul>
@@ -622,6 +624,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.errors.max_tool_calls_exceeded_error</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">MaxToolCallsExceededError</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.errors.tool_suspension_error</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolSuspensionError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.suspension_manager</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_default_suspension_manager</span><span class="p">,</span>
+    <span class="n">SuspensionManager</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">NO_CACHE</span><span class="p">,</span> <span class="n">StaticKnowledge</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.step</span><span class="w"> </span><span class="kn">import</span> <span class="n">Step</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.collections.message_sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageSequence</span>
@@ -896,6 +903,12 @@
     <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Whether to debug each agent step using the logger.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">suspension_manager</span><span class="p">:</span> <span class="n">SuspensionManager</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The suspension manager to use for Human-in-the-Loop workflows.</span>
+<span class="sd">    If None, uses the default global suspension manager.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Internal fields</span>
@@ -1266,6 +1279,112 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">run_async</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span> <span class="n">trace_params</span><span class="o">=</span><span class="n">trace_params</span>
         <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="Agent.resume_async">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.resume_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">resume_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">resumption_token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">approval_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resume a suspended agent execution.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            resumption_token: Token from a suspended execution</span>
+<span class="sd">            approval_data: Optional approval data to pass to the resumed execution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentRunOutput with the completed or newly suspended execution</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the resumption token is invalid or expired</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">suspension_manager</span> <span class="o">=</span> <span class="n">get_default_suspension_manager</span><span class="p">()</span>
+
+        <span class="c1"># Resume the execution</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">suspension_manager</span><span class="o">.</span><span class="n">resume_execution</span><span class="p">(</span>
+            <span class="n">resumption_token</span><span class="p">,</span> <span class="n">approval_data</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid or expired resumption token: </span><span class="si">{</span><span class="n">resumption_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">context</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">result</span>
+
+        <span class="c1"># Continue execution from where it left off</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_continue_execution_from_context</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Agent.resume">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.resume">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resume</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">resumption_token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">approval_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resume a suspended agent execution synchronously.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            resumption_token: Token from a suspended execution</span>
+<span class="sd">            approval_data: Optional approval data to pass to the resumed execution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentRunOutput with the completed or newly suspended execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">run_sync</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">resume_async</span><span class="p">,</span>
+            <span class="n">resumption_token</span><span class="o">=</span><span class="n">resumption_token</span><span class="p">,</span>
+            <span class="n">approval_data</span><span class="o">=</span><span class="n">approval_data</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_continue_execution_from_context</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Context</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Continue agent execution from a resumed context.</span>
+
+<span class="sd">        This method is used internally to resume execution after a suspension.</span>
+<span class="sd">        It continues from where the agent left off based on the context state.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># For now, we&#39;ll implement a simple approach that restarts the run_async logic</span>
+        <span class="c1"># with the existing context. In a more sophisticated implementation, we could</span>
+        <span class="c1"># resume from the exact point of suspension.</span>
+
+        <span class="c1"># Check if there&#39;s approval data in the context</span>
+        <span class="n">approval_result</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_checkpoint_data</span><span class="p">(</span><span class="s2">&quot;approval_result&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If we have approval data and it was denied, return a failed result</span>
+        <span class="k">if</span> <span class="n">approval_result</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">approval_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;approved&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
+                <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                <span class="n">parsed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">is_suspended</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">suspension_reason</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Request denied: </span><span class="si">{</span><span class="n">approval_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;approval_data&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reason&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;No reason provided&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Continue with normal execution logic</span>
+        <span class="c1"># This is a simplified approach - in production you might want to resume</span>
+        <span class="c1"># from the exact point where execution was suspended</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Re-run the agent logic with the existing context</span>
+            <span class="c1"># For now, we&#39;ll just complete the execution and return the context</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
+                <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># No new generation for resumed execution</span>
+                <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                <span class="n">parsed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">is_suspended</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">fail_execution</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
+                <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                <span class="n">parsed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">is_suspended</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">suspension_reason</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="p">)</span>
 
 <div class="viewcode-block" id="Agent.run_async">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.run_async">[docs]</a>
@@ -1698,28 +1817,62 @@
 
                 <span class="c1"># Time the tool execution</span>
                 <span class="n">tool_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-                <span class="n">tool_result</span> <span class="o">=</span> <span class="n">selected_tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
-                    <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span>
-                <span class="p">)</span>
-                <span class="n">tool_execution_time</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tool_start_time</span>
-                <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># Convert to milliseconds</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">tool_result</span> <span class="o">=</span> <span class="n">selected_tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span>
+                        <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span>
+                    <span class="p">)</span>
+                    <span class="n">tool_execution_time</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tool_start_time</span>
+                    <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># Convert to milliseconds</span>
 
-                <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tool execution result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">tool_result</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">called_tools</span><span class="p">[</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">tool_execution_suggestion</span><span class="p">,</span>
-                    <span class="n">tool_result</span><span class="p">,</span>
-                <span class="p">)</span>
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tool execution result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">tool_result</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">called_tools</span><span class="p">[</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                        <span class="n">tool_result</span><span class="p">,</span>
+                    <span class="p">)</span>
 
-                <span class="c1"># Add the tool execution result to the step</span>
-                <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
-                    <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
-                    <span class="n">result</span><span class="o">=</span><span class="n">tool_result</span><span class="p">,</span>
-                    <span class="n">execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time</span><span class="p">,</span>
-                    <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="p">)</span>
+                    <span class="c1"># Add the tool execution result to the step</span>
+                    <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
+                        <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                        <span class="n">result</span><span class="o">=</span><span class="n">tool_result</span><span class="p">,</span>
+                        <span class="n">execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time</span><span class="p">,</span>
+                        <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="n">ToolSuspensionError</span> <span class="k">as</span> <span class="n">suspension_error</span><span class="p">:</span>
+                    <span class="c1"># Handle tool suspension for HITL workflows</span>
+                    <span class="n">suspension_reason</span> <span class="o">=</span> <span class="n">suspension_error</span><span class="o">.</span><span class="n">reason</span>
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="s2">&quot;Tool execution suspended: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">suspension_reason</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Get the suspension manager (injected or default)</span>
+                    <span class="n">suspension_mgr</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">suspension_manager</span> <span class="ow">or</span> <span class="n">get_default_suspension_manager</span><span class="p">()</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Suspend the execution</span>
+                    <span class="n">resumption_token</span> <span class="o">=</span> <span class="k">await</span> <span class="n">suspension_mgr</span><span class="o">.</span><span class="n">suspend_execution</span><span class="p">(</span>
+                        <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                        <span class="n">reason</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+                        <span class="n">approval_data</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">approval_data</span><span class="p">,</span>
+                        <span class="n">timeout_hours</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">timeout_seconds</span> <span class="o">//</span> <span class="mi">3600</span>
+                        <span class="k">if</span> <span class="n">suspension_error</span><span class="o">.</span><span class="n">timeout_seconds</span>
+                        <span class="k">else</span> <span class="mi">24</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Return suspended result immediately</span>
+                    <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
+                        <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                        <span class="n">parsed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">is_suspended</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">suspension_reason</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+                        <span class="n">resumption_token</span><span class="o">=</span><span class="n">resumption_token</span><span class="p">,</span>
+                    <span class="p">)</span>
 
             <span class="c1"># Complete the step and add it to context</span>
             <span class="n">step_duration</span> <span class="o">=</span> <span class="p">(</span>
@@ -1772,6 +1925,7 @@
         <span class="n">new_mcp_servers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">MCPServerProtocol</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_generation_provider</span><span class="p">:</span> <span class="n">GenerationProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_suspension_manager</span><span class="p">:</span> <span class="n">SuspensionManager</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates a clone of the current agent with optionally modified attributes.</span>
@@ -1795,6 +1949,7 @@
 <span class="sd">            new_mcp_servers: New MCP servers for the agent.</span>
 <span class="sd">            new_generation_provider: New generation provider for the agent.</span>
 <span class="sd">            new_url: New URL for the agent.</span>
+<span class="sd">            new_suspension_manager: New suspension manager for the agent.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Agent[T_Schema]: A new agent with the specified attributes modified.</span>
@@ -1824,6 +1979,7 @@
             <span class="n">mcp_servers</span><span class="o">=</span><span class="n">new_mcp_servers</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcp_servers</span><span class="p">,</span>
             <span class="n">generation_provider</span><span class="o">=</span><span class="n">new_generation_provider</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_provider</span><span class="p">,</span>
             <span class="n">url</span><span class="o">=</span><span class="n">new_url</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">suspension_manager</span><span class="o">=</span><span class="n">new_suspension_manager</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">suspension_manager</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 

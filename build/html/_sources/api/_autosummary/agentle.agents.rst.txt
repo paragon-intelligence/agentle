@@ -26,4 +26,5 @@
    execution_state
    knowledge
    step
+   suspension_manager
    ui
