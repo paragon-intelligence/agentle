@@ -30,7 +30,10 @@ context.steps = list(context.steps) + [step]
 """
 
 from collections.abc import Sequence
+from datetime import datetime
+
 from rsb.models.base_model import BaseModel
+from rsb.models.field import Field
 
 from agentle.generations.models.message_parts.tool_execution_suggestion import (
     ToolExecutionSuggestion,
@@ -85,7 +88,9 @@ class Step(BaseModel):
         ```
     """
 
-    called_tools: Sequence[ToolExecutionSuggestion]
+    timestamp: datetime = Field(default_factory=datetime.now)
+
+    tool_execution_suggestions: Sequence[ToolExecutionSuggestion]
     """
     A sequence of tool execution suggestions that were made during this step.
     

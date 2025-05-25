@@ -33,7 +33,7 @@ context.messages = list(context.messages) + [
 ```
 """
 
-from collections.abc import Sequence
+from collections.abc import MutableSequence
 
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
@@ -102,13 +102,13 @@ class Context(BaseModel):
         ```
     """
 
-    messages: Sequence[Message]
+    message_history: MutableSequence[Message]
     """
     The sequence of messages exchanged between the user and the agent.
     Represents the full conversation history, including instructions, user queries, and agent responses.
     """
 
-    steps: Sequence[Step] = Field(default_factory=list)
+    steps: MutableSequence[Step] = Field(default_factory=list)
     """
     A record of actions and execution steps taken by the agent during processing.
     Empty by default, and populated during agent execution.

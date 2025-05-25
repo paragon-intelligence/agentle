@@ -60,9 +60,11 @@ def audio_description_agent_default_factory(
         GoogleGenaiGenerationProvider,
     )
 
-    return Agent(
+    agent = Agent(
         model="gemini-2.0-flash",
         instructions="You are a helpful assistant that deeply understands audio files.",
         generation_provider=provider or GoogleGenaiGenerationProvider(),
         response_schema=AudioDescription,
     )
+
+    return agent

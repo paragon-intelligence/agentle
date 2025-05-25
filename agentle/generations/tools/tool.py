@@ -156,6 +156,9 @@ class Tool[T_Output = Any](BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
+    def is_mcp_tool(self) -> bool:
+        return self._server is not None
+
     @property
     def text(self) -> str:
         """

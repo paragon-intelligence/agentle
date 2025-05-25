@@ -12,7 +12,7 @@ from __future__ import annotations
 import functools
 import inspect
 import logging
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any, TypeVar, cast, get_args
 from rsb.coroutines.fire_and_forget import fire_and_forget
@@ -31,9 +31,9 @@ P = TypeVar("P", bound=dict[str, Any])
 logger = logging.getLogger(__name__)
 
 
-def observe(
-    func: Callable[..., Coroutine[Any, Any, Generation[Any]]],
-) -> Callable[..., Coroutine[Any, Any, Generation[Any]]]:
+def observe[F: Callable[..., Any]](
+    func: F,
+) -> F:
     """
     Decorator that adds observability to provider generation methods.
 
@@ -468,4 +468,4 @@ def observe(
             # Re-raise the exception
             raise
 
-    return wrapper
+    return cast(F, wrapper)

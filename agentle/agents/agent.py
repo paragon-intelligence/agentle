@@ -843,9 +843,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         context: Context = self._convert_input_to_context(
             input, instructions=instructions
         )
+
         _logger.bind_optional(
             lambda log: log.debug(
-                "Converted input to context with %d messages", len(context.messages)
+                "Converted input to context with %d messages",
+                len(context.message_history),
             )
         )
 
@@ -879,7 +881,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 T_Schema
             ] = await generation_provider.create_generation_async(
                 model=self.model,
-                messages=context.messages,
+                messages=context.message_history,
                 response_schema=self.response_schema,
                 generation_config=self.agent_config.generation_config
                 if trace_params is None
@@ -973,7 +975,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
             tool_call_generation = await generation_provider.create_generation_async(
                 model=self.model,
-                messages=MessageSequence(context.messages)
+                messages=MessageSequence(context.message_history)
                 .append_before_last_message(called_tools_prompt)
                 .elements,
                 generation_config=self.agent_config.generation_config,
@@ -1000,7 +1002,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     )
                     generation = await generation_provider.create_generation_async(
                         model=self.model,
-                        messages=context.messages,
+                        messages=context.message_history,
                         response_schema=self.response_schema,
                         generation_config=self.agent_config.generation_config,
                     )
@@ -1222,11 +1224,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             return input
         elif isinstance(input, UserMessage):
             # If it's a UserMessage, prepend the developer instructions.
-            return Context(messages=[developer_message, input])
+            return Context(message_history=[developer_message, input])
         elif isinstance(input, str):
             # Handle plain string input
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
                     UserMessage(parts=[TextPart(text=input)]),
                 ]
@@ -1234,7 +1236,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         elif isinstance(input, (TextPart, FilePart, Tool)):
             # Handle single message parts
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
                     UserMessage(
                         parts=cast(Sequence[TextPart | FilePart | Tool], [input])
@@ -1244,9 +1246,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         elif callable(input) and not isinstance(input, Tool):
             # Handle callable input (that's not a Tool)
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
-                    UserMessage(parts=[TextPart(text=input())]),
+                    UserMessage(parts=[TextPart(text=str(input()))]),
                 ]
             )
         # Handle pandas DataFrame if available
@@ -1257,7 +1259,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 if isinstance(input, pd.DataFrame):
                     # Convert DataFrame to Markdown
                     return Context(
-                        messages=[
+                        message_history=[
                             developer_message,
                             UserMessage(
                                 parts=[TextPart(text=input.to_markdown() or "")]
@@ -1274,9 +1276,17 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 if isinstance(input, np.ndarray):
                     # Convert NumPy array to string representation
                     return Context(
-                        messages=[
+                        message_history=[
                             developer_message,
-                            UserMessage(parts=[TextPart(text=np.array2string(input))]),
+                            UserMessage(
+                                parts=[
+                                    TextPart(
+                                        text=np.array2string(
+                                            cast(np.ndarray[Any, Any], input)
+                                        )
+                                    )
+                                ]
+                            ),
                         ]
                     )
             except ImportError:
@@ -1308,7 +1318,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     )
 
                     return Context(
-                        messages=[
+                        message_history=[
                             developer_message,
                             UserMessage(
                                 parts=[
@@ -1329,7 +1339,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             except UnicodeDecodeError:
                 text = f"Input is binary data of size {len(input)} bytes."
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
                     UserMessage(parts=[TextPart(text=text)]),
                 ]
@@ -1337,7 +1347,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         elif isinstance(input, (datetime.datetime, datetime.date, datetime.time)):
             # Convert datetime objects to ISO format string
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
                     UserMessage(parts=[TextPart(text=input.isoformat())]),
                 ]
@@ -1348,7 +1358,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 try:
                     file_content = input.read_text()
                     return Context(
-                        messages=[
+                        message_history=[
                             developer_message,
                             UserMessage(parts=[TextPart(text=file_content)]),
                         ]
@@ -1356,7 +1366,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 except Exception as e:
                     # Fallback to string representation if reading fails
                     return Context(
-                        messages=[
+                        message_history=[
                             developer_message,
                             UserMessage(
                                 parts=[
@@ -1370,14 +1380,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             else:
                 # If it's not a file or doesn't exist, use the string representation
                 return Context(
-                    messages=[
+                    message_history=[
                         developer_message,
                         UserMessage(parts=[TextPart(text=str(input))]),
                     ]
                 )
         elif isinstance(input, Prompt):
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
                     UserMessage(parts=[TextPart(text=input.text)]),
                 ]
@@ -1394,14 +1404,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             else:  # str
                 text = content
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
                     UserMessage(parts=[TextPart(text=text)]),
                 ]
             )
         elif isinstance(input, ParsedDocument):
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
                     UserMessage(parts=[TextPart(text=input.md)]),
                 ]
@@ -1416,13 +1426,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             ):
                 # Sequence of Messages
                 # Ensure it's a list of Messages for type consistency
-                return Context(messages=list(cast(Sequence[Message], input)))
+                return Context(message_history=list(cast(Sequence[Message], input)))
             elif input and isinstance(input[0], (TextPart, FilePart, Tool)):
                 # Sequence of Parts
                 # Ensure it's a list of the correct Part types
                 valid_parts = cast(Sequence[TextPart | FilePart | Tool], input)
                 return Context(
-                    messages=[
+                    message_history=[
                         developer_message,
                         UserMessage(parts=list(valid_parts)),
                     ]
@@ -1437,7 +1447,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     # Convert Pydantic model to JSON string
                     text = input.model_dump_json(indent=2)
                     return Context(
-                        messages=[
+                        message_history=[
                             developer_message,
                             UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
                         ]
@@ -1454,9 +1464,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 )  # Add default=str for non-serializable
             except TypeError:
                 # Fallback to string representation if json fails
-                text = f"Input is a collection: {str(input)}"
+                text = f"Input is a collection: {str(cast(object, input))}"
             return Context(
-                messages=[
+                message_history=[
                     developer_message,
                     UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
                 ]
@@ -1476,7 +1486,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             text = f"Input of type {input_type_name} could not be converted to string"
 
         return Context(  # type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]
-            messages=[
+            message_history=[
                 developer_message,
                 UserMessage(parts=[TextPart(text=text)]),  # type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]
             ]

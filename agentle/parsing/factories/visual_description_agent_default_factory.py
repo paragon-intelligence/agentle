@@ -62,9 +62,11 @@ def visual_description_agent_default_factory(
         GoogleGenaiGenerationProvider,
     )
 
-    return Agent(
+    agent = Agent(
         model="gemini-2.0-pro-vision",
         instructions="You are a helpful assistant that deeply understands visual media.",
         generation_provider=provider or GoogleGenaiGenerationProvider(),
         response_schema=VisualMediaDescription,
     )
+
+    return agent

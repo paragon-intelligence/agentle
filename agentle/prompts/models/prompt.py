@@ -242,10 +242,10 @@ class Prompt(BaseModel):
             key = key.strip()
 
             if isinstance(current, dict) and key in current:
-                current = current[key]
-            elif hasattr(current, key):
+                current = cast(dict[str, Any], current[key])
+            elif hasattr(cast(dict[str, Any], current), key):
                 # Support for object attributes
-                current = getattr(current, key)
+                current = getattr(current, key)  # type: ignore
             else:
                 return None
 
