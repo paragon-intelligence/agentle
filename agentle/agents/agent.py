@@ -31,6 +31,7 @@ import datetime
 import importlib.util
 import json
 import logging
+import time
 import uuid
 from collections.abc import (
     AsyncGenerator,
@@ -65,6 +66,7 @@ from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
 from agentle.agents.knowledge.static_knowledge import NO_CACHE, StaticKnowledge
+from agentle.agents.step import Step
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.trace_params import TraceParams
@@ -843,6 +845,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             input, instructions=instructions
         )
 
+        # Start execution tracking
+        context.start_execution()
+
         _logger.bind_optional(
             lambda log: log.debug(
                 "Converted input to context with %d messages",
@@ -894,9 +899,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 )
             )
 
+            # Update context with final generation and complete execution
+            context.update_token_usage(generation.usage)
+            context.complete_execution()
+
             return AgentRunOutput(
                 generation=generation,
-                steps=context.steps,
+                context=context,
                 parsed=generation.parsed,
             )
 
@@ -921,10 +930,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]] = {}
 
         while state.iteration < self.agent_config.maxIterations:
+            current_iteration = state.iteration + 1
             _logger.bind_optional(
                 lambda log: log.info(
                     "Starting iteration %d of %d",
-                    state.iteration + 1,
+                    current_iteration,
                     self.agent_config.maxIterations,
                 )
             )
@@ -987,6 +997,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 )
             )
 
+            # Update context with token usage from this generation
+            context.update_token_usage(tool_call_generation.usage)
+
             agent_didnt_call_any_tool = tool_call_generation.tool_calls_amount() == 0
             if agent_didnt_call_any_tool:
                 _logger.bind_optional(
@@ -1008,6 +1021,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     _logger.bind_optional(
                         lambda log: log.debug("Final generation complete")
                     )
+                    # Update context with final generation and complete execution
+                    context.update_token_usage(generation.usage)
+                    context.complete_execution()
                     return self._build_agent_run_output(
                         context=context, generation=generation
                     )
@@ -1016,6 +1032,8 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 _logger.bind_optional(
                     lambda log: log.debug("Using existing text response")
                 )
+                # Complete execution before returning
+                context.complete_execution()
                 return self._build_agent_run_output(
                     generation=cast(Generation[T_Schema], tool_call_generation),
                     context=context,
@@ -1026,6 +1044,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 lambda log: log.info(
                     "Processing %d tool calls", len(tool_call_generation.tool_calls)
                 )
+            )
+
+            # Create a step to track this iteration's tool executions
+            step_start_time = time.time()
+            step = Step(
+                step_type="tool_execution",
+                iteration=current_iteration,
+                tool_execution_suggestions=list(tool_call_generation.tool_calls),
+                generation_text=tool_call_generation.text,
+                token_usage=tool_call_generation.usage,
             )
 
             for tool_execution_suggestion in tool_call_generation.tool_calls:
@@ -1039,7 +1067,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
                 selected_tool = available_tools[tool_execution_suggestion.tool_name]
 
+                # Time the tool execution
+                tool_start_time = time.time()
                 tool_result = selected_tool.call(**tool_execution_suggestion.args)
+                tool_execution_time = (
+                    time.time() - tool_start_time
+                ) * 1000  # Convert to milliseconds
+
                 _logger.bind_optional(
                     lambda log: log.debug("Tool execution result: %s", tool_result)
                 )
@@ -1047,6 +1081,21 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     tool_execution_suggestion,
                     tool_result,
                 )
+
+                # Add the tool execution result to the step
+                step.add_tool_execution_result(
+                    suggestion=tool_execution_suggestion,
+                    result=tool_result,
+                    execution_time_ms=tool_execution_time,
+                    success=True,
+                )
+
+            # Complete the step and add it to context
+            step_duration = (
+                time.time() - step_start_time
+            ) * 1000  # Convert to milliseconds
+            step.mark_completed(duration_ms=step_duration)
+            context.add_step(step)
 
             state.update(
                 last_response=tool_call_generation.text,
@@ -1061,6 +1110,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 self.agent_config.maxIterations,
             )
         )
+
+        # Mark context as failed due to max iterations exceeded
+        context.fail_execution(
+            error_message=f"Max tool calls exceeded after {self.agent_config.maxIterations} iterations"
+        )
+
         raise MaxToolCallsExceededError(
             f"Max tool calls exceeded after {self.agent_config.maxIterations} iterations"
         )
@@ -1167,7 +1222,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         return AgentRunOutput(
             generation=generation,
-            steps=context.steps,
+            context=context,
             parsed=parsed,
         )
 

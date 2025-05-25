@@ -28,11 +28,10 @@ structured_data = result.parsed  # If using a response_schema
 """
 
 import logging
-from collections.abc import Sequence
 
 from rsb.models.base_model import BaseModel
 
-from agentle.agents.step import Step
+from agentle.agents.context import Context
 from agentle.generations.models.generation.generation import Generation
 
 logger = logging.getLogger(__name__)
@@ -101,7 +100,7 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
     The generation produced by the agent.
     """
 
-    steps: Sequence[Step]
+    context: Context
     """
     The complete conversation context at the end of execution.
     """

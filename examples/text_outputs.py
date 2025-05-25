@@ -26,7 +26,7 @@ print(response.text)
 
 # You can also access conversation steps if needed
 print("\nConversation steps:")
-for i, step in enumerate(response.steps):
+for i, step in enumerate(response.context.steps):
     print(f"Step {i + 1}: {step}")
 
 # To run asynchronously:
