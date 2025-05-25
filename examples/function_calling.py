@@ -6,8 +6,8 @@ to perform tasks beyond simple text generation.
 """
 
 from agentle.agents.agent import Agent
-from agentle.generations.providers.google.google_genai_generation_provider import (
-    GoogleGenaiGenerationProvider,
+from agentle.generations.providers.cerebras.cerebras_generation_provider import (
+    CerebrasGenerationProvider,
 )
 
 
@@ -57,21 +57,17 @@ def calculate_mortgage(principal: float, interest_rate: float, years: int) -> st
 # Create an agent with the tools
 agent_with_tools = Agent(
     name="Assistant with Tools",
-    generation_provider=GoogleGenaiGenerationProvider(),
-    model="gemini-2.0-flash",
+    generation_provider=CerebrasGenerationProvider(),
+    model="llama-3.3-70b",
     instructions="""You are a helpful assistant that can answer questions about the weather 
     and help with financial calculations. Use the provided tools when appropriate.""",
     tools=[get_weather, calculate_mortgage],  # Pass the functions as tools
 )
 
 # Run the agent with queries that will likely trigger tool use
-weather_response = agent_with_tools.run("What's the weather like in Tokyo?")
-print("Weather Query Response:")
-print(weather_response.text)
-print("\n" + "-" * 50 + "\n")
-
-mortgage_response = agent_with_tools.run(
-    "Calculate the monthly payment for a $300,000 mortgage at 4.5% interest for 30 years."
+agent_response = agent_with_tools.run(
+    "What's the weather like in Tokyo? Also, Calculate the monthly payment for a $300,000 mortgage at 4.5% interest for 30 years. Answer in CAPS LOCK."
 )
-print("Mortgage Query Response:")
-print(mortgage_response.text)
+print("Agent response:")
+print(agent_response.text)
+print("\n" + "-" * 50 + "\n")

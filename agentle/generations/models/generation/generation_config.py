@@ -38,7 +38,6 @@ class GenerationConfig(BaseModel):
         top_p: Nucleus sampling parameter - considers only the top p% of probability mass.
             Range 0-1.
         top_k: Only sample from the top k tokens at each step.
-        google_generation_kwargs: Additional parameters specific to Google AI models.
         trace_params: Parameters for tracing the generation for observability.
         timeout: Maximum time in seconds to wait for a generation before timing out.
     """
@@ -75,10 +74,7 @@ class GenerationConfig(BaseModel):
         ge=0.0,
         examples=[10, 40, 100],
     )
-    google_generation_kwargs: dict[str, object] | None = Field(
-        default=None,
-        description="Additional parameters specific to Google AI model generation. Allows passing provider-specific parameters that aren't standardized across all providers in the Agentle framework.",
-    )
+
     trace_params: TraceParams = Field(
         default_factory=lambda: TraceParams(),
         description="Configuration for tracing and observability of the generation process. Controls what metadata is captured about the generation for monitoring, debugging, and analysis purposes.",
@@ -127,7 +123,6 @@ class GenerationConfig(BaseModel):
         new_n: int | None = None,
         new_top_p: float | None = None,
         new_top_k: float | None = None,
-        new_google_generation_kwargs: dict[str, object] | None = None,
         new_trace_params: TraceParams | None = None,
         new_timeout: float | None = None,
     ) -> GenerationConfig:
@@ -143,7 +138,6 @@ class GenerationConfig(BaseModel):
             new_n: New number of completions value, if provided.
             new_top_p: New top_p value, if provided.
             new_top_k: New top_k value, if provided.
-            new_google_generation_kwargs: New Google-specific parameters, if provided.
             new_trace_params: New trace parameters, if provided.
             new_timeout: New timeout value, if provided.
 
@@ -160,9 +154,6 @@ class GenerationConfig(BaseModel):
             n=new_n if new_n is not None else self.n,
             top_p=new_top_p if new_top_p is not None else self.top_p,
             top_k=new_top_k if new_top_k is not None else self.top_k,
-            google_generation_kwargs=new_google_generation_kwargs
-            if new_google_generation_kwargs is not None
-            else self.google_generation_kwargs,
             trace_params=new_trace_params
             if new_trace_params is not None
             else self.trace_params,

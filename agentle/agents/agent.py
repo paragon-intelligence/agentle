@@ -57,6 +57,7 @@ from agentle.agents.a2a.models.authentication import Authentication
 from agentle.agents.a2a.models.capabilities import Capabilities
 from agentle.agents.a2a.models.run_state import RunState
 from agentle.agents.agent_config import AgentConfig
+from agentle.agents.agent_config_dict import AgentConfigDict
 from agentle.agents.agent_input import AgentInput
 from agentle.agents.agent_run_output import AgentRunOutput
 from agentle.agents.context import Context
@@ -324,7 +325,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     The tools to use for the agent.
     """
 
-    config: AgentConfig = Field(default_factory=AgentConfig)
+    config: AgentConfig | AgentConfigDict = Field(default_factory=AgentConfig)
     """
     The configuration for the agent.
     """
@@ -336,6 +337,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
     # Internal fields
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    @property
+    def agent_config(self) -> AgentConfig:
+        if isinstance(self.config, dict):
+            return AgentConfig.model_validate(self.config)
+
+        return self.config
 
     @classmethod
     def from_agent_card(cls, agent_card: dict[str, Any]) -> "Agent[Any]":
@@ -873,9 +881,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 model=self.model,
                 messages=context.messages,
                 response_schema=self.response_schema,
-                generation_config=self.config.generationConfig
+                generation_config=self.agent_config.generation_config
                 if trace_params is None
-                else self.config.generationConfig.clone(new_trace_params=trace_params),
+                else self.agent_config.generation_config.clone(
+                    new_trace_params=trace_params
+                ),
             )
             _logger.bind_optional(
                 lambda log: log.debug(
@@ -909,12 +919,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         # Convert all tools in the array to Tool objects
         called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]] = {}
 
-        while state.iteration < self.config.maxIterations:
+        while state.iteration < self.agent_config.maxIterations:
             _logger.bind_optional(
                 lambda log: log.info(
                     "Starting iteration %d of %d",
                     state.iteration + 1,
-                    self.config.maxIterations,
+                    self.agent_config.maxIterations,
                 )
             )
 
@@ -938,7 +948,8 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         called_tools_prompt_parts.append(
                             TextPart(
                                 text="""<info>
-                                The following are the other tool calls made by the agent:
+                                The following is a tool call made by the agent.
+                                Only call it again if you think it's necessary.
                                 </info>"""
                                 + "\n"
                                 + "\n".join(
@@ -965,7 +976,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 messages=MessageSequence(context.messages)
                 .append_before_last_message(called_tools_prompt)
                 .elements,
-                generation_config=self.config.generationConfig,
+                generation_config=self.agent_config.generation_config,
                 tools=all_tools,
             )
             _logger.bind_optional(
@@ -991,7 +1002,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         model=self.model,
                         messages=context.messages,
                         response_schema=self.response_schema,
-                        generation_config=self.config.generationConfig,
+                        generation_config=self.agent_config.generation_config,
                     )
                     _logger.bind_optional(
                         lambda log: log.debug("Final generation complete")
@@ -1045,11 +1056,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         _logger.bind_optional(
             lambda log: log.error(
-                "Max tool calls exceeded after %d iterations", self.config.maxIterations
+                "Max tool calls exceeded after %d iterations",
+                self.agent_config.maxIterations,
             )
         )
         raise MaxToolCallsExceededError(
-            f"Max tool calls exceeded after {self.config.maxIterations} iterations"
+            f"Max tool calls exceeded after {self.agent_config.maxIterations} iterations"
         )
 
     def clone(
@@ -1058,7 +1070,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         new_name: str | None = None,
         new_instructions: str | None = None,
         new_tools: Sequence[Tool | Callable[..., object]] | None = None,
-        new_config: AgentConfig | None = None,
+        new_config: AgentConfig | AgentConfigDict | None = None,
         new_model: str | None = None,
         new_version: str | None = None,
         new_documentation_url: str | None = None,

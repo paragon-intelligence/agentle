@@ -25,18 +25,11 @@ agent = Agent(
 ```
 """
 
-from typing import Self
+from typing import NotRequired, TypedDict
 from agentle.generations.models.generation.generation_config import GenerationConfig
-from rsb.models.base_model import BaseModel
-from rsb.models.field import Field
-from rsb.models.model_validator import model_validator
-
-from agentle.generations.models.generation.generation_config_dict import (
-    GenerationConfigDict,
-)
 
 
-class AgentConfig(BaseModel):
+class AgentConfigDict(TypedDict):
     """
     Configuration class for Agentle agents.
 
@@ -69,40 +62,11 @@ class AgentConfig(BaseModel):
         generations per request are not supported for agents.
     """
 
-    generationConfig: GenerationConfig | GenerationConfigDict = Field(
-        default_factory=GenerationConfig
-    )
+    generationConfig: NotRequired[GenerationConfig]
     """Configuration for the language model generation process."""
 
-    maxToolCalls: int = Field(default=15)
+    maxToolCalls: NotRequired[int]
     """Maximum number of tool calls allowed during agent execution."""
 
-    maxIterations: int = Field(default=10)
+    maxIterations: NotRequired[int]
     """Maximum number of agent reasoning iterations before terminating."""
-
-    @property
-    def generation_config(self) -> GenerationConfig:
-        if isinstance(self.generationConfig, dict):
-            return GenerationConfig.model_validate(self.generationConfig)
-        return self.generationConfig
-
-    @model_validator(mode="after")
-    def validate_max_tool_calls(self) -> Self:
-        """
-        Validates that the generation configuration is compatible with agent requirements.
-
-        This validator ensures that the number of generations (n) is set to 1, as agents
-        do not (thanks GOD) support multiple parallel generations.
-
-        Returns:
-            Self: The validated AgentConfig instance.
-
-        Raises:
-            ValueError: If generationConfig.n is greater than 1.
-        """
-        if self.generation_config.n > 1:
-            raise ValueError(
-                "a number of choices > 1 is not supported for agents. This is NOT planned to be supported."
-                + "If you want multiple choices/responses, just call the agent n times."
-            )
-        return self

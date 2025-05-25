@@ -74,7 +74,6 @@ class Tool[T_Output = Any](BaseModel):
         description: Human-readable description of what the tool does.
         parameters: Dictionary of parameter specifications for the tool.
         _callable_ref: Private attribute storing the callable function.
-        needs_human_confirmation: Flag indicating if human confirmation is needed before execution.
 
     Examples:
         ```python
@@ -139,10 +138,14 @@ class Tool[T_Output = Any](BaseModel):
         ],
     )
 
-    needs_human_confirmation: bool = Field(
-        default=False,
-        description="Flag indicating whether human confirmation is required before executing this tool.",
-        examples=[True, False],
+    before_call: Callable[..., T_Output] | None = Field(
+        default=None,
+        description="Function to call before the tool is called.",
+    )
+
+    after_call: Callable[..., T_Output] | None = Field(
+        default=None,
+        description="Function to call after the tool is called.",
     )
 
     _callable_ref: (
@@ -242,6 +245,12 @@ class Tool[T_Output = Any](BaseModel):
                 'Tool is not callable because the "_callable_ref" instance variable is not set'
             )
 
+        if self.before_call is not None:
+            self.before_call(**kwargs)
+
+        if self.after_call is not None:
+            self.after_call(**kwargs)
+
         if inspect.iscoroutinefunction(self._callable_ref):
             ret: T_Output = await self._callable_ref(**kwargs)  # type: ignore
             return ret
@@ -335,6 +344,8 @@ class Tool[T_Output = Any](BaseModel):
     def from_callable(
         cls,
         _callable: Callable[..., T_Output],
+        before_call: Callable[..., T_Output] | None = None,
+        after_call: Callable[..., T_Output] | None = None,
         /,
     ) -> Tool[T_Output]:
         """
@@ -409,6 +420,8 @@ class Tool[T_Output = Any](BaseModel):
             name=name,
             description=description,
             parameters=parameters,
+            before_call=before_call,
+            after_call=after_call,
         )
 
         # Definir o atributo privado após a criação da instância

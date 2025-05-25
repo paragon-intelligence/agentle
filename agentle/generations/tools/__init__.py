@@ -26,5 +26,6 @@ print(result)  # "The weather in Tokyo is sunny."
 """
 
 from agentle.generations.tools.tool import Tool
+from agentle.generations.tools.decorators.tool import tool
 
-__all__ = ["Tool"]
+__all__ = ["Tool", "tool"]
