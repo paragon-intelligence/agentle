@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.asgi" href="agentle.agents.asgi.html" /><link rel="prev" title="agentle.agents.agent_run_output" href="agentle.agents.agent_run_output.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.mcp.servers.stdio_mcp_server" href="agentle.mcp.servers.stdio_mcp_server.html" /><link rel="prev" title="agentle.mcp.servers.mcp_server_protocol" href="agentle.mcp.servers.mcp_server_protocol.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>agentle.agents.agent_team - Agentle 0.1.0 documentation</title>
+        <title>agentle.mcp.servers.sse_mcp_server - Agentle 0.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
@@ -226,8 +226,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 current has-children"><a class="reference internal" href="../agents.html">Agents API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Agents API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3 current has-children"><a class="reference internal" href="agentle.agents.html">agentle.agents</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of agentle.agents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../agents.html">Agents API</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Agents API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="agentle.agents.html">agentle.agents</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of agentle.agents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.a2a.html">agentle.agents.a2a</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.a2a_interface.html">agentle.agents.a2a.a2a_interface</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.a2a_interface_options.html">agentle.agents.a2a.a2a_interface_options</a></li>
@@ -296,7 +296,7 @@
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.agent_input.html">agentle.agents.agent_input</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.agent_pipeline.html">agentle.agents.agent_pipeline</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.agent_run_output.html">agentle.agents.agent_run_output</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">agentle.agents.agent_team</a></li>
+<li class="toctree-l4"><a class="reference internal" href="agentle.agents.agent_team.html">agentle.agents.agent_team</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.asgi.html">agentle.agents.asgi</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of agentle.agents.asgi</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.asgi.blacksheep.html">agentle.agents.asgi.blacksheep</a></li>
 </ul>
@@ -330,7 +330,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="agentle.agents.agent.html">agentle.agents.agent</a></li>
 <li class="toctree-l3"><a class="reference internal" href="agentle.agents.agent_pipeline.html">agentle.agents.agent_pipeline</a></li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">agentle.agents.agent_team</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agentle.agents.agent_team.html">agentle.agents.agent_team</a></li>
 <li class="toctree-l3"><a class="reference internal" href="agentle.agents.context.html">agentle.agents.context</a></li>
 <li class="toctree-l3"><a class="reference internal" href="agentle.agents.agent_config.html">agentle.agents.agent_config</a></li>
 <li class="toctree-l3"><a class="reference internal" href="agentle.agents.agent_input.html">agentle.agents.agent_input</a></li>
@@ -413,8 +413,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../prompts.html">Prompts API</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../mcp.html">MCP API</a><input class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of MCP API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="agentle.mcp.html">agentle.mcp</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of agentle.mcp</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../mcp.html">MCP API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of MCP API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="agentle.mcp.html">agentle.mcp</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of agentle.mcp</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.mcp.errors.html">agentle.mcp.errors</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of agentle.mcp.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.mcp.errors.error_code.html">agentle.mcp.errors.error_code</a></li>
 </ul>
@@ -479,9 +479,9 @@
 <li class="toctree-l5"><a class="reference internal" href="agentle.mcp.sampling.request.html">agentle.mcp.sampling.request</a></li>
 </ul>
 </li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="agentle.mcp.servers.html">agentle.mcp.servers</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of agentle.mcp.servers</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.mcp.servers.html">agentle.mcp.servers</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of agentle.mcp.servers</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="agentle.mcp.servers.mcp_server_protocol.html">agentle.mcp.servers.mcp_server_protocol</a></li>
-<li class="toctree-l5"><a class="reference internal" href="agentle.mcp.servers.sse_mcp_server.html">agentle.mcp.servers.sse_mcp_server</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">agentle.mcp.servers.sse_mcp_server</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.mcp.servers.stdio_mcp_server.html">agentle.mcp.servers.stdio_mcp_server</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.mcp.servers.streamable_http_mcp_server.html">agentle.mcp.servers.streamable_http_mcp_server</a></li>
 </ul>
@@ -499,9 +499,9 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="agentle.mcp.servers.html">agentle.mcp.servers</a><input class="toctree-checkbox" id="toctree-checkbox-43" name="toctree-checkbox-43" role="switch" type="checkbox"/><label for="toctree-checkbox-43"><div class="visually-hidden">Toggle navigation of agentle.mcp.servers</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="agentle.mcp.servers.html">agentle.mcp.servers</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-43" name="toctree-checkbox-43" role="switch" type="checkbox"/><label for="toctree-checkbox-43"><div class="visually-hidden">Toggle navigation of agentle.mcp.servers</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="agentle.mcp.servers.mcp_server_protocol.html">agentle.mcp.servers.mcp_server_protocol</a></li>
-<li class="toctree-l4"><a class="reference internal" href="agentle.mcp.servers.sse_mcp_server.html">agentle.mcp.servers.sse_mcp_server</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">agentle.mcp.servers.sse_mcp_server</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.mcp.servers.stdio_mcp_server.html">agentle.mcp.servers.stdio_mcp_server</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.mcp.servers.streamable_http_mcp_server.html">agentle.mcp.servers.streamable_http_mcp_server</a></li>
 </ul>
@@ -545,7 +545,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.agent_team.rst.txt" title="View this page">
+  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.mcp.servers.sse_mcp_server.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -565,70 +565,15 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-agentle.agents.agent_team">
-<span id="agentle-agents-agent-team"></span><h1>agentle.agents.agent_team<a class="headerlink" href="#module-agentle.agents.agent_team" title="Link to this heading">¶</a></h1>
-<p>Agent Team Module for the Agentle Framework</p>
-<p>This module provides functionality for creating dynamic teams of AI agents managed by an orchestrator.
-AgentTeam implements a flexible approach to multi-agent systems where agents are selected at runtime
-based on the specific requirements of each task and subtask.</p>
-<p>Unlike the AgentPipeline which follows a fixed sequence of agents, AgentTeam uses an orchestrator
-agent to dynamically analyze tasks and select the most appropriate agent to handle each step.
-This provides greater flexibility and adaptability, particularly for complex workflows where:</p>
-<ol class="arabic simple">
-<li><p>The optimal sequence of agents depends on the specific task</p></li>
-<li><p>Different agents may be needed depending on the content of previous responses</p></li>
-<li><p>The same agent may need to be invoked multiple times for different aspects of a task</p></li>
-<li><p>The task completion criteria can only be determined at runtime</p></li>
-</ol>
-<p>Example:
-<a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
-from agentle.agents.agent import Agent
-from agentle.agents.agent_team import AgentTeam
-from agentle.agents.agent_config import AgentConfig
-from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider</p>
-<p># Create provider for all agents
-provider = GoogleGenaiGenerationProvider()</p>
-<p># Create specialized agents
-research_agent = Agent(</p>
-<blockquote>
-<div><p>name=”Research Agent”,
-description=”Specialized in finding information and data on various topics”,
-generation_provider=provider,
-model=”gemini-2.0-flash”,
-instructions=”You are a research agent focused on gathering accurate information.”,</p>
-</div></blockquote>
-<p>)</p>
-<dl class="simple">
-<dt>coding_agent = Agent(</dt><dd><p>name=”Coding Agent”,
-description=”Specialized in writing and debugging code in various languages”,
-generation_provider=provider,
-model=”gemini-2.0-flash”,
-instructions=”You are a coding expert that writes clean, efficient code.”,</p>
-</dd>
-</dl>
-<p>)</p>
-<dl class="simple">
-<dt>writing_agent = Agent(</dt><dd><p>name=”Writing Agent”,
-description=”Specialized in creating clear and engaging written content”,
-generation_provider=provider,
-model=”gemini-2.0-flash”,
-instructions=”You are a writing expert that creates compelling content.”,</p>
-</dd>
-</dl>
-<p>)</p>
-<p># Create a team with these agents and an orchestrator
-team = AgentTeam(</p>
-<blockquote>
-<div><p>agents=[research_agent, coding_agent, writing_agent],
-orchestrator_provider=provider,
-orchestrator_model=”gemini-2.0-flash”,
-team_config=AgentConfig(maxIterations=10)</p>
-</div></blockquote>
-<p>)</p>
-<p># Run the team with a task
-result = team.run(“Research the latest advancements in quantum computing and summarize them.”)
-print(result.generation.text)
-<a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+          <section id="module-agentle.mcp.servers.sse_mcp_server">
+<span id="agentle-mcp-servers-sse-mcp-server"></span><h1>agentle.mcp.servers.sse_mcp_server<a class="headerlink" href="#module-agentle.mcp.servers.sse_mcp_server" title="Link to this heading">¶</a></h1>
+<p>Server-Sent Events (SSE) implementation of the Model Context Protocol (MCP) server client.</p>
+<p>This module provides a client implementation for interacting with MCP servers over
+Server-Sent Events (SSE). It enables connection management, tool discovery,
+resource querying, and tool execution through SSE for server-to-client streaming
+and HTTP POST for client-to-server communication.</p>
+<p>The implementation follows the MCPServerProtocol interface and uses httpx for
+asynchronous HTTP communication with SSE support.</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -636,14 +581,8 @@ print(result.generation.text)
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
 <td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cast</span></code>(typ, val)</p></td>
-<td><p>Cast a value to a type.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_validator</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrivateAttr</span></code>()</p></td>
 <td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_sync</span></code>(func[, timeout])</p></td>
-<td><p>Runs a callable synchronously.</p></td>
 </tr>
 </tbody>
 </table>
@@ -652,38 +591,29 @@ print(result.generation.text)
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent</span></code>(*[, uid, name, description, url, ...])</p></td>
-<td><p>The main class of the Agentle framework that represents an intelligent agent.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentConfig</span></code>(*[, generationConfig, ...])</p></td>
-<td><p>Configuration class for Agentle agents.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentRunOutput</span></code>(*[, generation, ...])</p></td>
-<td><p>Represents the complete result of an agent execution.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../agents.html#agentle.agents.agent_team.AgentTeam" title="agentle.agents.agent_team.AgentTeam"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentTeam</span></code></a>(*, agents[, ...])</p></td>
-<td><p>A dynamic team of AI agents managed by an orchestrator agent.</p></td>
-</tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
-<td><p>Alias for pydantic.BaseModel.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GenerationProvider</span></code>(*[, tracing_client])</p></td>
-<td><p>Abstract base class for AI generation service providers.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GoogleGenaiGenerationProvider</span></code>(*[, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AsyncIterator</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
-<td><p>All the operations on a read-write sequence.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemorySessionManager</span></code>()</p></td>
+<td><p>Thread-safe in-memory implementation of the SessionManager interface.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code>()</p></td>
+<td><p>Abstract base class defining the protocol for MCP servers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
+<td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SSEMCPServer</span></code>(*, server_name, server_url[, ...])</p></td>
+<td><p>Server-Sent Events (SSE) implementation of the MCP (Model Context Protocol) server client.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
 <td><p>All the operations on a read-only sequence.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UUID</span></code>([hex, bytes, bytes_le, fields, int, ...])</p></td>
-<td><p>Instances of the UUID class represent UUIDs as specified in RFC 4122.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionManager</span></code>()</p></td>
+<td><p>Abstract base class for MCP session management.</p></td>
 </tr>
 </tbody>
 </table>
@@ -695,23 +625,23 @@ print(result.generation.text)
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="agentle.agents.asgi.html">
+          <a class="next-page" href="agentle.mcp.servers.stdio_mcp_server.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">agentle.agents.asgi</div>
+                <div class="title">agentle.mcp.servers.stdio_mcp_server</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="agentle.agents.agent_run_output.html">
+          <a class="prev-page" href="agentle.mcp.servers.mcp_server_protocol.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">agentle.agents.agent_run_output</div>
+                <div class="title">agentle.mcp.servers.mcp_server_protocol</div>
                 
               </div>
             </a>

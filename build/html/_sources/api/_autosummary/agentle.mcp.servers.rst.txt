@@ -9,6 +9,7 @@ agentle.mcp.servers
    .. autosummary::
    
       MCPServerProtocol
+      SSEMCPServer
       StreamableHTTPMCPServer
    
 .. rubric:: Modules
@@ -18,5 +19,6 @@ agentle.mcp.servers
    :recursive:
 
    mcp_server_protocol
+   sse_mcp_server
    stdio_mcp_server
    streamable_http_mcp_server

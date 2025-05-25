@@ -481,6 +481,7 @@
 </li>
 <li class="toctree-l4 current has-children"><a class="current reference internal" href="#">agentle.mcp.servers</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of agentle.mcp.servers</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.mcp.servers.mcp_server_protocol.html">agentle.mcp.servers.mcp_server_protocol</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.mcp.servers.sse_mcp_server.html">agentle.mcp.servers.sse_mcp_server</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.mcp.servers.stdio_mcp_server.html">agentle.mcp.servers.stdio_mcp_server</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.mcp.servers.streamable_http_mcp_server.html">agentle.mcp.servers.streamable_http_mcp_server</a></li>
 </ul>
@@ -500,6 +501,7 @@
 </li>
 <li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">agentle.mcp.servers</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-43" name="toctree-checkbox-43" role="switch" type="checkbox"/><label for="toctree-checkbox-43"><div class="visually-hidden">Toggle navigation of agentle.mcp.servers</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="agentle.mcp.servers.mcp_server_protocol.html">agentle.mcp.servers.mcp_server_protocol</a></li>
+<li class="toctree-l4"><a class="reference internal" href="agentle.mcp.servers.sse_mcp_server.html">agentle.mcp.servers.sse_mcp_server</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.mcp.servers.stdio_mcp_server.html">agentle.mcp.servers.stdio_mcp_server</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.mcp.servers.streamable_http_mcp_server.html">agentle.mcp.servers.streamable_http_mcp_server</a></li>
 </ul>
@@ -568,7 +570,7 @@
 <p>MCP Servers Package</p>
 <p>This package provides server implementations for the Model Context Protocol.
 It includes protocol definitions and concrete implementations for different
-server types (e.g., HTTP, WebSocket) that allow communication with external
+server types (e.g., HTTP, WebSocket, SSE) that allow communication with external
 tools and resources.</p>
 <p class="rubric">Classes</p>
 <div class="table-wrapper autosummary longtable docutils container">
@@ -577,7 +579,10 @@ tools and resources.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code>()</p></td>
 <td><p>Abstract base class defining the protocol for MCP servers.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StreamableHTTPMCPServer</span></code>(*, server_name, ...)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SSEMCPServer</span></code>(*, server_name, server_url[, ...])</p></td>
+<td><p>Server-Sent Events (SSE) implementation of the MCP (Model Context Protocol) server client.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StreamableHTTPMCPServer</span></code>(*, server_name, ...)</p></td>
 <td><p>Streamable HTTP implementation of the MCP (Model Context Protocol) server client.</p></td>
 </tr>
 </tbody>
@@ -590,10 +595,13 @@ tools and resources.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="../mcp.html#module-agentle.mcp.servers.mcp_server_protocol" title="agentle.mcp.servers.mcp_server_protocol"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mcp_server_protocol</span></code></a></p></td>
 <td><p>MCP Server Protocol Module</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../mcp.html#module-agentle.mcp.servers.stdio_mcp_server" title="agentle.mcp.servers.stdio_mcp_server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stdio_mcp_server</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="agentle.mcp.servers.sse_mcp_server.html#module-agentle.mcp.servers.sse_mcp_server" title="agentle.mcp.servers.sse_mcp_server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sse_mcp_server</span></code></a></p></td>
+<td><p>Server-Sent Events (SSE) implementation of the Model Context Protocol (MCP) server client.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../mcp.html#module-agentle.mcp.servers.stdio_mcp_server" title="agentle.mcp.servers.stdio_mcp_server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stdio_mcp_server</span></code></a></p></td>
 <td><p>Stdio implementation of the Model Context Protocol (MCP) server client.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../mcp.html#module-agentle.mcp.servers.streamable_http_mcp_server" title="agentle.mcp.servers.streamable_http_mcp_server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamable_http_mcp_server</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../mcp.html#module-agentle.mcp.servers.streamable_http_mcp_server" title="agentle.mcp.servers.streamable_http_mcp_server"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamable_http_mcp_server</span></code></a></p></td>
 <td><p>Streamable HTTP implementation of the Model Context Protocol (MCP) server client.</p></td>
 </tr>
 </tbody>
