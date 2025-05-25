@@ -24,14 +24,23 @@ response = agent.run("What are the three laws of robotics?")
 # Print the response text
 print(response.text)
 
-# You can also access conversation steps if needed
-print("\nConversation steps:")
+# You can also access conversation steps - now always at least 1 step!
+print(f"\nExecution steps: {len(response.context.steps)}")
 for i, step in enumerate(response.context.steps):
-    print(f"Step {i + 1}: {step}")
-
-# To run asynchronously:
-# import asyncio
-# async def main():
-#     response = await agent.run_async("What are the three laws of robotics?")
-#     print(response.text)
-# asyncio.run(main())
+    print(f"Step {i + 1}:")
+    print(f"  Type: {step.step_type}")
+    print(f"  Iteration: {step.iteration}")
+    print(f"  Duration: {step.duration_ms:.1f}ms")
+    print(f"  Has tool executions: {step.has_tool_executions}")
+    print(f"  Successful: {step.is_successful}")
+    if step.generation_text:
+        preview = (
+            step.generation_text[:100] + "..."
+            if len(step.generation_text) > 100
+            else step.generation_text
+        )
+        print(f"  Generated text preview: {preview}")
+    if step.token_usage:
+        print(
+            f"  Token usage: {step.token_usage.prompt_tokens} prompt + {step.token_usage.completion_tokens} completion = {step.token_usage.total_tokens} total"
+        )

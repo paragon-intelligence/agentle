@@ -881,6 +881,17 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             _logger.bind_optional(
                 lambda log: log.debug("No tools available, generating direct response")
             )
+
+            # Create a step to track the direct generation
+            step_start_time = time.time()
+            step = Step(
+                step_type="generation",
+                iteration=1,
+                tool_execution_suggestions=[],  # No tools called
+                generation_text="Generating direct response...",
+                token_usage=None,  # Will be updated after generation
+            )
+
             generation: Generation[
                 T_Schema
             ] = await generation_provider.create_generation_async(
@@ -898,6 +909,17 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     "Generated response with %d tokens", generation.usage.total_tokens
                 )
             )
+
+            # Update the step with the actual generation results
+            step.generation_text = generation.text
+            step.token_usage = generation.usage
+            step_duration = (
+                time.time() - step_start_time
+            ) * 1000  # Convert to milliseconds
+            step.mark_completed(duration_ms=step_duration)
+
+            # Add the step to context
+            context.add_step(step)
 
             # Update context with final generation and complete execution
             context.update_token_usage(generation.usage)
@@ -1007,6 +1029,17 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         "Agent didn't call any tool, generating final response"
                     )
                 )
+                # Create a step for the final generation (no tools called)
+                final_step_start_time = time.time()
+                final_step = Step(
+                    step_type="generation",
+                    iteration=current_iteration,
+                    tool_execution_suggestions=[],  # No tools called in this final step
+                    generation_text=tool_call_generation.text
+                    or "Generating final response...",
+                    token_usage=tool_call_generation.usage,
+                )
+
                 # Only make another call if we need structured output or didn't get text
                 if self.response_schema is not None or not tool_call_generation.text:
                     _logger.bind_optional(
@@ -1021,6 +1054,14 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     _logger.bind_optional(
                         lambda log: log.debug("Final generation complete")
                     )
+
+                    # Update the step with the final generation results
+                    final_step.generation_text = generation.text
+                    final_step.token_usage = generation.usage
+                    final_step_duration = (time.time() - final_step_start_time) * 1000
+                    final_step.mark_completed(duration_ms=final_step_duration)
+                    context.add_step(final_step)
+
                     # Update context with final generation and complete execution
                     context.update_token_usage(generation.usage)
                     context.complete_execution()
@@ -1032,6 +1073,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 _logger.bind_optional(
                     lambda log: log.debug("Using existing text response")
                 )
+
+                # Complete the final step and add to context
+                final_step_duration = (time.time() - final_step_start_time) * 1000
+                final_step.mark_completed(duration_ms=final_step_duration)
+                context.add_step(final_step)
+
                 # Complete execution before returning
                 context.complete_execution()
                 return self._build_agent_run_output(
