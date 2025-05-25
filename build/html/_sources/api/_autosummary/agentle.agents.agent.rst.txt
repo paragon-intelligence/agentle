@@ -22,6 +22,7 @@ agentle.agents.agent
    
       Agent
       AgentConfig
+      AgentConfigDict
       AgentRunOutput
       AgentSkill
       Any

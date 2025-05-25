@@ -18,4 +18,5 @@ agentle.agents.agent\_config
       AgentConfig
       BaseModel
       GenerationConfig
+      GenerationConfigDict
    
