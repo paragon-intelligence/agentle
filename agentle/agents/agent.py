@@ -71,6 +71,8 @@ from agentle.agents.suspension_manager import (
     SuspensionManager,
 )
 from agentle.agents.knowledge.static_knowledge import NO_CACHE, StaticKnowledge
+from agentle.parsing.cache.cache_store import CacheStore
+from agentle.parsing.cache.in_memory_cache_store import InMemoryCacheStore
 from agentle.agents.step import Step
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
@@ -228,6 +230,23 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     """
     A document parser to be used by the agent. This will be used to parse the static
     knowledge documents, if provided.
+    """
+
+    cache_store: CacheStore | None = Field(default=None)
+    """
+    A cache store to be used by the agent for caching parsed documents.
+    If None, a default InMemoryCacheStore will be used.
+    
+    Example:
+    ```python
+    from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore
+    
+    # Use in-memory cache (default)
+    agent = Agent(cache_store=InMemoryCacheStore())
+    
+    # Use Redis cache for distributed environments
+    agent = Agent(cache_store=RedisCacheStore(redis_url="redis://localhost:6379/0"))
+    ```
     """
 
     generation_provider: GenerationProvider
@@ -852,6 +871,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         if self.static_knowledge:
             _logger.bind_optional(lambda log: log.debug("Processing static knowledge"))
             knowledge_contents: MutableSequence[str] = []
+
+            # Get or create cache store
+            cache_store = self.cache_store or InMemoryCacheStore()
+
             for knowledge_item in self.static_knowledge:
                 # Convert string to StaticKnowledge with NO_CACHE
                 if isinstance(knowledge_item, str):
@@ -862,7 +885,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 # Process the knowledge item based on its content type
                 content_to_parse = knowledge_item.content
                 parsed_content = None
-                cache_key = None
                 parser = self.document_parser or file_parser_default_factory(
                     visual_description_provider=generation_provider
                     if self.file_visual_description_provider is None
@@ -876,34 +898,38 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 # Check if caching is enabled
                 if knowledge_item.cache is not NO_CACHE:
                     _logger.bind_optional(
-                        lambda log: log.debug("Using cache for knowledge item")
+                        lambda log: log.debug("Using cache store for knowledge item")
                     )
-                    try:
-                        # Import aiocache only when needed
-                        from aiocache import cached
 
-                        # Create a cache key based on the content
-                        cache_key = f"static_knowledge_{hash(content_to_parse)}"
+                    # Generate cache key
+                    cache_key = cache_store.get_cache_key(
+                        content_to_parse, parser.__class__.__name__
+                    )
 
-                        # Define a cached version of the parse function
-                        @cached(  # type: ignore
-                            ttl=None
-                            if knowledge_item.cache == "infinite"
-                            else knowledge_item.cache,
-                            key=cache_key,
+                    # Try to get from cache first
+                    parsed_content = await cache_store.get_async(cache_key)
+
+                    if parsed_content is None:
+                        # Not in cache, parse and store
+                        _logger.bind_optional(
+                            lambda log: log.debug("Cache miss, parsing and storing")
                         )
-                        async def get_cached_parsed_content(
-                            content_path: str,
-                        ) -> ParsedDocument:
-                            return await parser.parse_async(content_path)
+                        if knowledge_item.is_url():
+                            parsed_content = await parser.parse_async(content_to_parse)
+                        elif knowledge_item.is_file_path():
+                            parsed_content = await parser.parse_async(content_to_parse)
+                        else:  # Raw text - don't cache raw text
+                            parsed_content = None
 
-                        # Get parsed content, either from cache or newly parsed
-                        parsed_content = await get_cached_parsed_content(
-                            content_to_parse
+                        # Store in cache if we parsed something
+                        if parsed_content is not None:
+                            await cache_store.set_async(
+                                cache_key, parsed_content, ttl=knowledge_item.cache
+                            )
+                    else:
+                        _logger.bind_optional(
+                            lambda log: log.debug("Cache hit for knowledge item")
                         )
-                    except ImportError:
-                        # If aiocache is not installed, just parse normally
-                        parsed_content = None
 
                 # If no cached content (either cache not enabled or cache miss), parse directly
                 if parsed_content is None:
@@ -1333,6 +1359,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         new_generation_provider: GenerationProvider | None = None,
         new_url: str | None = None,
         new_suspension_manager: SuspensionManager | None = None,
+        new_cache_store: CacheStore | None = None,
     ) -> Agent[T_Schema]:
         """
         Creates a clone of the current agent with optionally modified attributes.
@@ -1357,6 +1384,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             new_generation_provider: New generation provider for the agent.
             new_url: New URL for the agent.
             new_suspension_manager: New suspension manager for the agent.
+            new_cache_store: New cache store for the agent.
 
         Returns:
             Agent[T_Schema]: A new agent with the specified attributes modified.
@@ -1387,6 +1415,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             generation_provider=new_generation_provider or self.generation_provider,
             url=new_url or self.url,
             suspension_manager=new_suspension_manager or self.suspension_manager,
+            cache_store=new_cache_store or self.cache_store,
         )
 
     def _build_agent_run_output(

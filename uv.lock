@@ -4,7 +4,7 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "agentle"
-version = "0.1.9"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
@@ -31,6 +31,7 @@ dev = [
     { name = "couchbase" },
     { name = "furo" },
     { name = "google-genai" },
+    { name = "groq" },
     { name = "influxdb-client" },
     { name = "ipykernel" },
     { name = "langfuse" },
@@ -141,6 +142,7 @@ dev = [
     { name = "couchbase", specifier = ">=4.3.5" },
     { name = "furo", specifier = ">=2024.8.6" },
     { name = "google-genai", specifier = ">=1.11.0" },
+    { name = "groq", specifier = ">=0.22.0" },
     { name = "influxdb-client", specifier = ">=1.48.0" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "langfuse", specifier = ">=2.60.3" },

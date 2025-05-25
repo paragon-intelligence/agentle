@@ -10,28 +10,24 @@ Usage:
     python speech_to_text_example.py
 """
 
-import os
 import sys
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+from agentle.stt.models.transcription_config import TranscriptionConfig
+from agentle.stt.providers.google.google_speech_to_text_provider import (
+    GoogleSpeechToTextProvider,
+)
+
+load_dotenv()
 
 # Add parent directory to path to import agentle
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from agentle.stt.models.transcription_config import TranscriptionConfig
-from agentle.stt.providers.gladia.gladia_speech_to_text_provider import (
-    GladiaSpeechToTextProvider,
-)
-
-
-# Check if API key is set
-api_key = os.getenv("GLADIA_API_KEY")
-if not api_key:
-    print("Please set the GLADIA_API_KEY environment variable.")
-    print("You can get an API key from https://gladia.io")
-    sys.exit(1)
 
 # Initialize the provider
-provider = GladiaSpeechToTextProvider()
+provider = GoogleSpeechToTextProvider()
 
 # Path to the sample audio file
 audio_file = Path(__file__).parent / "harvard.wav"

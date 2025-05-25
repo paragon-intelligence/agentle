@@ -88,14 +88,71 @@ print(response.text)
 
 <div align="center">
 
-| 🎨 **Beautiful UIs** | 🌐 **Instant APIs** | 📊 **Observability** |
-|:---:|:---:|:---:|
-| Create chat interfaces with Streamlit in minutes | Deploy RESTful APIs with automatic Scalar docs | Track everything with built-in Langfuse integration |
-| ![Streamlit UI](https://github.com/user-attachments/assets/1c31da4c-aeb2-4ca6-88ac-62fb903d6d92) | ![API Docs](https://github.com/user-attachments/assets/d9d743cb-ad9c-41eb-a059-eda089efa6b6) | ![Tracing](https://github.com/user-attachments/assets/94937238-405c-4011-83e2-147cec5cf3e7) |
+| 🎨 **Beautiful UIs** | 🌐 **Instant APIs** | 📊 **Observability** | 🗄️ **Production Caching** |
+|:---:|:---:|:---:|:---:|
+| Create chat interfaces with Streamlit in minutes | Deploy RESTful APIs with automatic Scalar docs | Track everything with built-in Langfuse integration | Flexible caching with InMemory & Redis stores |
+| ![Streamlit UI](https://github.com/user-attachments/assets/1c31da4c-aeb2-4ca6-88ac-62fb903d6d92) | ![API Docs](https://github.com/user-attachments/assets/d9d743cb-ad9c-41eb-a059-eda089efa6b6) | ![Tracing](https://github.com/user-attachments/assets/94937238-405c-4011-83e2-147cec5cf3e7) | Intelligent document caching for performance |
 
 </div>
 
 ### 🔥 Core Capabilities
+
+<details>
+<summary><b>🗄️ Production-Ready Caching</b> - Intelligent document caching for performance and scalability</summary>
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge
+from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore
+from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+
+# In-Memory Cache (Development & Single Process)
+memory_cache = InMemoryCacheStore(cleanup_interval=300)
+
+agent = Agent(
+    name="Research Assistant",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You analyze documents efficiently with caching.",
+    static_knowledge=[
+        StaticKnowledge(content="large_report.pdf", cache=3600),  # Cache for 1 hour
+        StaticKnowledge(content="https://api.example.com/data", cache="infinite"),  # Cache indefinitely
+    ],
+    cache_store=memory_cache
+)
+
+# Redis Cache (Production & Distributed)
+redis_cache = RedisCacheStore(
+    redis_url="redis://localhost:6379/0",
+    key_prefix="agentle:docs:",
+    default_ttl=7200  # 2 hours default
+)
+
+production_agent = Agent(
+    name="Production Assistant",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You handle high-volume document processing.",
+    static_knowledge=[
+        StaticKnowledge(content="enterprise_docs.pdf", cache=86400),  # Cache for 1 day
+    ],
+    cache_store=redis_cache
+)
+
+# Cache Management
+stats = memory_cache.get_stats()
+print(f"Active cache entries: {stats['active_entries']}")
+
+# Clear cache when needed
+await memory_cache.clear_async()
+```
+
+**Benefits:**
+- 🚀 **Performance**: Avoid re-parsing large documents
+- 💰 **Cost Efficiency**: Reduce API calls for URL-based documents
+- 📊 **Scalability**: Share cached documents across processes (Redis)
+- 🔄 **Consistency**: Same parsed content across multiple runs
+</details>
 
 <details>
 <summary><b>🤖 Intelligent Agents</b> - Build specialized agents with knowledge, tools, and structured outputs</summary>
@@ -1642,6 +1699,103 @@ agent = Agent(
     document_parser=CustomParser()
 )
 ```
+
+### 🗄️ Production-Ready Caching
+
+Agentle provides a flexible caching system for parsed documents to improve performance and reduce redundant parsing operations in production environments:
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.knowledge.static_knowledge import StaticKnowledge
+from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore
+from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
+
+# Option 1: In-Memory Cache (Default)
+# Perfect for single-process applications and development
+in_memory_cache = InMemoryCacheStore(
+    cleanup_interval=300  # Clean up expired entries every 5 minutes
+)
+
+agent_with_memory_cache = Agent(
+    name="Research Assistant",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a research assistant that analyzes documents.",
+    static_knowledge=[
+        StaticKnowledge(content="research_paper.pdf", cache=3600),  # Cache for 1 hour
+        StaticKnowledge(content="https://example.com/data.pdf", cache="infinite"),  # Cache indefinitely
+    ],
+    cache_store=in_memory_cache
+)
+
+# Option 2: Redis Cache (Production)
+# Perfect for distributed environments with multiple processes/servers
+redis_cache = RedisCacheStore(
+    redis_url="redis://localhost:6379/0",
+    key_prefix="agentle:parsed:",
+    default_ttl=3600  # 1 hour default TTL
+)
+
+agent_with_redis_cache = Agent(
+    name="Production Assistant",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a production assistant with distributed caching.",
+    static_knowledge=[
+        StaticKnowledge(content="large_document.pdf", cache=7200),  # Cache for 2 hours
+        StaticKnowledge(content="https://api.example.com/report", cache=1800),  # Cache for 30 minutes
+    ],
+    cache_store=redis_cache
+)
+
+# Option 3: No Cache (Legacy behavior)
+# Documents are parsed fresh every time
+agent_no_cache = Agent(
+    name="Simple Assistant",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a simple assistant without caching.",
+    static_knowledge=[
+        "Raw text knowledge",  # No caching for raw text
+        StaticKnowledge(content="document.pdf"),  # No cache specified = no caching
+    ]
+    # No cache_store specified = uses default InMemoryCacheStore but only for items with cache TTL
+)
+
+# Cache Management Operations
+cache = InMemoryCacheStore()
+
+# Check if a document is cached
+cache_key = cache.get_cache_key("document.pdf", "PDFParser")
+is_cached = await cache.exists_async(cache_key)
+
+# Get cache statistics
+stats = cache.get_stats()
+print(f"Cache entries: {stats['active_entries']}")
+
+# Clear all cached documents
+await cache.clear_async()
+
+# For Redis cache, get detailed info
+if isinstance(cache, RedisCacheStore):
+    cache_info = await cache.get_cache_info()
+    print(f"Redis version: {cache_info['redis_version']}")
+    await cache.close()  # Clean up Redis connection
+```
+
+**Cache Store Comparison:**
+
+| Store | Best For | Persistence | Scalability | Setup |
+|-------|----------|-------------|-------------|-------|
+| **InMemory** | Development, Single Process | ❌ No | Single Process | Zero config |
+| **Redis** | Production, Distributed | ✅ Yes | Multi-Instance | Redis server |
+
+**Caching Benefits:**
+- 🚀 **Performance**: Avoid re-parsing large documents
+- 💰 **Cost Savings**: Reduce API calls for URL-based documents  
+- 🔄 **Consistency**: Same parsed content across multiple agent runs
+- 📊 **Scalability**: Share cached documents across processes (Redis)
+- ⚡ **Responsiveness**: Faster agent startup with pre-cached knowledge
 
 ## 🧠 Philosophy
 
