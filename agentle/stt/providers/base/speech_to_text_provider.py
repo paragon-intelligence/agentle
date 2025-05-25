@@ -1,17 +1,12 @@
 import abc
 from pathlib import Path
 
-from rsb.models.base_model import BaseModel
-
 from agentle.stt.models.audio_transcription import AudioTranscription
 from agentle.stt.models.transcription_config import TranscriptionConfig
 from rsb.coroutines.run_sync import run_sync
-from rsb.models.config_dict import ConfigDict
 
 
-class SpeechToTextProvider(BaseModel, abc.ABC):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class SpeechToTextProvider(abc.ABC):
     def transcribe(
         self, audio_file: str | Path, config: TranscriptionConfig | None = None
     ) -> AudioTranscription:

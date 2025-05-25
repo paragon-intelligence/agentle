@@ -7,6 +7,7 @@ from pathlib import Path
 
 from rsb.functions.ext2mime import ext2mime
 from rsb.models.base_model import BaseModel
+from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 
 from agentle.generations.models.message_parts.file import FilePart
@@ -29,12 +30,13 @@ class _TranscriptionOutput(BaseModel):
     subtitles: Subtitles = Field(description="The subtitles of the audio file.")
 
 
-class GoogleSpeechToTextProvider(SpeechToTextProvider):
+class GoogleSpeechToTextProvider(BaseModel, SpeechToTextProvider):
     model: str = "gemini-2.0-flash"
     use_vertex_ai: bool = False
     api_key: str | None = None
     project: str | None = None
     location: str | None = None
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     async def _get_audio_duration(self, audio_file: str | Path) -> float:
         """Get the duration of an audio file using ffprobe."""

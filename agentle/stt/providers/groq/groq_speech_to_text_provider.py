@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Literal
 
 import httpx
+from rsb.models.base_model import BaseModel
+from rsb.models.config_dict import ConfigDict
 
 from agentle.stt.models.audio_transcription import AudioTranscription
 from agentle.stt.models.sentence_segment import SentenceSegment
@@ -10,7 +12,7 @@ from agentle.stt.models.transcription_config import TranscriptionConfig
 from agentle.stt.providers.base.speech_to_text_provider import SpeechToTextProvider
 
 
-class GroqSpeechToTextProvider(SpeechToTextProvider):
+class GroqSpeechToTextProvider(BaseModel, SpeechToTextProvider):
     api_key: str | None = None
     http_client: httpx.Client | None = None
     timeout: float | httpx.Timeout | None = None
@@ -20,6 +22,7 @@ class GroqSpeechToTextProvider(SpeechToTextProvider):
         ]
         | str
     ) = "whisper-large-v3"
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     async def transcribe_async(
         self, audio_file: str | Path, config: TranscriptionConfig | None = None

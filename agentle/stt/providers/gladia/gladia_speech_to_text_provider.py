@@ -1,11 +1,12 @@
+import asyncio
 import os
+import time
 from pathlib import Path
 from typing import override
-import time
-import asyncio
 
 import httpx
 from rsb.functions.ext2mime import ext2mime
+from rsb.models.base_model import BaseModel
 
 from agentle.stt.models.audio_transcription import AudioTranscription
 from agentle.stt.models.sentence_segment import SentenceSegment
@@ -14,7 +15,7 @@ from agentle.stt.models.transcription_config import TranscriptionConfig
 from agentle.stt.providers.base.speech_to_text_provider import SpeechToTextProvider
 
 
-class GladiaSpeechToTextProvider(SpeechToTextProvider):
+class GladiaSpeechToTextProvider(BaseModel, SpeechToTextProvider):
     api_key: str | None = None
 
     @override
