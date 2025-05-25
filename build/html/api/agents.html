@@ -1553,6 +1553,52 @@ result = analysis_pipeline.run(“Raw data: …”)
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline.resume_async">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resume_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resumption_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approval_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent_pipeline.html#AgentPipeline.resume_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline.resume_async" title="Link to this definition">¶</a></dt>
+<dd><p>Resume a suspended pipeline execution.</p>
+<p>This method resumes a pipeline that was suspended due to a tool requiring
+human approval. It retrieves the pipeline state and continues execution
+from where it left off.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resumption_token</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Token from a suspended pipeline execution</p></li>
+<li><p><strong>approval_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional approval data to pass to the resumed execution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>AgentRunOutput with the completed or newly suspended execution</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the resumption token is invalid or not for a pipeline</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AgentRunOutput</em>[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline.resume">
+<span class="sig-name descname"><span class="pre">resume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resumption_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approval_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent_pipeline.html#AgentPipeline.resume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline.resume" title="Link to this definition">¶</a></dt>
+<dd><p>Resume a suspended pipeline execution synchronously.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resumption_token</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Token from a suspended pipeline execution</p></li>
+<li><p><strong>approval_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional approval data to pass to the resumed execution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>AgentRunOutput with the completed or newly suspended execution</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>AgentRunOutput</em>[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="agentle.agents.agent_pipeline.AgentPipeline.run">
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent_pipeline.html#AgentPipeline.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_pipeline.AgentPipeline.run" title="Link to this definition">¶</a></dt>
 <dd><p>Run the agent pipeline synchronously with the provided input.</p>
@@ -1868,6 +1914,52 @@ result = custom_team.run(“Research, analyze, and summarize recent developments
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="agentle.agents.agent_team.AgentTeam.resume_async">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resume_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resumption_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approval_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent_team.html#AgentTeam.resume_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_team.AgentTeam.resume_async" title="Link to this definition">¶</a></dt>
+<dd><p>Resume a suspended team execution.</p>
+<p>This method resumes a team that was suspended due to a tool requiring
+human approval. It retrieves the team state and continues execution
+from where it left off.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resumption_token</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Token from a suspended team execution</p></li>
+<li><p><strong>approval_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional approval data to pass to the resumed execution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>AgentRunOutput with the completed or newly suspended execution</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the resumption token is invalid or not for a team</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>AgentRunOutput</em>[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.agents.agent_team.AgentTeam.resume">
+<span class="sig-name descname"><span class="pre">resume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resumption_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">approval_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent_team.html#AgentTeam.resume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_team.AgentTeam.resume" title="Link to this definition">¶</a></dt>
+<dd><p>Resume a suspended team execution synchronously.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resumption_token</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – Token from a suspended team execution</p></li>
+<li><p><strong>approval_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Optional approval data to pass to the resumed execution</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>AgentRunOutput with the completed or newly suspended execution</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>AgentRunOutput</em>[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="agentle.agents.agent_team.AgentTeam.run">
 <span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent_team.html#AgentTeam.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent_team.AgentTeam.run" title="Link to this definition">¶</a></dt>
 <dd><p>Run the agent team synchronously with the provided input.</p>
@@ -2129,6 +2221,8 @@ combined_team = expanded_team + other_team</p>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.debug_mode"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.debug_mode</span></code></a></li>
 <li><a class="reference internal" href="#id116"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.agents</span></code></a></li>
 <li><a class="reference internal" href="#id117"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.debug_mode</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.resume_async"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.resume_async()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.resume"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.resume()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.run"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.run()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.run_async"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.run_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_pipeline.AgentPipeline.model_config"><code class="docutils literal notranslate"><span class="pre">AgentPipeline.model_config</span></code></a></li>
@@ -2151,6 +2245,8 @@ combined_team = expanded_team + other_team</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.extend"><code class="docutils literal notranslate"><span class="pre">AgentTeam.extend()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.resume_async"><code class="docutils literal notranslate"><span class="pre">AgentTeam.resume_async()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.resume"><code class="docutils literal notranslate"><span class="pre">AgentTeam.resume()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.run"><code class="docutils literal notranslate"><span class="pre">AgentTeam.run()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.run_async"><code class="docutils literal notranslate"><span class="pre">AgentTeam.run_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent_team.AgentTeam.__add__"><code class="docutils literal notranslate"><span class="pre">AgentTeam.__add__()</span></code></a></li>

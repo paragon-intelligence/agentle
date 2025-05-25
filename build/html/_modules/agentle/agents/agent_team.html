@@ -787,6 +787,234 @@
         <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">other</span></div>
 
 
+<div class="viewcode-block" id="AgentTeam.resume_async">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent_team.AgentTeam.resume_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">resume_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">resumption_token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">approval_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resume a suspended team execution.</span>
+
+<span class="sd">        This method resumes a team that was suspended due to a tool requiring</span>
+<span class="sd">        human approval. It retrieves the team state and continues execution</span>
+<span class="sd">        from where it left off.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            resumption_token: Token from a suspended team execution</span>
+<span class="sd">            approval_data: Optional approval data to pass to the resumed execution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentRunOutput with the completed or newly suspended execution</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the resumption token is invalid or not for a team</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;AgentTeam must have at least one agent&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Resume the agent execution first</span>
+        <span class="c1"># We need to get the suspended agent and resume it</span>
+        <span class="c1"># For now, we&#39;ll delegate to the first agent&#39;s resume method</span>
+        <span class="n">resumed_result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resume_async</span><span class="p">(</span>
+            <span class="n">resumption_token</span><span class="p">,</span> <span class="n">approval_data</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check if we have team state to continue from</span>
+        <span class="n">team_state</span> <span class="o">=</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">get_checkpoint_data</span><span class="p">(</span><span class="s2">&quot;team_state&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">team_state</span><span class="p">:</span>
+            <span class="c1"># If no team state, just return the resumed result</span>
+            <span class="k">return</span> <span class="n">resumed_result</span>
+
+        <span class="c1"># Extract team state</span>
+        <span class="n">iteration_count</span> <span class="o">=</span> <span class="n">team_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;iteration_count&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">max_iterations</span> <span class="o">=</span> <span class="n">team_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;max_iterations&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">team_config</span><span class="o">.</span><span class="n">maxIterations</span>
+        <span class="p">)</span>
+        <span class="n">current_input</span> <span class="o">=</span> <span class="n">team_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_input&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">conversation_history</span> <span class="o">=</span> <span class="n">team_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;conversation_history&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">original_input</span> <span class="o">=</span> <span class="n">team_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;original_input&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Recreate agent map</span>
+        <span class="n">agent_map</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">agent</span><span class="o">.</span><span class="n">uid</span><span class="p">):</span> <span class="n">agent</span> <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">}</span>
+
+        <span class="c1"># Create orchestrator agent (same as in run_async)</span>
+        <span class="n">agent_descriptions</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">agent</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="n">skills_desc</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">skill</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">skill</span> <span class="ow">in</span> <span class="n">agent</span><span class="o">.</span><span class="n">skills</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">agent</span><span class="o">.</span><span class="n">skills</span>
+                <span class="k">else</span> <span class="s2">&quot;No specific skills defined&quot;</span>
+            <span class="p">)</span>
+            <span class="n">agent_desc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            Agent ID: </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">uid</span><span class="si">}</span>
+<span class="s2">            Name: </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span>
+<span class="s2">            Description: </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">description</span><span class="si">}</span>
+<span class="s2">            Skills: </span><span class="si">{</span><span class="n">skills_desc</span><span class="si">}</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+            <span class="n">agent_descriptions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent_desc</span><span class="p">)</span>
+
+        <span class="n">agents_info</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">agent_descriptions</span><span class="p">)</span>
+
+        <span class="n">orchestrator_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Orchestrator&quot;</span><span class="p">,</span>
+            <span class="n">generation_provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orchestrator_provider</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orchestrator_model</span><span class="p">,</span>
+            <span class="n">instructions</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;You are an orchestrator agent that analyzes tasks and determines which agent</span>
+<span class="s2">            should handle them. Examine the input carefully and select the most appropriate agent based on </span>
+<span class="s2">            its capabilities and expertise. You should also determine if the task is complete.</span>
+<span class="s2">            </span>
+<span class="s2">            Here are the available agents you can choose from:</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">agents_info</span><span class="si">}</span>
+<span class="s2">            </span>
+<span class="s2">            For each task you are given, you must:</span>
+<span class="s2">            1. Analyze the task requirements thoroughly</span>
+<span class="s2">            2. Select the most appropriate agent by its ID based on its capabilities</span>
+<span class="s2">            3. Determine if the task is complete (set task_done to true if it is)</span>
+<span class="s2">            </span>
+<span class="s2">            If you believe the task has been fully addressed, set task_done to true.</span>
+<span class="s2">            If you believe the task requires further processing, select the appropriate agent and set task_done to false.</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
+            <span class="n">response_schema</span><span class="o">=</span><span class="n">_OrchestratorOutput</span><span class="p">,</span>
+            <span class="n">config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">team_config</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Update conversation history with the resumed result</span>
+        <span class="k">if</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="n">conversation_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Resumed execution: </span><span class="si">{</span><span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">current_input</span> <span class="o">=</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+
+        <span class="n">task_done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">last_output</span> <span class="o">=</span> <span class="n">resumed_result</span>
+
+        <span class="c1"># Continue the team execution loop</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">task_done</span> <span class="ow">and</span> <span class="n">iteration_count</span> <span class="o">&lt;</span> <span class="n">max_iterations</span><span class="p">:</span>
+            <span class="n">iteration_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># Format orchestrator input with task history</span>
+            <span class="n">orchestrator_input</span> <span class="o">=</span> <span class="n">current_input</span>
+            <span class="k">if</span> <span class="n">conversation_history</span><span class="p">:</span>
+                <span class="n">history_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">conversation_history</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">orchestrator_input</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Task Context/History:</span>
+<span class="si">{</span><span class="n">history_text</span><span class="si">}</span>
+
+<span class="s2">Current input:</span>
+<span class="si">{</span><span class="n">current_input</span><span class="si">}</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+            <span class="c1"># Use the orchestrator to decide which agent should handle the task</span>
+            <span class="n">orchestrator_result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">orchestrator_agent</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">orchestrator_input</span><span class="p">)</span>
+            <span class="n">orchestrator_output</span> <span class="o">=</span> <span class="n">orchestrator_result</span><span class="o">.</span><span class="n">parsed</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">orchestrator_output</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Orchestrator failed to produce structured output, using first agent as fallback&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
+
+            <span class="c1"># Check if the task is done</span>
+            <span class="n">task_done</span> <span class="o">=</span> <span class="n">orchestrator_output</span><span class="o">.</span><span class="n">task_done</span>
+            <span class="k">if</span> <span class="n">task_done</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Task marked as complete by orchestrator after </span><span class="si">{</span><span class="n">iteration_count</span><span class="si">}</span><span class="s2"> iterations (resumed)&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">last_output</span>
+
+            <span class="c1"># Get the chosen agent</span>
+            <span class="n">agent_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">orchestrator_output</span><span class="o">.</span><span class="n">agent_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">agent_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">agent_map</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Orchestrator selected unknown agent ID: </span><span class="si">{</span><span class="n">agent_id</span><span class="si">}</span><span class="s2">, using first agent as fallback&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
+
+            <span class="n">chosen_agent</span> <span class="o">=</span> <span class="n">agent_map</span><span class="p">[</span><span class="n">agent_id</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Resumed iteration </span><span class="si">{</span><span class="n">iteration_count</span><span class="si">}</span><span class="s2">: Orchestrator selected agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Run the chosen agent with the current input</span>
+            <span class="n">agent_output</span> <span class="o">=</span> <span class="k">await</span> <span class="n">chosen_agent</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
+            <span class="n">last_output</span> <span class="o">=</span> <span class="n">agent_output</span>
+
+            <span class="c1"># Check if the agent execution was suspended again</span>
+            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">is_suspended</span><span class="p">:</span>
+                <span class="n">suspension_msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Team execution suspended again at iteration </span><span class="si">{</span><span class="n">iteration_count</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;(Agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;): </span><span class="si">{</span><span class="n">agent_output</span><span class="o">.</span><span class="n">suspension_reason</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">suspension_msg</span><span class="p">)</span>
+
+                <span class="c1"># Update team state for the new suspension point</span>
+                <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">context</span><span class="p">:</span>
+                    <span class="n">agent_output</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">set_checkpoint_data</span><span class="p">(</span>
+                        <span class="s2">&quot;team_state&quot;</span><span class="p">,</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;iteration_count&quot;</span><span class="p">:</span> <span class="n">iteration_count</span><span class="p">,</span>
+                            <span class="s2">&quot;max_iterations&quot;</span><span class="p">:</span> <span class="n">max_iterations</span><span class="p">,</span>
+                            <span class="s2">&quot;current_input&quot;</span><span class="p">:</span> <span class="n">current_input</span><span class="p">,</span>
+                            <span class="s2">&quot;conversation_history&quot;</span><span class="p">:</span> <span class="n">conversation_history</span><span class="p">,</span>
+                            <span class="s2">&quot;agent_map&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                <span class="nb">str</span><span class="p">(</span><span class="n">uid</span><span class="p">):</span> <span class="n">agent</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">uid</span><span class="p">,</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">agent_map</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                            <span class="p">},</span>
+                            <span class="s2">&quot;last_selected_agent_id&quot;</span><span class="p">:</span> <span class="n">agent_id</span><span class="p">,</span>
+                            <span class="s2">&quot;original_input&quot;</span><span class="p">:</span> <span class="n">original_input</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">agent_output</span>
+
+            <span class="c1"># Update the conversation history</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">conversation_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;User/Task: </span><span class="si">{</span><span class="n">current_input</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                <span class="n">conversation_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Update the input with the agent&#39;s response for the next iteration</span>
+            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                <span class="n">current_input</span> <span class="o">=</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; produced no text output, returning current output&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">agent_output</span>
+
+        <span class="c1"># If we&#39;ve reached max iterations, return the last output</span>
+        <span class="k">if</span> <span class="n">iteration_count</span> <span class="o">&gt;=</span> <span class="n">max_iterations</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Warning: AgentTeam reached maximum iterations (</span><span class="si">{</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2">) without completion (resumed)&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">last_output</span></div>
+
+
+<div class="viewcode-block" id="AgentTeam.resume">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent_team.AgentTeam.resume">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resume</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">resumption_token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">approval_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resume a suspended team execution synchronously.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            resumption_token: Token from a suspended team execution</span>
+<span class="sd">            approval_data: Optional approval data to pass to the resumed execution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentRunOutput with the completed or newly suspended execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">run_sync</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">resume_async</span><span class="p">,</span>
+            <span class="n">resumption_token</span><span class="o">=</span><span class="n">resumption_token</span><span class="p">,</span>
+            <span class="n">approval_data</span><span class="o">=</span><span class="n">approval_data</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="AgentTeam.run">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent_team.AgentTeam.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">AgentInput</span> <span class="o">|</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
@@ -997,16 +1225,44 @@
             <span class="n">agent_output</span> <span class="o">=</span> <span class="k">await</span> <span class="n">chosen_agent</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
             <span class="n">last_output</span> <span class="o">=</span> <span class="n">agent_output</span>
 
+            <span class="c1"># Check if the agent execution was suspended</span>
+            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">is_suspended</span><span class="p">:</span>
+                <span class="n">suspension_msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Team execution suspended at iteration </span><span class="si">{</span><span class="n">iteration_count</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;(Agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;): </span><span class="si">{</span><span class="n">agent_output</span><span class="o">.</span><span class="n">suspension_reason</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">suspension_msg</span><span class="p">)</span>
+
+                <span class="c1"># Store team state in the context for resumption</span>
+                <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">context</span><span class="p">:</span>
+                    <span class="n">agent_output</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">set_checkpoint_data</span><span class="p">(</span>
+                        <span class="s2">&quot;team_state&quot;</span><span class="p">,</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;iteration_count&quot;</span><span class="p">:</span> <span class="n">iteration_count</span><span class="p">,</span>
+                            <span class="s2">&quot;max_iterations&quot;</span><span class="p">:</span> <span class="n">max_iterations</span><span class="p">,</span>
+                            <span class="s2">&quot;current_input&quot;</span><span class="p">:</span> <span class="n">current_input</span><span class="p">,</span>
+                            <span class="s2">&quot;conversation_history&quot;</span><span class="p">:</span> <span class="n">conversation_history</span><span class="p">,</span>
+                            <span class="s2">&quot;agent_map&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                <span class="nb">str</span><span class="p">(</span><span class="n">uid</span><span class="p">):</span> <span class="n">agent</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">uid</span><span class="p">,</span> <span class="n">agent</span> <span class="ow">in</span> <span class="n">agent_map</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                            <span class="p">},</span>
+                            <span class="s2">&quot;last_selected_agent_id&quot;</span><span class="p">:</span> <span class="n">agent_id</span><span class="p">,</span>
+                            <span class="s2">&quot;original_input&quot;</span><span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Return the suspended output immediately</span>
+                <span class="k">return</span> <span class="n">agent_output</span>
+
             <span class="c1"># Update the conversation history</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">conversation_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;User/Task: </span><span class="si">{</span><span class="n">current_input</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
                 <span class="n">conversation_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Agent &#39;</span><span class="si">{</span><span class="n">chosen_agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
 
             <span class="c1"># Update the input with the agent&#39;s response for the next iteration</span>
-            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
                 <span class="n">current_input</span> <span class="o">=</span> <span class="n">agent_output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># If we don&#39;t have text output, use the original input again</span>

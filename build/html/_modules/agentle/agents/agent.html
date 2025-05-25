@@ -1357,7 +1357,7 @@
             <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
                 <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
-                <span class="n">parsed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">parsed</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">T_Schema</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="n">is_suspended</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">suspension_reason</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Request denied: </span><span class="si">{</span><span class="n">approval_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;approval_data&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;reason&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;No reason provided&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">)</span>
@@ -1373,7 +1373,7 @@
             <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
                 <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># No new generation for resumed execution</span>
                 <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
-                <span class="n">parsed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">parsed</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">T_Schema</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="n">is_suspended</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1381,7 +1381,7 @@
             <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
                 <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                 <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
-                <span class="n">parsed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">parsed</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">T_Schema</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                 <span class="n">is_suspended</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">suspension_reason</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
             <span class="p">)</span>
@@ -1868,7 +1868,7 @@
                     <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
                         <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
-                        <span class="n">parsed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">parsed</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">T_Schema</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
                         <span class="n">is_suspended</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="n">suspension_reason</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
                         <span class="n">resumption_token</span><span class="o">=</span><span class="n">resumption_token</span><span class="p">,</span>

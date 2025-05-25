@@ -703,6 +703,148 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;When True, enables detailed logging of pipeline execution steps.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
+<div class="viewcode-block" id="AgentPipeline.resume_async">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent_pipeline.AgentPipeline.resume_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">resume_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">resumption_token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">approval_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resume a suspended pipeline execution.</span>
+
+<span class="sd">        This method resumes a pipeline that was suspended due to a tool requiring</span>
+<span class="sd">        human approval. It retrieves the pipeline state and continues execution</span>
+<span class="sd">        from where it left off.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            resumption_token: Token from a suspended pipeline execution</span>
+<span class="sd">            approval_data: Optional approval data to pass to the resumed execution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentRunOutput with the completed or newly suspended execution</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the resumption token is invalid or not for a pipeline</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Pipeline must contain at least one agent&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Resume the agent execution first</span>
+        <span class="c1"># We need to get the suspended agent and resume it</span>
+        <span class="c1"># For now, we&#39;ll delegate to the first agent&#39;s resume method</span>
+        <span class="c1"># In a more sophisticated implementation, we&#39;d track which specific agent was suspended</span>
+        <span class="n">resumed_result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resume_async</span><span class="p">(</span>
+            <span class="n">resumption_token</span><span class="p">,</span> <span class="n">approval_data</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check if we have pipeline state to continue from</span>
+        <span class="n">pipeline_state</span> <span class="o">=</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">get_checkpoint_data</span><span class="p">(</span><span class="s2">&quot;pipeline_state&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pipeline_state</span><span class="p">:</span>
+            <span class="c1"># If no pipeline state, just return the resumed result</span>
+            <span class="k">return</span> <span class="n">resumed_result</span>
+
+        <span class="c1"># Extract pipeline state</span>
+        <span class="n">current_step</span> <span class="o">=</span> <span class="n">pipeline_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_step&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">current_input</span> <span class="o">=</span> <span class="n">pipeline_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_input&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">intermediate_outputs_data</span> <span class="o">=</span> <span class="n">pipeline_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;intermediate_outputs&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">debug_mode</span> <span class="o">=</span> <span class="n">pipeline_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;debug_mode&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug_mode</span><span class="p">)</span>
+
+        <span class="c1"># Reconstruct intermediate outputs for debugging</span>
+        <span class="n">intermediate_outputs</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Continue from the next step after the suspended one</span>
+        <span class="n">next_step</span> <span class="o">=</span> <span class="n">current_step</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># Use the resumed result as the current input for the next step</span>
+        <span class="k">if</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="n">current_input</span> <span class="o">=</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+
+        <span class="n">last_output</span> <span class="o">=</span> <span class="n">resumed_result</span>
+
+        <span class="c1"># Continue processing remaining agents</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">next_step</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)):</span>
+            <span class="n">agent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">debug_mode</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Pipeline resume step </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span><span class="si">}</span><span class="s2">: Running agent &#39;</span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Run the current agent with the current input</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
+            <span class="n">last_output</span> <span class="o">=</span> <span class="n">output</span>
+
+            <span class="c1"># Check if this agent also gets suspended</span>
+            <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">is_suspended</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">debug_mode</span><span class="p">:</span>
+                    <span class="n">suspension_msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Pipeline suspended again at step </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;(Agent &#39;</span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;): </span><span class="si">{</span><span class="n">output</span><span class="o">.</span><span class="n">suspension_reason</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">suspension_msg</span><span class="p">)</span>
+
+                <span class="c1"># Update pipeline state for the new suspension point</span>
+                <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">context</span><span class="p">:</span>
+                    <span class="n">output</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">set_checkpoint_data</span><span class="p">(</span>
+                        <span class="s2">&quot;pipeline_state&quot;</span><span class="p">,</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;current_step&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                            <span class="s2">&quot;total_steps&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">),</span>
+                            <span class="s2">&quot;current_input&quot;</span><span class="p">:</span> <span class="n">current_input</span><span class="p">,</span>
+                            <span class="s2">&quot;intermediate_outputs&quot;</span><span class="p">:</span> <span class="n">intermediate_outputs_data</span>
+                            <span class="o">+</span> <span class="p">[</span>
+                                <span class="p">{</span>
+                                    <span class="s2">&quot;agent_name&quot;</span><span class="p">:</span> <span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                    <span class="s2">&quot;output_text&quot;</span><span class="p">:</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+                                    <span class="k">if</span> <span class="n">resumed_result</span><span class="o">.</span><span class="n">generation</span>
+                                    <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                                <span class="p">}</span>
+                            <span class="p">],</span>
+                            <span class="s2">&quot;debug_mode&quot;</span><span class="p">:</span> <span class="n">debug_mode</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">output</span>
+
+            <span class="c1"># Store intermediate output if in debug mode</span>
+            <span class="k">if</span> <span class="n">debug_mode</span><span class="p">:</span>
+                <span class="n">intermediate_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">output</span><span class="p">))</span>
+
+            <span class="c1"># If this is not the last agent, prepare input for the next agent</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                    <span class="n">current_input</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">debug_mode</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Agent &#39;</span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; produced no text output. Pipeline terminated early.&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">last_output</span></div>
+
+
+<div class="viewcode-block" id="AgentPipeline.resume">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent_pipeline.AgentPipeline.resume">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resume</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">resumption_token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">approval_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Resume a suspended pipeline execution synchronously.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            resumption_token: Token from a suspended pipeline execution</span>
+<span class="sd">            approval_data: Optional approval data to pass to the resumed execution</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            AgentRunOutput with the completed or newly suspended execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">run_sync</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">resume_async</span><span class="p">,</span>
+            <span class="n">resumption_token</span><span class="o">=</span><span class="n">resumption_token</span><span class="p">,</span>
+            <span class="n">approval_data</span><span class="o">=</span><span class="n">approval_data</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="AgentPipeline.run">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent_pipeline.AgentPipeline.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">AgentInput</span> <span class="o">|</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
@@ -798,6 +940,39 @@
             <span class="n">output</span> <span class="o">=</span> <span class="k">await</span> <span class="n">agent</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span><span class="n">current_input</span><span class="p">)</span>
             <span class="n">last_output</span> <span class="o">=</span> <span class="n">output</span>
 
+            <span class="c1"># Check if the agent execution was suspended</span>
+            <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">is_suspended</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug_mode</span><span class="p">:</span>
+                    <span class="n">suspension_msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Pipeline suspended at step </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;(Agent &#39;</span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;): </span><span class="si">{</span><span class="n">output</span><span class="o">.</span><span class="n">suspension_reason</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">suspension_msg</span><span class="p">)</span>
+
+                <span class="c1"># Store pipeline state in the context for resumption</span>
+                <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">context</span><span class="p">:</span>
+                    <span class="n">output</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">set_checkpoint_data</span><span class="p">(</span>
+                        <span class="s2">&quot;pipeline_state&quot;</span><span class="p">,</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;current_step&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                            <span class="s2">&quot;total_steps&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">),</span>
+                            <span class="s2">&quot;current_input&quot;</span><span class="p">:</span> <span class="n">current_input</span><span class="p">,</span>
+                            <span class="s2">&quot;intermediate_outputs&quot;</span><span class="p">:</span> <span class="p">[</span>
+                                <span class="p">{</span>
+                                    <span class="s2">&quot;agent_name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                                    <span class="s2">&quot;output_text&quot;</span><span class="p">:</span> <span class="n">out</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+                                    <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">generation</span>
+                                    <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                                <span class="p">}</span>
+                                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">intermediate_outputs</span>
+                            <span class="p">],</span>
+                            <span class="s2">&quot;debug_mode&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug_mode</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Return the suspended output immediately</span>
+                <span class="k">return</span> <span class="n">output</span>
+
             <span class="c1"># Store intermediate output if in debug mode</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug_mode</span><span class="p">:</span>
                 <span class="n">intermediate_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">agent</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">output</span><span class="p">))</span>
@@ -805,7 +980,7 @@
             <span class="c1"># If this is not the last agent, prepare input for the next agent</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="c1"># Use the text output as input to the next agent</span>
-                <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
                     <span class="n">current_input</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># If no text output, we can&#39;t continue the pipeline</span>
@@ -823,9 +998,14 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug_mode</span> <span class="ow">and</span> <span class="n">intermediate_outputs</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pipeline completed with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">intermediate_outputs</span><span class="p">)</span><span class="si">}</span><span class="s2"> steps:&quot;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">intermediate_outputs</span><span class="p">):</span>
+                <span class="n">output_text</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+                    <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span> <span class="ow">and</span> <span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span>
+                    <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;  Step </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">: Agent &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; - &quot;</span>
-                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Output: </span><span class="si">{</span><span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">[:</span><span class="mi">50</span><span class="p">]</span><span class="si">}{</span><span class="s1">&#39;...&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Output: </span><span class="si">{</span><span class="n">output_text</span><span class="p">[:</span><span class="mi">50</span><span class="p">]</span><span class="si">}{</span><span class="s1">&#39;...&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">last_output</span></div>
