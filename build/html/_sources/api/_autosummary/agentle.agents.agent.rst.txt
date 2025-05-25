@@ -52,6 +52,7 @@ agentle.agents.agent
       RunState
       Sequence
       StaticKnowledge
+      Step
       StringIO
       TextPart
       Tool

@@ -588,20 +588,17 @@ structured_data = result.parsed  # If using a response_schema
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentRunOutput</span></code>(*, generation, steps, parsed)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentRunOutput</span></code>(*, generation, context, parsed)</p></td>
 <td><p>Represents the complete result of an agent execution.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Generation</span></code>(*, id, object, created, model, ...)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code>(*[, context_id, message_history, ...])</p></td>
+<td><p>Container for contextual information that guides an agent's behavior.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Generation</span></code>(*, id, object, created, model, ...)</p></td>
 <td><p>Primary container for AI-generated content with metadata.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
-<td><p>All the operations on a read-only sequence.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Step</span></code>(*[, timestamp])</p></td>
-<td><p>Represents a single execution step in an agent's reasoning process.</p></td>
 </tr>
 </tbody>
 </table>

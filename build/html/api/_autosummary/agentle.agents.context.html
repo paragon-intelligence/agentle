@@ -184,7 +184,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -553,7 +553,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -577,7 +577,7 @@ from agentle.generations.models.message_parts.text import TextPart</p>
 context = Context(</p>
 <blockquote>
 <div><dl class="simple">
-<dt>messages=[</dt><dd><p>UserMessage(parts=[TextPart(text=”Hello, can you help me with weather information?”)]),
+<dt>message_history=[</dt><dd><p>UserMessage(parts=[TextPart(text=”Hello, can you help me with weather information?”)]),
 AssistantMessage(parts=[TextPart(text=”Of course! What location would you like weather for?”)])</p>
 </dd>
 </dl>
@@ -587,13 +587,8 @@ AssistantMessage(parts=[TextPart(text=”Of course! What location would you like
 <p># Context can be passed directly to an agent
 response = agent.run(context)</p>
 <p># Or extended with new messages
-context.messages = list(context.messages) + [</p>
-<blockquote>
-<div><p>UserMessage(parts=[TextPart(text=”What’s the weather in New York?”)])</p>
-</div></blockquote>
-<section id="id5">
-<h2>]<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
-</section>
+context.add_user_message(“What’s the weather in New York?”)
+<a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -608,26 +603,44 @@ context.messages = list(context.messages) + [</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssistantMessage</span></code>(*[, role])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
+<td><p>Special type indicating an unconstrained type.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssistantMessage</span></code>(*[, role])</p></td>
 <td><p>Represents a message from an assistant in the system.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code>(*, message_history[, steps])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code>(*[, context_id, message_history, ...])</p></td>
 <td><p>Container for contextual information that guides an agent's behavior.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeveloperMessage</span></code>(*[, role])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeveloperMessage</span></code>(*[, role])</p></td>
 <td><p>Represents a message from a developer in the system.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExecutionState</span></code>(*[, state, ...])</p></td>
+<td><p>Tracks the execution state of an agent context.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
+<td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
 <td><p>All the operations on a read-write sequence.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Step</span></code>(*[, timestamp])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Step</span></code>(*[, step_id, step_type, timestamp, ...])</p></td>
 <td><p>Represents a single execution step in an agent's reasoning process.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserMessage</span></code>(*[, role])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TextPart</span></code>(*[, type])</p></td>
+<td><p>Represents a plain text part of a message.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Usage</span></code>(*[, prompt_tokens, completion_tokens])</p></td>
+<td><p>Tracks and calculates token consumption in AI model interactions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserMessage</span></code>(*[, role])</p></td>
 <td><p>Represents a message from a user in the system.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime</span></code>(year, month, day[, hour[, minute[, ...)</p></td>
+<td><p>The year, month and day arguments are required.</p></td>
 </tr>
 </tbody>
 </table>
@@ -677,27 +690,8 @@ context.messages = list(context.messages) + [</p>
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">agentle.agents.context</a><ul>
-<li><a class="reference internal" href="#id5">]</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>

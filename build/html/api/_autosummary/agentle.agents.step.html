@@ -581,7 +581,7 @@ args={“location”: “London”}</p>
 </div></blockquote>
 <p>)</p>
 <p># Create a step recording that tool call
-step = Step(called_tools=[tool_suggestion])</p>
+step = Step(tool_execution_suggestions=[tool_suggestion])</p>
 <p># Steps are typically stored in a Context object
 context.steps = list(context.steps) + [step]
 <a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
@@ -599,17 +599,29 @@ context.steps = list(context.steps) + [step]
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
+<td><p>Special type indicating an unconstrained type.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
+<td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
 <td><p>All the operations on a read-only sequence.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Step</span></code>(*[, timestamp])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Step</span></code>(*[, step_id, step_type, timestamp, ...])</p></td>
 <td><p>Represents a single execution step in an agent's reasoning process.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolExecutionSuggestion</span></code>(*[, type, id, args])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolExecutionResult</span></code>(*, suggestion, result[, ...])</p></td>
+<td><p>Represents the result of a tool execution within a step.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolExecutionSuggestion</span></code>(*[, type, id, args])</p></td>
 <td><p>Represents a suggestion to execute a specific tool.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Usage</span></code>(*[, prompt_tokens, completion_tokens])</p></td>
+<td><p>Tracks and calculates token consumption in AI model interactions.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime</span></code>(year, month, day[, hour[, minute[, ...)</p></td>
 <td><p>The year, month and day arguments are required.</p></td>

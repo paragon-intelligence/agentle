@@ -10,7 +10,6 @@ agentle.agents.agent\_run\_output
    
       AgentRunOutput
       BaseModel
+      Context
       Generation
-      Sequence
-      Step
    

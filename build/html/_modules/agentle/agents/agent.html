@@ -586,6 +586,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AsyncGenerator</span><span class="p">,</span>
@@ -620,6 +621,7 @@
     <span class="n">MaxToolCallsExceededError</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">NO_CACHE</span><span class="p">,</span> <span class="n">StaticKnowledge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.step</span><span class="w"> </span><span class="kn">import</span> <span class="n">Step</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.collections.message_sequence</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageSequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.generation.generation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.generation.trace_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">TraceParams</span>
@@ -1423,6 +1425,9 @@
             <span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span>
         <span class="p">)</span>
 
+        <span class="c1"># Start execution tracking</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">start_execution</span><span class="p">()</span>
+
         <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;Converted input to context with </span><span class="si">%d</span><span class="s2"> messages&quot;</span><span class="p">,</span>
@@ -1474,9 +1479,13 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
+            <span class="c1"># Update context with final generation and complete execution</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">update_token_usage</span><span class="p">(</span><span class="n">generation</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
+
             <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
                 <span class="n">generation</span><span class="o">=</span><span class="n">generation</span><span class="p">,</span>
-                <span class="n">steps</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span>
+                <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
                 <span class="n">parsed</span><span class="o">=</span><span class="n">generation</span><span class="o">.</span><span class="n">parsed</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -1501,10 +1510,11 @@
         <span class="n">called_tools</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ToolExecutionSuggestion</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">while</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">:</span>
+            <span class="n">current_iteration</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s2">&quot;Starting iteration </span><span class="si">%d</span><span class="s2"> of </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">current_iteration</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
@@ -1567,6 +1577,9 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
+            <span class="c1"># Update context with token usage from this generation</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">update_token_usage</span><span class="p">(</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+
             <span class="n">agent_didnt_call_any_tool</span> <span class="o">=</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">tool_calls_amount</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="n">agent_didnt_call_any_tool</span><span class="p">:</span>
                 <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
@@ -1588,6 +1601,9 @@
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Final generation complete&quot;</span><span class="p">)</span>
                     <span class="p">)</span>
+                    <span class="c1"># Update context with final generation and complete execution</span>
+                    <span class="n">context</span><span class="o">.</span><span class="n">update_token_usage</span><span class="p">(</span><span class="n">generation</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+                    <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
                         <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="n">generation</span><span class="o">=</span><span class="n">generation</span>
                     <span class="p">)</span>
@@ -1596,6 +1612,8 @@
                 <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                     <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using existing text response&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
+                <span class="c1"># Complete execution before returning</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
                     <span class="n">generation</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">Generation</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">],</span> <span class="n">tool_call_generation</span><span class="p">),</span>
                     <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
@@ -1606,6 +1624,16 @@
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> tool calls&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">)</span>
                 <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Create a step to track this iteration&#39;s tool executions</span>
+            <span class="n">step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
+                <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;tool_execution&quot;</span><span class="p">,</span>
+                <span class="n">iteration</span><span class="o">=</span><span class="n">current_iteration</span><span class="p">,</span>
+                <span class="n">tool_execution_suggestions</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">),</span>
+                <span class="n">generation_text</span><span class="o">=</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+                <span class="n">token_usage</span><span class="o">=</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="k">for</span> <span class="n">tool_execution_suggestion</span> <span class="ow">in</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
@@ -1619,7 +1647,13 @@
 
                 <span class="n">selected_tool</span> <span class="o">=</span> <span class="n">available_tools</span><span class="p">[</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="p">]</span>
 
+                <span class="c1"># Time the tool execution</span>
+                <span class="n">tool_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
                 <span class="n">tool_result</span> <span class="o">=</span> <span class="n">selected_tool</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="o">**</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                <span class="n">tool_execution_time</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">tool_start_time</span>
+                <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># Convert to milliseconds</span>
+
                 <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                     <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Tool execution result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">tool_result</span><span class="p">)</span>
                 <span class="p">)</span>
@@ -1627,6 +1661,21 @@
                     <span class="n">tool_execution_suggestion</span><span class="p">,</span>
                     <span class="n">tool_result</span><span class="p">,</span>
                 <span class="p">)</span>
+
+                <span class="c1"># Add the tool execution result to the step</span>
+                <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
+                    <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                    <span class="n">result</span><span class="o">=</span><span class="n">tool_result</span><span class="p">,</span>
+                    <span class="n">execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time</span><span class="p">,</span>
+                    <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Complete the step and add it to context</span>
+            <span class="n">step_duration</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">step_start_time</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># Convert to milliseconds</span>
+            <span class="n">step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span><span class="n">duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">)</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
 
             <span class="n">state</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
                 <span class="n">last_response</span><span class="o">=</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
@@ -1641,6 +1690,12 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
+
+        <span class="c1"># Mark context as failed due to max iterations exceeded</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">fail_execution</span><span class="p">(</span>
+            <span class="n">error_message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Max tool calls exceeded after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="si">}</span><span class="s2"> iterations&quot;</span>
+        <span class="p">)</span>
+
         <span class="k">raise</span> <span class="n">MaxToolCallsExceededError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Max tool calls exceeded after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="si">}</span><span class="s2"> iterations&quot;</span>
         <span class="p">)</span></div>
@@ -1751,7 +1806,7 @@
 
         <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
             <span class="n">generation</span><span class="o">=</span><span class="n">generation</span><span class="p">,</span>
-            <span class="n">steps</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">steps</span><span class="p">,</span>
+            <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
             <span class="n">parsed</span><span class="o">=</span><span class="n">parsed</span><span class="p">,</span>
         <span class="p">)</span>
 

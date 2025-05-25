@@ -14,9 +14,13 @@ agentle.agents.step
 
    .. autosummary::
    
+      Any
       BaseModel
+      MutableMapping
       Sequence
       Step
+      ToolExecutionResult
       ToolExecutionSuggestion
+      Usage
       datetime
    

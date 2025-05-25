@@ -14,11 +14,17 @@ agentle.agents.context
 
    .. autosummary::
    
+      Any
       AssistantMessage
       BaseModel
       Context
       DeveloperMessage
+      ExecutionState
+      MutableMapping
       MutableSequence
       Step
+      TextPart
+      Usage
       UserMessage
+      datetime
    
