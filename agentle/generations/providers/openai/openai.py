@@ -26,7 +26,7 @@ from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
-from agentle.generations.tracing.decorators import observe
+from agentle.generations.tracing.decorators.observe import observe
 
 type WithoutStructuredOutput = None
 
@@ -115,8 +115,8 @@ class OpenaiGenerationProvider(GenerationProvider):
             Generation[T]: An Agentle Generation object containing the response
         """
         from openai import AsyncOpenAI
-        from openai.types.chat.chat_completion import ChatCompletion
         from openai._types import NOT_GIVEN as OPENAI_NOT_GIVEN
+        from openai.types.chat.chat_completion import ChatCompletion
 
         _generation_config = generation_config or GenerationConfig()
 

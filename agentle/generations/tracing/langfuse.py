@@ -52,9 +52,9 @@ Note: To use this client, you need to set up Langfuse credentials as environment
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 import uuid
+from collections.abc import Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional, Sequence, override
 

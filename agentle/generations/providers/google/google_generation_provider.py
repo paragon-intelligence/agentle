@@ -55,7 +55,7 @@ from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
-from agentle.generations.tracing.decorators import observe
+from agentle.generations.tracing.decorators.observe import observe
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials

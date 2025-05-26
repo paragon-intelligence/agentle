@@ -211,7 +211,8 @@ def observe[F: Callable[..., Any]](
                 output_data["cost_details"] = cost_details
 
             # Complete the generation and trace if needed
-            await tracing_manager.complete_generation(
+            fire_and_forget(
+                tracing_manager.complete_generation,
                 generation_client=generation_client,
                 start_time=start_time,
                 output_data=output_data,

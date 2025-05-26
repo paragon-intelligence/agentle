@@ -9,11 +9,14 @@ from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_genai_generation_provider import (
     GoogleGenaiGenerationProvider,
 )
+from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
+
+tracing_client = LangfuseObservabilityClient()
 
 # Create a simple agent with minimal configuration
 agent = Agent(
     name="Simple Text Agent",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=GoogleGenaiGenerationProvider(tracing_client=tracing_client),
     model="gemini-2.0-flash",  # Use an appropriate model
     instructions="You are a helpful assistant who provides concise, accurate information.",
 )
