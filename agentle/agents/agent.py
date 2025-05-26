@@ -71,8 +71,10 @@ from agentle.agents.suspension_manager import (
     SuspensionManager,
 )
 from agentle.agents.knowledge.static_knowledge import NO_CACHE, StaticKnowledge
-from agentle.parsing.cache.cache_store import CacheStore
-from agentle.parsing.cache.in_memory_cache_store import InMemoryCacheStore
+from agentle.parsing.cache.document_cache_store import DocumentCacheStore
+from agentle.parsing.cache.in_memory_document_cache_store import (
+    InMemoryDocumentCacheStore,
+)
 from agentle.agents.step import Step
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
@@ -232,20 +234,20 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     knowledge documents, if provided.
     """
 
-    cache_store: CacheStore | None = Field(default=None)
+    document_cache_store: DocumentCacheStore | None = Field(default=None)
     """
     A cache store to be used by the agent for caching parsed documents.
-    If None, a default InMemoryCacheStore will be used.
+    If None, a default InMemoryDocumentCacheStore will be used.
     
     Example:
     ```python
-    from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore
+    from agentle.parsing.cache import InMemoryDocumentCacheStore, RedisCacheStore
     
     # Use in-memory cache (default)
-    agent = Agent(cache_store=InMemoryCacheStore())
+    agent = Agent(document_cache_store=InMemoryDocumentCacheStore())
     
     # Use Redis cache for distributed environments
-    agent = Agent(cache_store=RedisCacheStore(redis_url="redis://localhost:6379/0"))
+    agent = Agent(document_cache_store=RedisCacheStore(redis_url="redis://localhost:6379/0"))
     ```
     """
 
@@ -873,7 +875,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             knowledge_contents: MutableSequence[str] = []
 
             # Get or create cache store
-            cache_store = self.cache_store or InMemoryCacheStore()
+            document_cache_store = (
+                self.document_cache_store or InMemoryDocumentCacheStore()
+            )
 
             for knowledge_item in self.static_knowledge:
                 # Convert string to StaticKnowledge with NO_CACHE
@@ -902,12 +906,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     )
 
                     # Generate cache key
-                    cache_key = cache_store.get_cache_key(
+                    cache_key = document_cache_store.get_cache_key(
                         content_to_parse, parser.__class__.__name__
                     )
 
                     # Try to get from cache first
-                    parsed_content = await cache_store.get_async(cache_key)
+                    parsed_content = await document_cache_store.get_async(cache_key)
 
                     if parsed_content is None:
                         # Not in cache, parse and store
@@ -923,7 +927,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
                         # Store in cache if we parsed something
                         if parsed_content is not None:
-                            await cache_store.set_async(
+                            await document_cache_store.set_async(
                                 cache_key, parsed_content, ttl=knowledge_item.cache
                             )
                     else:
@@ -1359,7 +1363,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         new_generation_provider: GenerationProvider | None = None,
         new_url: str | None = None,
         new_suspension_manager: SuspensionManager | None = None,
-        new_cache_store: CacheStore | None = None,
+        new_document_cache_store: DocumentCacheStore | None = None,
     ) -> Agent[T_Schema]:
         """
         Creates a clone of the current agent with optionally modified attributes.
@@ -1384,7 +1388,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             new_generation_provider: New generation provider for the agent.
             new_url: New URL for the agent.
             new_suspension_manager: New suspension manager for the agent.
-            new_cache_store: New cache store for the agent.
+            new_document_cache_store: New cache store for the agent.
 
         Returns:
             Agent[T_Schema]: A new agent with the specified attributes modified.
@@ -1415,7 +1419,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             generation_provider=new_generation_provider or self.generation_provider,
             url=new_url or self.url,
             suspension_manager=new_suspension_manager or self.suspension_manager,
-            cache_store=new_cache_store or self.cache_store,
+            document_cache_store=new_document_cache_store or self.document_cache_store,
         )
 
     def _build_agent_run_output(

@@ -12,11 +12,11 @@ from typing import Any, override
 
 from rsb.models.field import Field
 
-from agentle.parsing.cache.cache_store import CacheStore, CacheTTL
+from agentle.parsing.cache.document_cache_store import DocumentCacheStore, CacheTTL
 from agentle.parsing.parsed_document import ParsedDocument
 
 
-class InMemoryCacheStore(CacheStore):
+class InMemoryDocumentCacheStore(DocumentCacheStore):
     """
     Thread-safe in-memory cache store for parsed documents.
 
@@ -35,10 +35,10 @@ class InMemoryCacheStore(CacheStore):
 
     Example:
         ```python
-        from agentle.parsing.cache import InMemoryCacheStore
+        from agentle.parsing.cache import InMemoryDocumentCacheStore
 
         # Create cache with 5-minute cleanup interval
-        cache = InMemoryCacheStore(cleanup_interval=300)
+        cache = InMemoryDocumentCacheStore(cleanup_interval=300)
 
         # Store a document with 1-hour TTL
         await cache.set_async("doc_key", parsed_doc, ttl=3600)
@@ -61,14 +61,14 @@ class InMemoryCacheStore(CacheStore):
         self._cleanup_timer: threading.Timer | None = None
 
         # Class-level tracking for resource management
-        InMemoryCacheStore._instances.add(self)
+        InMemoryDocumentCacheStore._instances.add(self)
 
         # Start cleanup timer if cleanup interval is set
         if self.cleanup_interval > 0:
             self._start_cleanup_timer()
 
     # Class-level tracking for proper cleanup
-    _instances: weakref.WeakSet["InMemoryCacheStore"] = weakref.WeakSet()
+    _instances: weakref.WeakSet["InMemoryDocumentCacheStore"] = weakref.WeakSet()
     _class_lock = threading.RLock()
 
     @override

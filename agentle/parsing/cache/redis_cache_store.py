@@ -10,11 +10,11 @@ from typing import Any, override
 
 from rsb.models.field import Field
 
-from agentle.parsing.cache.cache_store import CacheStore, CacheTTL
+from agentle.parsing.cache.document_cache_store import DocumentCacheStore, CacheTTL
 from agentle.parsing.parsed_document import ParsedDocument
 
 
-class RedisCacheStore(CacheStore):
+class RedisCacheStore(DocumentCacheStore):
     """
     Redis-based cache store for parsed documents.
 

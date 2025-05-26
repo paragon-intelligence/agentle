@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import shlex
-from collections.abc import MutableMapping, Sequence
+from collections.abc import Callable, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any, NotRequired, Optional, TypedDict, override
 
 from rsb.models.field import Field
@@ -101,7 +101,9 @@ class StdioMCPServer(MCPServerProtocol):
 
     # Required configuration fields
     server_name: str = Field(..., description="Human-readable name for the MCP server")
-    command: str = Field(..., description="Command to run the MCP server process")
+    command: str | Callable[..., str] = Field(
+        ..., description="Command to run the MCP server process"
+    )
 
     # Optional configuration fields
     server_env: MutableMapping[str, str] = Field(
@@ -149,7 +151,9 @@ class StdioMCPServer(MCPServerProtocol):
 
         try:
             # Split command into args if provided as a string
-            cmd_args = shlex.split(self.command)
+            cmd_args = shlex.split(
+                self.command() if callable(self.command) else self.command
+            )
 
             # Start the server process
             self._process = await asyncio.create_subprocess_exec(

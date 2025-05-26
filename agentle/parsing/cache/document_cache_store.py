@@ -16,7 +16,7 @@ from agentle.parsing.parsed_document import ParsedDocument
 type CacheTTL = int | Literal["infinite"] | None
 
 
-class CacheStore(BaseModel, abc.ABC):
+class DocumentCacheStore(BaseModel, abc.ABC):
     """
     Abstract base class for cache stores used in document parsing.
 
@@ -32,9 +32,9 @@ class CacheStore(BaseModel, abc.ABC):
     Example:
         ```python
         # Using an in-memory cache store
-        from agentle.parsing.cache import InMemoryCacheStore
+        from agentle.parsing.cache import InMemoryDocumentCacheStore
 
-        cache = InMemoryCacheStore()
+        cache = InMemoryDocumentCacheStore()
 
         # Store a parsed document
         await cache.set_async("document_key", parsed_doc, ttl=3600)  # Cache for 1 hour

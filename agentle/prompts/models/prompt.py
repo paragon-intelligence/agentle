@@ -277,3 +277,21 @@ class Prompt(BaseModel):
         if isinstance(other, str):
             return Prompt(content=self.text + other)
         return Prompt(content=self.text + other.text)
+
+    def __getitem__(self, key: int | slice) -> str:
+        """
+        Support indexing and slicing operations on the prompt content.
+
+        Args:
+            key: Integer index or slice object
+
+        Returns:
+            str: Character at index or substring for slice
+
+        Examples:
+            >>> prompt = Prompt("Hello World")
+            >>> prompt[0]  # 'H'
+            >>> prompt[6:]  # 'World'
+            >>> prompt[:5]  # 'Hello'
+        """
+        return self.content[key]

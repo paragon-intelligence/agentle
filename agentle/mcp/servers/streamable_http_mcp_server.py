@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from collections.abc import AsyncIterator, MutableMapping, Sequence
+from collections.abc import AsyncIterator, Callable, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import httpx
@@ -63,7 +63,7 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
     # Required configuration fields
     server_name: str = Field(..., description="Human-readable name for the MCP server")
     server_url: str = Field(..., description="Base URL for the HTTP MCP server")
-    mcp_endpoint: str = Field(
+    mcp_endpoint: str | Callable[..., str] = Field(
         default="/mcp",
         description="The endpoint path for MCP requests, relative to the server URL",
     )
@@ -177,7 +177,12 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             self._jsonrpc_id_counter += 1
 
             # POST the initialize request to the MCP endpoint
-            response = await client.post(self.mcp_endpoint, json=initialize_request)
+            response = await client.post(
+                self.mcp_endpoint()
+                if callable(self.mcp_endpoint)
+                else self.mcp_endpoint,
+                json=initialize_request,
+            )
 
             self._logger.debug(
                 f"Initialization response status: {response.status_code}"
@@ -257,7 +262,13 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
                 "method": "initialized",
                 "params": {},
             }
-            await client.post(self.mcp_endpoint, json=notification, headers=headers)
+            await client.post(
+                self.mcp_endpoint()
+                if callable(self.mcp_endpoint)
+                else self.mcp_endpoint,
+                json=notification,
+                headers=headers,
+            )
 
             # Store session info using session manager
             await self.session_manager.store_session(
@@ -298,7 +309,12 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
             try:
                 client = await self._create_client()
                 headers = {"Mcp-Session-Id": self._session_id}
-                await client.delete(self.mcp_endpoint, headers=headers)
+                await client.delete(
+                    self.mcp_endpoint()
+                    if callable(self.mcp_endpoint)
+                    else self.mcp_endpoint,
+                    headers=headers,
+                )
                 self._logger.debug(f"Session terminated: {self._session_id}")
 
                 # Remove from session manager
@@ -554,7 +570,11 @@ class StreamableHTTPMCPServer(MCPServerProtocol):
 
             # Send the request
             response = await client.post(
-                self.mcp_endpoint, json=request, headers=headers
+                self.mcp_endpoint()
+                if callable(self.mcp_endpoint)
+                else self.mcp_endpoint,
+                json=request,
+                headers=headers,
             )
 
             # Check for session ID in response

@@ -16,7 +16,7 @@ import asyncio
 import json
 import logging
 import re
-from collections.abc import AsyncIterator, MutableMapping, Sequence
+from collections.abc import AsyncIterator, Callable, MutableMapping, Sequence
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import httpx
@@ -72,11 +72,11 @@ class SSEMCPServer(MCPServerProtocol):
     # Required configuration fields
     server_name: str = Field(..., description="Human-readable name for the MCP server")
     server_url: str = Field(..., description="Base URL for the SSE MCP server")
-    sse_endpoint: str = Field(
+    sse_endpoint: str | Callable[..., str] = Field(
         default="/sse",
         description="The endpoint path for SSE connections, relative to the server URL",
     )
-    messages_endpoint: str = Field(
+    messages_endpoint: str | Callable[..., str] = Field(
         default="/messages",
         description="The endpoint path for POST messages, relative to the server URL",
     )
@@ -189,7 +189,10 @@ class SSEMCPServer(MCPServerProtocol):
             # Establish SSE connection
             self._logger.debug(f"Establishing SSE connection to {self.sse_endpoint}")
             self._sse_response = await self._client.get(
-                self.sse_endpoint, headers=sse_headers
+                self.sse_endpoint()
+                if callable(self.sse_endpoint)
+                else self.sse_endpoint,
+                headers=sse_headers,
             )
 
             if self._sse_response.status_code != 200:
@@ -249,7 +252,12 @@ class SSEMCPServer(MCPServerProtocol):
             try:
                 temp_client = await self._create_client()
                 headers = {"Mcp-Session-Id": self._session_id}
-                await temp_client.delete(self.messages_endpoint, headers=headers)
+                await temp_client.delete(
+                    self.messages_endpoint()
+                    if callable(self.messages_endpoint)
+                    else self.messages_endpoint,
+                    headers=headers,
+                )
                 self._logger.debug(f"Session terminated: {self._session_id}")
 
                 # Remove from session manager
@@ -487,7 +495,11 @@ class SSEMCPServer(MCPServerProtocol):
 
             # Send the request via POST
             await self._client.post(
-                self.messages_endpoint, json=request, headers=headers
+                self.messages_endpoint()
+                if callable(self.messages_endpoint)
+                else self.messages_endpoint,
+                json=request,
+                headers=headers,
             )
 
             # Wait for the response with timeout
@@ -522,7 +534,11 @@ class SSEMCPServer(MCPServerProtocol):
 
         # Send the notification via POST
         await self._client.post(
-            self.messages_endpoint, json=notification, headers=headers
+            self.messages_endpoint()
+            if callable(self.messages_endpoint)
+            else self.messages_endpoint,
+            json=notification,
+            headers=headers,
         )
 
     async def _send_request(

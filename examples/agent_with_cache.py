@@ -11,7 +11,7 @@ from agentle.agents.knowledge.static_knowledge import StaticKnowledge
 from agentle.generations.providers.google.google_generation_provider import (
     GoogleGenerationProvider,
 )
-from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore
+from agentle.parsing.cache import InMemoryDocumentCacheStore, RedisCacheStore
 
 
 async def main():
@@ -20,7 +20,9 @@ async def main():
     # Example 1: Using InMemory cache store (default)
     print("=== Example 1: InMemory Cache Store ===")
 
-    in_memory_cache = InMemoryCacheStore(cleanup_interval=60)  # Cleanup every minute
+    in_memory_cache = InMemoryDocumentCacheStore(
+        cleanup_interval=60
+    )  # Cleanup every minute
 
     agent_with_memory_cache = Agent(
         name="Research Assistant with Memory Cache",
@@ -33,7 +35,7 @@ async def main():
             # Cache indefinitely
             StaticKnowledge(content="local_document.txt", cache="infinite"),
         ],
-        cache_store=in_memory_cache,
+        document_cache_store=in_memory_cache,
         debug=True,
     )
 
@@ -76,7 +78,7 @@ async def main():
                 # Cache for 1 day
                 StaticKnowledge(content="important_document.docx", cache=86400),
             ],
-            cache_store=redis_cache,
+            document_cache_store=redis_cache,
             debug=True,
         )
 
@@ -114,7 +116,7 @@ async def main():
                 content="https://example.com/report.pdf"
             ),  # No cache specified
         ],
-        # No cache_store specified - will use default InMemoryCacheStore
+        # No document_cache_store specified - will use default InMemoryDocumentCacheStore
         debug=True,
     )
 
@@ -127,7 +129,7 @@ async def main():
     # Example 4: Cache management operations
     print("\n=== Example 4: Cache Management ===")
 
-    cache = InMemoryCacheStore()
+    cache = InMemoryDocumentCacheStore()
 
     # Check if a specific document is cached
     cache_key = cache.get_cache_key("example_document.pdf", "PDFParser")
