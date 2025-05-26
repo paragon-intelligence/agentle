@@ -11,7 +11,7 @@ from agentle.generations.providers.google.google_generation_provider import (
 )
 from agentle.mcp.servers.sse_mcp_server import SSEMCPServer
 
-
+# Not working yet
 open_memory_server = SSEMCPServer(
     server_name="OpenMemoryMCP",
     server_url="http://localhost:8765",
