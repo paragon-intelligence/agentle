@@ -144,6 +144,10 @@ class GenerationConfig(BaseModel):
         Returns:
             A new GenerationConfig instance with the specified updates applied.
         """
+
+        if new_trace_params is not None:
+            self.trace_params.update(new_trace_params)
+
         return GenerationConfig(
             temperature=new_temperature
             if new_temperature is not None
@@ -154,9 +158,7 @@ class GenerationConfig(BaseModel):
             n=new_n if new_n is not None else self.n,
             top_p=new_top_p if new_top_p is not None else self.top_p,
             top_k=new_top_k if new_top_k is not None else self.top_k,
-            trace_params=new_trace_params
-            if new_trace_params is not None
-            else self.trace_params,
+            trace_params=self.trace_params,
             timeout=new_timeout if new_timeout is not None else self.timeout,
         )
 
