@@ -4,7 +4,10 @@ version = "v0.3.0"
 description = "..."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["mcp[cli]>=1.6.0", "rock-solid-base>=0.0.28"]
+dependencies = [
+    "mcp[cli]>=1.6.0",
+    "rock-solid-base>=0.0.30",
+]
 
 [[project.authors]]
 name = "Arthur Brenno"

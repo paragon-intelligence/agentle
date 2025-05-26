@@ -103,11 +103,11 @@ print(response.text)
 ```python
 from agentle.agents.agent import Agent
 from agentle.agents.knowledge.static_knowledge import StaticKnowledge
-from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore
+from agentle.parsing.cache import InMemoryDocumentCacheStore, RedisCacheStore
 from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
 # In-Memory Cache (Development & Single Process)
-memory_cache = InMemoryCacheStore(cleanup_interval=300)
+memory_cache = InMemoryDocumentCacheStore(cleanup_interval=300)
 
 agent = Agent(
     name="Research Assistant",
@@ -118,7 +118,7 @@ agent = Agent(
         StaticKnowledge(content="large_report.pdf", cache=3600),  # Cache for 1 hour
         StaticKnowledge(content="https://api.example.com/data", cache="infinite"),  # Cache indefinitely
     ],
-    cache_store=memory_cache
+    document_cache_store=memory_cache
 )
 
 # Redis Cache (Production & Distributed)
@@ -136,7 +136,7 @@ production_agent = Agent(
     static_knowledge=[
         StaticKnowledge(content="enterprise_docs.pdf", cache=86400),  # Cache for 1 day
     ],
-    cache_store=redis_cache
+    document_cache_store=redis_cache
 )
 
 # Cache Management
@@ -1707,12 +1707,12 @@ Agentle provides a flexible caching system for parsed documents to improve perfo
 ```python
 from agentle.agents.agent import Agent
 from agentle.agents.knowledge.static_knowledge import StaticKnowledge
-from agentle.parsing.cache import InMemoryCacheStore, RedisCacheStore
+from agentle.parsing.cache import InMemoryDocumentCacheStore, RedisCacheStore
 from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
 # Option 1: In-Memory Cache (Default)
 # Perfect for single-process applications and development
-in_memory_cache = InMemoryCacheStore(
+in_memory_cache = InMemoryDocumentCacheStore(
     cleanup_interval=300  # Clean up expired entries every 5 minutes
 )
 
@@ -1725,7 +1725,7 @@ agent_with_memory_cache = Agent(
         StaticKnowledge(content="research_paper.pdf", cache=3600),  # Cache for 1 hour
         StaticKnowledge(content="https://example.com/data.pdf", cache="infinite"),  # Cache indefinitely
     ],
-    cache_store=in_memory_cache
+    document_cache_store=in_memory_cache
 )
 
 # Option 2: Redis Cache (Production)
@@ -1745,7 +1745,7 @@ agent_with_redis_cache = Agent(
         StaticKnowledge(content="large_document.pdf", cache=7200),  # Cache for 2 hours
         StaticKnowledge(content="https://api.example.com/report", cache=1800),  # Cache for 30 minutes
     ],
-    cache_store=redis_cache
+    document_cache_store=redis_cache
 )
 
 # Option 3: No Cache (Legacy behavior)
@@ -1759,11 +1759,11 @@ agent_no_cache = Agent(
         "Raw text knowledge",  # No caching for raw text
         StaticKnowledge(content="document.pdf"),  # No cache specified = no caching
     ]
-    # No cache_store specified = uses default InMemoryCacheStore but only for items with cache TTL
+    # No document_cache_store specified = uses default InMemoryDocumentCacheStore but only for items with cache TTL
 )
 
 # Cache Management Operations
-cache = InMemoryCacheStore()
+cache = InMemoryDocumentCacheStore()
 
 # Check if a document is cached
 cache_key = cache.get_cache_key("document.pdf", "PDFParser")
