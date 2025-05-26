@@ -18,6 +18,7 @@ agentle.mcp.servers.stdio\_mcp\_server
    .. autosummary::
    
       Any
+      Callable
       MCPServerProtocol
       MutableMapping
       Sequence

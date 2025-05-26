@@ -17,6 +17,7 @@ agentle.mcp.servers.streamable\_http\_mcp\_server
    
       Any
       AsyncIterator
+      Callable
       InMemorySessionManager
       MCPServerProtocol
       MutableMapping

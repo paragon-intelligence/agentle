@@ -32,18 +32,18 @@ agentle.agents.agent
       Authentication
       BaseModel
       BytesIO
-      CacheStore
       Callable
       Capabilities
       ConfigDict
       Context
       DeveloperMessage
+      DocumentCacheStore
       DocumentParser
       FilePart
       Generation
       GenerationProvider
       Generator
-      InMemoryCacheStore
+      InMemoryDocumentCacheStore
       MCPServerProtocol
       Maybe
       MessageSequence
