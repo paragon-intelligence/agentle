@@ -71,6 +71,7 @@ from agentle.agents.suspension_manager import (
     SuspensionManager,
 )
 from agentle.agents.knowledge.static_knowledge import NO_CACHE, StaticKnowledge
+from agentle.memory.memory_store import MemoryStore
 from agentle.parsing.cache.document_cache_store import DocumentCacheStore
 from agentle.parsing.cache.in_memory_document_cache_store import (
     InMemoryDocumentCacheStore,
@@ -340,6 +341,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     response_schema: type[T_Schema] | None = None
     """
     The schema of the response to be returned by the agent.
+    """
+
+    memory: MemoryStore | None = Field(default=None)
+    """
+    The memory store to use for the agent.
     """
 
     mcp_servers: Sequence[MCPServerProtocol] = Field(default_factory=list)
