@@ -15,8 +15,9 @@ This implementation is particularly valuable for mission-critical applications t
 require high availability and cannot tolerate downtime from any single AI provider.
 """
 
+from __future__ import annotations
 import random
-from collections.abc import Sequence
+from collections.abc import MutableSequence, Sequence
 from typing import override
 
 from rsb.contracts.maybe_protocol import MaybeProtocol
@@ -177,4 +178,43 @@ class FailoverGenerationProvider(GenerationProvider):
     ) -> str:
         raise NotImplementedError(
             "This method should not be called on the FailoverGenerationProvider."
+        )
+
+    def without_provider_type(
+        self, provider_type: type[GenerationProvider]
+    ) -> FailoverGenerationProvider:
+        """
+        Create a new FailoverGenerationProvider without providers of the specified type.
+
+        This method recursively removes providers of the specified type from nested
+        FailoverGenerationProviders as well.
+
+        Args:
+            provider_type: The generation provider type to remove from the failover sequence.
+
+        Returns:
+            FailoverGenerationProvider: A new instance with all providers of the specified type removed.
+        """
+        filtered_providers: MutableSequence[GenerationProvider] = []
+
+        for provider in self.generation_providers:
+            if isinstance(provider, provider_type):
+                # Skip providers of the target type
+                continue
+            elif isinstance(provider, FailoverGenerationProvider):
+                # Recursively filter nested failover providers
+                nested_filtered = provider.without_provider_type(provider_type)
+                # Only add if it still has providers after filtering
+                if nested_filtered.generation_providers:
+                    filtered_providers.append(nested_filtered)
+            else:
+                # Keep other provider types
+                filtered_providers.append(provider)
+
+        return FailoverGenerationProvider(
+            generation_providers=filtered_providers,
+            tracing_client=self.tracing_client.unwrap()
+            if self.tracing_client
+            else None,
+            shuffle=self.shuffle,
         )
