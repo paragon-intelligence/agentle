@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 import httpx
 
@@ -37,4 +37,24 @@ class Mem0MemoryStore(MemoryStore):
 
     @override
     async def add_memories_async(self, text: str, user_id: str) -> None:
-        response = await self.client.add(messages=[])
+        messages = cast(list[dict[str, Any]], text)  # thanks for the poor typing, Mem0!
+        memory_response = await self.client.add(
+            messages=messages,
+            user_id=user_id,
+            metadata={"source_app": "agentle", "mcp_client": "AsyncMemoryClient"},
+        )
+
+        print(memory_response)
+
+    @override
+    async def search_memory_async(self, query: str, user_id: str) -> str: ...
+
+    @override
+    async def list_memories_async(self, user_id: str) -> str: ...
+
+    @override
+    async def delete_all_memories_async(self, user_id: str) -> None: ...
+
+
+if __name__ == "__main__":
+    memory_store = Mem0MemoryStore()
