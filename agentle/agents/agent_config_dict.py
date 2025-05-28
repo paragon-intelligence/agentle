@@ -27,6 +27,9 @@ agent = Agent(
 
 from typing import NotRequired, TypedDict
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.models.generation.generation_config_dict import (
+    GenerationConfigDict,
+)
 
 
 class AgentConfigDict(TypedDict):
@@ -62,7 +65,7 @@ class AgentConfigDict(TypedDict):
         generations per request are not supported for agents.
     """
 
-    generationConfig: NotRequired[GenerationConfig]
+    generationConfig: NotRequired[GenerationConfig | GenerationConfigDict]
     """Configuration for the language model generation process."""
 
     maxToolCalls: NotRequired[int]

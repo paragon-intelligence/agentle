@@ -32,6 +32,9 @@ from agentle.generations.json.json_schema_builder import (  # type: ignore[attr-
 )
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.models.generation.generation_config_dict import (
+    GenerationConfigDict,
+)
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
@@ -185,7 +188,7 @@ class CerebrasGenerationProvider(GenerationProvider):
         model: str | ModelKind | None = None,
         messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
-        generation_config: GenerationConfig | None = None,
+        generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         """
@@ -214,7 +217,7 @@ class CerebrasGenerationProvider(GenerationProvider):
         from cerebras.cloud.sdk import AsyncCerebras
         from cerebras.cloud.sdk.types.chat.chat_completion import ChatCompletionResponse
 
-        _generation_config = generation_config or GenerationConfig()
+        _generation_config = self._normalize_generation_config(generation_config)
         client = AsyncCerebras(
             api_key=self.api_key,
             base_url=self.base_url,

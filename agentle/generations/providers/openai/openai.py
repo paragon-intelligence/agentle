@@ -7,6 +7,9 @@ import httpx
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.models.generation.generation_config_dict import (
+    GenerationConfigDict,
+)
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
@@ -94,7 +97,7 @@ class OpenaiGenerationProvider(GenerationProvider):
         model: str | ModelKind | None = None,
         messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
-        generation_config: GenerationConfig | None = None,
+        generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool[Any]] | None = None,
     ) -> Generation[T]:
         """
@@ -118,7 +121,7 @@ class OpenaiGenerationProvider(GenerationProvider):
         from openai._types import NOT_GIVEN as OPENAI_NOT_GIVEN
         from openai.types.chat.chat_completion import ChatCompletion
 
-        _generation_config = generation_config or GenerationConfig()
+        _generation_config = self._normalize_generation_config(generation_config)
 
         # Calculate timeout based on available timeout parameters with correct priority
         timeout = None

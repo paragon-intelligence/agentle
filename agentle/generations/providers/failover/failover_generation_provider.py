@@ -24,6 +24,7 @@ from rsb.contracts.maybe_protocol import MaybeProtocol
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.models.generation.generation_config_dict import GenerationConfigDict
 from agentle.generations.models.messages.message import Message
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
@@ -124,7 +125,7 @@ class FailoverGenerationProvider(GenerationProvider):
         model: str | ModelKind | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
-        generation_config: GenerationConfig | None = None,
+        generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         """

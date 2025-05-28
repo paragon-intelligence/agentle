@@ -28,6 +28,9 @@ from rsb.coroutines.run_sync import run_sync
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.models.generation.generation_config_dict import (
+    GenerationConfigDict,
+)
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.part import Part
 from agentle.generations.models.message_parts.text import TextPart
@@ -116,7 +119,7 @@ class GenerationProvider(abc.ABC):
         prompt: str | Prompt | Part | Sequence[Part],
         developer_prompt: str | Prompt | None = None,
         response_schema: type[T] | None = None,
-        generation_config: GenerationConfig | None = None,
+        generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         """
@@ -137,9 +140,17 @@ class GenerationProvider(abc.ABC):
             Generation[T]: An Agentle Generation object containing the model's response,
                 potentially with structured output if a response_schema was provided.
         """
+        _generation_config = self._normalize_generation_config(generation_config)
+
         return run_sync(
             self.create_generation_by_prompt_async,
-            timeout=generation_config.timeout if generation_config else None,
+            timeout=_generation_config.timeout
+            if _generation_config.timeout
+            else _generation_config.timeout_s * 1000
+            if _generation_config.timeout_s
+            else _generation_config.timeout_m * 60 * 1000
+            if _generation_config.timeout_m
+            else None,
             model=model,
             prompt=prompt,
             developer_prompt=developer_prompt,
@@ -155,7 +166,7 @@ class GenerationProvider(abc.ABC):
         prompt: str | Prompt | Part | Sequence[Part],
         developer_prompt: str | Prompt | None = None,
         response_schema: type[T] | None = None,
-        generation_config: GenerationConfig | None = None,
+        generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         """
@@ -219,7 +230,7 @@ class GenerationProvider(abc.ABC):
         model: str | ModelKind | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
-        generation_config: GenerationConfig | None = None,
+        generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         """
@@ -239,9 +250,17 @@ class GenerationProvider(abc.ABC):
             Generation[T]: An Agentle Generation object containing the model's response,
                 potentially with structured output if a response_schema was provided.
         """
+        _generation_config = self._normalize_generation_config(generation_config)
+
         return run_sync(
             self.create_generation_async,
-            timeout=generation_config.timeout if generation_config else None,
+            timeout=_generation_config.timeout
+            if _generation_config.timeout
+            else _generation_config.timeout_s * 1000
+            if _generation_config.timeout_s
+            else _generation_config.timeout_m * 60 * 1000
+            if _generation_config.timeout_m
+            else None,
             model=model,
             messages=messages,
             response_schema=response_schema,
@@ -256,7 +275,7 @@ class GenerationProvider(abc.ABC):
         model: str | ModelKind | None = None,
         messages: Sequence[AssistantMessage | DeveloperMessage | UserMessage],
         response_schema: type[T] | None = None,
-        generation_config: GenerationConfig | None = None,
+        generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool[Any]] | None = None,
     ) -> Generation[T]:
         """
@@ -327,6 +346,16 @@ class GenerationProvider(abc.ABC):
             str: The provider-specific model identifier.
         """
         ...
+
+    def _normalize_generation_config(
+        self, generation_config: GenerationConfig | GenerationConfigDict | None
+    ) -> GenerationConfig:
+        if isinstance(generation_config, dict):
+            return GenerationConfig.model_validate(generation_config)
+        if generation_config is None:
+            return GenerationConfig()
+
+        return generation_config
 
     def _raise_unsuported_model_kind(self, model_kind: ModelKind) -> Never:
         raise NotImplementedError(

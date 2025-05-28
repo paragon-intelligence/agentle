@@ -28,6 +28,9 @@ from rsb.adapters.adapter import Adapter
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
+from agentle.generations.models.generation.generation_config_dict import (
+    GenerationConfigDict,
+)
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
@@ -176,7 +179,7 @@ class GoogleGenerationProvider(GenerationProvider):
         model: str | ModelKind | None = None,
         messages: Sequence[Message],
         response_schema: type[T] | None = None,
-        generation_config: GenerationConfig | None = None,
+        generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool] | None = None,
     ) -> Generation[T]:
         """
@@ -202,7 +205,7 @@ class GoogleGenerationProvider(GenerationProvider):
         from google.genai import types
 
         used_model = model or self.default_model
-        _generation_config = generation_config or GenerationConfig()
+        _generation_config = self._normalize_generation_config(generation_config)
 
         _http_options = self.http_options or types.HttpOptions()
         # change so if the timeout is provided in the constructor and the user doesnt inform the timeout in the generation config, the timeout in the constructor is used
