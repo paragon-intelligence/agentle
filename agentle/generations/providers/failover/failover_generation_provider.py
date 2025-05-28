@@ -24,7 +24,9 @@ from rsb.contracts.maybe_protocol import MaybeProtocol
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
-from agentle.generations.models.generation.generation_config_dict import GenerationConfigDict
+from agentle.generations.models.generation.generation_config_dict import (
+    GenerationConfigDict,
+)
 from agentle.generations.models.messages.message import Message
 from agentle.generations.providers.base.generation_provider import (
     GenerationProvider,
@@ -210,6 +212,76 @@ class FailoverGenerationProvider(GenerationProvider):
                     filtered_providers.append(nested_filtered)
             else:
                 # Keep other provider types
+                filtered_providers.append(provider)
+
+        return FailoverGenerationProvider(
+            generation_providers=filtered_providers,
+            tracing_client=self.tracing_client.unwrap()
+            if self.tracing_client
+            else None,
+            shuffle=self.shuffle,
+        )
+
+    def __sub__(
+        self,
+        other: GenerationProvider
+        | type[GenerationProvider]
+        | Sequence[GenerationProvider | type[GenerationProvider]],
+    ) -> FailoverGenerationProvider:
+        """
+        Remove providers or provider types from the failover sequence.
+
+        This method supports removing:
+        - A specific provider instance
+        - All providers of a specific type
+        - Multiple providers/types from a sequence
+
+        Args:
+            other: The provider(s) or provider type(s) to remove from the failover sequence.
+
+        Returns:
+            FailoverGenerationProvider: A new instance with the specified providers removed.
+        """
+        filtered_providers: MutableSequence[GenerationProvider] = []
+
+        for provider in self.generation_providers:
+            should_remove = False
+
+            # Check if this provider should be removed
+            if isinstance(other, (list, tuple)):
+                # Handle sequence of items to remove
+                for item in other:
+                    if isinstance(item, type):
+                        # Remove by type
+                        if isinstance(provider, item):
+                            should_remove = True
+                            break
+                    else:
+                        # Remove by instance
+                        if provider is item:
+                            should_remove = True
+                            break
+            else:
+                # Handle single item to remove
+                if isinstance(other, type):
+                    # Remove by type
+                    if isinstance(provider, other):
+                        should_remove = True
+                else:
+                    # Remove by instance
+                    if provider is other:
+                        should_remove = True
+
+            if should_remove:
+                continue
+
+            # Handle nested FailoverGenerationProviders recursively
+            if isinstance(provider, FailoverGenerationProvider):
+                nested_filtered = provider.__sub__(other)
+                # Only add if it still has providers after filtering
+                if nested_filtered.generation_providers:
+                    filtered_providers.append(nested_filtered)
+            else:
                 filtered_providers.append(provider)
 
         return FailoverGenerationProvider(
