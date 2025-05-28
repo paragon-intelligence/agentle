@@ -16,4 +16,5 @@ agentle.agents.agent\_config\_dict
    
       AgentConfigDict
       GenerationConfig
+      GenerationConfigDict
    
