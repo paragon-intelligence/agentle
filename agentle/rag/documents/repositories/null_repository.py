@@ -30,21 +30,21 @@ class NullDocumentRepository(
     """
 
     @override
-    async def read(
+    async def read_async(
         self, uid: str, filters: dict[str, object] | None = None
     ) -> Document:
         """Retorna um documento vazio."""
         return Document(id=UUID(uid), chunks=[], metadata={})
 
     @override
-    async def read_all(
+    async def read_all_async(
         self, filters: dict[str, object] | None = None
     ) -> Sequence[Document]:
         """Retorna uma lista vazia de documentos."""
         return []
 
     @override
-    async def delete(self, uid: str) -> None:
+    async def delete_async(self, uid: str) -> None:
         """Não executa nenhuma operação de exclusão."""
         pass
 
@@ -54,6 +54,6 @@ class NullDocumentRepository(
         return Blob(data=b"", extension="")
 
     @override
-    async def write(self, e: Path) -> None:
+    async def write_async(self, e: Path) -> None:
         """Não executa nenhuma operação de escrita."""
         pass
