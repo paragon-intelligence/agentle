@@ -972,6 +972,287 @@ bot = WhatsAppBot(
 )
 ```
 
+# WhatsApp Provider Comparison: Evolution API vs WhatsApp Business API
+
+## 🔄 Evolution API
+
+### Overview
+Evolution API is a third-party solution that provides a REST API interface for WhatsApp Web. It's designed for developers who want to quickly integrate WhatsApp without going through Meta's approval process.
+
+### ✅ Pros
+- **Quick Setup**: No approval process required
+- **Simple API**: Straightforward REST endpoints
+- **Multi-Session**: Can handle multiple WhatsApp accounts
+- **Self-Hosted**: Can be deployed on your own infrastructure
+- **WebSocket Support**: Real-time message updates
+- **No Message Limits**: No template requirements
+
+### ❌ Cons
+- **Unofficial**: Not endorsed by Meta/WhatsApp
+- **Stability**: Depends on WhatsApp Web, may break with updates
+- **No Business Features**: Missing official business tools
+- **Legal Concerns**: May violate WhatsApp's terms of service
+- **No Support**: Community-driven support only
+
+### Best For
+- Development and testing
+- Internal tools
+- Personal projects
+- Quick prototypes
+- Non-commercial use
+
+### Setup Example
+```python
+from agentle.agents.whatsapp.providers.evolution import (
+    EvolutionAPIProvider,
+    EvolutionAPIConfig
+)
+
+config = EvolutionAPIConfig(
+    base_url="http://localhost:8080",
+    instance_name="my-bot",
+    api_key="your-api-key"
+)
+
+provider = EvolutionAPIProvider(config)
+```
+
+---
+
+## 📱 WhatsApp Business API
+
+### Overview
+The official WhatsApp Business Platform API provided by Meta. It's designed for businesses that need reliable, scalable WhatsApp integration with full support and compliance.
+
+### ✅ Pros
+- **Official Support**: Backed by Meta
+- **Business Features**: Catalogs, labels, quick replies
+- **Scalability**: Handle millions of messages
+- **Analytics**: Detailed messaging insights
+- **Compliance**: Fully compliant with regulations
+- **Security**: Enterprise-grade security
+- **Webhooks**: Reliable webhook delivery
+- **Green Tick**: Business verification available
+
+### ❌ Cons
+- **Approval Required**: Business verification needed
+- **Template Messages**: Must use pre-approved templates for outreach
+- **Costs**: Pay per conversation
+- **Complexity**: More complex setup
+- **Rate Limits**: Messaging limits based on quality rating
+- **24-Hour Window**: Can only reply within 24 hours without template
+
+### Best For
+- Production applications
+- Customer service
+- E-commerce
+- Marketing campaigns
+- Enterprise solutions
+- Regulated industries
+
+### Setup Example
+```python
+from agentle.agents.whatsapp.providers.whatsapp_business import (
+    WhatsAppBusinessAPIProvider,
+    WhatsAppBusinessAPIConfig
+)
+
+config = WhatsAppBusinessAPIConfig(
+    phone_number_id="1234567890",
+    access_token="EAAxx...",
+    webhook_verify_token="my-verify-token",
+    app_secret="abc123..."  # For security
+)
+
+provider = WhatsAppBusinessAPIProvider(config)
+```
+
+---
+
+## 📊 Feature Comparison
+
+| Feature | Evolution API | WhatsApp Business API |
+|---------|--------------|---------------------|
+| **Setup Time** | Minutes | Days to weeks |
+| **Approval Required** | ❌ No | ✅ Yes |
+| **Cost** | Free (self-hosted) | Per conversation |
+| **Message Templates** | ❌ Not required | ✅ Required for outreach |
+| **Media Support** | ✅ Full | ✅ Full |
+| **Group Support** | ✅ Yes | ❌ Limited |
+| **Business Features** | ❌ No | ✅ Yes |
+| **Rate Limits** | ❌ None | ✅ Yes |
+| **Webhook Reliability** | 🟡 Medium | ✅ High |
+| **Official Support** | ❌ No | ✅ Yes |
+| **Compliance** | ❌ Risk | ✅ Compliant |
+| **Multi-phone** | ✅ Yes | ✅ Yes (multiple numbers) |
+| **API Stability** | 🟡 Medium | ✅ High |
+| **Analytics** | ❌ Basic | ✅ Advanced |
+
+---
+
+## 🤔 Which Should You Choose?
+
+### Choose Evolution API if:
+- 🚀 You need to start immediately
+- 🧪 You're building a prototype or POC
+- 🏠 It's for internal/personal use
+- 💸 You have no budget
+- 🔧 You need full WhatsApp Web features
+- 👥 You need group messaging support
+
+### Choose WhatsApp Business API if:
+- 🏢 You're building for production
+- 📈 You need to scale to thousands of users
+- 🔒 Security and compliance are critical
+- 📊 You need detailed analytics
+- ✅ You want official support
+- 💼 It's for commercial use
+- 🌐 You're serving multiple countries
+
+---
+
+## 🔄 Migration Path
+
+Start with Evolution API for development, then migrate to WhatsApp Business API for production:
+
+```python
+# Development
+if ENVIRONMENT == "development":
+    provider = EvolutionAPIProvider(evolution_config)
+else:
+    # Production
+    provider = WhatsAppBusinessAPIProvider(business_config)
+
+# Same adapter works with both!
+adapter = AgentToWhatsAppAdapter(provider)
+bot = adapter.adapt(agent)
+```
+
+---
+
+## 💰 Cost Comparison
+
+### Evolution API
+- **Software**: Free (open source)
+- **Infrastructure**: Your hosting costs
+- **Messages**: No per-message cost
+
+### WhatsApp Business API
+- **Setup**: Free
+- **Phone Number**: ~$15/month
+- **Conversations**: $0.003 - $0.08 per conversation (varies by country)
+- **Categories**:
+  - Utility: Customer support (cheaper)
+  - Authentication: OTPs
+  - Marketing: Promotional (more expensive)
+  - Service: Customer-initiated (cheapest)
+
+---
+
+## 🔧 Technical Requirements
+
+### Evolution API
+- Docker or Node.js environment
+- 2GB RAM minimum
+- Stable internet connection
+- WhatsApp account
+
+### WhatsApp Business API
+- Facebook Business Manager account
+- Verified business
+- Privacy policy URL
+- Webhook endpoint (HTTPS)
+- Valid phone number
+
+---
+
+## 🚀 Getting Started
+
+### Quick Start (Evolution API)
+```bash
+# Run Evolution API
+docker run -p 8080:8080 evolutionapi/evolution-api
+
+# Use with Agentle
+agentle-whatsapp run --instance my-bot --api-key KEY
+```
+
+### Production Start (WhatsApp Business API)
+1. Create Facebook App
+2. Add WhatsApp product
+3. Get phone number
+4. Verify business
+5. Configure webhooks
+6. Start sending messages
+
+---
+
+## 📝 Code Example: Provider Agnostic Bot
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.whatsapp import AgentToWhatsAppAdapter
+
+def create_whatsapp_bot(provider_type="evolution"):
+    """Create a WhatsApp bot with the specified provider."""
+    
+    # Create your agent
+    agent = Agent(
+        name="Universal Bot",
+        generation_provider=GoogleGenerationProvider(),
+        model="gemini-2.0-flash",
+        instructions="You are a helpful assistant."
+    )
+    
+    # Choose provider based on environment
+    if provider_type == "evolution":
+        from agentle.agents.whatsapp.providers.evolution import (
+            EvolutionAPIProvider,
+            EvolutionAPIConfig
+        )
+        
+        provider = EvolutionAPIProvider(
+            EvolutionAPIConfig(
+                base_url="http://localhost:8080",
+                instance_name="my-bot",
+                api_key="your-key"
+            )
+        )
+    else:
+        from agentle.agents.whatsapp.providers.whatsapp_business import (
+            WhatsAppBusinessAPIProvider,
+            WhatsAppBusinessAPIConfig
+        )
+        
+        provider = WhatsAppBusinessAPIProvider(
+            WhatsAppBusinessAPIConfig(
+                phone_number_id="123456",
+                access_token="EAA...",
+                webhook_verify_token="verify"
+            )
+        )
+    
+    # Same adapter works with both providers!
+    adapter = AgentToWhatsAppAdapter(provider)
+    return adapter.adapt(agent)
+
+# Use the same bot interface regardless of provider
+bot = create_whatsapp_bot("business")  # or "evolution"
+await bot.start()
+```
+
+---
+
+## 🎯 Recommendations
+
+1. **Start with Evolution API** for development and testing
+2. **Plan for WhatsApp Business API** from the beginning
+3. **Use the provider interface** to make switching easy
+4. **Test both providers** before going to production
+5. **Consider hybrid approach**: Evolution for internal, Business API for customers
+
+The Agentle WhatsApp integration is designed to make switching between providers seamless, so you can start fast and scale with confidence!
+
 ## 🏗️ Real-World Examples
 
 ### 💬 Customer Support Agent
