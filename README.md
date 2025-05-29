@@ -687,19 +687,6 @@ await whatsapp_bot.start()
 - **🌐 Webhook Support**: Easy integration with web frameworks
 - **🎯 HITL Compatible**: Works with Human-in-the-Loop workflows
 
-## 🛠️ Installation
-
-```bash
-# Install Agentle with WhatsApp support
-pip install agentle[whatsapp]
-
-# For Evolution API support
-pip install evolution-api-client  # Coming soon
-
-# For webhook server
-pip install blacksheep uvicorn
-```
-
 ## 📖 Usage Examples
 
 ### Basic WhatsApp Bot
