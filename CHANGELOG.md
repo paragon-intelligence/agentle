@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.3.5
+## v0.3.6
 
-- feat: new `__sub__` method in the FailoverGenerationProvider
+- 
