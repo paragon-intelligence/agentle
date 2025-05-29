@@ -640,6 +640,351 @@ response = agent.run(
 
 <img width="100%" alt="Trace Scores" src="https://github.com/user-attachments/assets/f0aab337-ead3-417b-97ef-0126c833d347" />
 
+# WhatsApp Integration for Agentle
+
+Transform your Agentle agents into WhatsApp bots with just a few lines of code. This integration supports both Evolution API and the official WhatsApp Business API (coming soon).
+
+## 🚀 Quick Start
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.whatsapp import AgentToWhatsAppAdapter, EvolutionAPIProvider
+from agentle.agents.whatsapp.providers.evolution import EvolutionAPIConfig
+
+# Create your agent
+agent = Agent(
+    name="Customer Support",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a helpful customer support agent."
+)
+
+# Configure Evolution API
+config = EvolutionAPIConfig(
+    base_url="http://localhost:8080",
+    instance_name="my-bot",
+    api_key="your-api-key"
+)
+
+# Create WhatsApp bot
+provider = EvolutionAPIProvider(config)
+adapter = AgentToWhatsAppAdapter(provider)
+whatsapp_bot = adapter.adapt(agent)
+
+# Start the bot
+await whatsapp_bot.start()
+```
+
+## 📋 Features
+
+- **🔄 Seamless Integration**: Convert any Agentle agent into a WhatsApp bot
+- **📱 Multiple Providers**: Support for Evolution API and WhatsApp Business API
+- **💬 Rich Messaging**: Text, images, documents, audio, and video support
+- **🔧 Tool Support**: Agents can use tools while chatting on WhatsApp
+- **📊 Session Management**: Automatic conversation context handling
+- **⌨️ Typing Indicators**: Show when the bot is processing
+- **✅ Read Receipts**: Automatic message acknowledgment
+- **🌐 Webhook Support**: Easy integration with web frameworks
+- **🎯 HITL Compatible**: Works with Human-in-the-Loop workflows
+
+## 🛠️ Installation
+
+```bash
+# Install Agentle with WhatsApp support
+pip install agentle[whatsapp]
+
+# For Evolution API support
+pip install evolution-api-client  # Coming soon
+
+# For webhook server
+pip install blacksheep uvicorn
+```
+
+## 📖 Usage Examples
+
+### Basic WhatsApp Bot
+
+```python
+from agentle.agents.agent import Agent
+from agentle.agents.whatsapp import (
+    AgentToWhatsAppAdapter,
+    EvolutionAPIProvider,
+    WhatsAppBotConfig
+)
+
+# Create agent with custom behavior
+agent = Agent(
+    name="Sales Assistant",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="""You are a friendly sales assistant.
+    Help customers find products and answer questions.
+    Be enthusiastic but not pushy."""
+)
+
+# Configure bot behavior
+bot_config = WhatsAppBotConfig(
+    typing_indicator=True,
+    typing_duration=2,
+    welcome_message="👋 Welcome! How can I help you find the perfect product today?",
+    error_message="😔 Oops! Something went wrong. Let me try again."
+)
+
+# Create and start bot
+provider = EvolutionAPIProvider(evolution_config)
+adapter = AgentToWhatsAppAdapter(provider, bot_config)
+bot = adapter.adapt(agent)
+
+await bot.start()
+```
+
+### WhatsApp Bot with Tools
+
+```python
+# Define tools for your agent
+def check_inventory(product: str) -> str:
+    """Check if a product is in stock."""
+    inventory = {
+        "laptop": 15,
+        "phone": 32,
+        "headphones": 50
+    }
+    count = inventory.get(product.lower(), 0)
+    return f"{product}: {count} units in stock" if count > 0 else f"{product} is out of stock"
+
+def calculate_discount(price: float, discount_percent: float) -> str:
+    """Calculate discounted price."""
+    discounted = price * (1 - discount_percent / 100)
+    saved = price - discounted
+    return f"Price after {discount_percent}% discount: ${discounted:.2f} (You save ${saved:.2f})"
+
+# Create agent with tools
+agent = Agent(
+    name="Shop Assistant",
+    generation_provider=GoogleGenerationProvider(),
+    model="gemini-2.0-flash",
+    instructions="You are a shop assistant who helps with inventory and pricing.",
+    tools=[check_inventory, calculate_discount]
+)
+
+# The bot can now use these tools in WhatsApp conversations!
+```
+
+### Webhook Server
+
+```python
+from blacksheep import Application
+from agentle.agents.whatsapp.handlers.webhook_handler import WhatsAppWebhookHandler
+
+# Create your bot
+bot = adapter.adapt(agent)
+
+# Create webhook handler
+app = Application()
+handler = WhatsAppWebhookHandler(bot)
+handler.register_with_blacksheep(app, "/webhook/whatsapp")
+
+# Add startup/shutdown
+@app.on_start
+async def startup():
+    await bot.start()
+    await provider.set_webhook_url("https://your-domain.com/webhook/whatsapp")
+
+@app.on_stop
+async def shutdown():
+    await bot.stop()
+
+# Run with uvicorn
+import uvicorn
+uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+### Using the CLI
+
+```bash
+# Run a simple WhatsApp bot
+agentle-whatsapp run --instance my-bot --api-key YOUR_KEY --name "Support Bot"
+
+# Run with custom instructions
+agentle-whatsapp run \
+    --instance my-bot \
+    --api-key YOUR_KEY \
+    --instructions "You are a tech support specialist" \
+    --welcome "Hello! I'm here to help with technical issues."
+
+# Run webhook server
+agentle-whatsapp serve \
+    --instance my-bot \
+    --api-key YOUR_KEY \
+    --port 8000
+
+# Run from config file
+agentle-whatsapp from-config bot_config.yaml
+```
+
+### Agent Teams on WhatsApp
+
+```python
+from agentle.agents.agent_team import AgentTeam
+
+# Create specialized agents
+research_agent = Agent(
+    name="Research Specialist",
+    description="Finds information and answers questions",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="You research and provide accurate information."
+)
+
+support_agent = Agent(
+    name="Support Specialist", 
+    description="Helps with technical issues",
+    generation_provider=provider,
+    model="gemini-2.0-flash",
+    instructions="You provide technical support."
+)
+
+# Create team
+team = AgentTeam(
+    agents=[research_agent, support_agent],
+    orchestrator_provider=provider,
+    orchestrator_model="gemini-2.0-flash"
+)
+
+# Teams work just like single agents!
+bot = adapter.adapt(team)
+await bot.start()
+```
+
+## 🔧 Configuration
+
+### Bot Configuration
+
+```python
+WhatsAppBotConfig(
+    # Typing indicator settings
+    typing_indicator=True,          # Show typing while processing
+    typing_duration=3,              # Seconds to show typing
+    
+    # Message handling
+    auto_read_messages=True,        # Auto-mark messages as read
+    max_message_length=4096,        # WhatsApp message limit
+    
+    # Session management
+    session_timeout_minutes=30,     # Session inactivity timeout
+    
+    # Messages
+    welcome_message="Welcome!",     # First interaction message
+    error_message="Error occurred"  # Error fallback message
+)
+```
+
+### Evolution API Configuration
+
+```python
+EvolutionAPIConfig(
+    base_url="http://localhost:8080",    # Evolution API URL
+    instance_name="my-bot",              # Your instance name
+    api_key="your-api-key",              # API key
+    webhook_url="https://...",           # Optional webhook URL
+    timeout=30                           # Request timeout
+)
+```
+
+## 📱 Supported Message Types
+
+- **Text Messages**: Plain text with emoji support
+- **Media Messages**: Images, documents, audio, video
+- **Reply Messages**: Quote/reply to previous messages
+- **Mentions**: Tag users in messages (groups)
+- **Locations**: Send location pins
+- **Contacts**: Share contact cards
+
+## 🔄 Message Flow
+
+1. **Incoming Message** → WhatsApp → Evolution API → Webhook
+2. **Process with Agent** → Convert to agent input → Get response
+3. **Send Response** → Format message → Evolution API → WhatsApp
+
+## 🚨 Error Handling
+
+The integration handles various error scenarios:
+
+```python
+# Custom error handling
+async def custom_error_handler(error: Exception, message: WhatsAppMessage):
+    if isinstance(error, NetworkError):
+        await bot.provider.send_text_message(
+            message.from_number,
+            "📶 Network issue. Please try again."
+        )
+    else:
+        # Default error handling
+        await bot._send_error_message(message.from_number)
+
+# Add to bot
+bot.error_handler = custom_error_handler
+```
+
+## 🔐 Security Best Practices
+
+1. **API Keys**: Store API keys in environment variables
+2. **Webhooks**: Use HTTPS for webhook endpoints
+3. **Validation**: Validate webhook signatures
+4. **Rate Limiting**: Implement rate limiting for users
+5. **Data Privacy**: Don't log sensitive message content
+
+## 🎯 Tips for WhatsApp Bots
+
+1. **Keep messages concise** - WhatsApp users expect quick responses
+2. **Use emojis** - They make bots feel more friendly 😊
+3. **Handle media** - Support images and documents
+4. **Provide quick options** - Use numbered lists for choices
+5. **Be responsive** - Use typing indicators
+
+## 🐛 Troubleshooting
+
+### Bot not receiving messages
+- Check Evolution instance is connected
+- Verify webhook URL is accessible
+- Check API key permissions
+
+### Messages not sending
+- Ensure phone number format is correct
+- Check Evolution API is running
+- Verify network connectivity
+
+### Session issues
+- Implement session cleanup
+- Handle timeout gracefully
+- Store sessions persistently for production
+
+## 🚀 Production Deployment
+
+```python
+# Production configuration
+config = WhatsAppBotConfig(
+    typing_indicator=True,
+    session_timeout_minutes=60,
+    max_message_length=4096,
+    error_message="We're experiencing issues. Please try again later."
+)
+
+# Use Redis for session storage
+redis_session_store = RedisSessionStore(
+    redis_url="redis://localhost:6379",
+    ttl=3600
+)
+
+# Deploy with proper error handling and monitoring
+bot = WhatsAppBot(
+    agent=agent,
+    provider=provider,
+    config=config,
+    session_store=redis_session_store
+)
+```
+
 ## 🏗️ Real-World Examples
 
 ### 💬 Customer Support Agent
