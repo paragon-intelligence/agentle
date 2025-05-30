@@ -1,80 +1,60 @@
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: evolution_postgres
-    environment:
-      POSTGRES_DB: evolution_db
-      POSTGRES_USER: api_user
-      POSTGRES_PASSWORD: ApiPassw0rd!2024
+  api:
+    container_name: evolution_api
+    image: atendai/evolution-api:v1.8.6
+    restart: always
+    depends_on:
+      - redis
+      - postgres
+    ports:
+      - 8080:8080
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - evolution_instances:/evolution/instances
     networks:
-      - evolution_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U api_user -d evolution_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - evolution-net
+    env_file:
+      - .env
+    expose:
+      - 8080
 
   redis:
-    image: redis:7-alpine
-    container_name: evolution_redis
-    command: redis-server --requirepass RedisPassw0rd!2024
-    volumes:
-      - redis_data:/data
+    image: redis:latest
     networks:
-      - evolution_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  mongo:
-    image: mongo:6-jammy
-    container_name: evolution_mongo
-    environment:
-      MONGO_INITDB_DATABASE: api_db
-      MONGO_INITDB_ROOT_USERNAME: mongo_root
-      MONGO_INITDB_ROOT_PASSWORD: MongoPassw0rd!2024
+      - evolution-net
+    container_name: redis
+    command: >
+      redis-server --port 6363 --appendonly yes
     volumes:
-      - mongo_data:/data/db
-    networks:
-      - evolution_network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  evolution-api:
-    image: evolutionapi/evolution-api:v2.0.10
-    container_name: evolution_api
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      mongo:
-        condition: service_healthy
-    environment:
-      NODE_ENV: production
-      API_PORT: 8080
-      DB_POSTGRES_URL: "postgresql://api_user:ApiPassw0rd!2024@postgres:5432/evolution_db"
-      DB_REDIS_URL: "redis://:RedisPassw0rd!2024@redis:6379"
-      DB_MONGO_URL: "mongodb://mongo_root:MongoPassw0rd!2024@mongo:27017/api_db?authSource=admin"
-      JWT_SECRET: "YourSecureJWTSecretKey123!"
+      - evolution_redis:/data
     ports:
-      - "8080:8080"
+      - 6363:6363
+
+  postgres:
+    container_name: postgres
+    image: postgres:15
     networks:
-      - evolution_network
-    restart: unless-stopped
+      - evolution-net
+    command: ["postgres", "-c", "max_connections=1000", "-c", "listen_addresses=*"]
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=evolution
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - 5432
 
 volumes:
+  evolution_instances:
+  evolution_redis:
   postgres_data:
-  redis_data:
-  mongo_data:
+
 
 networks:
-  evolution_network:
+  evolution-net:
+    name: evolution-net
     driver: bridge

@@ -191,10 +191,10 @@ class WhatsAppBot:
             # Run agent
             result = await self.agent.run_async(agent_input)
 
-            if result.generation and result.generation.text:
-                return result.generation.text
-            else:
-                return "I processed your message but have no response."
+            if result.generation:
+                return result.text
+
+            return "I processed your message but have no response."
 
         except Exception as e:
             logger.error(f"Agent processing error: {e}", exc_info=True)

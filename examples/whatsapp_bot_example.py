@@ -7,9 +7,6 @@ import uvicorn
 from blacksheep import Application
 
 from agentle.agents.agent import Agent
-from agentle.agents.whatsapp.adapters.agent_to_whatsapp_adapter import (
-    AgentToWhatsAppAdapter,
-)
 from agentle.agents.whatsapp.functions.create_whatsapp_webhook_app import (
     create_whatsapp_webhook_app,
 )
@@ -19,6 +16,7 @@ from agentle.agents.whatsapp.providers.evolution.evolution_api_config import (
 from agentle.agents.whatsapp.providers.evolution.evolution_api_provider import (
     EvolutionAPIProvider,
 )
+from agentle.agents.whatsapp.whatsapp_bot import WhatsAppBot
 from agentle.generations.providers.google.google_generation_provider import (
     GoogleGenerationProvider,
 )
@@ -42,8 +40,7 @@ def create_webhook_server() -> Application:
     )
 
     provider = EvolutionAPIProvider(evolution_config)
-    adapter = AgentToWhatsAppAdapter(provider)
-    whatsapp_bot = adapter.adapt(agent)
+    whatsapp_bot = WhatsAppBot(agent=agent, provider=provider)
 
     app = create_whatsapp_webhook_app(whatsapp_bot)
 

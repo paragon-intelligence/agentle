@@ -11,9 +11,6 @@ from typing import Optional, TextIO
 import click
 
 from agentle.agents.agent import Agent
-from agentle.agents.whatsapp.adapters.agent_to_whatsapp_adapter import (
-    AgentToWhatsAppAdapter,
-)
 from agentle.agents.whatsapp.models.whatsapp_bot_config import WhatsAppBotConfig
 from agentle.agents.whatsapp.providers.evolution.evolution_api_config import (
     EvolutionAPIConfig,
@@ -21,6 +18,7 @@ from agentle.agents.whatsapp.providers.evolution.evolution_api_config import (
 from agentle.agents.whatsapp.providers.evolution.evolution_api_provider import (
     EvolutionAPIProvider,
 )
+from agentle.agents.whatsapp.whatsapp_bot import WhatsAppBot
 from agentle.generations.providers.google.google_generation_provider import (
     GoogleGenerationProvider,
 )
@@ -108,8 +106,9 @@ def run(
 
     # Create and run bot
     evolution_provider = EvolutionAPIProvider(evolution_config)
-    adapter = AgentToWhatsAppAdapter(evolution_provider, bot_config)
-    whatsapp_bot = adapter.adapt(agent)
+    whatsapp_bot = WhatsAppBot(
+        agent=agent, provider=evolution_provider, config=bot_config
+    )
 
     click.echo(f"🚀 Starting {name} on Evolution instance '{instance}'...")
     click.echo(f"📱 Using {provider} provider with model {model}")
@@ -170,8 +169,7 @@ def serve(
     )
 
     evolution_provider = EvolutionAPIProvider(evolution_config)
-    adapter = AgentToWhatsAppAdapter(evolution_provider)
-    whatsapp_bot = adapter.adapt(agent)
+    whatsapp_bot = WhatsAppBot(agent=agent, provider=evolution_provider)
 
     # Create web app
     app = Application()
@@ -261,8 +259,9 @@ def from_config(config_file: TextIO):
         auto_read_messages=bot_config.get("auto_read_messages", True),
     )
 
-    adapter = AgentToWhatsAppAdapter(evolution_provider, bot_settings)
-    whatsapp_bot = adapter.adapt(agent)
+    whatsapp_bot = WhatsAppBot(
+        agent=agent, provider=evolution_provider, config=bot_settings
+    )
 
     click.echo(f"🚀 Starting bot from config: {config_file.name}")
 
