@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.3.5
+## v0.3.7
 
-- feat: new `__sub__` method in the FailoverGenerationProvider
+- feat: letting users pass a sequence of providers in the FailoverGenrationProvider as well

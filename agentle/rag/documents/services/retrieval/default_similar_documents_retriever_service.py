@@ -12,4 +12,4 @@ from agentle.rag.documents.services.retrieval.similar_documents_retrieval_servic
 class DefaultSimilarDocumentsRetrieverService(SimilarDocumentsRetrievalServiceProtocol):
     @override
     async def retrieve_similar_async(self, query: str) -> Sequence[Document]:
-        return await self.repository.read_all({"query": query})
+        return await self.repository.read_all_async({"query": query})

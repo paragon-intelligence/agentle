@@ -33,7 +33,7 @@ class R2RGraphDocumentRepository(
         self.r2r_client = r2r_client
 
     @override
-    async def read(
+    async def read_async(
         self, uid: str, filters: dict[str, object] | None = None
     ) -> Document:
         from sdk.models import GraphSearchSettings, SearchSettings
@@ -80,7 +80,7 @@ class R2RGraphDocumentRepository(
         return Document(id=UUID(uid), chunks=chunks, metadata={})
 
     @override
-    async def read_all(
+    async def read_all_async(
         self, filters: dict[str, object] | None = None
     ) -> Sequence[Document]:
         from sdk.models import GraphSearchSettings, SearchSettings
@@ -142,7 +142,7 @@ class R2RGraphDocumentRepository(
         return documents
 
     @override
-    async def delete(self, uid: str) -> None:
+    async def delete_async(self, uid: str) -> None:
         await self.r2r_client.documents.delete(uid)
 
     @override

@@ -11,4 +11,4 @@ from agentle.rag.documents.services.ingestion.document_ingestion_service_protoco
 class DefaultDocumentIngestionService(DocumentIngestionServiceProtocol):
     @override
     async def create_document_async(self, file_path: str) -> None:
-        await self.writable_repository.write(Path(file_path))
+        await self.writable_repository.write_async(Path(file_path))

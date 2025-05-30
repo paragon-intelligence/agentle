@@ -40,7 +40,7 @@ agent = Agent(
     instructions="You are a helpful assistant."
 )
 
-response = agent.run("How can I help you?")
+response = agent.run("Agentle is cool.")
 ```
 
 </td>
@@ -52,6 +52,7 @@ response = agent.run("How can I help you?")
 - 💪 **Type-Safe** with full type hints
 - 🎯 **Structured Outputs** with Pydantic
 - 🔧 **Tool Calling** support out of the box
+- 📦 **Minimum dependencies** you only install what you need
 
 </td>
 </tr>
@@ -76,7 +77,7 @@ agent = Agent(
     name="Quick Start Agent",
     generation_provider=GoogleGenerationProvider(),
     model="gemini-2.0-flash",
-    instructions="You are a helpful assistant who provides concise, accurate information."
+    instructions="You are a helpful assistant who provides concise information."
 )
 
 # Run the agent
