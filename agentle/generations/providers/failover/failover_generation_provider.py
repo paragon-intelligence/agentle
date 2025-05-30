@@ -65,7 +65,9 @@ class FailoverGenerationProvider(GenerationProvider):
     def __init__(
         self,
         *,
-        generation_providers: Sequence[GenerationProvider],
+        generation_providers: Sequence[
+            GenerationProvider | Sequence[GenerationProvider]
+        ],
         tracing_client: StatefulObservabilityClient | None = None,
         shuffle: bool = False,
     ) -> None:
@@ -75,12 +77,24 @@ class FailoverGenerationProvider(GenerationProvider):
         Args:
             tracing_client: Optional client for observability and tracing of generation
                 requests and responses.
-            generation_providers: Sequence of underlying generation providers to try in order.
+            generation_providers: Sequence of underlying generation providers or sequences
+                of providers to try in order. Nested sequences will be flattened.
             shuffle: Whether to randomly shuffle the order of providers for each request.
                 Defaults to False (maintain the specified order).
         """
         super().__init__(tracing_client=tracing_client)
-        self.generation_providers = generation_providers
+
+        # Flatten nested sequences of providers
+        flattened_providers: MutableSequence[GenerationProvider] = []
+        for item in generation_providers:
+            if isinstance(item, Sequence) and not isinstance(item, (str, bytes)):
+                # If it's a sequence (but not string/bytes), extend with its contents
+                flattened_providers.extend(item)
+            else:
+                # If it's a single provider, append it
+                flattened_providers.append(item)
+
+        self.generation_providers = flattened_providers
         self.shuffle = shuffle
 
     @property
