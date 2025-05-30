@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: evolution_postgres
+    environment:
+      POSTGRES_DB: evolution_db
+      POSTGRES_USER: api_user
+      POSTGRES_PASSWORD: ApiPassw0rd!2024
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - evolution_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api_user -d evolution_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: evolution_redis
+    command: redis-server --requirepass RedisPassw0rd!2024
+    volumes:
+      - redis_data:/data
+    networks:
+      - evolution_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:6-jammy
+    container_name: evolution_mongo
+    environment:
+      MONGO_INITDB_DATABASE: api_db
+      MONGO_INITDB_ROOT_USERNAME: mongo_root
+      MONGO_INITDB_ROOT_PASSWORD: MongoPassw0rd!2024
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - evolution_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  evolution-api:
+    image: evolutionapi/evolution-api:v2.0.10
+    container_name: evolution_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      API_PORT: 8080
+      DB_POSTGRES_URL: "postgresql://api_user:ApiPassw0rd!2024@postgres:5432/evolution_db"
+      DB_REDIS_URL: "redis://:RedisPassw0rd!2024@redis:6379"
+      DB_MONGO_URL: "mongodb://mongo_root:MongoPassw0rd!2024@mongo:27017/api_db?authSource=admin"
+      JWT_SECRET: "YourSecureJWTSecretKey123!"
+    ports:
+      - "8080:8080"
+    networks:
+      - evolution_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongo_data:
+
+networks:
+  evolution_network:
+    driver: bridge
