@@ -250,7 +250,7 @@ class WhatsAppBot:
 
                 # Add caption if present
                 if message.caption:
-                    parts.append(TextPart(text=message.caption))
+                    parts.append(TextPart(text=f"Caption: {message.caption}"))
 
             except Exception as e:
                 logger.error(f"Failed to download media: {e}")
