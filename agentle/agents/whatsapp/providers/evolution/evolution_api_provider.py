@@ -192,7 +192,7 @@ class EvolutionAPIProvider(WhatsAppProvider):
         # Handle error responses
         try:
             error_data = await response.json()
-        except:
+        except Exception:
             error_data = {"error": await response.text()}
 
         error_message = f"Evolution API error: {response.status}"
