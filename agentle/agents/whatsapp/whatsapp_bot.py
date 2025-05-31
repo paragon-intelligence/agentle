@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Mapping, MutableSequence, Sequence
+from collections.abc import Callable, MutableSequence, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -29,6 +29,10 @@ if TYPE_CHECKING:
     from blacksheep.server.routing import MountRegistry, Router
     from rodi import ContainerProtocol
 
+try:
+    import blacksheep
+except ImportError:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +145,7 @@ class WhatsAppBot:
             logger.error(f"Error handling message: {e}", exc_info=True)
             await self._send_error_message(message.from_number, message.id)
 
-    async def handle_webhook(self, payload: Mapping[str, Any]) -> None:
+    async def handle_webhook(self, payload: WhatsAppWebhookPayload) -> None:
         """
         Handle incoming webhook from WhatsApp.
 
@@ -149,19 +153,19 @@ class WhatsAppBot:
             payload: Raw webhook payload
         """
         try:
-            webhook_payload = await self.provider.process_webhook(payload)
+            await self.provider.validate_webhook(payload)
 
             # Handle different event types
-            if webhook_payload.event_type == "messages.upsert":
-                await self._handle_message_upsert(webhook_payload)
-            elif webhook_payload.event_type == "messages.update":
-                await self._handle_message_update(webhook_payload)
-            elif webhook_payload.event_type == "connection.update":
-                await self._handle_connection_update(webhook_payload)
+            if payload.event_type == "messages.upsert":
+                await self._handle_message_upsert(payload)
+            elif payload.event_type == "messages.update":
+                await self._handle_message_update(payload)
+            elif payload.event_type == "connection.update":
+                await self._handle_connection_update(payload)
 
             # Call custom handlers
             for handler in self._webhook_handlers:
-                await handler(webhook_payload)
+                await handler(payload)
 
         except Exception as e:
             logger.error(f"Error handling webhook: {e}", exc_info=True)
@@ -190,12 +194,12 @@ class WhatsAppBot:
         Returns:
             BlackSheep application with webhook endpoint
         """
-        from blacksheep import Application, post, FromJSON, Response, json
+        import blacksheep
         from blacksheep.server.openapi.ui import ScalarUIProvider
         from blacksheep.server.openapi.v3 import OpenAPIHandler
         from openapidocs.v3 import Info
 
-        app = Application(
+        app = blacksheep.Application(
             router=router,
             services=services,
             show_error_details=show_error_details,
@@ -211,10 +215,10 @@ class WhatsAppBot:
 
         docs.bind_app(app)
 
-        @post(webhook_path)
+        @blacksheep.post(webhook_path)
         async def _(
-            webhook_payload: FromJSON[dict[str, Any]],
-        ) -> Response:
+            webhook_payload: blacksheep.FromJSON[WhatsAppWebhookPayload],
+        ) -> blacksheep.Response:
             """
             Handle incoming WhatsApp webhooks.
 
@@ -226,15 +230,17 @@ class WhatsAppBot:
             """
             try:
                 # Process the webhook payload
-                payload_data: dict[str, Any] = webhook_payload.value
+                payload_data: WhatsAppWebhookPayload = webhook_payload.value
                 await self.handle_webhook(payload_data)
 
                 # Return success response
-                return json({"status": "success", "message": "Webhook processed"})
+                return blacksheep.json(
+                    {"status": "success", "message": "Webhook processed"}
+                )
 
             except Exception as e:
                 logger.error(f"Webhook processing error: {e}", exc_info=True)
-                return json(
+                return blacksheep.json(
                     {"status": "error", "message": "Failed to process webhook"},
                     status=500,
                 )
@@ -396,7 +402,9 @@ class WhatsAppBot:
     async def _handle_message_upsert(self, payload: WhatsAppWebhookPayload) -> None:
         """Handle new message event."""
         data = payload.data
-
+        if not data:
+            raise ValueError("No data in webhook payload")
+    
         # Extract message from Evolution API format
         for msg_data in data.get("messages", []):
             # Skip outgoing messages
@@ -415,7 +423,11 @@ class WhatsAppBot:
 
     async def _handle_connection_update(self, payload: WhatsAppWebhookPayload) -> None:
         """Handle connection status update."""
-        state = payload.data.get("state")
+        data = payload.data
+        if not data:
+            raise ValueError("No data in webhook payload")
+
+        state = data.get("state")
         logger.info(f"WhatsApp connection state: {state}")
 
     def _parse_evolution_message(

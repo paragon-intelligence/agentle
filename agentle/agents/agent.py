@@ -66,17 +66,12 @@ from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
 from agentle.agents.errors.tool_suspension_error import ToolSuspensionError
-from agentle.agents.runnable import Runnable
-from agentle.agents.suspension_manager import (
-    get_default_suspension_manager,
-    SuspensionManager,
-)
 from agentle.agents.knowledge.static_knowledge import NO_CACHE, StaticKnowledge
-from agentle.parsing.cache.document_cache_store import DocumentCacheStore
-from agentle.parsing.cache.in_memory_document_cache_store import (
-    InMemoryDocumentCacheStore,
-)
 from agentle.agents.step import Step
+from agentle.agents.suspension_manager import (
+    SuspensionManager,
+    get_default_suspension_manager,
+)
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.trace_params import TraceParams
@@ -96,6 +91,10 @@ from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+from agentle.parsing.cache.document_cache_store import DocumentCacheStore
+from agentle.parsing.cache.in_memory_document_cache_store import (
+    InMemoryDocumentCacheStore,
+)
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.factories.file_parser_default_factory import (
     file_parser_default_factory,
@@ -128,7 +127,7 @@ HAS_PIL = is_module_available("PIL")
 HAS_PYDANTIC = is_module_available("pydantic")
 
 
-class Agent[T_Schema = WithoutStructuredOutput](BaseModel, Runnable[T_Schema]):
+class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     """
     The main class of the Agentle framework that represents an intelligent agent.
 

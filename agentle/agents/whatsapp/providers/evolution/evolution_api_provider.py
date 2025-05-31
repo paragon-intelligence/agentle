@@ -515,17 +515,16 @@ class EvolutionAPIProvider(WhatsAppProvider):
         except Exception as e:
             logger.error(f"Failed to update session {session.session_id}: {e}")
 
-    async def process_webhook(
-        self, payload: Mapping[str, Any]
-    ) -> WhatsAppWebhookPayload:
+    @override
+    async def validate_webhook(self, payload: WhatsAppWebhookPayload) -> None:
         """Process incoming webhook data from Evolution API."""
         try:
             # Evolution API webhook structure validation
-            event_type = payload.get("event")
+            event_type = payload.event_type
             if event_type is None:
                 raise EvolutionAPIError("Event type is required in webhook payload")
 
-            instance_name = payload.get("instance")
+            instance_name = payload.instance_id
             if instance_name is None:
                 raise EvolutionAPIError("Instance name is required in webhook payload")
 
@@ -534,17 +533,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
                     f"Webhook for wrong instance: expected {self.config.instance_name}, got {instance_name}"
                 )
 
-            webhook_payload = WhatsAppWebhookPayload(
-                event_type=event_type,
-                instance_id=instance_name,
-                data=payload.get("data", {}),
-                timestamp=datetime.now(),
-            )
-
             logger.debug(
                 f"Processed webhook: {event_type} for instance {instance_name}"
             )
-            return webhook_payload
 
         except EvolutionAPIError:
             raise

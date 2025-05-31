@@ -3,8 +3,7 @@ Base interface for WhatsApp providers.
 """
 
 from abc import abstractmethod
-from collections.abc import Mapping
-from typing import Any, Protocol
+from typing import Protocol
 
 from agentle.agents.whatsapp.models.whatsapp_contact import WhatsAppContact
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
@@ -113,9 +112,7 @@ class WhatsAppProvider(Protocol):
         pass
 
     @abstractmethod
-    async def process_webhook(
-        self, payload: Mapping[str, Any]
-    ) -> WhatsAppWebhookPayload:
+    async def validate_webhook(self, payload: WhatsAppWebhookPayload) -> None:
         """Process incoming webhook data from WhatsApp."""
         pass
 

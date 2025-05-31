@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, cast, Union
 
-from blacksheep.server.controllers import Controller
 from rsb.adapters.adapter import Adapter
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field

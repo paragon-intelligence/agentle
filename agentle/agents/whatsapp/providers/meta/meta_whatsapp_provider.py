@@ -567,16 +567,15 @@ class MetaWhatsAppProvider(WhatsAppProvider):
         except Exception as e:
             logger.error(f"Failed to update session {session.session_id}: {e}")
 
-    async def process_webhook(
-        self, payload: Mapping[str, Any]
-    ) -> WhatsAppWebhookPayload:
+    @override
+    async def validate_webhook(self, payload: WhatsAppWebhookPayload) -> None:
         """Process incoming webhook data from Meta WhatsApp Business API."""
         try:
             # Verify webhook signature if needed
             # Note: In a real implementation, you should verify the webhook signature
 
             # Meta webhook structure validation
-            entry = payload.get("entry", [])
+            entry = payload.entry
             if not entry:
                 raise MetaWhatsAppError("No entry data in webhook payload")
 
@@ -586,19 +585,10 @@ class MetaWhatsAppProvider(WhatsAppProvider):
 
             change = changes[0]
             field = change.get("field")
-            value = change.get("value", {})
-
-            webhook_payload = WhatsAppWebhookPayload(
-                event_type=f"whatsapp.{field}",
-                instance_id=self.config.phone_number_id,
-                data=value,
-                timestamp=datetime.now(),
-            )
 
             logger.debug(
                 f"Processed webhook: {field} for phone {self.config.phone_number_id}"
             )
-            return webhook_payload
 
         except MetaWhatsAppError:
             raise
