@@ -2,14 +2,15 @@
 Base interface for session storage implementations.
 """
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import Sequence
-from typing import Optional
+from typing import Protocol, runtime_checkable
 
 from rsb.models.base_model import BaseModel
 
 
-class SessionStore[T_Session: BaseModel](ABC):
+@runtime_checkable
+class SessionStore[T_Session: BaseModel](Protocol):
     """
     Abstract base class for session storage implementations.
 
@@ -18,7 +19,7 @@ class SessionStore[T_Session: BaseModel](ABC):
     """
 
     @abstractmethod
-    async def get_session(self, session_id: str) -> Optional[T_Session]:
+    async def get_session(self, session_id: str) -> T_Session | None:
         """
         Retrieve a session by ID.
 
@@ -32,7 +33,7 @@ class SessionStore[T_Session: BaseModel](ABC):
 
     @abstractmethod
     async def set_session(
-        self, session_id: str, session: T_Session, ttl_seconds: Optional[int] = None
+        self, session_id: str, session: T_Session, ttl_seconds: int | None = None
     ) -> None:
         """
         Store a session.
@@ -71,7 +72,7 @@ class SessionStore[T_Session: BaseModel](ABC):
         pass
 
     @abstractmethod
-    async def list_sessions(self, pattern: Optional[str] = None) -> Sequence[str]:
+    async def list_sessions(self, pattern: str | None = None) -> Sequence[str]:
         """
         List all session IDs, optionally matching a pattern.
 

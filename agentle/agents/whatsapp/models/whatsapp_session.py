@@ -1,3 +1,4 @@
+from collections.abc import MutableMapping
 from datetime import datetime
 from typing import Any
 
@@ -17,5 +18,5 @@ class WhatsAppSession(BaseModel):
     last_activity: datetime = Field(default_factory=datetime.now)
     message_count: int = 0
     is_active: bool = True
-    context_data: dict[str, Any] = Field(default_factory=dict)
+    context_data: MutableMapping[str, Any] = Field(default_factory=dict)
     agent_context_id: str | None = None

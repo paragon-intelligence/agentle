@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, MutableSequence, Sequence
+from collections.abc import Callable, Mapping, MutableSequence, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -38,6 +38,12 @@ class WhatsAppBot:
     This class handles the integration between WhatsApp messages
     and the Agentle agent, managing sessions and message conversion.
     """
+
+    agent: Runnable[Any]
+    provider: WhatsAppProvider
+    config: WhatsAppBotConfig
+    _running: bool
+    _webhook_handlers: MutableSequence[Callable[..., Any]]
 
     def __init__(
         self,
@@ -119,7 +125,7 @@ class WhatsAppBot:
             logger.error(f"Error handling message: {e}", exc_info=True)
             await self._send_error_message(message.from_number, message.id)
 
-    async def handle_webhook(self, payload: dict[str, Any]) -> None:
+    async def handle_webhook(self, payload: Mapping[str, Any]) -> None:
         """
         Handle incoming webhook from WhatsApp.
 

@@ -4,9 +4,9 @@ Evolution API implementation for WhatsApp.
 """
 
 import logging
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from datetime import datetime
-from typing import Any, override, Optional, Dict
+from typing import Any, override
 from urllib.parse import urljoin
 
 import aiohttp
@@ -41,8 +41,8 @@ class EvolutionAPIError(Exception):
     def __init__(
         self,
         message: str,
-        status_code: Optional[int] = None,
-        response_data: Optional[Dict[str, Any]] = None,
+        status_code: int | None = None,
+        response_data: Mapping[str, Any] | None = None,
     ):
         super().__init__(message)
         self.status_code = status_code
@@ -64,10 +64,15 @@ class EvolutionAPIProvider(WhatsAppProvider):
     - Media handling
     """
 
+    config: EvolutionAPIConfig
+    session_manager: SessionManager[WhatsAppSession]
+    session_ttl_seconds: int
+    _session: aiohttp.ClientSession | None
+
     def __init__(
         self,
         config: EvolutionAPIConfig,
-        session_manager: Optional[SessionManager[WhatsAppSession]] = None,
+        session_manager: SessionManager[WhatsAppSession] | None = None,
         session_ttl_seconds: int = 3600,
     ):
         """
@@ -125,9 +130,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
         self,
         method: str,
         url: str,
-        data: Optional[Dict[str, Any]] = None,
+        data: Mapping[str, Any] | None = None,
         expected_status: int = 200,
-    ) -> Dict[str, Any]:
+    ) -> Mapping[str, Any]:
         """
         Make HTTP request with proper error handling.
 
@@ -144,20 +149,21 @@ class EvolutionAPIProvider(WhatsAppProvider):
             EvolutionAPIError: If the request fails
         """
         try:
-            if method.upper() == "GET":
-                async with self.session.get(url) as response:
-                    return await self._handle_response(response, expected_status)
-            elif method.upper() == "POST":
-                async with self.session.post(url, json=data) as response:
-                    return await self._handle_response(response, expected_status)
-            elif method.upper() == "PUT":
-                async with self.session.put(url, json=data) as response:
-                    return await self._handle_response(response, expected_status)
-            elif method.upper() == "DELETE":
-                async with self.session.delete(url) as response:
-                    return await self._handle_response(response, expected_status)
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+            match method.upper():
+                case "GET":
+                    async with self.session.get(url) as response:
+                        return await self._handle_response(response, expected_status)
+                case "POST":
+                    async with self.session.post(url, json=data) as response:
+                        return await self._handle_response(response, expected_status)
+                case "PUT":
+                    async with self.session.put(url, json=data) as response:
+                        return await self._handle_response(response, expected_status)
+                case "DELETE":
+                    async with self.session.delete(url) as response:
+                        return await self._handle_response(response, expected_status)
+                case _:
+                    raise ValueError(f"Unsupported HTTP method: {method}")
 
         except aiohttp.ClientError as e:
             logger.error(f"HTTP client error for {method} {url}: {e}")
@@ -168,7 +174,7 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
     async def _handle_response(
         self, response: aiohttp.ClientResponse, expected_status: int
-    ) -> Dict[str, Any]:
+    ) -> Mapping[str, Any]:
         """
         Handle HTTP response with proper error handling.
 
@@ -271,7 +277,7 @@ class EvolutionAPIProvider(WhatsAppProvider):
     ) -> WhatsAppTextMessage:
         """Send a text message via Evolution API."""
         try:
-            payload: Dict[str, Any] = {
+            payload: Mapping[str, Any] = {
                 "number": self._normalize_phone(to),
                 "textMessage": {"text": text},
             }
@@ -509,7 +515,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
         except Exception as e:
             logger.error(f"Failed to update session {session.session_id}: {e}")
 
-    async def process_webhook(self, payload: dict[str, Any]) -> WhatsAppWebhookPayload:
+    async def process_webhook(
+        self, payload: Mapping[str, Any]
+    ) -> WhatsAppWebhookPayload:
         """Process incoming webhook data from Evolution API."""
         try:
             # Evolution API webhook structure validation
@@ -625,14 +633,14 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
         return phone
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> Mapping[str, Any]:
         """
         Get statistics about the Evolution API provider.
 
         Returns:
             Dictionary with provider statistics
         """
-        base_stats: Dict[str, Any] = {
+        base_stats: Mapping[str, Any] = {
             "instance_name": self.config.instance_name,
             "base_url": self.config.base_url,
             "webhook_url": self.config.webhook_url,

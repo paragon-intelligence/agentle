@@ -6,7 +6,7 @@ import asyncio
 import fnmatch
 import time
 from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
-from typing import Any, Optional, override
+from typing import Any, override
 
 from rsb.models.base_model import BaseModel
 
@@ -37,7 +37,7 @@ class InMemorySessionStore[T_Session: BaseModel](SessionStore[T_Session]):
         self._sessions: MutableMapping[str, T_Session] = {}
         self._expiry_times: MutableMapping[str, float] = {}
         self._cleanup_interval = cleanup_interval_seconds
-        self._cleanup_task: Optional[asyncio.Task[Any]] = None
+        self._cleanup_task: asyncio.Task[Any] | None = None
         self._lock = asyncio.Lock()
         self._closed = False
 
@@ -60,7 +60,7 @@ class InMemorySessionStore[T_Session: BaseModel](SessionStore[T_Session]):
                 pass
 
     @override
-    async def get_session(self, session_id: str) -> Optional[T_Session]:
+    async def get_session(self, session_id: str) -> T_Session | None:
         """Retrieve a session by ID."""
         await self._start_cleanup_task()
 
@@ -79,7 +79,7 @@ class InMemorySessionStore[T_Session: BaseModel](SessionStore[T_Session]):
 
     @override
     async def set_session(
-        self, session_id: str, session: T_Session, ttl_seconds: Optional[int] = None
+        self, session_id: str, session: T_Session, ttl_seconds: int | None = None
     ) -> None:
         """Store a session."""
         await self._start_cleanup_task()
@@ -111,7 +111,7 @@ class InMemorySessionStore[T_Session: BaseModel](SessionStore[T_Session]):
         return session is not None
 
     @override
-    async def list_sessions(self, pattern: Optional[str] = None) -> Sequence[str]:
+    async def list_sessions(self, pattern: str | None = None) -> Sequence[str]:
         """List all session IDs, optionally matching a pattern."""
         async with self._lock:
             current_time = time.time()

@@ -4,7 +4,7 @@ Redis-based session storage implementation.
 
 from collections.abc import Mapping, Sequence
 import json
-from typing import Optional, override, Any, TYPE_CHECKING, cast
+from typing import override, Any, TYPE_CHECKING, cast
 import fnmatch
 
 from rsb.models.base_model import BaseModel
@@ -42,7 +42,7 @@ class RedisSessionStore[T_Session: BaseModel](SessionStore[T_Session]):
         self,
         redis_url: str = "redis://localhost:6379/0",
         key_prefix: str = "agentle:session:",
-        default_ttl_seconds: Optional[int] = 3600,
+        default_ttl_seconds: int | None = 3600,
         session_class: type[T_Session] | None = None,
     ):
         """
@@ -63,7 +63,7 @@ class RedisSessionStore[T_Session: BaseModel](SessionStore[T_Session]):
         self.key_prefix = key_prefix
         self.default_ttl_seconds = default_ttl_seconds
         self.session_class = session_class
-        self._redis: Optional["Redis"] = None
+        self._redis: Redis | None = None
 
     async def _get_redis(self) -> "Redis":
         """Get or create Redis connection."""
@@ -82,7 +82,7 @@ class RedisSessionStore[T_Session: BaseModel](SessionStore[T_Session]):
         return redis_key[len(self.key_prefix) :]
 
     @override
-    async def get_session(self, session_id: str) -> Optional[T_Session]:
+    async def get_session(self, session_id: str) -> T_Session | None:
         """Retrieve a session by ID."""
         redis_client = await self._get_redis()
         key = self._make_key(session_id)
@@ -109,7 +109,7 @@ class RedisSessionStore[T_Session: BaseModel](SessionStore[T_Session]):
 
     @override
     async def set_session(
-        self, session_id: str, session: T_Session, ttl_seconds: Optional[int] = None
+        self, session_id: str, session: T_Session, ttl_seconds: int | None = None
     ) -> None:
         """Store a session."""
         redis_client = await self._get_redis()
@@ -148,7 +148,7 @@ class RedisSessionStore[T_Session: BaseModel](SessionStore[T_Session]):
         return result > 0
 
     @override
-    async def list_sessions(self, pattern: Optional[str] = None) -> Sequence[str]:
+    async def list_sessions(self, pattern: str | None = None) -> Sequence[str]:
         """List all session IDs, optionally matching a pattern."""
         redis_client = await self._get_redis()
 
@@ -197,7 +197,7 @@ class RedisSessionStore[T_Session: BaseModel](SessionStore[T_Session]):
             await self._redis.close()
             self._redis = None
 
-    async def get_session_ttl(self, session_id: str) -> Optional[int]:
+    async def get_session_ttl(self, session_id: str) -> int | None:
         """
         Get the remaining TTL for a session.
 

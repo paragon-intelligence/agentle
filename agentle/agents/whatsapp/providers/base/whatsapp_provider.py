@@ -2,8 +2,9 @@
 Base interface for WhatsApp providers.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Optional
+from abc import abstractmethod
+from collections.abc import Mapping
+from typing import Any, Protocol
 
 from agentle.agents.whatsapp.models.whatsapp_contact import WhatsAppContact
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
@@ -14,7 +15,7 @@ from agentle.agents.whatsapp.models.whatsapp_webhook_payload import (
 )
 
 
-class WhatsAppProvider(ABC):
+class WhatsAppProvider(Protocol):
     """
     Abstract base class for WhatsApp API providers.
 
@@ -39,7 +40,7 @@ class WhatsAppProvider(ABC):
 
     @abstractmethod
     async def send_text_message(
-        self, to: str, text: str, quoted_message_id: Optional[str] = None
+        self, to: str, text: str, quoted_message_id: str | None = None
     ) -> WhatsAppTextMessage:
         """
         Send a text message.
@@ -60,9 +61,9 @@ class WhatsAppProvider(ABC):
         to: str,
         media_url: str,
         media_type: str,
-        caption: Optional[str] = None,
-        filename: Optional[str] = None,
-        quoted_message_id: Optional[str] = None,
+        caption: str | None = None,
+        filename: str | None = None,
+        quoted_message_id: str | None = None,
     ) -> WhatsAppMediaMessage:
         """
         Send a media message (image, document, audio, video).
@@ -112,7 +113,9 @@ class WhatsAppProvider(ABC):
         pass
 
     @abstractmethod
-    async def process_webhook(self, payload: dict[str, Any]) -> WhatsAppWebhookPayload:
+    async def process_webhook(
+        self, payload: Mapping[str, Any]
+    ) -> WhatsAppWebhookPayload:
         """Process incoming webhook data from WhatsApp."""
         pass
 

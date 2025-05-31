@@ -3,13 +3,11 @@ Session manager that coordinates session operations.
 """
 
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
-from typing import Optional, TypeVar, Any
+from typing import  Any
 
 from rsb.models.base_model import BaseModel
 
 from agentle.session.session_store import SessionStore
-
-T_Session = TypeVar("T_Session", bound=BaseModel)
 
 
 class SessionManager[T_Session: BaseModel]:
@@ -22,14 +20,14 @@ class SessionManager[T_Session: BaseModel]:
     """
 
     session_store: SessionStore[T_Session]
-    default_ttl_seconds: Optional[int]
+    default_ttl_seconds: int | None
     enable_events: bool
     _event_handlers: MutableMapping[str, list[Callable[..., Any]]]
 
     def __init__(
         self,
         session_store: SessionStore[T_Session],
-        default_ttl_seconds: Optional[int] = 3600,
+        default_ttl_seconds: int | None = 3600,
         enable_events: bool = False,
     ):
         """
@@ -54,8 +52,8 @@ class SessionManager[T_Session: BaseModel]:
         self,
         session_id: str,
         refresh_ttl: bool = False,
-        additional_ttl_seconds: Optional[int] = None,
-    ) -> Optional[T_Session]:
+        additional_ttl_seconds: int | None = None,
+    ) -> T_Session | None:
         """
         Get a session by ID with optional TTL refresh.
 
@@ -81,7 +79,7 @@ class SessionManager[T_Session: BaseModel]:
         self,
         session_id: str,
         session: T_Session,
-        ttl_seconds: Optional[int] = None,
+        ttl_seconds: int | None = None,
         overwrite: bool = False,
     ) -> bool:
         """
@@ -118,7 +116,7 @@ class SessionManager[T_Session: BaseModel]:
         self,
         session_id: str,
         session: T_Session,
-        ttl_seconds: Optional[int] = None,
+        ttl_seconds: int | None = None,
         create_if_missing: bool = False,
     ) -> bool:
         """
@@ -180,7 +178,7 @@ class SessionManager[T_Session: BaseModel]:
         return await self.session_store.exists(session_id)
 
     async def list_sessions(
-        self, pattern: Optional[str] = None, include_metadata: bool = False
+        self, pattern: str | None = None, include_metadata: bool = False
     ) -> Sequence[str] | list[Mapping[str, Any]]:
         """
         List session IDs or session metadata.
@@ -294,7 +292,7 @@ class SessionManager[T_Session: BaseModel]:
             return False
 
     async def _fire_event(
-        self, event_type: str, session_id: str, session_data: Optional[T_Session]
+        self, event_type: str, session_id: str, session_data: T_Session | None
     ) -> None:
         """Fire an event to all registered handlers."""
         if not self.enable_events or event_type not in self._event_handlers:
