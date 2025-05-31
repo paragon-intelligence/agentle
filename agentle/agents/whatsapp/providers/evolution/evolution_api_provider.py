@@ -29,8 +29,8 @@ from agentle.agents.whatsapp.providers.base.whatsapp_provider import WhatsAppPro
 from agentle.agents.whatsapp.providers.evolution.evolution_api_config import (
     EvolutionAPIConfig,
 )
-from agentle.session.session_manager import SessionManager
-from agentle.session.in_memory_session_store import InMemorySessionStore
+from agentle.sessions.session_manager import SessionManager
+from agentle.sessions.in_memory_session_store import InMemorySessionStore
 
 logger = logging.getLogger(__name__)
 

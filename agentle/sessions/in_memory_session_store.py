@@ -10,7 +10,7 @@ from typing import Any, override
 
 from rsb.models.base_model import BaseModel
 
-from agentle.session.session_store import SessionStore
+from agentle.sessions.session_store import SessionStore
 
 
 class InMemorySessionStore[T_Session: BaseModel](SessionStore[T_Session]):

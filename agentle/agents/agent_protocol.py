@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 @runtime_checkable
-class Runnable[T = None](Protocol):
+class AgentProtocol[T = None](Protocol):
     def run(
         self,
         input: AgentInput | Any,

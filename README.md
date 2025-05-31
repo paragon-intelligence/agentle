@@ -642,7 +642,7 @@ response = agent.run(
 <img width="100%" alt="Trace Scores" src="https://github.com/user-attachments/assets/f0aab337-ead3-417b-97ef-0126c833d347" />
 
 
-# WhatsApp Integration Guide
+# WhatsApp Integration Guide (experimental, not released in the current version v0.3.7)
 
 This guide explains how to use Agentle's WhatsApp integration to build production-ready WhatsApp bots with Evolution API.
 
@@ -709,9 +709,9 @@ bot = WhatsAppBot(agent, provider)
 
 # Run as async service
 async def main():
+    # This just initializes the connection with the provider
     await bot.start()
-    # Keep running...
-    
+
 asyncio.run(main())
 ```
 
@@ -720,8 +720,8 @@ asyncio.run(main())
 ### In-Memory Sessions (Development)
 
 ```python
-from agentle.session.in_memory_session_store import InMemorySessionStore
-from agentle.session.session_manager import SessionManager
+from agentle.sessions.in_memory_session_store import InMemorySessionStore
+from agentle.sessions.session_manager import SessionManager
 
 # Create session store
 session_store = InMemorySessionStore[WhatsAppSession](
@@ -745,7 +745,7 @@ provider = EvolutionAPIProvider(
 ### Redis Sessions (Production)
 
 ```python
-from agentle.session.redis_session_store import RedisSessionStore
+from agentle.sessions.redis_session_store import RedisSessionStore
 
 # Create Redis session store
 session_store = RedisSessionStore[WhatsAppSession](
@@ -839,6 +839,7 @@ app = bot.to_blacksheep_app(
 )
 
 # Run with uvicorn
+# DOCUMENTATION AUTOMATICALLY AVAILABLE AT localhost:8000/docs
 import uvicorn
 uvicorn.run(app, host="0.0.0.0", port=8000)
 ```
@@ -958,8 +959,8 @@ bot.add_webhook_handler(on_webhook_error)
 ### Health Checks
 
 ```python
-# Add health check endpoint
-@app.route("/health")
+# Add health check endpoint with blacksheep!
+@app.router.post("/health")
 async def health_check():
     stats = provider.get_stats()
     return {
@@ -1001,11 +1002,11 @@ class CustomWhatsAppBot(WhatsAppBot):
         await super().handle_message(processed_message)
     
     def is_spam(self, message: WhatsAppMessage) -> bool:
-        # Your spam detection logic
+        # Your spam detection logic here...
         return False
     
     def preprocess_message(self, message: WhatsAppMessage) -> WhatsAppMessage:
-        # Your preprocessing logic
+        # Your preprocessing logic here...
         return message
 ```
 
@@ -1254,7 +1255,7 @@ app = bot.to_blacksheep_app(show_error_details=True)
 
 ```python
 # Add monitoring endpoints
-@app.route("/metrics")
+@app.router.post("/metrics")
 async def metrics():
     return {
         "provider_stats": provider.get_stats(),
@@ -1262,49 +1263,11 @@ async def metrics():
         "timestamp": datetime.now().isoformat()
     }
 
-@app.route("/sessions")
+@app.router.post("/sessions")
 async def list_sessions():
     sessions = await session_manager.list_sessions(include_metadata=True)
     return {"sessions": sessions}
 ```
-
-## Migration Guide
-
-### From Basic WhatsApp Integration
-
-If you're migrating from a basic WhatsApp integration:
-
-1. **Update imports**:
-   ```python
-   # Old
-   from agentle.whatsapp import WhatsAppBot
-   
-   # New
-   from agentle.agents.whatsapp.whatsapp_bot import WhatsAppBot
-   from agentle.agents.whatsapp.providers.evolution.evolution_api_provider import EvolutionAPIProvider
-   ```
-
-2. **Add session management**:
-   ```python
-   # Add session manager
-   session_manager = SessionManager[WhatsAppSession](
-       session_store=InMemorySessionStore[WhatsAppSession]()
-   )
-   
-   provider = EvolutionAPIProvider(config, session_manager=session_manager)
-   ```
-
-3. **Update configuration**:
-   ```python
-   # Use structured configuration
-   bot_config = WhatsAppBotConfig(
-       typing_indicator=True,
-       auto_read_messages=True,
-       # ... other settings
-   )
-   ```
-
-This comprehensive integration provides a solid foundation for building production-ready WhatsApp bots with Agentle!
 
 ## 🏗️ Real-World Examples
 

@@ -21,8 +21,8 @@ from agentle.agents.whatsapp.whatsapp_bot import WhatsAppBot
 from agentle.generations.providers.google.google_generation_provider import (
     GoogleGenerationProvider,
 )
-from agentle.session.in_memory_session_store import InMemorySessionStore
-from agentle.session.session_manager import SessionManager
+from agentle.sessions.in_memory_session_store import InMemorySessionStore
+from agentle.sessions.session_manager import SessionManager
 
 
 def get_weather(location: str) -> str:

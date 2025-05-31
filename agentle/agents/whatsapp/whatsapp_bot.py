@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from agentle.agents.context import Context
-from agentle.agents.runnable import Runnable
+from agentle.agents.agent_protocol import AgentProtocol
 from agentle.agents.whatsapp.models.whatsapp_bot_config import WhatsAppBotConfig
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
 from agentle.agents.whatsapp.models.whatsapp_message import WhatsAppMessage
@@ -20,8 +20,8 @@ from agentle.agents.whatsapp.providers.base.whatsapp_provider import WhatsAppPro
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.session.session_manager import SessionManager
-from agentle.session.in_memory_session_store import InMemorySessionStore
+from agentle.sessions.session_manager import SessionManager
+from agentle.sessions.in_memory_session_store import InMemorySessionStore
 
 if TYPE_CHECKING:
     from blacksheep import Application
@@ -45,7 +45,7 @@ class WhatsAppBot:
     and the Agentle agent, managing sessions and message conversion.
     """
 
-    agent: Runnable[Any]
+    agent: AgentProtocol[Any]
     provider: WhatsAppProvider
     config: WhatsAppBotConfig
     context_manager: SessionManager[Context]
@@ -54,7 +54,7 @@ class WhatsAppBot:
 
     def __init__(
         self,
-        agent: Runnable[Any],
+        agent: AgentProtocol[Any],
         provider: WhatsAppProvider,
         config: WhatsAppBotConfig | None = None,
         context_manager: SessionManager[Context] | None = None,
@@ -404,7 +404,7 @@ class WhatsAppBot:
         data = payload.data
         if not data:
             raise ValueError("No data in webhook payload")
-    
+
         # Extract message from Evolution API format
         for msg_data in data.get("messages", []):
             # Skip outgoing messages

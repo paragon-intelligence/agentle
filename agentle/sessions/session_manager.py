@@ -3,11 +3,11 @@ Session manager that coordinates session operations.
 """
 
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
-from typing import  Any
+from typing import Any
 
 from rsb.models.base_model import BaseModel
 
-from agentle.session.session_store import SessionStore
+from agentle.sessions.session_store import SessionStore
 
 
 class SessionManager[T_Session: BaseModel]:
