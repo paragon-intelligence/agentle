@@ -5,7 +5,7 @@ import logging
 from collections.abc import Callable, MutableSequence, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
-
+from rsb.coroutines.run_sync import run_sync
 from agentle.agents.context import Context
 from agentle.agents.agent_protocol import AgentProtocol
 from agentle.agents.whatsapp.models.whatsapp_bot_config import WhatsAppBotConfig
@@ -84,13 +84,21 @@ class WhatsAppBot:
         else:
             self.context_manager = context_manager
 
-    async def start(self) -> None:
+    def startt(self) -> None:
+        """Start the WhatsApp bot."""
+        run_sync(self.start_async)
+
+    def stopp(self) -> None:
+        """Stop the WhatsApp bot."""
+        run_sync(self.stop_async)
+
+    async def start_async(self) -> None:
         """Start the WhatsApp bot."""
         await self.provider.initialize()
         self._running = True
         logger.info("WhatsApp bot started for agent:")
 
-    async def stop(self) -> None:
+    async def stop_async(self) -> None:
         """Stop the WhatsApp bot."""
         self._running = False
         await self.provider.shutdown()

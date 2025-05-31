@@ -707,12 +707,8 @@ config = EvolutionAPIConfig(
 provider = EvolutionAPIProvider(config)
 bot = WhatsAppBot(agent, provider)
 
-# Run as async service
-async def main():
-    # This just initializes the connection with the provider
-    await bot.start()
-
-asyncio.run(main())
+# Run a sync service (async version also available)
+bot.start()
 ```
 
 ## Session Management
@@ -1008,45 +1004,6 @@ class CustomWhatsAppBot(WhatsAppBot):
     def preprocess_message(self, message: WhatsAppMessage) -> WhatsAppMessage:
         # Your preprocessing logic here...
         return message
-```
-
-### Multi-Instance Support
-
-```python
-# Create multiple bot instances
-bots = {}
-instances = ["bot1", "bot2", "bot3"]
-
-for instance_name in instances:
-    config = EvolutionAPIConfig(
-        base_url="http://localhost:8080",
-        instance_name=instance_name,
-        api_key=f"key-{instance_name}"
-    )
-    
-    provider = EvolutionAPIProvider(config)
-    bot = WhatsAppBot(agent, provider)
-    bots[instance_name] = bot
-
-# Start all bots
-for bot in bots.values():
-    await bot.start()
-```
-
-### Custom Message Types
-
-```python
-from agentle.agents.whatsapp.models.whatsapp_location_message import WhatsAppLocationMessage
-
-async def handle_location_message(self, message: WhatsAppLocationMessage):
-    """Handle location messages specially."""
-    location_info = f"Received location: {message.latitude}, {message.longitude}"
-    if message.name:
-        location_info += f" ({message.name})"
-    
-    # Process location with agent
-    response = await self.agent.run_async(f"User shared location: {location_info}")
-    await self.provider.send_text_message(message.from_number, response.text)
 ```
 
 ## Deployment
