@@ -21,6 +21,11 @@ class SessionManager[T_Session: BaseModel]:
     and metadata management.
     """
 
+    session_store: SessionStore[T_Session]
+    default_ttl_seconds: Optional[int]
+    enable_events: bool
+    _event_handlers: MutableMapping[str, list[Callable[..., Any]]]
+
     def __init__(
         self,
         session_store: SessionStore[T_Session],

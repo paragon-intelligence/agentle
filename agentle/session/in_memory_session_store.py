@@ -3,15 +3,17 @@ In-memory session storage implementation.
 """
 
 import asyncio
-from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
-import time
-from typing import Optional, override, Any
 import fnmatch
+import time
+from collections.abc import Mapping, MutableMapping, MutableSequence, Sequence
+from typing import Any, Optional, override
 
-from agentle.session.session_store import SessionStore, T_Session
+from rsb.models.base_model import BaseModel
+
+from agentle.session.session_store import SessionStore
 
 
-class InMemorySessionStore(SessionStore[T_Session]):
+class InMemorySessionStore[T_Session: BaseModel](SessionStore[T_Session]):
     """
     In-memory session storage implementation.
 

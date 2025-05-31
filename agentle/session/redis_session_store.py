@@ -9,7 +9,7 @@ import fnmatch
 
 from rsb.models.base_model import BaseModel
 
-from agentle.session.session_store import SessionStore, T_Session
+from agentle.session.session_store import SessionStore
 
 try:
     import redis.asyncio as redis
@@ -23,7 +23,7 @@ except ImportError:
         from redis.asyncio import Redis
 
 
-class RedisSessionStore(SessionStore[T_Session]):
+class RedisSessionStore[T_Session: BaseModel](SessionStore[T_Session]):
     """
     Redis-based session storage implementation.
 

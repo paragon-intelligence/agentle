@@ -4,14 +4,12 @@ Base interface for session storage implementations.
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Optional, TypeVar, Generic
+from typing import Optional
 
 from rsb.models.base_model import BaseModel
 
-T_Session = TypeVar("T_Session", bound=BaseModel)
 
-
-class SessionStore(ABC, Generic[T_Session]):
+class SessionStore[T_Session: BaseModel](ABC):
     """
     Abstract base class for session storage implementations.
 
