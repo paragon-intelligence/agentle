@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import asyncio
+import logging
 from collections.abc import Callable, MutableSequence, Sequence
 from datetime import datetime
-from typing import Any
-from agentle.agents.agent import Agent
+from typing import TYPE_CHECKING, Any
+
 from agentle.agents.context import Context
+from agentle.agents.runnable import Runnable
 from agentle.agents.whatsapp.models.whatsapp_bot_config import WhatsAppBotConfig
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
 from agentle.agents.whatsapp.models.whatsapp_message import WhatsAppMessage
@@ -13,11 +17,16 @@ from agentle.agents.whatsapp.models.whatsapp_webhook_payload import (
     WhatsAppWebhookPayload,
 )
 from agentle.agents.whatsapp.providers.base.whatsapp_provider import WhatsAppProvider
-import logging
-
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.messages.user_message import UserMessage
+
+if TYPE_CHECKING:
+    from blacksheep import Application
+    from blacksheep.server.openapi.v3 import OpenAPIHandler
+    from blacksheep.server.routing import MountRegistry, Router
+    from rodi import ContainerProtocol
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +41,7 @@ class WhatsAppBot:
 
     def __init__(
         self,
-        agent: Agent,
+        agent: Runnable[Any],
         provider: WhatsAppProvider,
         config: WhatsAppBotConfig | None = None,
     ):
@@ -54,13 +63,13 @@ class WhatsAppBot:
         """Start the WhatsApp bot."""
         await self.provider.initialize()
         self._running = True
-        logger.info(f"WhatsApp bot started for agent: {self.agent.name}")
+        logger.info("WhatsApp bot started for agent:")
 
     async def stop(self) -> None:
         """Stop the WhatsApp bot."""
         self._running = False
         await self.provider.shutdown()
-        logger.info(f"WhatsApp bot stopped for agent: {self.agent.name}")
+        logger.info("WhatsApp bot stopped for agent:")
 
     async def handle_message(self, message: WhatsAppMessage) -> None:
         """
@@ -134,6 +143,81 @@ class WhatsAppBot:
 
         except Exception as e:
             logger.error(f"Error handling webhook: {e}", exc_info=True)
+
+    def to_blacksheep_app(
+        self,
+        *,
+        router: Router | None = None,
+        services: ContainerProtocol | None = None,
+        show_error_details: bool = False,
+        mount: MountRegistry | None = None,
+        docs: OpenAPIHandler | None = None,
+        webhook_path: str = "/webhook/whatsapp",
+    ) -> Application:
+        """
+        Convert the WhatsApp bot to a BlackSheep ASGI application.
+
+        Args:
+            router: Optional router to use
+            services: Optional services container
+            show_error_details: Whether to show error details in responses
+            mount: Optional mount registry
+            docs: Optional OpenAPI handler
+            webhook_path: Path for the webhook endpoint
+
+        Returns:
+            BlackSheep application with webhook endpoint
+        """
+        from blacksheep import Application, post, FromJSON, Response, json
+        from blacksheep.server.openapi.ui import ScalarUIProvider
+        from blacksheep.server.openapi.v3 import OpenAPIHandler
+        from openapidocs.v3 import Info
+
+        app = Application(
+            router=router,
+            services=services,
+            show_error_details=show_error_details,
+            mount=mount,
+        )
+
+        if docs is None:
+            docs = OpenAPIHandler(
+                ui_path="/openapi",
+                info=Info(title="Agentle WhatsApp Bot API", version="1.0.0"),
+            )
+            docs.ui_providers.append(ScalarUIProvider(ui_path="/docs"))
+
+        docs.bind_app(app)
+
+        @post(webhook_path)
+        async def _(
+            webhook_payload: FromJSON[dict[str, Any]],
+        ) -> Response:
+            """
+            Handle incoming WhatsApp webhooks.
+
+            Args:
+                webhook_payload: The webhook payload from WhatsApp
+
+            Returns:
+                Success response
+            """
+            try:
+                # Process the webhook payload
+                payload_data: dict[str, Any] = webhook_payload.value
+                await self.handle_webhook(payload_data)
+
+                # Return success response
+                return json({"status": "success", "message": "Webhook processed"})
+
+            except Exception as e:
+                logger.error(f"Webhook processing error: {e}", exc_info=True)
+                return json(
+                    {"status": "error", "message": "Failed to process webhook"},
+                    status=500,
+                )
+
+        return app
 
     def add_webhook_handler(self, handler: Callable[..., Any]) -> None:
         """Add custom webhook handler."""

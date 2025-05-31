@@ -149,11 +149,6 @@ def serve(
 ):
     """Run a webhook server for WhatsApp bot"""
     import uvicorn
-    from blacksheep import Application
-
-    from agentle.agents.whatsapp.webhook.whatsapp_webhook_handler import (
-        WhatsAppWebhookHandler,
-    )
 
     # Create a simple agent
     agent = Agent(
@@ -172,9 +167,7 @@ def serve(
     whatsapp_bot = WhatsAppBot(agent=agent, provider=evolution_provider)
 
     # Create web app
-    app = Application()
-    handler = WhatsAppWebhookHandler(whatsapp_bot)
-    handler.register_with_blacksheep(app, webhook_path)
+    app = whatsapp_bot.to_blacksheep_app()
 
     # Health check
     @app.router.get("/health")

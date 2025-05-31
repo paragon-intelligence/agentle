@@ -66,6 +66,7 @@ from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
 from agentle.agents.errors.tool_suspension_error import ToolSuspensionError
+from agentle.agents.runnable import Runnable
 from agentle.agents.suspension_manager import (
     get_default_suspension_manager,
     SuspensionManager,
@@ -127,7 +128,7 @@ HAS_PIL = is_module_available("PIL")
 HAS_PYDANTIC = is_module_available("pydantic")
 
 
-class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
+class Agent[T_Schema = WithoutStructuredOutput](BaseModel, Runnable[T_Schema]):
     """
     The main class of the Agentle framework that represents an intelligent agent.
 
@@ -685,6 +686,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     def run(
         self,
         input: AgentInput | Any,
+        *,
         timeout: float | None = None,
         trace_params: TraceParams | None = None,
     ) -> AgentRunOutput[T_Schema]:
@@ -820,7 +822,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
 
     async def run_async(
-        self, input: AgentInput | Any, trace_params: TraceParams | None = None
+        self, input: AgentInput | Any, *, trace_params: TraceParams | None = None
     ) -> AgentRunOutput[T_Schema]:
         """
         Runs the agent asynchronously with the provided input.
