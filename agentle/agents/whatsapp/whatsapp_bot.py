@@ -20,6 +20,8 @@ from agentle.agents.whatsapp.providers.base.whatsapp_provider import WhatsAppPro
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.messages.user_message import UserMessage
+from agentle.session.session_manager import SessionManager
+from agentle.session.in_memory_session_store import InMemorySessionStore
 
 if TYPE_CHECKING:
     from blacksheep import Application
@@ -42,6 +44,7 @@ class WhatsAppBot:
     agent: Runnable[Any]
     provider: WhatsAppProvider
     config: WhatsAppBotConfig
+    context_manager: SessionManager[Context]
     _running: bool
     _webhook_handlers: MutableSequence[Callable[..., Any]]
 
@@ -50,6 +53,7 @@ class WhatsAppBot:
         agent: Runnable[Any],
         provider: WhatsAppProvider,
         config: WhatsAppBotConfig | None = None,
+        context_manager: SessionManager[Context] | None = None,
     ):
         """
         Initialize WhatsApp bot.
@@ -58,12 +62,23 @@ class WhatsAppBot:
             agent: The Agentle agent to use for processing messages
             provider: WhatsApp provider for sending/receiving messages
             config: Bot configuration
+            context_manager: Session manager for conversation context persistence (creates in-memory if not provided)
         """
         self.agent = agent
         self.provider = provider
         self.config = config or WhatsAppBotConfig()
         self._running = False
         self._webhook_handlers: MutableSequence[Callable[..., Any]] = []
+
+        # Initialize context manager using existing session system
+        if context_manager is None:
+            context_store = InMemorySessionStore[Context]()
+            self.context_manager = SessionManager(
+                session_store=context_store,
+                default_ttl_seconds=1800,  # 30 minutes default for conversations
+            )
+        else:
+            self.context_manager = context_manager
 
     async def start(self) -> None:
         """Start the WhatsApp bot."""
@@ -75,6 +90,7 @@ class WhatsAppBot:
         """Stop the WhatsApp bot."""
         self._running = False
         await self.provider.shutdown()
+        await self.context_manager.close()
         logger.info("WhatsApp bot stopped for agent:")
 
     async def handle_message(self, message: WhatsAppMessage) -> None:
@@ -232,7 +248,7 @@ class WhatsAppBot:
     async def _convert_message_to_input(
         self, message: WhatsAppMessage, session: WhatsAppSession
     ) -> Any:
-        """Convert WhatsApp message to agent input."""
+        """Convert WhatsApp message to agent input with proper context loading."""
         parts: MutableSequence[TextPart | FilePart] = []
 
         # Handle text messages
@@ -259,17 +275,35 @@ class WhatsAppBot:
         # Create user message
         user_message = UserMessage(parts=parts)
 
-        # Get or create agent context
+        # Get or create agent context with proper persistence
+        context: Context
         if session.agent_context_id:
-            # In a real implementation, you'd load the context from storage
-            # For now, we'll create a new context
-            context = Context(context_id=session.agent_context_id)
+            # Load existing context from storage
+            existing_context = await self.context_manager.get_session(
+                session.agent_context_id, refresh_ttl=True
+            )
+            if existing_context:
+                context = existing_context
+                logger.debug(f"Loaded existing context: {session.agent_context_id}")
+            else:
+                # Context expired or not found, create new one
+                context = Context(context_id=session.agent_context_id)
+                logger.debug(
+                    f"Context not found, created new: {session.agent_context_id}"
+                )
         else:
+            # Create new context
             context = Context()
             session.agent_context_id = context.context_id
+            logger.debug(f"Created new context: {context.context_id}")
 
         # Add message to context
         context.message_history.append(user_message)
+
+        # Save context to storage
+        await self.context_manager.update_session(
+            context.context_id, context, create_if_missing=True
+        )
 
         return context
 
@@ -278,8 +312,17 @@ class WhatsAppBot:
     ) -> str:
         """Process input with agent and return response text."""
         try:
-            # Run agent
+            # Run agent with the full context
             result = await self.agent.run_async(agent_input)
+
+            # Save the updated context after agent processing
+            if hasattr(result, "context") and hasattr(agent_input, "context_id"):
+                await self.context_manager.update_session(
+                    agent_input.context_id,
+                    result.context,  # The updated context from agent execution
+                    create_if_missing=True,
+                )
+                logger.debug(f"Saved updated context: {agent_input.context_id}")
 
             if result.generation:
                 return result.text
