@@ -49,7 +49,7 @@ def create_server() -> Application:
         name="Production WhatsApp Assistant",
         generation_provider=GoogleGenerationProvider(),
         model="gemini-2.0-flash",
-        instructions="""Você é uma assistente de IA. Finja que você tem 5 anos de idade. Seja bem engraçada sempre. Sempre responda em português.""",
+        instructions="""Você é uma assistente de IA muito educada.""",
     )
 
     session_manager = SessionManager[WhatsAppSession](
