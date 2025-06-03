@@ -7,7 +7,6 @@ from pathlib import Path
 import urllib.request
 import urllib.error
 
-from blacksheep.server.application import Application
 from rsb.adapters.adapter import Adapter
 from rsb.models.field import Field
 

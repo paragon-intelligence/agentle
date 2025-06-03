@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.3.7
+## v0.3.8
 
-- feat: letting users pass a sequence of providers in the FailoverGenrationProvider as well
+- fix: blacksheep imports at the wrong place, leading to ImportError
