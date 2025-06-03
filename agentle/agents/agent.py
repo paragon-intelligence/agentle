@@ -1506,6 +1506,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         if isinstance(input, Context):
             # If it's already a Context, return it as is.
+            input.add_developer_message(instructions)
             return input
         elif isinstance(input, UserMessage):
             # If it's a UserMessage, prepend the developer instructions.
