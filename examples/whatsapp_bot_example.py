@@ -72,7 +72,7 @@ def create_server() -> Application:
     # Configure bot for production
     bot_config = WhatsAppBotConfig(
         typing_indicator=True,
-        typing_duration=3,
+        typing_duration=8,
         auto_read_messages=True,
         session_timeout_minutes=60,
         max_message_length=4000,
