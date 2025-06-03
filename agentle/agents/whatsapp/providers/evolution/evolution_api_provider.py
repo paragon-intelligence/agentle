@@ -416,13 +416,14 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 phone = ""
 
             payload = {
-                "readMessages": [
-                    {"key": {"id": msg_id, "remoteJid": phone, "fromMe": False}}
-                ]
+                "readMessages": [{"id": msg_id, "remoteJid": phone, "fromMe": False}]
             }
 
-            url = self._build_url(f"markAsRead/{self.config.instance_name}")
-            await self._make_request("PUT", url, payload)
+            url = self._build_url(
+                f"chat/markMessageAsRead/{self.config.instance_name}",
+                use_message_prefix=False,
+            )
+            await self._make_request("POST", url, payload, expected_status=201)
 
             logger.debug(f"Message marked as read: {message_id}")
 
