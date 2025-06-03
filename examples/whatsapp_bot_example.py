@@ -23,6 +23,9 @@ from agentle.generations.providers.google.google_generation_provider import (
 )
 from agentle.sessions.in_memory_session_store import InMemorySessionStore
 from agentle.sessions.session_manager import SessionManager
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_weather(location: str) -> str:
