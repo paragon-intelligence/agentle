@@ -67,7 +67,7 @@ def create_server() -> Application:
     #     session_class=WhatsAppSession,
     # )
 
-    session_store = InMemorySessionStore[WhatsAppSession]()
+    session_store = InMemorySessionStore[WhatsAppSession](cleanup_interval_seconds=1)
 
     session_manager = SessionManager[WhatsAppSession](
         session_store=session_store, default_ttl_seconds=3600, enable_events=True

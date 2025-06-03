@@ -4,6 +4,7 @@ Evolution API implementation for WhatsApp.
 """
 
 import logging
+import time
 from collections.abc import Mapping, MutableMapping
 from datetime import datetime
 from typing import Any, override
@@ -43,10 +44,30 @@ class EvolutionAPIError(Exception):
         message: str,
         status_code: int | None = None,
         response_data: Mapping[str, Any] | None = None,
+        request_url: str | None = None,
+        request_data: Mapping[str, Any] | None = None,
     ):
         super().__init__(message)
         self.status_code = status_code
         self.response_data = response_data
+        self.request_url = request_url
+        self.request_data = request_data
+
+    def __str__(self) -> str:
+        """Enhanced string representation with context."""
+        base_message = super().__str__()
+        details: list[str] = []
+
+        if self.status_code:
+            details.append(f"status={self.status_code}")
+        if self.request_url:
+            details.append(f"url={self.request_url}")
+        if self.response_data:
+            details.append(f"response={self.response_data}")
+
+        if details:
+            return f"{base_message} ({', '.join(details)})"
+        return base_message
 
 
 class EvolutionAPIProvider(WhatsAppProvider):
@@ -83,18 +104,31 @@ class EvolutionAPIProvider(WhatsAppProvider):
             session_manager: Optional session manager (creates in-memory if not provided)
             session_ttl_seconds: Default TTL for sessions in seconds
         """
+        logger.info(
+            "Initializing Evolution API provider with instance '%s' at %s, session_ttl=%ss",
+            config.instance_name,
+            config.base_url,
+            session_ttl_seconds,
+        )
+
         self.config = config
         self.session_ttl_seconds = session_ttl_seconds
         self._session: aiohttp.ClientSession | None = None
 
         # Initialize session manager
         if session_manager is None:
+            logger.debug("Creating in-memory session store for Evolution API provider")
             session_store = InMemorySessionStore[WhatsAppSession]()
             self.session_manager = SessionManager(
                 session_store=session_store, default_ttl_seconds=session_ttl_seconds
             )
         else:
+            logger.debug("Using provided session manager for Evolution API provider")
             self.session_manager = session_manager
+
+        logger.info(
+            f"Evolution API provider initialized successfully for instance '{config.instance_name}'"
+        )
 
     @override
     def get_instance_identifier(self) -> str:
@@ -105,12 +139,14 @@ class EvolutionAPIProvider(WhatsAppProvider):
     def session(self) -> aiohttp.ClientSession:
         """Get or create HTTP session."""
         if self._session is None:
+            logger.debug("Creating new aiohttp session for Evolution API")
             headers = {
                 "apikey": self.config.api_key,
                 "Content-Type": "application/json",
             }
             timeout = aiohttp.ClientTimeout(total=self.config.timeout)
             self._session = aiohttp.ClientSession(headers=headers, timeout=timeout)
+            logger.debug(f"HTTP session created with timeout={self.config.timeout}s")
         return self._session
 
     def _build_url(self, endpoint: str, use_message_prefix: bool = True) -> str:
@@ -122,9 +158,12 @@ class EvolutionAPIProvider(WhatsAppProvider):
             use_message_prefix: Whether to prefix with /message/ (default: True)
         """
         if use_message_prefix:
-            return urljoin(self.config.base_url, f"/message/{endpoint}")
+            url = urljoin(self.config.base_url, f"/message/{endpoint}")
         else:
-            return urljoin(self.config.base_url, f"/{endpoint}")
+            url = urljoin(self.config.base_url, f"/{endpoint}")
+
+        logger.debug(f"Built API URL: {url}")
+        return url
 
     async def _make_request(
         self,
@@ -148,32 +187,105 @@ class EvolutionAPIProvider(WhatsAppProvider):
         Raises:
             EvolutionAPIError: If the request fails
         """
+        start_time = time.time()
+
+        # Log request details (excluding sensitive data)
+        safe_data = self._sanitize_request_data(data) if data else None
+        logger.info(f"Making {method} request to {url}")
+        if safe_data:
+            logger.debug(f"Request payload: {safe_data}")
+
         try:
             match method.upper():
                 case "GET":
                     async with self.session.get(url) as response:
-                        return await self._handle_response(response, expected_status)
+                        return await self._handle_response(
+                            response, expected_status, url, data, start_time
+                        )
                 case "POST":
                     async with self.session.post(url, json=data) as response:
-                        return await self._handle_response(response, expected_status)
+                        return await self._handle_response(
+                            response, expected_status, url, data, start_time
+                        )
                 case "PUT":
                     async with self.session.put(url, json=data) as response:
-                        return await self._handle_response(response, expected_status)
+                        return await self._handle_response(
+                            response, expected_status, url, data, start_time
+                        )
                 case "DELETE":
                     async with self.session.delete(url) as response:
-                        return await self._handle_response(response, expected_status)
+                        return await self._handle_response(
+                            response, expected_status, url, data, start_time
+                        )
                 case _:
+                    duration = time.time() - start_time
+                    logger.error(
+                        f"Unsupported HTTP method '{method}' for {url} (duration: {duration:.3f}s)"
+                    )
                     raise ValueError(f"Unsupported HTTP method: {method}")
 
         except aiohttp.ClientError as e:
-            logger.error(f"HTTP client error for {method} {url}: {e}")
-            raise EvolutionAPIError(f"Network error: {e}")
+            duration = time.time() - start_time
+            logger.error(
+                f"HTTP client error for {method} {url} (duration: {duration:.3f}s): {type(e).__name__}: {e}",
+                extra={
+                    "method": method,
+                    "url": url,
+                    "duration_seconds": duration,
+                    "error_type": type(e).__name__,
+                    "request_data": self._sanitize_request_data(data) if data else None,
+                },
+            )
+            raise EvolutionAPIError(
+                f"Network error: {e}",
+                request_url=url,
+                request_data=self._sanitize_request_data(data) if data else None,
+            )
         except Exception as e:
-            logger.error(f"Unexpected error for {method} {url}: {e}")
-            raise EvolutionAPIError(f"Unexpected error: {e}")
+            duration = time.time() - start_time
+            logger.error(
+                f"Unexpected error for {method} {url} (duration: {duration:.3f}s): {type(e).__name__}: {e}",
+                extra={
+                    "method": method,
+                    "url": url,
+                    "duration_seconds": duration,
+                    "error_type": type(e).__name__,
+                    "request_data": self._sanitize_request_data(data) if data else None,
+                },
+            )
+            raise EvolutionAPIError(
+                f"Unexpected error: {e}",
+                request_url=url,
+                request_data=self._sanitize_request_data(data) if data else None,
+            )
+
+    def _sanitize_request_data(
+        self, data: Mapping[str, Any] | None
+    ) -> Mapping[str, Any] | None:
+        """Remove sensitive information from request data for logging."""
+        if not data:
+            return data
+
+        # Create a copy and remove sensitive fields
+        sanitized = dict(data)
+
+        # Remove API keys and tokens
+        for key in list(sanitized.keys()):
+            if any(
+                sensitive in key.lower()
+                for sensitive in ["key", "token", "secret", "password"]
+            ):
+                sanitized[key] = "***REDACTED***"
+
+        return sanitized
 
     async def _handle_response(
-        self, response: aiohttp.ClientResponse, expected_status: int
+        self,
+        response: aiohttp.ClientResponse,
+        expected_status: int,
+        request_url: str,
+        request_data: Mapping[str, Any] | None,
+        start_time: float,
     ) -> Mapping[str, Any]:
         """
         Handle HTTP response with proper error handling.
@@ -181,6 +293,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
         Args:
             response: aiohttp response object
             expected_status: Expected HTTP status code
+            request_url: The URL that was requested
+            request_data: The data that was sent with the request
+            start_time: When the request was started
 
         Returns:
             Response data as dictionary
@@ -188,18 +303,37 @@ class EvolutionAPIProvider(WhatsAppProvider):
         Raises:
             EvolutionAPIError: If the response indicates an error
         """
+        duration = time.time() - start_time
+
+        logger.info(
+            f"Received response {response.status} for {request_url} (duration: {duration:.3f}s)",
+            extra={
+                "status_code": response.status,
+                "url": request_url,
+                "duration_seconds": duration,
+                "expected_status": expected_status,
+            },
+        )
+
         if response.status == expected_status:
             try:
-                return await response.json()
-            except Exception:
+                response_data = await response.json()
+                logger.debug(f"Response data received: {response_data}")
+                return response_data
+            except Exception as e:
+                logger.warning(f"Response is not valid JSON: {e}, returning empty dict")
                 # If response is not JSON, return empty dict
                 return {}
 
         # Handle error responses
         try:
             error_data = await response.json()
-        except Exception:
-            error_data = {"error": await response.text()}
+            logger.debug(f"Error response data: {error_data}")
+        except Exception as e:
+            logger.warning(f"Failed to parse error response as JSON: {e}")
+            error_text = await response.text()
+            error_data = {"error": error_text}
+            logger.debug(f"Error response text: {error_text}")
 
         error_message = f"Evolution API error: {response.status}"
         if "error" in error_data:
@@ -207,16 +341,39 @@ class EvolutionAPIProvider(WhatsAppProvider):
         elif "message" in error_data:
             error_message += f" - {error_data['message']}"
 
-        logger.error(f"Evolution API error: {error_message}")
+        logger.error(
+            f"API request failed: {error_message} (duration: {duration:.3f}s)",
+            extra={
+                "status_code": response.status,
+                "url": request_url,
+                "duration_seconds": duration,
+                "error_data": error_data,
+                "request_data": self._sanitize_request_data(request_data)
+                if request_data
+                else None,
+            },
+        )
+
         raise EvolutionAPIError(
-            error_message, status_code=response.status, response_data=error_data
+            error_message,
+            status_code=response.status,
+            response_data=error_data,
+            request_url=request_url,
+            request_data=self._sanitize_request_data(request_data)
+            if request_data
+            else None,
         )
 
     async def initialize(self) -> None:
         """Initialize the Evolution API connection."""
+        logger.info(
+            f"Initializing Evolution API connection for instance '{self.config.instance_name}'"
+        )
+
         try:
             # Check instance status
             url = self._build_url("instance/fetchInstances", use_message_prefix=False)
+            logger.debug(f"Fetching instances from {url}")
             response_data = await self._make_request("GET", url)
 
             # Look for our instance in the response
@@ -224,61 +381,104 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 response_data if isinstance(response_data, list) else [response_data]
             )
             instance_found = False
+            available_instances: list[str] = []
+
+            logger.debug("Processing %d instances from API response", len(instances))
 
             for instance_data in instances:
                 if isinstance(instance_data, dict):
                     instance_info = instance_data.get("instance", {})
-                    if instance_info.get("instanceName") == self.config.instance_name:
-                        instance_found = True
-                        break
+                    instance_name = instance_info.get("instanceName")
+
+                    if instance_name:
+                        available_instances.append(instance_name)
+                        logger.debug(f"Found instance: {instance_name}")
+
+                        if instance_name == self.config.instance_name:
+                            instance_found = True
+                            logger.info(
+                                f"Target instance '{self.config.instance_name}' found and accessible"
+                            )
+
+                            # Log additional instance details if available
+                            if "connectionStatus" in instance_info:
+                                logger.info(
+                                    f"Instance connection status: {instance_info['connectionStatus']}"
+                                )
+                            if "profilePictureUrl" in instance_info:
+                                logger.debug("Instance has profile picture configured")
 
             if not instance_found:
-                available_instances = []
-                for inst in instances:
-                    if isinstance(inst, dict):
-                        inst_info = inst.get("instance", {})
-                        inst_name = inst_info.get("instanceName")
-                        if inst_name:
-                            available_instances.append(inst_name)
-
                 error_msg = (
                     f"Instance '{self.config.instance_name}' not found. "
                     f"Available instances: {available_instances}"
                 )
+                logger.error(
+                    error_msg,
+                    extra={
+                        "target_instance": self.config.instance_name,
+                        "available_instances": available_instances,
+                        "total_instances": len(available_instances),
+                    },
+                )
                 raise EvolutionAPIError(error_msg)
 
             logger.info(
-                f"Evolution API provider initialized for instance: {self.config.instance_name}"
+                f"Evolution API provider initialized successfully for instance: {self.config.instance_name}"
             )
 
         except EvolutionAPIError:
+            logger.error(
+                f"Failed to initialize Evolution API provider due to API error"
+            )
             raise
         except Exception as e:
-            logger.error(f"Failed to initialize Evolution API provider: {e}")
+            logger.error(
+                f"Failed to initialize Evolution API provider: {type(e).__name__}: {e}",
+                extra={
+                    "instance_name": self.config.instance_name,
+                    "base_url": self.config.base_url,
+                    "error_type": type(e).__name__,
+                },
+            )
             raise EvolutionAPIError(f"Initialization failed: {e}")
 
     async def shutdown(self) -> None:
         """Shutdown the Evolution API connection."""
+        logger.info("Shutting down Evolution API provider")
+
         try:
             if self._session:
+                logger.debug("Closing aiohttp session")
                 await self._session.close()
                 self._session = None
 
             # Close session manager
+            logger.debug("Closing session manager")
             await self.session_manager.close()
 
             logger.info("Evolution API provider shutdown complete")
 
         except Exception as e:
-            logger.error(f"Error during Evolution API provider shutdown: {e}")
+            logger.error(
+                f"Error during Evolution API provider shutdown: {type(e).__name__}: {e}",
+                extra={"error_type": type(e).__name__},
+            )
 
     async def send_text_message(
         self, to: str, text: str, quoted_message_id: str | None = None
     ) -> WhatsAppTextMessage:
         """Send a text message via Evolution API."""
+        logger.info(f"Sending text message to {to} (length: {len(text)} chars)")
+        if quoted_message_id:
+            logger.debug(f"Message is quoting message ID: {quoted_message_id}")
+
         try:
+            normalized_to = self._normalize_phone(to)
+            logger.debug(f"Normalized phone number: {to} -> {normalized_to}")
+
             payload: Mapping[str, Any] = {
-                "number": self._normalize_phone(to),
+                "number": normalized_to,
                 "textMessage": {"text": text},
             }
 
@@ -290,9 +490,12 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 "POST", url, payload, expected_status=201
             )
 
+            message_id = response_data["key"]["id"]
+            from_jid = response_data["key"]["remoteJid"]
+
             message = WhatsAppTextMessage(
-                id=response_data["key"]["id"],
-                from_number=response_data["key"]["remoteJid"],
+                id=message_id,
+                from_number=from_jid,
                 to_number=to,
                 timestamp=datetime.now(),
                 status=WhatsAppMessageStatus.SENT,
@@ -300,13 +503,32 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 quoted_message_id=quoted_message_id,
             )
 
-            logger.debug(f"Text message sent successfully: {message.id}")
+            logger.info(
+                f"Text message sent successfully to {to}: {message_id}",
+                extra={
+                    "message_id": message_id,
+                    "to_number": to,
+                    "normalized_to": normalized_to,
+                    "from_jid": from_jid,
+                    "text_length": len(text),
+                    "has_quote": quoted_message_id is not None,
+                },
+            )
             return message
 
         except EvolutionAPIError:
+            logger.error(f"Evolution API error while sending text message to {to}")
             raise
         except Exception as e:
-            logger.error(f"Failed to send text message: {e}")
+            logger.error(
+                f"Failed to send text message to {to}: {type(e).__name__}: {e}",
+                extra={
+                    "to_number": to,
+                    "text_length": len(text),
+                    "error_type": type(e).__name__,
+                    "has_quote": quoted_message_id is not None,
+                },
+            )
             raise EvolutionAPIError(f"Failed to send text message: {e}")
 
     async def send_media_message(
@@ -319,6 +541,18 @@ class EvolutionAPIProvider(WhatsAppProvider):
         quoted_message_id: str | None = None,
     ) -> WhatsAppMediaMessage:
         """Send a media message via Evolution API."""
+        logger.info(
+            f"Sending {media_type} media message to {to}",
+            extra={
+                "to_number": to,
+                "media_type": media_type,
+                "media_url": media_url,
+                "has_caption": caption is not None,
+                "has_filename": filename is not None,
+                "has_quote": quoted_message_id is not None,
+            },
+        )
+
         try:
             # Determine endpoint based on media type
             endpoint_map = {
@@ -330,10 +564,17 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
             endpoint = endpoint_map.get(media_type)
             if not endpoint:
+                logger.error(
+                    f"Unsupported media type: {media_type}. Supported types: {list(endpoint_map.keys())}"
+                )
                 raise EvolutionAPIError(f"Unsupported media type: {media_type}")
 
+            normalized_to = self._normalize_phone(to)
+            logger.debug(f"Normalized phone number: {to} -> {normalized_to}")
+            logger.debug(f"Using endpoint: {endpoint}")
+
             payload: MutableMapping[str, Any] = {
-                "number": self._normalize_phone(to),
+                "number": normalized_to,
                 "mediaMessage": {
                     "mediaurl": media_url
                 },  # Note: Evolution API uses "mediaurl" not "mediaUrl"
@@ -341,9 +582,11 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
             if caption:
                 payload["mediaMessage"]["caption"] = caption
+                logger.debug(f"Added caption (length: {len(caption)} chars)")
 
             if filename and media_type == "document":
                 payload["mediaMessage"]["fileName"] = filename
+                logger.debug(f"Added filename: {filename}")
 
             if quoted_message_id:
                 payload["quoted"] = {"key": {"id": quoted_message_id}}
@@ -352,6 +595,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
             response_data = await self._make_request(
                 "POST", url, payload, expected_status=201
             )
+
+            message_id = response_data["key"]["id"]
+            from_jid = response_data["key"]["remoteJid"]
 
             # Create appropriate media message type
             message_class_map = {
@@ -363,8 +609,8 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
             message_class = message_class_map[media_type]
             message = message_class(
-                id=response_data["key"]["id"],
-                from_number=response_data["key"]["remoteJid"],
+                id=message_id,
+                from_number=from_jid,
                 to_number=to,
                 timestamp=datetime.now(),
                 status=WhatsAppMessageStatus.SENT,
@@ -375,45 +621,92 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 quoted_message_id=quoted_message_id,
             )
 
-            logger.debug(f"Media message sent successfully: {message.id}")
+            logger.info(
+                f"{media_type.title()} media message sent successfully to {to}: {message_id}",
+                extra={
+                    "message_id": message_id,
+                    "to_number": to,
+                    "normalized_to": normalized_to,
+                    "from_jid": from_jid,
+                    "media_type": media_type,
+                    "media_url": media_url,
+                    "has_caption": caption is not None,
+                    "has_filename": filename is not None,
+                },
+            )
             return message
 
         except EvolutionAPIError:
+            logger.error(
+                f"Evolution API error while sending {media_type} media message to {to}"
+            )
             raise
         except Exception as e:
-            logger.error(f"Failed to send media message: {e}")
+            logger.error(
+                f"Failed to send {media_type} media message to {to}: {type(e).__name__}: {e}",
+                extra={
+                    "to_number": to,
+                    "media_type": media_type,
+                    "media_url": media_url,
+                    "error_type": type(e).__name__,
+                },
+            )
             raise EvolutionAPIError(f"Failed to send media message: {e}")
 
     async def send_typing_indicator(self, to: str, duration: int = 3) -> None:
         """Send typing indicator via Evolution API."""
+        logger.debug(f"Sending typing indicator to {to} for {duration}s")
+
         try:
+            normalized_to = self._normalize_phone(to)
             payload = {
-                "number": self._normalize_phone(to),
+                "number": normalized_to,
                 "delay": duration * 1000,  # Evolution API expects milliseconds
             }
 
             url = self._build_url(f"sendPresence/{self.config.instance_name}")
             await self._make_request("POST", url, payload, expected_status=201)
 
-            logger.debug(f"Typing indicator sent to {to} for {duration}s")
+            logger.debug(
+                f"Typing indicator sent successfully to {to} for {duration}s",
+                extra={
+                    "to_number": to,
+                    "normalized_to": normalized_to,
+                    "duration_seconds": duration,
+                },
+            )
 
         except EvolutionAPIError as e:
             # Typing indicator failures are non-critical
-            logger.warning(f"Failed to send typing indicator: {e}")
+            logger.warning(
+                f"Failed to send typing indicator to {to}: {e}",
+                extra={"to_number": to, "duration_seconds": duration, "error": str(e)},
+            )
         except Exception as e:
-            logger.warning(f"Failed to send typing indicator: {e}")
+            logger.warning(
+                f"Failed to send typing indicator to {to}: {type(e).__name__}: {e}",
+                extra={
+                    "to_number": to,
+                    "duration_seconds": duration,
+                    "error_type": type(e).__name__,
+                },
+            )
 
     async def mark_message_as_read(self, message_id: str) -> None:
         """Mark a message as read via Evolution API."""
+        logger.debug(f"Marking message as read: {message_id}")
+
         try:
             # Extract the phone number from message_id if it's in Evolution format
             # Evolution message IDs are typically in format: messageId@phonenumber
             if "@" in message_id:
                 msg_id, phone = message_id.split("@", 1)
+                logger.debug(f"Extracted message ID: {msg_id}, phone: {phone}")
             else:
                 # Fallback - use message_id as is
                 msg_id = message_id
                 phone = ""
+                logger.debug(f"Using message ID as-is (no phone extraction): {msg_id}")
 
             payload = {
                 "readMessages": [{"id": msg_id, "remoteJid": phone, "fromMe": False}]
@@ -425,26 +718,47 @@ class EvolutionAPIProvider(WhatsAppProvider):
             )
             await self._make_request("POST", url, payload, expected_status=201)
 
-            logger.debug(f"Message marked as read: {message_id}")
+            logger.debug(
+                f"Message marked as read successfully: {message_id}",
+                extra={
+                    "message_id": message_id,
+                    "extracted_id": msg_id,
+                    "phone": phone,
+                },
+            )
 
         except EvolutionAPIError as e:
             # Read receipt failures are non-critical
-            logger.warning(f"Failed to mark message as read: {e}")
+            logger.warning(
+                f"Failed to mark message as read: {message_id}: {e}",
+                extra={"message_id": message_id, "error": str(e)},
+            )
         except Exception as e:
-            logger.warning(f"Failed to mark message as read: {e}")
+            logger.warning(
+                f"Failed to mark message as read: {message_id}: {type(e).__name__}: {e}",
+                extra={"message_id": message_id, "error_type": type(e).__name__},
+            )
 
     async def get_contact_info(self, phone: str) -> WhatsAppContact | None:
         """Get contact information via Evolution API."""
+        logger.debug(f"Fetching contact info for {phone}")
+
         try:
             normalized_phone = self._normalize_phone(phone)
+            logger.debug(
+                f"Normalized phone for contact fetch: {phone} -> {normalized_phone}"
+            )
 
             # Use the correct endpoint for fetching profile
-            url = self._build_url(f"fetchProfile/{self.config.instance_name}")
+            url = self._build_url(
+                f"chat/fetchProfile/{self.config.instance_name}", use_message_prefix=False
+            )
             payload = {"number": normalized_phone}
 
             response_data = await self._make_request("POST", url, payload)
 
             if not response_data:
+                logger.debug(f"No contact data returned for {phone}")
                 return None
 
             contact = WhatsAppContact(
@@ -454,21 +768,40 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 profile_picture_url=response_data.get("profilePictureUrl"),
             )
 
-            logger.debug(f"Contact info retrieved for {phone}")
+            logger.info(
+                f"Contact info retrieved successfully for {phone}",
+                extra={
+                    "phone": phone,
+                    "normalized_phone": normalized_phone,
+                    "has_name": contact.name is not None,
+                    "has_push_name": contact.push_name is not None,
+                    "has_profile_picture": contact.profile_picture_url is not None,
+                },
+            )
             return contact
 
         except EvolutionAPIError as e:
-            logger.warning(f"Failed to get contact info for {phone}: {e}")
+            logger.warning(
+                f"Evolution API error while fetching contact info for {phone}: {e}",
+                extra={"phone": phone, "error": str(e)},
+            )
             return None
         except Exception as e:
-            logger.warning(f"Failed to get contact info for {phone}: {e}")
+            logger.warning(
+                f"Failed to get contact info for {phone}: {type(e).__name__}: {e}",
+                extra={"phone": phone, "error_type": type(e).__name__},
+            )
             return None
 
     async def get_session(self, phone: str) -> WhatsAppSession | None:
         """Get or create a session for a phone number."""
+        logger.debug(f"Getting/creating session for {phone}")
+
         try:
             normalized_phone = self._normalize_phone(phone)
             session_id = f"{self.config.instance_name}_{normalized_phone}"
+
+            logger.debug(f"Session ID: {session_id}")
 
             # Try to get existing session
             session = await self.session_manager.get_session(
@@ -479,11 +812,23 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 # Update last activity
                 session.last_activity = datetime.now()
                 await self.session_manager.update_session(session_id, session)
+                logger.debug(
+                    f"Retrieved existing session for {phone}",
+                    extra={
+                        "phone": phone,
+                        "session_id": session_id,
+                        "last_activity": session.last_activity,
+                    },
+                )
                 return session
 
             # Create new session
+            logger.debug(f"Creating new session for {phone}")
             contact = await self.get_contact_info(phone)
             if not contact:
+                logger.debug(
+                    f"No contact info available, creating minimal contact for {phone}"
+                )
                 contact = WhatsAppContact(phone=normalized_phone)
 
             new_session = WhatsAppSession(
@@ -497,55 +842,100 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 session_id, new_session, ttl_seconds=self.session_ttl_seconds
             )
 
-            logger.debug(f"Created new session for {phone}")
+            logger.info(
+                f"Created new session for {phone}",
+                extra={
+                    "phone": phone,
+                    "normalized_phone": normalized_phone,
+                    "session_id": session_id,
+                    "ttl_seconds": self.session_ttl_seconds,
+                },
+            )
             return new_session
 
         except Exception as e:
-            logger.error(f"Failed to get/create session for {phone}: {e}")
+            logger.error(
+                f"Failed to get/create session for {phone}: {type(e).__name__}: {e}",
+                extra={"phone": phone, "error_type": type(e).__name__},
+            )
             return None
 
     async def update_session(self, session: WhatsAppSession) -> None:
         """Update session data."""
+        logger.debug(f"Updating session: {session.session_id}")
+
         try:
             session.last_activity = datetime.now()
             await self.session_manager.update_session(
                 session.session_id, session, ttl_seconds=self.session_ttl_seconds
             )
-            logger.debug(f"Session updated: {session.session_id}")
+            logger.debug(
+                f"Session updated successfully: {session.session_id}",
+                extra={
+                    "session_id": session.session_id,
+                    "phone_number": session.phone_number,
+                    "last_activity": session.last_activity,
+                },
+            )
 
         except Exception as e:
-            logger.error(f"Failed to update session {session.session_id}: {e}")
+            logger.error(
+                f"Failed to update session {session.session_id}: {type(e).__name__}: {e}",
+                extra={
+                    "session_id": session.session_id,
+                    "phone_number": session.phone_number,
+                    "error_type": type(e).__name__,
+                },
+            )
 
     @override
     async def validate_webhook(self, payload: WhatsAppWebhookPayload) -> None:
         """Process incoming webhook data from Evolution API."""
+        logger.info(f"Validating webhook payload with event: {payload.event}")
+
         try:
             # Evolution API webhook structure validation
             event_type = payload.event
             if event_type is None:
+                logger.error("Webhook validation failed: Event type is missing")
                 raise EvolutionAPIError("Event type is required in webhook payload")
 
             instance_name = payload.instance
             if instance_name is None:
+                logger.error("Webhook validation failed: Instance name is missing")
                 raise EvolutionAPIError("Instance name is required in webhook payload")
 
             if instance_name != self.config.instance_name:
+                logger.error(
+                    f"Webhook validation failed: Instance mismatch - expected '{self.config.instance_name}', got '{instance_name}'"
+                )
                 raise EvolutionAPIError(
                     f"Webhook for wrong instance: expected {self.config.instance_name}, got {instance_name}"
                 )
 
-            logger.debug(
-                f"Processed webhook: {event_type} for instance {instance_name}"
+            logger.info(
+                f"Webhook validated successfully: {event_type} for instance {instance_name}",
+                extra={
+                    "event_type": event_type,
+                    "instance_name": instance_name,
+                    "expected_instance": self.config.instance_name,
+                },
             )
 
         except EvolutionAPIError:
+            logger.error("Webhook validation failed due to Evolution API error")
             raise
         except Exception as e:
-            logger.error(f"Failed to process webhook: {e}")
+            logger.error(
+                f"Failed to validate webhook: {type(e).__name__}: {e}",
+                extra={"error_type": type(e).__name__},
+            )
             raise EvolutionAPIError(f"Failed to process webhook: {e}")
 
     async def download_media(self, media_id: str) -> bytes:
         """Download media content by ID."""
+        logger.info(f"Downloading media with ID: {media_id}")
+
         try:
             # Use the correct endpoint for downloading media
             url = self._build_url(
@@ -556,27 +946,42 @@ class EvolutionAPIProvider(WhatsAppProvider):
             response_data = await self._make_request("POST", url, payload)
 
             if "base64" not in response_data:
+                logger.error(
+                    f"Media download failed: No base64 data in response for media {media_id}"
+                )
                 raise EvolutionAPIError("No base64 data in media response")
 
             import base64
 
             media_data = base64.b64decode(response_data["base64"])
+            media_size = len(media_data)
 
-            logger.debug(f"Media downloaded successfully: {media_id}")
+            logger.info(
+                f"Media downloaded successfully: {media_id} ({media_size} bytes)",
+                extra={"media_id": media_id, "size_bytes": media_size},
+            )
             return media_data
 
         except EvolutionAPIError:
+            logger.error(f"Evolution API error while downloading media {media_id}")
             raise
         except Exception as e:
-            logger.error(f"Failed to download media {media_id}: {e}")
+            logger.error(
+                f"Failed to download media {media_id}: {type(e).__name__}: {e}",
+                extra={"media_id": media_id, "error_type": type(e).__name__},
+            )
             raise EvolutionAPIError(f"Failed to download media: {e}")
 
     def get_webhook_url(self) -> str:
         """Get the webhook URL for this provider."""
-        return self.config.webhook_url or ""
+        webhook_url = self.config.webhook_url or ""
+        logger.debug(f"Retrieved webhook URL: {webhook_url}")
+        return webhook_url
 
     async def set_webhook_url(self, url: str) -> None:
         """Set the webhook URL for receiving messages."""
+        logger.info(f"Setting webhook URL: {url}")
+
         try:
             webhook_config = {
                 "webhook": {
@@ -597,12 +1002,23 @@ class EvolutionAPIProvider(WhatsAppProvider):
             await self._make_request("PUT", api_url, webhook_config)
 
             self.config.webhook_url = url
-            logger.info(f"Webhook URL set successfully: {url}")
+            logger.info(
+                f"Webhook URL set successfully: {url}",
+                extra={
+                    "webhook_url": url,
+                    "instance_name": self.config.instance_name,
+                    "events": webhook_config["webhook"]["events"],
+                },
+            )
 
         except EvolutionAPIError:
+            logger.error(f"Evolution API error while setting webhook URL: {url}")
             raise
         except Exception as e:
-            logger.error(f"Failed to set webhook URL: {e}")
+            logger.error(
+                f"Failed to set webhook URL: {url}: {type(e).__name__}: {e}",
+                extra={"webhook_url": url, "error_type": type(e).__name__},
+            )
             raise EvolutionAPIError(f"Failed to set webhook URL: {e}")
 
     def _normalize_phone(self, phone: str) -> str:
@@ -611,6 +1027,8 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
         Evolution API expects phone numbers in the format: countrycode+number@s.whatsapp.net
         """
+        original_phone = phone
+
         # Remove non-numeric characters
         phone = "".join(c for c in phone if c.isdigit())
 
@@ -623,6 +1041,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
         if not phone.endswith("@s.whatsapp.net"):
             phone = phone + "@s.whatsapp.net"
 
+        if original_phone != phone:
+            logger.debug(f"Phone number normalized: {original_phone} -> {phone}")
+
         return phone
 
     def get_stats(self) -> Mapping[str, Any]:
@@ -632,16 +1053,20 @@ class EvolutionAPIProvider(WhatsAppProvider):
         Returns:
             Dictionary with provider statistics
         """
+        logger.debug("Retrieving provider statistics")
+
         base_stats: Mapping[str, Any] = {
             "instance_name": self.config.instance_name,
             "base_url": self.config.base_url,
             "webhook_url": self.config.webhook_url,
             "timeout": self.config.timeout,
             "session_ttl_seconds": self.session_ttl_seconds,
+            "has_active_session": self._session is not None,
         }
 
         # Add session manager stats
         session_stats = self.session_manager.get_stats()
         base_stats["session_stats"] = session_stats
 
+        logger.debug(f"Provider statistics: {base_stats}")
         return base_stats
