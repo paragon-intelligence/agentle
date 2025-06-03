@@ -479,7 +479,7 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
             payload: Mapping[str, Any] = {
                 "number": normalized_to,
-                "textMessage": {"text": text},
+                "text": text,
             }
 
             if quoted_message_id:
