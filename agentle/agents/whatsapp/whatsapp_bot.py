@@ -5,9 +5,11 @@ import logging
 from collections.abc import Callable, MutableSequence, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+
 from rsb.coroutines.run_sync import run_sync
-from agentle.agents.context import Context
+
 from agentle.agents.agent_protocol import AgentProtocol
+from agentle.agents.context import Context
 from agentle.agents.whatsapp.models.whatsapp_bot_config import WhatsAppBotConfig
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
 from agentle.agents.whatsapp.models.whatsapp_message import WhatsAppMessage
@@ -20,8 +22,8 @@ from agentle.agents.whatsapp.providers.base.whatsapp_provider import WhatsAppPro
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.sessions.session_manager import SessionManager
 from agentle.sessions.in_memory_session_store import InMemorySessionStore
+from agentle.sessions.session_manager import SessionManager
 
 if TYPE_CHECKING:
     from blacksheep import Application
@@ -164,11 +166,11 @@ class WhatsAppBot:
             await self.provider.validate_webhook(payload)
 
             # Handle different event types
-            if payload.event_type == "messages.upsert":
+            if payload.event == "messages.upsert":
                 await self._handle_message_upsert(payload)
-            elif payload.event_type == "messages.update":
+            elif payload.event == "messages.update":
                 await self._handle_message_update(payload)
-            elif payload.event_type == "connection.update":
+            elif payload.event == "connection.update":
                 await self._handle_connection_update(payload)
 
             # Call custom handlers
@@ -410,7 +412,7 @@ class WhatsAppBot:
     async def _handle_message_upsert(self, payload: WhatsAppWebhookPayload) -> None:
         """Handle new message event."""
         data = payload.data
-        if not data:
+        if data is None:
             raise ValueError("No data in webhook payload")
 
         # Extract message from Evolution API format

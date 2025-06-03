@@ -520,11 +520,11 @@ class EvolutionAPIProvider(WhatsAppProvider):
         """Process incoming webhook data from Evolution API."""
         try:
             # Evolution API webhook structure validation
-            event_type = payload.event_type
+            event_type = payload.event
             if event_type is None:
                 raise EvolutionAPIError("Event type is required in webhook payload")
 
-            instance_name = payload.instance_id
+            instance_name = payload.instance
             if instance_name is None:
                 raise EvolutionAPIError("Instance name is required in webhook payload")
 
