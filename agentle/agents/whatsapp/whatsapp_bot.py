@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from rsb.coroutines.run_sync import run_sync
 
+from agentle.agents.agent_input import AgentInput
 from agentle.agents.agent_protocol import AgentProtocol
 from agentle.agents.context import Context
 from agentle.agents.whatsapp.models.data import Data
@@ -334,7 +335,7 @@ class WhatsAppBot:
         return context
 
     async def _process_with_agent(
-        self, agent_input: Any, session: WhatsAppSession
+        self, agent_input: AgentInput, session: WhatsAppSession
     ) -> str:
         """Process input with agent and return response text."""
         try:
@@ -342,13 +343,15 @@ class WhatsAppBot:
             result = await self.agent.run_async(agent_input)
 
             # Save the updated context after agent processing
-            if hasattr(result, "context") and hasattr(agent_input, "context_id"):
+            if result.context and hasattr(agent_input, "context_id"):
                 await self.context_manager.update_session(
-                    agent_input.context_id,
+                    cast(Context, agent_input).context_id,
                     result.context,  # The updated context from agent execution
                     create_if_missing=True,
                 )
-                logger.debug(f"Saved updated context: {agent_input.context_id}")
+                logger.debug(
+                    f"Saved updated context: {cast(Context, agent_input).context_id}"
+                )
 
             if result.generation:
                 return result.text
@@ -427,8 +430,8 @@ class WhatsAppBot:
             data = payload.data
 
             # Skip outgoing messages
-            # if data["key"].get("fromMe", False):
-            #     return
+            if data["key"].get("fromMe", False):
+                return
 
             # Parse message directly from data (which contains the message info)
             message = self._parse_evolution_message_from_data(data)

@@ -428,9 +428,7 @@ class EvolutionAPIProvider(WhatsAppProvider):
             )
 
         except EvolutionAPIError:
-            logger.error(
-                f"Failed to initialize Evolution API provider due to API error"
-            )
+            logger.error("Failed to initialize Evolution API provider due to API error")
             raise
         except Exception as e:
             logger.error(
@@ -556,10 +554,10 @@ class EvolutionAPIProvider(WhatsAppProvider):
         try:
             # Determine endpoint based on media type
             endpoint_map = {
-                "image": "sendImage",
-                "document": "sendDocument",
-                "audio": "sendAudio",
-                "video": "sendVideo",
+                "image": "sendMedia",
+                "document": "sendMedia",
+                "audio": "sendWhatsappAudio",
+                "video": "sendMedia",
             }
 
             endpoint = endpoint_map.get(media_type)
@@ -575,6 +573,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
             payload: MutableMapping[str, Any] = {
                 "number": normalized_to,
+                "mediatype": media_type,
+                "mimetype": f"{media_type}/*",
+                "caption": caption or "",
                 "mediaMessage": {
                     "mediaurl": media_url
                 },  # Note: Evolution API uses "mediaurl" not "mediaUrl"
@@ -661,10 +662,19 @@ class EvolutionAPIProvider(WhatsAppProvider):
             normalized_to = self._normalize_phone(to)
             payload = {
                 "number": normalized_to,
-                "delay": duration * 1000,  # Evolution API expects milliseconds
+                "presence": "composing",
+                "delay": duration * 1000,
+                "options": {
+                    "delay": duration * 1000,
+                    "presence": "composing",
+                    "number": normalized_to,
+                },  # Evolution API expects milliseconds
             }
 
-            url = self._build_url(f"sendPresence/{self.config.instance_name}")
+            url = self._build_url(
+                f"chat/sendPresence/{self.config.instance_name}",
+                use_message_prefix=False,
+            )
             await self._make_request("POST", url, payload, expected_status=201)
 
             logger.debug(
@@ -751,7 +761,8 @@ class EvolutionAPIProvider(WhatsAppProvider):
 
             # Use the correct endpoint for fetching profile
             url = self._build_url(
-                f"chat/fetchProfile/{self.config.instance_name}", use_message_prefix=False
+                f"chat/fetchProfile/{self.config.instance_name}",
+                use_message_prefix=False,
             )
             payload = {"number": normalized_phone}
 
@@ -939,9 +950,11 @@ class EvolutionAPIProvider(WhatsAppProvider):
         try:
             # Use the correct endpoint for downloading media
             url = self._build_url(
-                f"getBase64FromMediaMessage/{self.config.instance_name}"
+                f"chat/getBase64FromMediaMessage/{self.config.instance_name}",
+                use_message_prefix=False,
             )
-            payload = {"key": {"id": media_id}}
+    
+            payload = {"message": {"key": {"id": media_id}}}
 
             response_data = await self._make_request("POST", url, payload)
 

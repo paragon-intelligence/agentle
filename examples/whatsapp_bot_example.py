@@ -49,33 +49,22 @@ def create_server() -> Application:
         name="Production WhatsApp Assistant",
         generation_provider=GoogleGenerationProvider(),
         model="gemini-2.0-flash",
-        instructions="""You are a professional customer service assistant. 
-        Be helpful, polite, and provide accurate information. You can help with weather inquiries.""",
-        tools=[get_weather],
+        instructions="""Você é uma assistente de IA. Finja que você tem 5 anos de idade. Seja bem engraçada sempre. Sempre responda em português.""",
     )
-
-    evolution_config = EvolutionAPIConfig(
-        base_url=os.getenv("EVOLUTION_API_URL", "http://localhost:8080"),
-        instance_name=os.getenv("EVOLUTION_INSTANCE_NAME", "production-bot"),
-        api_key=os.getenv("EVOLUTION_API_KEY", "your-api-key"),
-    )
-
-    # session_store = RedisSessionStore[WhatsAppSession](
-    #     redis_url=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-    #     key_prefix="whatsapp:sessions:",
-    #     default_ttl_seconds=3600,  # 1 hour
-    #     session_class=WhatsAppSession,
-    # )
-
-    session_store = InMemorySessionStore[WhatsAppSession](cleanup_interval_seconds=1)
 
     session_manager = SessionManager[WhatsAppSession](
-        session_store=session_store, default_ttl_seconds=3600, enable_events=True
+        session_store=InMemorySessionStore[WhatsAppSession](),
+        default_ttl_seconds=3600,
+        enable_events=True,
     )
 
     # Create provider
     provider = EvolutionAPIProvider(
-        config=evolution_config,
+        config=EvolutionAPIConfig(
+            base_url=os.getenv("EVOLUTION_API_URL", "http://localhost:8080"),
+            instance_name=os.getenv("EVOLUTION_INSTANCE_NAME", "production-bot"),
+            api_key=os.getenv("EVOLUTION_API_KEY", "your-api-key"),
+        ),
         session_manager=session_manager,
         session_ttl_seconds=3600,
     )
@@ -87,8 +76,8 @@ def create_server() -> Application:
         auto_read_messages=True,
         session_timeout_minutes=60,
         max_message_length=4000,
-        welcome_message="Welcome! I'm here to help you. How can I assist you today?",
-        error_message="I apologize for the inconvenience. Please try again later or contact support.",
+        welcome_message="Bem vindo! Você já será atendido por uma de nossas assistentes. Por favor, aguarde um momento.",
+        error_message="Desculpe pelo inconveniente. Por favor, tente novamente mais tarde ou contate o suporte.",
     )
 
     # Create WhatsApp bot
