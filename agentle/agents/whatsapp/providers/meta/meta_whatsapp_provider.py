@@ -20,6 +20,7 @@ from agentle.agents.whatsapp.models.whatsapp_document_message import (
 )
 from agentle.agents.whatsapp.models.whatsapp_image_message import WhatsAppImageMessage
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
+from agentle.agents.whatsapp.models.whatsapp_message import WhatsAppMessage
 from agentle.agents.whatsapp.models.whatsapp_message_status import WhatsAppMessageStatus
 from agentle.agents.whatsapp.models.whatsapp_session import WhatsAppSession
 from agentle.agents.whatsapp.models.whatsapp_text_message import WhatsAppTextMessage
@@ -572,29 +573,147 @@ class MetaWhatsAppProvider(WhatsAppProvider):
         """Process incoming webhook data from Meta WhatsApp Business API."""
         try:
             # Verify webhook signature if needed
-            # Note: In a real implementation, you should verify the webhook signature
+            # TODO(arthur): verify the webhook signature
 
             # Meta webhook structure validation
             entry = payload.entry
             if not entry:
                 raise MetaWhatsAppError("No entry data in webhook payload")
 
-            changes = entry[0].get("changes", [])
-            if not changes:
-                raise MetaWhatsAppError("No changes data in webhook payload")
+            # Process each entry
+            for entry_item in entry:
+                changes = entry_item.get("changes", [])
+                if not changes:
+                    continue
 
-            change = changes[0]
-            field = change.get("field")
+                for change in changes:
+                    field = change.get("field")
+                    value = change.get("value", {})
 
-            logger.debug(
-                f"Processed webhook: {field} for phone {self.config.phone_number_id}"
-            )
+                    if field == "messages":
+                        # Process incoming messages
+                        await self._process_messages_webhook(value)
+                    elif field == "message_status":
+                        # Process message status updates
+                        await self._process_status_webhook(value)
+
+            logger.debug(f"Processed webhook for phone {self.config.phone_number_id}")
 
         except MetaWhatsAppError:
             raise
         except Exception as e:
             logger.error(f"Failed to process webhook: {e}")
             raise MetaWhatsAppError(f"Failed to process webhook: {e}")
+
+    async def _process_messages_webhook(self, value: dict[str, Any]) -> None:
+        """Process incoming messages from Meta webhook."""
+        try:
+            messages = value.get("messages", [])
+            for msg_data in messages:
+                # Skip if not a user message
+                if msg_data.get("from") == self.config.phone_number_id:
+                    continue
+
+                message = await self._parse_meta_message(msg_data)
+                if message:
+                    # Create a bot instance or get existing one to handle message
+                    # This would need to be coordinated with WhatsAppBot
+                    logger.info(f"Received message from Meta API: {message.id}")
+
+        except Exception as e:
+            logger.error(f"Error processing messages webhook: {e}")
+
+    async def _process_status_webhook(self, value: dict[str, Any]) -> None:
+        """Process message status updates from Meta webhook."""
+        try:
+            statuses = value.get("statuses", [])
+            for status_data in statuses:
+                message_id = status_data.get("id")
+                status = status_data.get("status")
+                logger.debug(f"Message {message_id} status: {status}")
+
+        except Exception as e:
+            logger.error(f"Error processing status webhook: {e}")
+
+    async def _parse_meta_message(
+        self, msg_data: dict[str, Any]
+    ) -> WhatsAppMessage | None:
+        """Parse Meta API message format."""
+        try:
+            message_id = msg_data.get("id")
+            from_number = msg_data.get("from")
+            timestamp_str = msg_data.get("timestamp")
+
+            if not message_id or not from_number:
+                return None
+
+            # Convert timestamp
+            timestamp = (
+                datetime.fromtimestamp(int(timestamp_str))
+                if timestamp_str
+                else datetime.now()
+            )
+
+            # Handle different message types
+            msg_type = msg_data.get("type")
+
+            if msg_type == "text":
+                text_data = msg_data.get("text", {})
+                text = text_data.get("body", "")
+
+                return WhatsAppTextMessage(
+                    id=message_id,
+                    from_number=from_number,
+                    to_number=self.config.phone_number_id,
+                    timestamp=timestamp,
+                    text=text,
+                )
+
+            elif msg_type == "image":
+                image_data = msg_data.get("image", {})
+
+                return WhatsAppImageMessage(
+                    id=message_id,
+                    from_number=from_number,
+                    to_number=self.config.phone_number_id,
+                    timestamp=timestamp,
+                    media_url="",  # Will be downloaded later
+                    media_mime_type=image_data.get("mime_type", "image/jpeg"),
+                    caption=image_data.get("caption"),
+                )
+
+            elif msg_type == "document":
+                doc_data = msg_data.get("document", {})
+
+                return WhatsAppDocumentMessage(
+                    id=message_id,
+                    from_number=from_number,
+                    to_number=self.config.phone_number_id,
+                    timestamp=timestamp,
+                    media_url="",  # Will be downloaded later
+                    media_mime_type=doc_data.get(
+                        "mime_type", "application/octet-stream"
+                    ),
+                    filename=doc_data.get("filename"),
+                    caption=doc_data.get("caption"),
+                )
+
+            elif msg_type == "audio":
+                audio_data = msg_data.get("audio", {})
+
+                return WhatsAppAudioMessage(
+                    id=message_id,
+                    from_number=from_number,
+                    to_number=self.config.phone_number_id,
+                    timestamp=timestamp,
+                    media_url="",  # Will be downloaded later
+                    media_mime_type=audio_data.get("mime_type", "audio/ogg"),
+                )
+
+        except Exception as e:
+            logger.error(f"Error parsing Meta message: {e}")
+
+        return None
 
     def verify_webhook_signature(self, payload_body: str, signature: str) -> bool:
         """

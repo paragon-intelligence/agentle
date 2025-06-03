@@ -4,12 +4,14 @@ import asyncio
 import logging
 from collections.abc import Callable, MutableSequence, Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from rsb.coroutines.run_sync import run_sync
 
 from agentle.agents.agent_protocol import AgentProtocol
 from agentle.agents.context import Context
+from agentle.agents.whatsapp.models.data import Data
+from agentle.agents.whatsapp.models.message import Message
 from agentle.agents.whatsapp.models.whatsapp_bot_config import WhatsAppBotConfig
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
 from agentle.agents.whatsapp.models.whatsapp_message import WhatsAppMessage
@@ -24,6 +26,11 @@ from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.sessions.in_memory_session_store import InMemorySessionStore
 from agentle.sessions.session_manager import SessionManager
+from agentle.agents.whatsapp.models.whatsapp_image_message import WhatsAppImageMessage
+from agentle.agents.whatsapp.models.whatsapp_document_message import (
+    WhatsAppDocumentMessage,
+)
+from agentle.agents.whatsapp.models.whatsapp_audio_message import WhatsAppAudioMessage
 
 if TYPE_CHECKING:
     from blacksheep import Application
@@ -165,13 +172,16 @@ class WhatsAppBot:
         try:
             await self.provider.validate_webhook(payload)
 
-            # Handle different event types
+            # Handle Evolution API events
             if payload.event == "messages.upsert":
                 await self._handle_message_upsert(payload)
             elif payload.event == "messages.update":
                 await self._handle_message_update(payload)
             elif payload.event == "connection.update":
                 await self._handle_connection_update(payload)
+            # Handle Meta API events
+            elif payload.entry:
+                await self._handle_meta_webhook(payload)
 
             # Call custom handlers
             for handler in self._webhook_handlers:
@@ -411,70 +421,261 @@ class WhatsAppBot:
 
     async def _handle_message_upsert(self, payload: WhatsAppWebhookPayload) -> None:
         """Handle new message event."""
-        data = payload.data
-        if data is None:
-            raise ValueError("No data in webhook payload")
+        # Check if this is Evolution API format
+        if payload.event == "messages.upsert" and payload.data:
+            # Evolution API format - single message in data field
+            data = payload.data
 
-        # Extract message from Evolution API format
-        for msg_data in data.get("messages", []):
             # Skip outgoing messages
-            if msg_data.get("key", {}).get("fromMe", False):
-                continue
+            # if data["key"].get("fromMe", False):
+            #     return
 
-            # Parse message
-            message = self._parse_evolution_message(msg_data)
+            # Parse message directly from data (which contains the message info)
+            message = self._parse_evolution_message_from_data(data)
             if message:
                 await self.handle_message(message)
 
+        # Check if this is Meta API format
+        elif payload.entry:
+            # Meta API format - handle through provider
+            await self.provider.validate_webhook(payload)
+            # Meta API provider should handle message parsing differently
+            # For now, we'll delegate this to the provider
+            pass
+        else:
+            logger.warning("Unknown webhook format in message upsert")
+
     async def _handle_message_update(self, payload: WhatsAppWebhookPayload) -> None:
         """Handle message update event (status changes)."""
-        # Log status updates for debugging
-        logger.debug(f"Message update: {payload.data}")
+        if payload.event == "messages.update" and payload.data:
+            # Evolution API format
+            logger.debug(f"Message update: {payload.data}")
+        elif payload.entry:
+            # Meta API format
+            logger.debug(f"Message update: {payload.entry}")
+        else:
+            logger.debug(f"Message update: {payload}")
 
     async def _handle_connection_update(self, payload: WhatsAppWebhookPayload) -> None:
         """Handle connection status update."""
-        data = payload.data
-        if not data:
-            raise ValueError("No data in webhook payload")
+        if payload.event == "connection.update" and payload.data:
+            # Evolution API format
+            # Note: connection updates might have different data structure
+            logger.info(f"WhatsApp connection update: {payload.data}")
+        elif payload.entry:
+            # Meta API format
+            logger.info(f"WhatsApp connection update: {payload.entry}")
+        else:
+            logger.info(f"WhatsApp connection update: {payload}")
 
-        state = data.get("state")
-        logger.info(f"WhatsApp connection state: {state}")
-
-    def _parse_evolution_message(
-        self, msg_data: dict[str, Any]
-    ) -> WhatsAppMessage | None:
-        """Parse Evolution API message format."""
+    def _parse_evolution_message_from_data(self, data: Data) -> WhatsAppMessage | None:
+        """Parse Evolution API message from webhook data field."""
         try:
-            key = msg_data.get("key", {})
+            # Extract key information
+            key = data["key"]
             message_id = key.get("id")
             from_number = key.get("remoteJid")
 
-            # Determine message type
-            if "message" in msg_data:
-                msg_content = msg_data["message"]
+            # Check if there's a message field
+            if data.get("message"):
+                msg_content = cast(Message, data.get("message"))
 
-                if (
-                    "conversation" in msg_content
-                    or "extendedTextMessage" in msg_content
-                ):
-                    # Text message
-                    text = msg_content.get("conversation") or msg_content.get(
-                        "extendedTextMessage", {}
-                    ).get("text", "")
-
+                # Handle text messages
+                if msg_content.get("conversation"):
+                    text = msg_content.get("conversation")
                     return WhatsAppTextMessage(
                         id=message_id,
                         from_number=from_number,
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
-                            msg_data.get("messageTimestamp", 0)
+                            getattr(data, "messageTimestamp", 0)
+                            / 1000  # Convert from milliseconds
+                        ),
+                        text=text or ".",
+                    )
+
+                # Handle extended text messages
+                elif msg_content.get("extendedTextMessage"):
+                    extended_text_message = msg_content.get("extendedTextMessage")
+                    text = (
+                        extended_text_message.get("text", "")
+                        if extended_text_message
+                        else ""
+                    )
+                    return WhatsAppTextMessage(
+                        id=message_id,
+                        from_number=from_number,
+                        to_number=self.provider.get_instance_identifier(),
+                        timestamp=datetime.fromtimestamp(
+                            getattr(data, "messageTimestamp", 0) / 1000
                         ),
                         text=text,
                     )
 
-                # Add more message type parsing as needed
+                # Handle image messages
+                elif msg_content.get("imageMessage"):
+                    image_msg = msg_content.get("imageMessage")
+                    return WhatsAppImageMessage(
+                        id=message_id,
+                        from_number=from_number,
+                        to_number=self.provider.get_instance_identifier(),
+                        timestamp=datetime.fromtimestamp(
+                            getattr(data, "messageTimestamp", 0) / 1000
+                        ),
+                        media_url=image_msg.get("url", "") if image_msg else "",
+                        media_mime_type=image_msg.get("mimetype", "image/jpeg")
+                        if image_msg
+                        else "image/jpeg",
+                        caption=image_msg.get("caption") if image_msg else "",
+                    )
+
+                # Handle document messages
+                elif msg_content.get("documentMessage"):
+                    doc_msg = msg_content.get("documentMessage")
+                    return WhatsAppDocumentMessage(
+                        id=message_id,
+                        from_number=from_number,
+                        to_number=self.provider.get_instance_identifier(),
+                        timestamp=datetime.fromtimestamp(
+                            getattr(data, "messageTimestamp", 0) / 1000
+                        ),
+                        media_url=doc_msg.get("url", "") if doc_msg else "",
+                        media_mime_type=doc_msg.get(
+                            "mimetype", "application/octet-stream"
+                        )
+                        if doc_msg
+                        else "application/octet-stream",
+                        filename=doc_msg.get("fileName") if doc_msg else "",
+                        caption=doc_msg.get("caption") if doc_msg else "",
+                    )
+
+                # Handle audio messages
+                elif msg_content.get("audioMessage"):
+                    audio_msg = msg_content.get("audioMessage")
+                    return WhatsAppAudioMessage(
+                        id=message_id,
+                        from_number=from_number,
+                        to_number=self.provider.get_instance_identifier(),
+                        timestamp=datetime.fromtimestamp(
+                            getattr(data, "messageTimestamp", 0) / 1000
+                        ),
+                        media_url=audio_msg.get("url", "") if audio_msg else "",
+                        media_mime_type=audio_msg.get("mimetype", "audio/ogg")
+                        if audio_msg
+                        else "audio/ogg",
+                    )
 
         except Exception as e:
-            logger.error(f"Error parsing message: {e}")
+            logger.error(f"Error parsing Evolution message from data: {e}")
+
+        return None
+
+    async def _handle_meta_webhook(self, payload: WhatsAppWebhookPayload) -> None:
+        """Handle Meta WhatsApp Business API webhooks."""
+        try:
+            if not payload.entry:
+                return
+
+            for entry_item in payload.entry:
+                changes = entry_item.get("changes", [])
+                for change in changes:
+                    field = change.get("field")
+                    value = change.get("value", {})
+
+                    if field == "messages":
+                        # Process incoming messages
+                        messages = value.get("messages", [])
+                        for msg_data in messages:
+                            # Skip outgoing messages
+                            if (
+                                msg_data.get("from")
+                                == self.provider.get_instance_identifier()
+                            ):
+                                continue
+
+                            message = await self._parse_meta_message(msg_data)
+                            if message:
+                                await self.handle_message(message)
+
+        except Exception as e:
+            logger.error(f"Error handling Meta webhook: {e}")
+
+    async def _parse_meta_message(
+        self, msg_data: dict[str, Any]
+    ) -> WhatsAppMessage | None:
+        """Parse Meta API message format."""
+        try:
+            message_id = msg_data.get("id")
+            from_number = msg_data.get("from")
+            timestamp_str = msg_data.get("timestamp")
+
+            if not message_id or not from_number:
+                return None
+
+            # Convert timestamp
+            timestamp = (
+                datetime.fromtimestamp(int(timestamp_str))
+                if timestamp_str
+                else datetime.now()
+            )
+
+            # Handle different message types
+            msg_type = msg_data.get("type")
+
+            if msg_type == "text":
+                text_data = msg_data.get("text", {})
+                text = text_data.get("body", "")
+
+                return WhatsAppTextMessage(
+                    id=message_id,
+                    from_number=from_number,
+                    to_number=self.provider.get_instance_identifier(),
+                    timestamp=timestamp,
+                    text=text,
+                )
+
+            elif msg_type == "image":
+                image_data = msg_data.get("image", {})
+
+                return WhatsAppImageMessage(
+                    id=message_id,
+                    from_number=from_number,
+                    to_number=self.provider.get_instance_identifier(),
+                    timestamp=timestamp,
+                    media_url=image_data.get("id", ""),  # Meta uses ID for media
+                    media_mime_type=image_data.get("mime_type", "image/jpeg"),
+                    caption=image_data.get("caption"),
+                )
+
+            elif msg_type == "document":
+                doc_data = msg_data.get("document", {})
+
+                return WhatsAppDocumentMessage(
+                    id=message_id,
+                    from_number=from_number,
+                    to_number=self.provider.get_instance_identifier(),
+                    timestamp=timestamp,
+                    media_url=doc_data.get("id", ""),  # Meta uses ID for media
+                    media_mime_type=doc_data.get(
+                        "mime_type", "application/octet-stream"
+                    ),
+                    filename=doc_data.get("filename"),
+                    caption=doc_data.get("caption"),
+                )
+
+            elif msg_type == "audio":
+                audio_data = msg_data.get("audio", {})
+
+                return WhatsAppAudioMessage(
+                    id=message_id,
+                    from_number=from_number,
+                    to_number=self.provider.get_instance_identifier(),
+                    timestamp=timestamp,
+                    media_url=audio_data.get("id", ""),  # Meta uses ID for media
+                    media_mime_type=audio_data.get("mime_type", "audio/ogg"),
+                )
+
+        except Exception as e:
+            logger.error(f"Error parsing Meta message: {e}")
 
         return None
