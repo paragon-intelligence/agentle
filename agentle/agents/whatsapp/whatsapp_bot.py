@@ -339,8 +339,9 @@ class WhatsAppBot:
     ) -> str:
         """Process input with agent and return response text."""
         try:
-            # Run agent with the full context
-            result = await self.agent.run_async(agent_input)
+            async with self.agent.start_mcp_servers_async():
+                # Run agent with the full context
+                result = await self.agent.run_async(agent_input)
 
             # Save the updated context after agent processing
             if result.context and hasattr(agent_input, "context_id"):
