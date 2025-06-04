@@ -642,7 +642,7 @@ response = agent.run(
 <img width="100%" alt="Trace Scores" src="https://github.com/user-attachments/assets/f0aab337-ead3-417b-97ef-0126c833d347" />
 
 
-# WhatsApp Integration Guide (experimental, not released in the current version v0.3.7)
+# WhatsApp Integration Guide (experimental, EvolutionAPI only)
 
 This guide explains how to use Agentle's WhatsApp integration to build production-ready WhatsApp bots with Evolution API.
 
@@ -659,26 +659,13 @@ Agentle's WhatsApp integration provides:
 
 ## Quick Start
 
-### 1. Install Dependencies
-
-```bash
-# Basic installation
-pip install agentle
-
-# For Redis session storage (production)
-pip install agentle[redis]
-
-# For complete WhatsApp support
-pip install agentle[whatsapp]
-```
-
-### 2. Set Up Evolution API
+### 1. Set Up Evolution API
 
 1. Install and run Evolution API server
 2. Create an instance in Evolution API
 3. Get your API key and instance name
 
-### 3. Basic Bot Example
+### 2. Basic Bot Example
 
 ```python
 import asyncio
