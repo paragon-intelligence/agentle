@@ -42,6 +42,6 @@ entrada = f"""
 Input: Cria uma OS pra mim para um novo sistema de pagamentos que chegou pra eu fazer.
 """
 
-exemplo_resposta = agente_siga.run(entrada)
+exemplo_resposta = agente_siga(entrada)
 
 print(exemplo_resposta.pretty_formatted())

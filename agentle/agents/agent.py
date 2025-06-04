@@ -101,6 +101,7 @@ from agentle.parsing.factories.file_parser_default_factory import (
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.prompts.models.prompt import Prompt
+from agentle.stt.providers.base.speech_to_text_provider import SpeechToTextProvider
 
 if TYPE_CHECKING:
     from blacksheep import Application
@@ -368,6 +369,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     """
     The suspension manager to use for Human-in-the-Loop workflows.
     If None, uses the default global suspension manager.
+    """
+
+    speech_to_text_provider: SpeechToTextProvider | None = Field(default=None)
+    """
+    The transcription provider to use for speech-to-text.
     """
 
     # Internal fields
@@ -1782,6 +1788,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 UserMessage(parts=[TextPart(text=text)]),  # type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]
             ]
         )
+
+
+    def __call__(self, input: AgentInput | Any) -> AgentRunOutput[T_Schema]:
+        return self.run(input)
 
     def __add__(self, other: Agent[Any]) -> AgentTeam:
         from agentle.agents.agent_team import AgentTeam
