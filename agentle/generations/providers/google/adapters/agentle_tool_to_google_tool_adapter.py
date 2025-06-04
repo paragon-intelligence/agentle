@@ -381,6 +381,21 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
             self._logger.debug(f"Converted to JSON Schema: {json_schema}")
             parameters_schema = self._create_schema_from_json_schema(json_schema)
 
+            # Detailed logging for debugging
+            if parameters_schema and parameters_schema.properties:
+                self._logger.debug(
+                    f"Tool '{agentle_tool.name}' has {len(parameters_schema.properties)} parameters:"
+                )
+                for param_name, param_schema in parameters_schema.properties.items():
+                    self._logger.debug(
+                        f"  - {param_name}: type={param_schema.type}, description='{param_schema.description}', default={param_schema.default}, required={param_name in (parameters_schema.required or [])}"
+                    )
+                self._logger.debug(
+                    f"Required parameters: {parameters_schema.required or []}"
+                )
+            else:
+                self._logger.debug(f"Tool '{agentle_tool.name}' has no parameters")
+
         # Create function declaration
         function_declaration = types.FunctionDeclaration(
             name=agentle_tool.name,
@@ -388,8 +403,8 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
             parameters=parameters_schema,
         )
 
-        self._logger.debug(
-            f"Created FunctionDeclaration for '{agentle_tool.name}' with parameters: {parameters_schema.properties if parameters_schema else 'None'}"
+        self._logger.info(
+            f"Successfully created FunctionDeclaration for '{agentle_tool.name}' with {len(parameters_schema.properties) if parameters_schema and parameters_schema.properties else 0} parameters"
         )
 
         # Create and return tool

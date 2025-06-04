@@ -1,12 +1,6 @@
-import logging
 from agentle.agents.agent import Agent
 from agentle.generations.providers.google.google_generation_provider import (
     GoogleGenerationProvider,
-)
-
-# Configure logging to show all debug logs
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 
@@ -35,12 +29,19 @@ agente_siga = Agent(
     tools=[listar_chamados_ativos, criar_chamado, atender_chamado],
 )
 
-exemplo_resposta = agente_siga.run(
-    """
-    Matricula: 25962
-    Input: Cria uma OS pra mim para um novo sistema de pagamentos que chegou pra eu fazer.
-    A descrição tem que ser 'chamado solicitado pela Karina'
-    """
-)
+# Vamos injetar isso no prompt do usuario.
+dados_usuario = """
+<dados>
+Matricula: 25962
+</dados>
+"""
+
+# Isso aqui viria um audio
+entrada = f"""
+{dados_usuario}
+Input: Cria uma OS pra mim para um novo sistema de pagamentos que chegou pra eu fazer.
+"""
+
+exemplo_resposta = agente_siga.run(entrada)
 
 print(exemplo_resposta.pretty_formatted())

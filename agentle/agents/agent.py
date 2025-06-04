@@ -103,6 +103,8 @@ from agentle.parsing.parsed_document import ParsedDocument
 from agentle.prompts.models.prompt import Prompt
 
 if TYPE_CHECKING:
+    from blacksheep import Application
+    from blacksheep.server.controllers import Controller
     from mcp.types import Tool as MCPTool
 
     from agentle.agents.agent_team import AgentTeam
@@ -1344,6 +1346,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         raise MaxToolCallsExceededError(
             f"Max tool calls exceeded after {self.agent_config.maxIterations} iterations"
         )
+
+    def to_api(self, *extra_routes: type[Controller]) -> Application:
+        from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import (
+            AgentToBlackSheepApplicationAdapter,
+        )
+
+        return AgentToBlackSheepApplicationAdapter(*extra_routes).adapt(self)
 
     def clone(
         self,
