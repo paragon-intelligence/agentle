@@ -1,4 +1,4 @@
-.PHONY: release docs clear-cache
+.PHONY: release docs clear-cache evolution evolution-down
 
 release:
 	uv run release.py
@@ -6,6 +6,12 @@ release:
 docs:
 	@echo "Gerando documentação..."
 	cd docs && make html
+
+evolution:
+	cd docker && docker compose up -d
+
+evolution-down:
+	cd docker && docker compose down
 
 clear-cache:
 	@echo "Removing Python cache files..."

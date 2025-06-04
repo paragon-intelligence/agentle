@@ -177,7 +177,7 @@ class Context(BaseModel):
             text: The text content of the developer message
         """
         message = DeveloperMessage(parts=[TextPart(text=text)])
-        self.message_history.append(message)
+        self.message_history.insert(0, message)
         self.execution_state.last_updated_at = datetime.now()
 
     def add_step(self, step: Step) -> None:

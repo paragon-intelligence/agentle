@@ -66,16 +66,12 @@ from agentle.agents.errors.max_tool_calls_exceeded_error import (
     MaxToolCallsExceededError,
 )
 from agentle.agents.errors.tool_suspension_error import ToolSuspensionError
-from agentle.agents.suspension_manager import (
-    get_default_suspension_manager,
-    SuspensionManager,
-)
 from agentle.agents.knowledge.static_knowledge import NO_CACHE, StaticKnowledge
-from agentle.parsing.cache.document_cache_store import DocumentCacheStore
-from agentle.parsing.cache.in_memory_document_cache_store import (
-    InMemoryDocumentCacheStore,
-)
 from agentle.agents.step import Step
+from agentle.agents.suspension_manager import (
+    SuspensionManager,
+    get_default_suspension_manager,
+)
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.trace_params import TraceParams
@@ -95,14 +91,21 @@ from agentle.generations.tools.tool import Tool
 
 # from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
+from agentle.parsing.cache.document_cache_store import DocumentCacheStore
+from agentle.parsing.cache.in_memory_document_cache_store import (
+    InMemoryDocumentCacheStore,
+)
 from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.factories.file_parser_default_factory import (
     file_parser_default_factory,
 )
 from agentle.parsing.parsed_document import ParsedDocument
 from agentle.prompts.models.prompt import Prompt
+from agentle.stt.providers.base.speech_to_text_provider import SpeechToTextProvider
 
 if TYPE_CHECKING:
+    from blacksheep import Application
+    from blacksheep.server.controllers import Controller
     from mcp.types import Tool as MCPTool
 
     from agentle.agents.agent_team import AgentTeam
@@ -366,6 +369,11 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     """
     The suspension manager to use for Human-in-the-Loop workflows.
     If None, uses the default global suspension manager.
+    """
+
+    speech_to_text_provider: SpeechToTextProvider | None = Field(default=None)
+    """
+    The transcription provider to use for speech-to-text.
     """
 
     # Internal fields
@@ -685,6 +693,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     def run(
         self,
         input: AgentInput | Any,
+        *,
         timeout: float | None = None,
         trace_params: TraceParams | None = None,
     ) -> AgentRunOutput[T_Schema]:
@@ -820,7 +829,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
 
     async def run_async(
-        self, input: AgentInput | Any, trace_params: TraceParams | None = None
+        self, input: AgentInput | Any, *, trace_params: TraceParams | None = None
     ) -> AgentRunOutput[T_Schema]:
         """
         Runs the agent asynchronously with the provided input.
@@ -1344,6 +1353,13 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             f"Max tool calls exceeded after {self.agent_config.maxIterations} iterations"
         )
 
+    def to_api(self, *extra_routes: type[Controller]) -> Application:
+        from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import (
+            AgentToBlackSheepApplicationAdapter,
+        )
+
+        return AgentToBlackSheepApplicationAdapter(*extra_routes).adapt(self)
+
     def clone(
         self,
         *,
@@ -1505,6 +1521,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         if isinstance(input, Context):
             # If it's already a Context, return it as is.
+            input.add_developer_message(instructions)
             return input
         elif isinstance(input, UserMessage):
             # If it's a UserMessage, prepend the developer instructions.
@@ -1771,6 +1788,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 UserMessage(parts=[TextPart(text=text)]),  # type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]
             ]
         )
+
+
+    def __call__(self, input: AgentInput | Any) -> AgentRunOutput[T_Schema]:
+        return self.run(input)
 
     def __add__(self, other: Agent[Any]) -> AgentTeam:
         from agentle.agents.agent_team import AgentTeam

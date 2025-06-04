@@ -25,12 +25,15 @@ agent = Agent(
 ```
 """
 
+from __future__ import annotations
+
 from typing import Self
-from agentle.generations.models.generation.generation_config import GenerationConfig
+
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 from rsb.models.model_validator import model_validator
 
+from agentle.generations.models.generation.generation_config import GenerationConfig
 from agentle.generations.models.generation.generation_config_dict import (
     GenerationConfigDict,
 )
@@ -79,6 +82,18 @@ class AgentConfig(BaseModel):
 
     maxIterations: int = Field(default=10)
     """Maximum number of agent reasoning iterations before terminating."""
+
+    def clone(
+        self,
+        new_generation_config: GenerationConfig | GenerationConfigDict | None = None,
+        new_max_tool_calls: int | None = None,
+        new_max_iterations: int | None = None,
+    ) -> AgentConfig:
+        return AgentConfig(
+            generationConfig=new_generation_config or self.generationConfig,
+            maxToolCalls=new_max_tool_calls or self.maxToolCalls,
+            maxIterations=new_max_iterations or self.maxIterations,
+        )
 
     @property
     def generation_config(self) -> GenerationConfig:

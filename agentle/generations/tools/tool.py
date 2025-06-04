@@ -38,6 +38,7 @@ from __future__ import annotations
 import base64
 import inspect
 from collections.abc import Awaitable, Callable, MutableSequence
+import logging
 from typing import TYPE_CHECKING, Any, Literal
 
 from rsb.coroutines.run_sync import run_sync
@@ -52,6 +53,8 @@ from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
 if TYPE_CHECKING:
     from mcp.types import Tool as MCPTool
     from agentle.agents.context import Context
+
+_logger = logging.getLogger(__name__)
 
 
 class Tool[T_Output = Any](BaseModel):
@@ -247,44 +250,59 @@ class Tool[T_Output = Any](BaseModel):
             print(result)  # Output: 8
             ```
         """
+        _logger.debug(f"Calling tool '{self.name}' with arguments: {kwargs}")
+
         if self._callable_ref is None:
+            _logger.error(f"Tool '{self.name}' is not callable - missing _callable_ref")
             raise ValueError(
                 'Tool is not callable because the "_callable_ref" instance variable is not set'
             )
 
-        # Execute before_call callback with context if available
-        if self._before_call is not None:
-            if inspect.iscoroutinefunction(self._before_call):
-                if context is not None:
-                    await self._before_call(context=context, **kwargs)
+        try:
+            # Execute before_call callback with context if available
+            if self._before_call is not None:
+                _logger.debug(f"Executing before_call callback for tool '{self.name}'")
+                if inspect.iscoroutinefunction(self._before_call):
+                    if context is not None:
+                        await self._before_call(context=context, **kwargs)
+                    else:
+                        await self._before_call(**kwargs)
                 else:
-                    await self._before_call(**kwargs)
+                    if context is not None:
+                        self._before_call(context=context, **kwargs)
+                    else:
+                        self._before_call(**kwargs)
+
+            # Execute the main function
+            _logger.debug(f"Executing main function for tool '{self.name}'")
+            if inspect.iscoroutinefunction(self._callable_ref):
+                ret: T_Output = await self._callable_ref(**kwargs)  # type: ignore
             else:
-                if context is not None:
-                    self._before_call(context=context, **kwargs)
-                else:
-                    self._before_call(**kwargs)
+                ret: T_Output = self._callable_ref(**kwargs)  # type: ignore
 
-        # Execute the main function
-        if inspect.iscoroutinefunction(self._callable_ref):
-            ret: T_Output = await self._callable_ref(**kwargs)  # type: ignore
-        else:
-            ret: T_Output = self._callable_ref(**kwargs)  # type: ignore
+            _logger.info(f"Tool '{self.name}' executed successfully")
 
-        # Execute after_call callback with context and result if available
-        if self._after_call is not None:
-            if inspect.iscoroutinefunction(self._after_call):
-                if context is not None:
-                    await self._after_call(context=context, result=ret, **kwargs)
+            # Execute after_call callback with context and result if available
+            if self._after_call is not None:
+                _logger.debug(f"Executing after_call callback for tool '{self.name}'")
+                if inspect.iscoroutinefunction(self._after_call):
+                    if context is not None:
+                        await self._after_call(context=context, result=ret, **kwargs)
+                    else:
+                        await self._after_call(result=ret, **kwargs)
                 else:
-                    await self._after_call(result=ret, **kwargs)
-            else:
-                if context is not None:
-                    self._after_call(context=context, result=ret, **kwargs)
-                else:
-                    self._after_call(result=ret, **kwargs)
+                    if context is not None:
+                        self._after_call(context=context, result=ret, **kwargs)
+                    else:
+                        self._after_call(result=ret, **kwargs)
 
-        return ret
+            return ret
+
+        except Exception as e:
+            _logger.error(
+                f"Error executing tool '{self.name}': {str(e)}", exc_info=True
+            )
+            raise
 
     @classmethod
     def from_mcp_tool(
@@ -316,6 +334,8 @@ class Tool[T_Output = Any](BaseModel):
             search_tool = Tool.from_mcp_tool(mcp_tool)
             ```
         """
+        _logger.debug(f"Creating Tool from MCP tool: {mcp_tool.name}")
+
         from mcp.types import (
             BlobResourceContents,
             CallToolResult,
@@ -325,48 +345,71 @@ class Tool[T_Output = Any](BaseModel):
             TextResourceContents,
         )
 
-        tool = cls(
-            name=mcp_tool.name,
-            description=mcp_tool.description,
-            parameters=mcp_tool.inputSchema,
-        )
-        tool._server = server
-
-        async def _callable_ref(**kwargs: object) -> Any:
-            call_tool_result: CallToolResult = await server.call_tool_async(
-                tool_name=mcp_tool.name,
-                arguments=kwargs,
+        try:
+            tool = cls(
+                name=mcp_tool.name,
+                description=mcp_tool.description,
+                parameters=mcp_tool.inputSchema,
             )
+            tool._server = server
 
-            contents: MutableSequence[str | FilePart] = []
+            async def _callable_ref(**kwargs: object) -> Any:
+                _logger.debug(f"Calling MCP tool '{mcp_tool.name}' with server")
+                try:
+                    call_tool_result: CallToolResult = await server.call_tool_async(
+                        tool_name=mcp_tool.name,
+                        arguments=kwargs,
+                    )
 
-            for content in call_tool_result.content:
-                match content:
-                    case TextContent():
-                        contents.append(content.text)
-                    case ImageContent():
-                        contents.append(
-                            FilePart(
-                                data=base64.b64decode(content.data),
-                                mime_type=content.mimeType,
-                            )
-                        )
-                    case EmbeddedResource():
-                        match content.resource:
-                            case TextResourceContents():
-                                contents.append(content.resource.text)
-                            case BlobResourceContents():
+                    contents: MutableSequence[str | FilePart] = []
+
+                    for content in call_tool_result.content:
+                        match content:
+                            case TextContent():
+                                contents.append(content.text)
+                            case ImageContent():
                                 contents.append(
                                     FilePart(
-                                        data=base64.b64decode(content.resource.blob),
-                                        mime_type="application/octet-stream",
+                                        data=base64.b64decode(content.data),
+                                        mime_type=content.mimeType,
                                     )
                                 )
+                            case EmbeddedResource():
+                                match content.resource:
+                                    case TextResourceContents():
+                                        contents.append(content.resource.text)
+                                    case BlobResourceContents():
+                                        contents.append(
+                                            FilePart(
+                                                data=base64.b64decode(
+                                                    content.resource.blob
+                                                ),
+                                                mime_type="application/octet-stream",
+                                            )
+                                        )
 
-            return contents
+                    _logger.debug(
+                        f"MCP tool '{mcp_tool.name}' returned {len(contents)} content items"
+                    )
+                    return contents
 
-        tool._callable_ref = _callable_ref
-        return tool
+                except Exception as e:
+                    _logger.error(
+                        f"Error calling MCP tool '{mcp_tool.name}': {str(e)}",
+                        exc_info=True,
+                    )
+                    raise
+
+            tool._callable_ref = _callable_ref
+            _logger.info(f"Successfully created Tool from MCP tool: {mcp_tool.name}")
+            return tool
+
+        except Exception as e:
+            _logger.error(
+                f"Error creating Tool from MCP tool '{mcp_tool.name}': {str(e)}",
+                exc_info=True,
+            )
+            raise
 
     @classmethod
     def from_callable(
@@ -408,54 +451,77 @@ class Tool[T_Output = Any](BaseModel):
             ```
         """
         name = getattr(_callable, "__name__", "anonymous_function")
-        description = _callable.__doc__ or "No description available"
+        _logger.debug(f"Creating Tool from callable function: {name}")
 
-        # Extrair informações dos parâmetros da função
-        parameters: dict[str, object] = {}
-        signature = inspect.signature(_callable)
+        try:
+            description = _callable.__doc__ or "No description available"
 
-        for param_name, param in signature.parameters.items():
-            # Ignorar parâmetros do tipo self/cls para métodos
-            if (
-                param_name in ("self", "cls")
-                and param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-            ):
-                continue
+            # Extrair informações dos parâmetros da função
+            parameters: dict[str, object] = {}
+            signature = inspect.signature(_callable)
+            _logger.debug(
+                f"Analyzing {len(signature.parameters)} parameters for function '{name}'"
+            )
 
-            param_info: dict[str, object] = {"type": "object"}
+            for param_name, param in signature.parameters.items():
+                # Ignorar parâmetros do tipo self/cls para métodos
+                if (
+                    param_name in ("self", "cls")
+                    and param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+                ):
+                    _logger.debug(f"Skipping {param_name} parameter (self/cls)")
+                    continue
 
-            # Adicionar informações de tipo se disponíveis
-            if param.annotation != inspect.Parameter.empty:
-                param_type = (
-                    str(param.annotation).replace("<class '", "").replace("'>", "")
-                )
-                param_info["type"] = param_type
+                param_info: dict[str, object] = {"type": "object"}
 
-            # Adicionar valor padrão se disponível
-            if param.default != inspect.Parameter.empty:
-                param_info["default"] = param.default
+                # Adicionar informações de tipo se disponíveis
+                if param.annotation != inspect.Parameter.empty:
+                    param_type = (
+                        str(param.annotation).replace("<class '", "").replace("'>", "")
+                    )
+                    param_info["type"] = param_type
+                    _logger.debug(
+                        f"Parameter '{param_name}' has type annotation: {param_type}"
+                    )
 
-            # Determinar se o parâmetro é obrigatório
-            if param.default == inspect.Parameter.empty and param.kind in (
-                inspect.Parameter.POSITIONAL_ONLY,
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            ):
-                param_info["required"] = True
+                # Adicionar valor padrão se disponível
+                if param.default != inspect.Parameter.empty:
+                    param_info["default"] = param.default
+                    _logger.debug(
+                        f"Parameter '{param_name}' has default value: {param.default}"
+                    )
 
-            parameters[param_name] = param_info
+                # Determinar se o parâmetro é obrigatório
+                if param.default == inspect.Parameter.empty and param.kind in (
+                    inspect.Parameter.POSITIONAL_ONLY,
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                ):
+                    param_info["required"] = True
+                    _logger.debug(f"Parameter '{param_name}' is required")
 
-        instance = cls(
-            name=name,
-            description=description,
-            parameters=parameters,
-        )
+                parameters[param_name] = param_info
 
-        # Definir o atributo privado após a criação da instância
-        instance._callable_ref = _callable
-        instance._before_call = before_call
-        instance._after_call = after_call
+            instance = cls(
+                name=name,
+                description=description,
+                parameters=parameters,
+            )
 
-        return instance
+            # Definir o atributo privado após a criação da instância
+            instance._callable_ref = _callable
+            instance._before_call = before_call
+            instance._after_call = after_call
+
+            _logger.info(
+                f"Successfully created Tool from callable: {name} with {len(parameters)} parameters"
+            )
+            return instance
+
+        except Exception as e:
+            _logger.error(
+                f"Error creating Tool from callable '{name}': {str(e)}", exc_info=True
+            )
+            raise
 
     def __str__(self) -> str:
         return self.text

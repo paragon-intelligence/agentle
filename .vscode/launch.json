@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: BlackSheep",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "env": {
+                "db_username": "postgres",
+                "db_password": "secret",
+                "host_server": "localhost",
+                "database_name": "blacksheep",
+                "ssl_mode": "prefer",
+                "db_server_port": "5432"
+            },
+            "args": [
+                "examples.whatsapp_bot_example:app",
+                "--port",
+                "8000"
+            ]
+        }
+    ]
+}
