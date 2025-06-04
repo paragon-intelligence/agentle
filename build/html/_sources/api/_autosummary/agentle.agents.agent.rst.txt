@@ -54,6 +54,7 @@ agentle.agents.agent
       Prompt
       RunState
       Sequence
+      SpeechToTextProvider
       StaticKnowledge
       Step
       StringIO
