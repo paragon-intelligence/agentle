@@ -166,3 +166,107 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
         Whether this suspended execution can be resumed.
         """
         return self.is_suspended and self.resumption_token is not None
+
+    def pretty_formatted(self) -> str:
+        """
+        Returns a pretty formatted string representation of the AgentRunOutput.
+
+        This method provides a comprehensive view of the agent execution result,
+        including all attributes, properties, and execution state information.
+
+        Returns:
+            str: A formatted string containing all relevant information about the agent run output.
+        """
+        lines: list[str] = []
+        lines.append("=" * 60)
+        lines.append("AGENT RUN OUTPUT")
+        lines.append("=" * 60)
+
+        # Execution Status
+        lines.append("\n📊 EXECUTION STATUS:")
+        lines.append(f"   • Completed: {self.is_completed}")
+        lines.append(f"   • Suspended: {self.is_suspended}")
+        lines.append(f"   • Can Resume: {self.can_resume}")
+
+        # Suspension Information
+        if self.is_suspended:
+            lines.append("\n⏸️  SUSPENSION DETAILS:")
+            lines.append(f"   • Reason: {self.suspension_reason or 'Not specified'}")
+            lines.append(
+                f"   • Resumption Token: {self.resumption_token or 'Not available'}"
+            )
+
+        # Generation Information
+        lines.append("\n🤖 GENERATION:")
+        if self.generation is not None:
+            lines.append("   • Has Generation: Yes")
+            lines.append(f"   • Text Length: {len(self.generation.text)} characters")
+            lines.append(
+                f"   • Text Preview: {self.generation.text[:100]}{'...' if len(self.generation.text) > 100 else ''}"
+            )
+
+            # Additional generation attributes if available
+            model = getattr(self.generation, "model", None)
+            if model:
+                lines.append(f"   • Model: {model}")
+
+            finish_reason = getattr(self.generation, "finish_reason", None)
+            if finish_reason:
+                lines.append(f"   • Finish Reason: {finish_reason}")
+
+            usage = getattr(self.generation, "usage", None)
+            if usage:
+                lines.append(f"   • Usage: {usage}")
+        else:
+            lines.append("   • Has Generation: No")
+
+        # Text Property
+        lines.append("\n📝 TEXT RESPONSE:")
+        if self.text:
+            lines.append(f"   • Length: {len(self.text)} characters")
+            lines.append(
+                f"   • Content: {self.text[:200]}{'...' if len(self.text) > 200 else ''}"
+            )
+        else:
+            lines.append("   • Content: (empty)")
+
+        # Parsed/Structured Output
+        lines.append("\n🏗️  STRUCTURED OUTPUT:")
+        if self.parsed is not None:
+            lines.append("   • Has Parsed Data: Yes")
+            lines.append("   • Type: {type(self.parsed).__name__}")
+            lines.append(
+                f"   • Content: {str(self.parsed)[:200]}{'...' if len(str(self.parsed)) > 200 else ''}"
+            )
+        else:
+            lines.append("   • Has Parsed Data: No")
+
+        # Context Information
+        lines.append("\n💬 CONTEXT:")
+        if self.context:
+            lines.append("   • Has Context: Yes")
+
+            steps = getattr(self.context, "steps", None)
+            if steps:
+                lines.append(f"   • Number of Steps: {len(steps)}")
+                lines.append(
+                    f"   • Step Types: {[step.step_type for step in steps[:5]]}"
+                )
+                if len(steps) > 5:
+                    lines.append(f"     (showing first 5 of {len(steps)} steps)")
+            else:
+                lines.append("   • Number of Steps: 0")
+
+            messages = getattr(self.context, "messages", None)
+            if messages:
+                lines.append(f"   • Number of Messages: {len(messages)}")
+
+            state = getattr(self.context, "state", None)
+            if state:
+                lines.append(f"   • State: {state}")
+        else:
+            lines.append("   • Has Context: No")
+
+        lines.append("\n" + "=" * 60)
+
+        return "\n".join(lines)
