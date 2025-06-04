@@ -287,6 +287,69 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
 
         return schema
 
+    def _convert_agentle_params_to_json_schema(
+        self, agentle_params: Mapping[str, Any]
+    ) -> dict[str, Any]:
+        """
+        Convert Agentle's flat parameter format to proper JSON Schema format.
+
+        Agentle format:
+        {
+            'param1': {'type': 'str', 'required': True, 'description': '...'},
+            'param2': {'type': 'int', 'required': False, 'default': 42}
+        }
+
+        JSON Schema format:
+        {
+            'type': 'object',
+            'properties': {
+                'param1': {'type': 'string', 'description': '...'},
+                'param2': {'type': 'integer', 'default': 42}
+            },
+            'required': ['param1']
+        }
+        """
+        # Check if this is already in JSON Schema format
+        if "type" in agentle_params and "properties" in agentle_params:
+            return dict(agentle_params)
+
+        # Convert from Agentle flat format to JSON Schema format
+        properties: dict[str, Any] = {}
+        required: list[str] = []
+
+        for param_name, param_info in agentle_params.items():
+            if not isinstance(param_info, dict):
+                continue
+
+            # Validate parameter name
+            self._validate_parameter_name(param_name)
+
+            # Extract the parameter info
+            param_type = param_info.get("type", "string")
+            is_required = param_info.get("required", False)
+
+            # Create the property schema
+            prop_schema: dict[str, Any] = {"type": param_type}
+
+            # Copy over other attributes (excluding 'required' since it goes to the root level)
+            for key, value in param_info.items():
+                if key not in (
+                    "required",
+                ):  # Exclude 'required' as it's handled separately
+                    prop_schema[key] = cast(Any, value)
+
+            properties[param_name] = prop_schema
+
+            if is_required:
+                required.append(param_name)
+
+        result: dict[str, Any] = {"type": "object", "properties": properties}
+
+        if required:
+            result["required"] = required
+
+        return result
+
     def adapt(self, agentle_tool: Tool[Any]) -> "types.Tool":
         """
         Convert an Agentle Tool to a Google AI Tool.
@@ -308,15 +371,25 @@ class AgentleToolToGoogleToolAdapter(Adapter[Tool[Any], "types.Tool"]):
         # Convert parameters
         parameters_schema = None
         if agentle_tool.parameters:
-            parameters_schema = self._create_schema_from_json_schema(
+            self._logger.debug(
+                f"Converting parameters for tool '{agentle_tool.name}': {agentle_tool.parameters}"
+            )
+            # Convert Agentle parameter format to JSON Schema format
+            json_schema = self._convert_agentle_params_to_json_schema(
                 agentle_tool.parameters
             )
+            self._logger.debug(f"Converted to JSON Schema: {json_schema}")
+            parameters_schema = self._create_schema_from_json_schema(json_schema)
 
         # Create function declaration
         function_declaration = types.FunctionDeclaration(
             name=agentle_tool.name,
             description=agentle_tool.description or "",
             parameters=parameters_schema,
+        )
+
+        self._logger.debug(
+            f"Created FunctionDeclaration for '{agentle_tool.name}' with parameters: {parameters_schema.properties if parameters_schema else 'None'}"
         )
 
         # Create and return tool
