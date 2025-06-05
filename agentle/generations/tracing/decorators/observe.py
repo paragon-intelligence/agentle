@@ -111,6 +111,7 @@ def observe[F: Callable[..., Any]](
         )
         tools = bound_args.arguments.get("tools")
 
+        vertex_ai = getattr(provider_self, "use_vertex_ai", False)
         # Prepare input data for tracing
         input_data: dict[str, Any] = {
             "messages": [
@@ -125,6 +126,7 @@ def observe[F: Callable[..., Any]](
             "message_count": len(messages),
             "has_tools": tools is not None and len(tools) > 0,
             "has_schema": response_schema is not None,
+            "vertex_ai": vertex_ai,
         }
 
         # Add any generation config parameters if available
