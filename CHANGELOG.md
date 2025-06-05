@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.4.2
+## v0.4.3
 
-- feat: tracking vertexai usages
+- 
