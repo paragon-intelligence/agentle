@@ -786,47 +786,649 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         This method is used internally to resume execution after a suspension.
         It continues from where the agent left off based on the context state.
+
+        The method handles various suspension scenarios:
+        1. Tool execution suspension (most common)
+        2. Generation suspension (less common)
+        3. Complex pipeline/team suspension scenarios
+
+        It properly restores execution state and continues from the exact
+        suspension point, ensuring no work is lost or duplicated.
         """
-        # For now, we'll implement a simple approach that restarts the run_async logic
-        # with the existing context. In a more sophisticated implementation, we could
-        # resume from the exact point of suspension.
+        _logger = Maybe(logger if self.debug else None)
+
+        _logger.bind_optional(
+            lambda log: log.info(
+                "Resuming agent execution from suspended context: %s",
+                context.context_id,
+            )
+        )
 
         # Check if there's approval data in the context
         approval_result = context.get_checkpoint_data("approval_result")
 
-        # If we have approval data and it was denied, return a failed result
+        # Handle approval denial
         if approval_result and not approval_result.get("approved", True):
+            reason = approval_result.get("approval_data", {}).get(
+                "reason", "No reason provided"
+            )
+            denial_message = f"Request denied by {approval_result.get('approver_id', 'unknown')}: {reason}"
+
+            _logger.bind_optional(
+                lambda log: log.info(
+                    "Execution denied during resumption: %s", denial_message
+                )
+            )
+
+            context.fail_execution(denial_message)
             return AgentRunOutput(
                 generation=None,
                 context=context,
                 parsed=cast(T_Schema, None),
                 is_suspended=False,
-                suspension_reason=f"Request denied: {approval_result.get('approval_data', {}).get('reason', 'No reason provided')}",
+                suspension_reason=denial_message,
             )
 
-        # Continue with normal execution logic
-        # This is a simplified approach - in production you might want to resume
-        # from the exact point where execution was suspended
         try:
-            # Re-run the agent logic with the existing context
-            # For now, we'll just complete the execution and return the context
+            # Resume the context execution state
+            context.resume_execution()
+
+            # Get suspension state data
+            suspension_state = context.get_checkpoint_data("suspension_state")
+
+            if not suspension_state:
+                # If no suspension state, this might be a legacy suspension
+                # Complete execution and return
+                _logger.bind_optional(
+                    lambda log: log.warning(
+                        "No suspension state found, completing execution"
+                    )
+                )
+                context.complete_execution()
+                return AgentRunOutput(
+                    generation=None,
+                    context=context,
+                    parsed=cast(T_Schema, None),
+                    is_suspended=False,
+                )
+
+            suspension_type = suspension_state.get("type", "unknown")
+            _logger.bind_optional(
+                lambda log: log.debug(
+                    "Resuming from suspension type: %s", suspension_type
+                )
+            )
+
+            if suspension_type == "tool_execution":
+                return await self._resume_from_tool_suspension(
+                    context, suspension_state
+                )
+            elif suspension_type == "generation":
+                return await self._resume_from_generation_suspension(
+                    context, suspension_state
+                )
+            else:
+                # Unknown suspension type, try to continue with normal flow
+                _logger.bind_optional(
+                    lambda log: log.warning(
+                        "Unknown suspension type: %s, attempting normal continuation",
+                        suspension_type,
+                    )
+                )
+                return await self._resume_with_normal_flow(context)
+
+        except Exception as e:
+            error_message = f"Error during execution resumption: {str(e)}"
+            _logger.bind_optional(
+                lambda log: log.error(
+                    "Error during execution resumption: %s", error_message
+                )
+            )
+            context.fail_execution(error_message)
+            return AgentRunOutput(
+                generation=None,
+                context=context,
+                parsed=cast(T_Schema, None),
+                is_suspended=False,
+                suspension_reason=error_message,
+            )
+
+    async def _resume_from_tool_suspension(
+        self, context: Context, suspension_state: dict[str, Any]
+    ) -> AgentRunOutput[T_Schema]:
+        """
+        Resume execution from a tool suspension point.
+
+        This handles the most common suspension scenario where a tool
+        raised ToolSuspensionError and required approval.
+        """
+        _logger = Maybe(logger if self.debug else None)
+
+        # Extract suspension state
+        suspended_tool_suggestion = suspension_state.get("tool_suggestion")
+        current_iteration = suspension_state.get("current_iteration", 1)
+        called_tools = suspension_state.get("called_tools", {})
+        current_step = suspension_state.get("current_step")
+
+        if not suspended_tool_suggestion:
+            raise ValueError("No suspended tool suggestion found in suspension state")
+
+        _logger.bind_optional(
+            lambda log: log.debug(
+                "Resuming tool execution: %s",
+                suspended_tool_suggestion.get("tool_name"),
+            )
+        )
+
+        # Reconstruct the tool execution environment
+        mcp_tools: MutableSequence[tuple[MCPServerProtocol, MCPTool]] = []
+        if self.mcp_servers:
+            for server in self.mcp_servers:
+                tools = await server.list_tools_async()
+                mcp_tools.extend((server, tool) for tool in tools)
+
+        all_tools: MutableSequence[Tool[Any]] = [
+            Tool.from_mcp_tool(mcp_tool=tool, server=server)
+            for server, tool in mcp_tools
+        ] + [
+            Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
+        ]
+
+        available_tools: MutableMapping[str, Tool[Any]] = {
+            tool.name: tool for tool in all_tools
+        }
+
+        # Create ToolExecutionSuggestion from saved data
+        tool_suggestion = ToolExecutionSuggestion(
+            id=suspended_tool_suggestion["id"],
+            tool_name=suspended_tool_suggestion["tool_name"],
+            args=suspended_tool_suggestion["args"],
+        )
+
+        # Approval data is stored in context for tools that need it
+
+        # Reconstruct or create the current step
+        if current_step:
+            step = Step(
+                step_id=current_step["step_id"],
+                step_type=current_step["step_type"],
+                iteration=current_step["iteration"],
+                tool_execution_suggestions=current_step["tool_execution_suggestions"],
+                generation_text=current_step.get("generation_text"),
+                token_usage=current_step.get("token_usage"),
+            )
+            # Update step timestamp to reflect resumption
+            step.timestamp = datetime.datetime.now()
+        else:
+            # Create new step for the resumed execution
+            step = Step(
+                step_type="tool_execution",
+                iteration=current_iteration,
+                tool_execution_suggestions=[tool_suggestion],
+                generation_text="Resuming from suspension...",
+            )
+
+        step_start_time = time.time()
+
+        # Execute the approved tool
+        selected_tool = available_tools.get(tool_suggestion.tool_name)
+        if not selected_tool:
+            raise ValueError(
+                f"Tool '{tool_suggestion.tool_name}' not found in available tools"
+            )
+
+        _logger.bind_optional(
+            lambda log: log.debug(
+                "Executing approved tool: %s with args: %s",
+                tool_suggestion.tool_name,
+                tool_suggestion.args,
+            )
+        )
+
+        # Use the tool arguments from the suspended suggestion
+        tool_args = dict(tool_suggestion.args)
+        # Note: Approval data is available in context checkpoint data if tools need it
+
+        # Execute the tool
+        tool_start_time = time.time()
+        try:
+            tool_result = selected_tool.call(context=context, **tool_args)
+            tool_execution_time = (time.time() - tool_start_time) * 1000
+
+            _logger.bind_optional(
+                lambda log: log.debug(
+                    "Tool execution completed successfully: %s", str(tool_result)[:100]
+                )
+            )
+
+            # Add the successful tool execution to the step
+            step.add_tool_execution_result(
+                suggestion=tool_suggestion,
+                result=tool_result,
+                execution_time_ms=tool_execution_time,
+                success=True,
+            )
+
+            # Update called_tools with the result
+            called_tools[tool_suggestion.id] = (tool_suggestion, tool_result)
+
+        except ToolSuspensionError as suspension_error:
+            # The tool suspended again - handle nested suspension
+            error = suspension_error
+
+            _logger.bind_optional(
+                lambda log: log.info(
+                    "Tool suspended again during resumption: %s",
+                    error.reason,
+                )
+            )
+
+            # Save the current state for the new suspension
+            await self._save_suspension_state(
+                context=context,
+                suspension_type="tool_execution",
+                tool_suggestion=tool_suggestion,
+                current_iteration=current_iteration,
+                all_tools=all_tools,
+                called_tools=called_tools,
+                current_step=step.model_dump() if hasattr(step, "model_dump") else None,
+            )
+
+            # Get suspension manager and suspend again
+            suspension_mgr = self.suspension_manager or get_default_suspension_manager()
+            resumption_token = await suspension_mgr.suspend_execution(
+                context=context,
+                reason=suspension_error.reason,
+                approval_data=suspension_error.approval_data,
+                timeout_hours=suspension_error.timeout_seconds // 3600
+                if suspension_error.timeout_seconds
+                else 24,
+            )
+
+            return AgentRunOutput(
+                generation=None,
+                context=context,
+                parsed=cast(T_Schema, None),
+                is_suspended=True,
+                suspension_reason=suspension_error.reason,
+                resumption_token=resumption_token,
+            )
+        except Exception as e:
+            # Tool execution failed
+            tool_execution_time = (time.time() - tool_start_time) * 1000
+            error_message = f"Tool execution failed: {str(e)}"
+
+            _logger.bind_optional(
+                lambda log: log.error(
+                    "Tool execution failed during resumption: %s", error_message
+                )
+            )
+
+            step.add_tool_execution_result(
+                suggestion=tool_suggestion,
+                result=error_message,
+                execution_time_ms=tool_execution_time,
+                success=False,
+                error_message=error_message,
+            )
+
+            # Complete the step and add to context
+            step_duration = (time.time() - step_start_time) * 1000
+            step.mark_failed(error_message=error_message, duration_ms=step_duration)
+            context.add_step(step)
+
+            # Fail the execution
+            context.fail_execution(error_message)
+            return AgentRunOutput(
+                generation=None,
+                context=context,
+                parsed=cast(T_Schema, None),
+                is_suspended=False,
+                suspension_reason=error_message,
+            )
+
+        # Complete the step and add to context
+        step_duration = (time.time() - step_start_time) * 1000
+        step.mark_completed(duration_ms=step_duration)
+        context.add_step(step)
+
+        # Clear the suspension state since we've handled it
+        context.set_checkpoint_data("suspension_state", None)
+
+        # Continue with the normal agent execution flow
+        _logger.bind_optional(
+            lambda log: log.debug(
+                "Tool execution completed, continuing with normal flow"
+            )
+        )
+
+        return await self._continue_normal_execution_flow(
+            context=context,
+            current_iteration=current_iteration,
+            all_tools=all_tools,
+            called_tools=called_tools,
+        )
+
+    async def _resume_from_generation_suspension(
+        self, context: Context, suspension_state: dict[str, Any]
+    ) -> AgentRunOutput[T_Schema]:
+        """
+        Resume execution from a generation suspension point.
+
+        This handles cases where the generation itself was suspended
+        (less common but possible in some scenarios).
+        """
+        _logger = Maybe(logger if self.debug else None)
+
+        _logger.bind_optional(
+            lambda log: log.debug("Resuming from generation suspension")
+        )
+
+        # For generation suspension, we typically just continue with normal flow
+        # The approval has already been processed by this point
+        context.set_checkpoint_data("suspension_state", None)
+        return await self._resume_with_normal_flow(context)
+
+    async def _resume_with_normal_flow(
+        self, context: Context
+    ) -> AgentRunOutput[T_Schema]:
+        """
+        Resume with normal agent execution flow.
+
+        This is used when we can't determine the exact suspension point
+        or for simple resumption scenarios.
+        """
+        _logger = Maybe(logger if self.debug else None)
+        generation_provider = self.generation_provider
+
+        _logger.bind_optional(
+            lambda log: log.debug("Resuming with normal execution flow")
+        )
+
+        # Check if agent has tools
+        mcp_tools: MutableSequence[tuple[MCPServerProtocol, MCPTool]] = []
+        if self.mcp_servers:
+            for server in self.mcp_servers:
+                tools = await server.list_tools_async()
+                mcp_tools.extend((server, tool) for tool in tools)
+
+        agent_has_tools = self.has_tools() or len(mcp_tools) > 0
+
+        if not agent_has_tools:
+            # No tools, generate final response
+            generation = await generation_provider.create_generation_async(
+                model=self.model,
+                messages=context.message_history,
+                response_schema=self.response_schema,
+                generation_config=self.agent_config.generation_config,
+            )
+
+            context.update_token_usage(generation.usage)
             context.complete_execution()
 
             return AgentRunOutput(
-                generation=None,  # No new generation for resumed execution
+                generation=generation,
                 context=context,
-                parsed=cast(T_Schema, None),
-                is_suspended=False,
+                parsed=generation.parsed,
             )
-        except Exception as e:
-            context.fail_execution(str(e))
-            return AgentRunOutput(
-                generation=None,
-                context=context,
-                parsed=cast(T_Schema, None),
-                is_suspended=False,
-                suspension_reason=str(e),
+
+        # Has tools, continue with tool execution loop
+        all_tools: MutableSequence[Tool[Any]] = [
+            Tool.from_mcp_tool(mcp_tool=tool, server=server)
+            for server, tool in mcp_tools
+        ] + [
+            Tool.from_callable(tool) if callable(tool) else tool for tool in self.tools
+        ]
+
+        return await self._continue_normal_execution_flow(
+            context=context,
+            current_iteration=context.execution_state.current_iteration + 1,
+            all_tools=all_tools,
+            called_tools={},
+        )
+
+    async def _continue_normal_execution_flow(
+        self,
+        context: Context,
+        current_iteration: int,
+        all_tools: MutableSequence[Tool[Any]],
+        called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]],
+    ) -> AgentRunOutput[T_Schema]:
+        """
+        Continue the normal agent execution flow after resumption.
+
+        This method continues the standard tool execution loop from where
+        the agent left off, handling iterations and tool calls.
+        """
+        _logger = Maybe(logger if self.debug else None)
+        generation_provider = self.generation_provider
+
+        available_tools: MutableMapping[str, Tool[Any]] = {
+            tool.name: tool for tool in all_tools
+        }
+
+        # Continue the execution loop from current iteration
+        while current_iteration <= self.agent_config.maxIterations:
+            _logger.bind_optional(
+                lambda log: log.info(
+                    "Continuing execution loop at iteration %d", current_iteration
+                )
             )
+
+            # Build called tools prompt
+            called_tools_prompt: UserMessage | str = ""
+            if called_tools:
+                called_tools_prompt_parts: MutableSequence[TextPart | FilePart] = []
+                for suggestion, result in called_tools.values():
+                    if isinstance(result, FilePart):
+                        called_tools_prompt_parts.extend(
+                            [
+                                TextPart(
+                                    text=f"<info><tool_name>{suggestion.tool_name}</tool_name><args>{suggestion.args}</args><result>The following is a file that was generated by the tool:</info>"
+                                ),
+                                result,
+                                TextPart(text="</result>"),
+                            ]
+                        )
+                    else:
+                        called_tools_prompt_parts.append(
+                            TextPart(
+                                text="""<info>
+                                The following is a tool call made by the agent.
+                                Only call it again if you think it's necessary.
+                                </info>"""
+                                + "\n"
+                                + "\n".join(
+                                    [
+                                        f"""<tool_execution>
+                                <tool_name>{suggestion.tool_name}</tool_name>
+                                <args>{suggestion.args}</args>
+                                <result>{result}</result>
+                            </tool_execution>"""
+                                    ]
+                                )
+                            )
+                        )
+
+                called_tools_prompt = UserMessage(parts=called_tools_prompt_parts)
+
+            # Generate tool call response
+            tool_call_generation = await generation_provider.create_generation_async(
+                model=self.model,
+                messages=MessageSequence(context.message_history)
+                .append_before_last_message(called_tools_prompt)
+                .elements,
+                generation_config=self.agent_config.generation_config,
+                tools=all_tools,
+            )
+
+            context.update_token_usage(tool_call_generation.usage)
+
+            # Check if agent called any tools
+            if tool_call_generation.tool_calls_amount() == 0:
+                _logger.bind_optional(
+                    lambda log: log.info(
+                        "No more tool calls, generating final response"
+                    )
+                )
+
+                # Create final step
+                final_step = Step(
+                    step_type="generation",
+                    iteration=current_iteration,
+                    tool_execution_suggestions=[],
+                    generation_text=tool_call_generation.text
+                    or "Generating final response...",
+                    token_usage=tool_call_generation.usage,
+                )
+
+                # Generate final response if needed
+                if self.response_schema is not None or not tool_call_generation.text:
+                    generation = await generation_provider.create_generation_async(
+                        model=self.model,
+                        messages=context.message_history,
+                        response_schema=self.response_schema,
+                        generation_config=self.agent_config.generation_config,
+                    )
+
+                    final_step.generation_text = generation.text
+                    final_step.token_usage = generation.usage
+                    context.update_token_usage(generation.usage)
+                else:
+                    generation = cast(Generation[T_Schema], tool_call_generation)
+
+                final_step.mark_completed()
+                context.add_step(final_step)
+                context.complete_execution()
+
+                return AgentRunOutput(
+                    generation=generation,
+                    context=context,
+                    parsed=generation.parsed,
+                )
+
+            # Execute tools
+            step = Step(
+                step_type="tool_execution",
+                iteration=current_iteration,
+                tool_execution_suggestions=list(tool_call_generation.tool_calls),
+                generation_text=tool_call_generation.text,
+                token_usage=tool_call_generation.usage,
+            )
+
+            step_start_time = time.time()
+
+            for tool_execution_suggestion in tool_call_generation.tool_calls:
+                selected_tool = available_tools[tool_execution_suggestion.tool_name]
+
+                tool_start_time = time.time()
+                try:
+                    tool_result = selected_tool.call(
+                        context=context, **tool_execution_suggestion.args
+                    )
+                    tool_execution_time = (time.time() - tool_start_time) * 1000
+
+                    called_tools[tool_execution_suggestion.id] = (
+                        tool_execution_suggestion,
+                        tool_result,
+                    )
+
+                    step.add_tool_execution_result(
+                        suggestion=tool_execution_suggestion,
+                        result=tool_result,
+                        execution_time_ms=tool_execution_time,
+                        success=True,
+                    )
+
+                except ToolSuspensionError as suspension_error:
+                    # Tool suspended - save state and return
+                    await self._save_suspension_state(
+                        context=context,
+                        suspension_type="tool_execution",
+                        tool_suggestion=tool_execution_suggestion,
+                        current_iteration=current_iteration,
+                        all_tools=all_tools,
+                        called_tools=called_tools,
+                        current_step=step.model_dump()
+                        if hasattr(step, "model_dump")
+                        else None,
+                    )
+
+                    suspension_mgr = (
+                        self.suspension_manager or get_default_suspension_manager()
+                    )
+                    resumption_token = await suspension_mgr.suspend_execution(
+                        context=context,
+                        reason=suspension_error.reason,
+                        approval_data=suspension_error.approval_data,
+                        timeout_hours=suspension_error.timeout_seconds // 3600
+                        if suspension_error.timeout_seconds
+                        else 24,
+                    )
+
+                    return AgentRunOutput(
+                        generation=None,
+                        context=context,
+                        parsed=cast(T_Schema, None),
+                        is_suspended=True,
+                        suspension_reason=suspension_error.reason,
+                        resumption_token=resumption_token,
+                    )
+
+            # Complete step and continue
+            step_duration = (time.time() - step_start_time) * 1000
+            step.mark_completed(duration_ms=step_duration)
+            context.add_step(step)
+
+            current_iteration += 1
+
+        # Max iterations reached
+        error_message = f"Max tool calls exceeded after {self.agent_config.maxIterations} iterations"
+        context.fail_execution(error_message)
+        raise MaxToolCallsExceededError(error_message)
+
+    async def _save_suspension_state(
+        self,
+        context: Context,
+        suspension_type: str,
+        tool_suggestion: ToolExecutionSuggestion | None = None,
+        current_iteration: int | None = None,
+        all_tools: MutableSequence[Tool[Any]] | None = None,
+        called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]] | None = None,
+        current_step: dict[str, Any] | None = None,
+    ) -> None:
+        """
+        Save the current execution state for proper resumption.
+
+        This method saves all necessary state information so that execution
+        can be resumed from the exact point where it was suspended.
+        """
+        suspension_state: dict[str, Any] = {
+            "type": suspension_type,
+            "timestamp": datetime.datetime.now().isoformat(),
+        }
+
+        if suspension_type == "tool_execution" and tool_suggestion:
+            suspension_state["tool_suggestion"] = {
+                "id": tool_suggestion.id,
+                "tool_name": tool_suggestion.tool_name,
+                "args": tool_suggestion.args,
+            }
+            suspension_state["current_iteration"] = current_iteration
+            suspension_state["called_tools"] = {
+                k: {
+                    "suggestion": {
+                        "id": v[0].id,
+                        "tool_name": v[0].tool_name,
+                        "args": v[0].args,
+                    },
+                    "result": str(v[1]),  # Serialize result as string
+                }
+                for k, v in (called_tools or {}).items()
+            }
+            suspension_state["current_step"] = current_step
+
+        context.set_checkpoint_data("suspension_state", suspension_state)
 
     async def run_async(
         self, input: AgentInput | Any, *, trace_params: TraceParams | None = None
@@ -1788,7 +2390,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 UserMessage(parts=[TextPart(text=text)]),  # type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]
             ]
         )
-
 
     def __call__(self, input: AgentInput | Any) -> AgentRunOutput[T_Schema]:
         return self.run(input)
