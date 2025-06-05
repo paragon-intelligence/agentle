@@ -143,6 +143,7 @@ class TracingManager:
                             "message_count": input_data.get("message_count", 0),
                             "has_tools": input_data.get("has_tools", False),
                             "has_schema": input_data.get("has_schema", False),
+                            "vertex_ai": input_data.get("vertex_ai", False),
                         },
                     ),
                     metadata={
