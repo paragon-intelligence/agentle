@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.4.1
+## v0.4.2
 
-- feat: implemented "_continue_execution_from_context" method
+- feat: tracking vertexai usages
