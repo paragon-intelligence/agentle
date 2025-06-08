@@ -38,6 +38,7 @@ agentle.agents.whatsapp.whatsapp\_bot
       WhatsAppProvider
       WhatsAppSession
       WhatsAppTextMessage
+      WhatsAppVideoMessage
       WhatsAppWebhookPayload
       datetime
    

@@ -14,6 +14,7 @@ agentle.agents.whatsapp.providers.base.whatsapp\_provider
 
    .. autosummary::
    
+      DownloadedMedia
       Protocol
       WhatsAppContact
       WhatsAppMediaMessage

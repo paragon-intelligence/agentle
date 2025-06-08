@@ -13,9 +13,11 @@ agentle.agents.whatsapp.models
    audio_message
    data
    document_message
+   downloaded_media
    image_message
    key
    message
+   video_message
    whatsapp_audio_message
    whatsapp_bot_config
    whatsapp_contact

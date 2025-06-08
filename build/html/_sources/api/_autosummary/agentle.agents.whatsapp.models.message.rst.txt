@@ -18,4 +18,5 @@ agentle.agents.whatsapp.models.message
       DocumentMessage
       ImageMessage
       Message
+      VideoMessage
    
