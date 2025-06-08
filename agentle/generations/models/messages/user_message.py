@@ -42,19 +42,19 @@ class UserMessage(BaseModel):
         name: str | None = None,
     ) -> UserMessage:
         """
-        Creates a user message with a name tag wrapped around the parts.
+        Creates a user message with a name identifier.
 
         Args:
             parts: The sequence of message parts to include in the message.
-            name: Optional name to tag this message with. If provided, the parts will
-                  be wrapped with <name:{name}> and </name:{name}> tags.
+            name: Optional name to identify the user sending this message.
 
         Returns:
-            A UserMessage instance with the parts wrapped in name tags if a name is provided.
+            A UserMessage instance with the name prepended if provided.
         """
+        if name is None:
+            return cls(role="user", parts=parts)
+        
         return cls(
             role="user",
-            parts=[TextPart(text=f"<name:{name}>")]
-            + list(parts)
-            + [TextPart(text=f"</name:{name}>")],
+            parts=[TextPart(text=f"[{name}]: ")] + list(parts),
         )
