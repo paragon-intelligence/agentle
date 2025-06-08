@@ -18,6 +18,7 @@ from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaM
 from agentle.agents.whatsapp.models.whatsapp_message import WhatsAppMessage
 from agentle.agents.whatsapp.models.whatsapp_session import WhatsAppSession
 from agentle.agents.whatsapp.models.whatsapp_text_message import WhatsAppTextMessage
+from agentle.agents.whatsapp.models.whatsapp_video_message import WhatsAppVideoMessage
 from agentle.agents.whatsapp.models.whatsapp_webhook_payload import (
     WhatsAppWebhookPayload,
 )
@@ -288,7 +289,7 @@ class WhatsAppBot:
             try:
                 media_data = await self.provider.download_media(message.id)
                 parts.append(
-                    FilePart(data=media_data, mime_type=message.media_mime_type)
+                    FilePart(data=media_data.data, mime_type=media_data.mime_type)
                 )
 
                 # Add caption if present
@@ -567,6 +568,20 @@ class WhatsAppBot:
                         media_mime_type=audio_msg.get("mimetype", "audio/ogg")
                         if audio_msg
                         else "audio/ogg",
+                    )
+                elif msg_content.get("videoMessage"):
+                    video_msg = msg_content.get("videoMessage")
+                    return WhatsAppVideoMessage(
+                        id=message_id,
+                        from_number=from_number,
+                        to_number=self.provider.get_instance_identifier(),
+                        timestamp=datetime.fromtimestamp(
+                            getattr(data, "messageTimestamp", 0) / 1000
+                        ),
+                        media_url=video_msg.get("url", "") if video_msg else "",
+                        media_mime_type=video_msg.get("mimetype", "")
+                        if video_msg
+                        else "",
                     )
 
         except Exception as e:

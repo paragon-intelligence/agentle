@@ -3,6 +3,7 @@ from typing import NotRequired, TypedDict
 from agentle.agents.whatsapp.models.audio_message import AudioMessage
 from agentle.agents.whatsapp.models.document_message import DocumentMessage
 from agentle.agents.whatsapp.models.image_message import ImageMessage
+from agentle.agents.whatsapp.models.video_message import VideoMessage
 
 
 class Message(TypedDict):
@@ -21,3 +22,4 @@ class Message(TypedDict):
     documentMessage: NotRequired[DocumentMessage]
     audioMessage: NotRequired[AudioMessage]
     base64: NotRequired[str]
+    videoMessage: NotRequired[VideoMessage]

@@ -5,6 +5,7 @@ Base interface for WhatsApp providers.
 from abc import abstractmethod
 from typing import Protocol
 
+from agentle.agents.whatsapp.models.downloaded_media import DownloadedMedia
 from agentle.agents.whatsapp.models.whatsapp_contact import WhatsAppContact
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
 from agentle.agents.whatsapp.models.whatsapp_session import WhatsAppSession
@@ -117,7 +118,7 @@ class WhatsAppProvider(Protocol):
         pass
 
     @abstractmethod
-    async def download_media(self, media_id: str) -> bytes:
+    async def download_media(self, media_id: str) -> DownloadedMedia:
         """Download media content by ID."""
         pass
 

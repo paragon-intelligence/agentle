@@ -3,16 +3,18 @@ Meta WhatsApp Business API implementation.
 """
 
 import asyncio
+import hashlib
+import hmac
 import logging
 from collections.abc import Mapping, MutableMapping
 from datetime import datetime
 from typing import Any, override
 from urllib.parse import urljoin
-import hashlib
-import hmac
 
 import aiohttp
+from rsb.functions.bytes2mime import bytes2mime
 
+from agentle.agents.whatsapp.models.downloaded_media import DownloadedMedia
 from agentle.agents.whatsapp.models.whatsapp_audio_message import WhatsAppAudioMessage
 from agentle.agents.whatsapp.models.whatsapp_contact import WhatsAppContact
 from agentle.agents.whatsapp.models.whatsapp_document_message import (
@@ -32,8 +34,8 @@ from agentle.agents.whatsapp.providers.base.whatsapp_provider import WhatsAppPro
 from agentle.agents.whatsapp.providers.meta.meta_whatsapp_config import (
     MetaWhatsAppConfig,
 )
-from agentle.sessions.session_manager import SessionManager
 from agentle.sessions.in_memory_session_store import InMemorySessionStore
+from agentle.sessions.session_manager import SessionManager
 
 logger = logging.getLogger(__name__)
 
@@ -744,7 +746,7 @@ class MetaWhatsAppProvider(WhatsAppProvider):
             logger.error(f"Failed to verify webhook signature: {e}")
             return False
 
-    async def download_media(self, media_id: str) -> bytes:
+    async def download_media(self, media_id: str) -> DownloadedMedia:
         """Download media content by ID."""
         try:
             # First get media URL
@@ -766,7 +768,7 @@ class MetaWhatsAppProvider(WhatsAppProvider):
                     media_data = await response.read()
 
             logger.debug(f"Media downloaded successfully: {media_id}")
-            return media_data
+            return DownloadedMedia(data=media_data, mime_type=bytes2mime(media_data))
 
         except MetaWhatsAppError:
             raise

@@ -4,6 +4,7 @@ Evolution API implementation for WhatsApp.
 """
 
 import logging
+import re
 import time
 from collections.abc import Mapping, MutableMapping
 from datetime import datetime
@@ -12,6 +13,7 @@ from urllib.parse import urljoin
 
 import aiohttp
 
+from agentle.agents.whatsapp.models.downloaded_media import DownloadedMedia
 from agentle.agents.whatsapp.models.whatsapp_audio_message import WhatsAppAudioMessage
 from agentle.agents.whatsapp.models.whatsapp_contact import WhatsAppContact
 from agentle.agents.whatsapp.models.whatsapp_document_message import (
@@ -764,6 +766,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 f"chat/fetchProfile/{self.config.instance_name}",
                 use_message_prefix=False,
             )
+
+            normalized_phone = re.match(r"\d+", normalized_phone)
+            normalized_phone = normalized_phone.group() if normalized_phone else ""
             payload = {"number": normalized_phone}
 
             response_data = await self._make_request("POST", url, payload)
@@ -943,7 +948,7 @@ class EvolutionAPIProvider(WhatsAppProvider):
             )
             raise EvolutionAPIError(f"Failed to process webhook: {e}")
 
-    async def download_media(self, media_id: str) -> bytes:
+    async def download_media(self, media_id: str) -> DownloadedMedia:
         """Download media content by ID."""
         logger.info(f"Downloading media with ID: {media_id}")
 
@@ -953,10 +958,12 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 f"chat/getBase64FromMediaMessage/{self.config.instance_name}",
                 use_message_prefix=False,
             )
-    
+
             payload = {"message": {"key": {"id": media_id}}}
 
-            response_data = await self._make_request("POST", url, payload)
+            response_data = await self._make_request(
+                "POST", url, payload, expected_status=201
+            )
 
             if "base64" not in response_data:
                 logger.error(
@@ -973,7 +980,9 @@ class EvolutionAPIProvider(WhatsAppProvider):
                 f"Media downloaded successfully: {media_id} ({media_size} bytes)",
                 extra={"media_id": media_id, "size_bytes": media_size},
             )
-            return media_data
+
+            mimetype: str = response_data["mimetype"].split(";")[0].strip()
+            return DownloadedMedia(data=media_data, mime_type=mimetype)
 
         except EvolutionAPIError:
             logger.error(f"Evolution API error while downloading media {media_id}")
