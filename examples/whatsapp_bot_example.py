@@ -27,20 +27,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-def get_weather(location: str) -> str:
-    """Example tool to get weather information."""
-    # This is a mock implementation
-    weather_data = {
-        "São Paulo": "Sunny, 25°C",
-        "Rio de Janeiro": "Partly cloudy, 28°C",
-        "New York": "Rainy, 15°C",
-        "London": "Foggy, 12°C",
-        "Tokyo": "Clear, 20°C",
-    }
-    return weather_data.get(location, f"Weather data not available for {location}")
-
-
 def create_server() -> Application:
     """
     Example 2: Production webhook server with Redis sessions
@@ -49,7 +35,8 @@ def create_server() -> Application:
         name="Production WhatsApp Assistant",
         generation_provider=GoogleGenerationProvider(),
         model="gemini-2.0-flash",
-        instructions="""Você é uma assistente de IA muito educada.""",
+        static_knowledge=["examples/arthur.md"],
+        instructions="""Você é uma assistente de IA responsável por responder perguntas e conversar, de maneira educada, sobre o Arthur. Em sua resposta final, utilize algum tipo de formato que o WhatApp entenda. Acredito que markdown funciona, mas garanta que funciona. Suas mensagens devem ser bem curtas e diretas, mas nao tao curtas. Respondendo apenas o necessario. Converse com um sotaque mineiro. Fingindo que é da roça. Use emojis do agro.""",
     )
 
     session_manager = SessionManager[WhatsAppSession](
@@ -76,7 +63,19 @@ def create_server() -> Application:
         auto_read_messages=True,
         session_timeout_minutes=60,
         max_message_length=4000,
-        welcome_message="Bem vindo! Você já será atendido por uma de nossas assistentes. Por favor, aguarde um momento.",
+        welcome_message="""Olá! Seja muito bem-vindo(a)!  
+Sou a assistente pessoal do Arthur 🤖  
+Já estou te redirecionando para uma de nossas assistentes especializadas, que vai te ajudar melhor 💬
+
+Aqui, você pode:
+
+📌 Saber mais sobre **quem é o Arthur**  
+🎯 Descobrir mais sobre a **carreira do Arthur**
+
+Eu fui configurada especificamente com uma persona do agro, que envia muitos emojis e escreve como se estivesse falando em mineirês! Isso é apenas um teste. Posso trocar a persona da IA para ela atuar como eu quiser. Atualmente, não suporto imagens nem mensagens de voz, mas isso está em desenvolvimento.
+
+Fique à vontade! Estamos aqui para te ajudar!
+        """,
         error_message="Desculpe pelo inconveniente. Por favor, tente novamente mais tarde ou contate o suporte.",
     )
 

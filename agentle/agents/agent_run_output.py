@@ -448,3 +448,6 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
         lines.append("\n" + "=" * 80)
 
         return "\n".join(lines)
+
+    def __str__(self) -> str:
+        return self.pretty_formatted()

@@ -8,7 +8,6 @@ for caching parsed documents in the Agentle framework.
 import abc
 from typing import Literal
 
-from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 
 from agentle.parsing.parsed_document import ParsedDocument
@@ -16,7 +15,7 @@ from agentle.parsing.parsed_document import ParsedDocument
 type CacheTTL = int | Literal["infinite"] | None
 
 
-class DocumentCacheStore(BaseModel, abc.ABC):
+class DocumentCacheStore(abc.ABC):
     """
     Abstract base class for cache stores used in document parsing.
 

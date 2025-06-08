@@ -70,6 +70,7 @@ parser_registry: MutableMapping[str, type[DocumentParser]] = {
     "xlsx": XlsxFileParser,
     "xls": XlsxFileParser,
     "xml": XMLFileParser,
+    "md": TxtFileParser,
 }
 """
 Global registry mapping file extensions to their respective DocumentParser classes.

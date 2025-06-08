@@ -8,13 +8,15 @@ of parsed documents across multiple processes and servers.
 import json
 from typing import Any, override
 
+from rsb.models.base_model import BaseModel
+from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 
-from agentle.parsing.cache.document_cache_store import DocumentCacheStore, CacheTTL
+from agentle.parsing.cache.document_cache_store import CacheTTL, DocumentCacheStore
 from agentle.parsing.parsed_document import ParsedDocument
 
 
-class RedisCacheStore(DocumentCacheStore):
+class RedisCacheStore(BaseModel, DocumentCacheStore):
     """
     Redis-based cache store for parsed documents.
 
@@ -59,6 +61,8 @@ class RedisCacheStore(DocumentCacheStore):
         default=3600,  # 1 hour
         description="Default TTL in seconds for cache entries",
     )
+
+    model_config = ConfigDict(frozen=True)
 
     def model_post_init(self, __context: Any) -> None:
         """Initialize the Redis cache store after Pydantic model creation."""
