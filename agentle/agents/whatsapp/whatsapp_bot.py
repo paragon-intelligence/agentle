@@ -301,7 +301,7 @@ class WhatsAppBot:
                 parts.append(TextPart(text="[Media file - failed to download]"))
 
         # Create user message
-        user_message = UserMessage(parts=parts)
+        user_message = UserMessage.create_named(parts=parts, name=message.push_name)
 
         # Get or create agent context with proper persistence
         context: Context
@@ -490,6 +490,7 @@ class WhatsAppBot:
                     text = msg_content.get("conversation")
                     return WhatsAppTextMessage(
                         id=message_id,
+                        push_name=data["pushName"],
                         from_number=from_number,
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
@@ -510,6 +511,7 @@ class WhatsAppBot:
                     return WhatsAppTextMessage(
                         id=message_id,
                         from_number=from_number,
+                        push_name=data["pushName"],
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
                             getattr(data, "messageTimestamp", 0) / 1000
@@ -523,6 +525,7 @@ class WhatsAppBot:
                     return WhatsAppImageMessage(
                         id=message_id,
                         from_number=from_number,
+                        push_name=data["pushName"],
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
                             getattr(data, "messageTimestamp", 0) / 1000
@@ -540,6 +543,7 @@ class WhatsAppBot:
                     return WhatsAppDocumentMessage(
                         id=message_id,
                         from_number=from_number,
+                        push_name=data["pushName"],
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
                             getattr(data, "messageTimestamp", 0) / 1000
@@ -560,6 +564,7 @@ class WhatsAppBot:
                     return WhatsAppAudioMessage(
                         id=message_id,
                         from_number=from_number,
+                        push_name=data["pushName"],
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
                             getattr(data, "messageTimestamp", 0) / 1000
@@ -574,6 +579,8 @@ class WhatsAppBot:
                     return WhatsAppVideoMessage(
                         id=message_id,
                         from_number=from_number,
+                        push_name=data["pushName"],
+                        caption=video_msg.get("caption") if video_msg else None,
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
                             getattr(data, "messageTimestamp", 0) / 1000
@@ -648,6 +655,10 @@ class WhatsAppBot:
                 return WhatsAppTextMessage(
                     id=message_id,
                     from_number=from_number,
+                    push_name=msg_data.get(
+                        "pushName",  # TODO(arthur): check Meta's official API
+                        "user",
+                    ),
                     to_number=self.provider.get_instance_identifier(),
                     timestamp=timestamp,
                     text=text,
@@ -659,6 +670,10 @@ class WhatsAppBot:
                 return WhatsAppImageMessage(
                     id=message_id,
                     from_number=from_number,
+                    push_name=msg_data.get(
+                        "pushName",  # TODO(arthur): check Meta's official API
+                        "user",
+                    ),
                     to_number=self.provider.get_instance_identifier(),
                     timestamp=timestamp,
                     media_url=image_data.get("id", ""),  # Meta uses ID for media
@@ -672,6 +687,10 @@ class WhatsAppBot:
                 return WhatsAppDocumentMessage(
                     id=message_id,
                     from_number=from_number,
+                    push_name=msg_data.get(
+                        "pushName",  # TODO(arthur): check Meta's official API
+                        "user",
+                    ),
                     to_number=self.provider.get_instance_identifier(),
                     timestamp=timestamp,
                     media_url=doc_data.get("id", ""),  # Meta uses ID for media
@@ -688,6 +707,10 @@ class WhatsAppBot:
                 return WhatsAppAudioMessage(
                     id=message_id,
                     from_number=from_number,
+                    push_name=msg_data.get(
+                        "pushName",  # TODO(arthur): check Meta's official API
+                        "user",
+                    ),
                     to_number=self.provider.get_instance_identifier(),
                     timestamp=timestamp,
                     media_url=audio_data.get("id", ""),  # Meta uses ID for media

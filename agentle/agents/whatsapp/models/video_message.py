@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import NotRequired, TypedDict
 
 
 class VideoMessage(TypedDict):
@@ -26,3 +26,4 @@ class VideoMessage(TypedDict):
 
     url: str
     mimetype: str
+    caption: NotRequired[str]

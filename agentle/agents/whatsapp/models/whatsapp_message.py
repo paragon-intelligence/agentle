@@ -15,6 +15,7 @@ class WhatsAppMessage(BaseModel):
     type: WhatsAppMessageType
     from_number: str
     to_number: str
+    push_name: str | None = None
     timestamp: datetime
     status: WhatsAppMessageStatus = WhatsAppMessageStatus.PENDING
     is_group: bool = False

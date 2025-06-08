@@ -26,6 +26,7 @@ class ImageMessage(TypedDict):
 
     url: str
     mimetype: str
+    caption: NotRequired[str]
     fileSha256: str
     fileLength: str
     height: int
