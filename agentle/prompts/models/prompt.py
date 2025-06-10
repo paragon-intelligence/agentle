@@ -38,6 +38,10 @@ class Prompt(BaseModel):
     content: str
     compiled: bool = False
 
+    @classmethod
+    def from_text(cls, text: str) -> Prompt:
+        return cls(content=text)
+
     def compile(
         self, context: dict[str, Any] | None = None, **replacements: Any
     ) -> Prompt:
