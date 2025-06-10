@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.4.4
+## v0.4.5
 
-- feat: support for video, audio and image messages in the evolution API WhatsApp integration
+- 
