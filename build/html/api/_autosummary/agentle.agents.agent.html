@@ -739,61 +739,64 @@ tools=[get_weather],</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code>()</p></td>
 <td><p>Abstract base class defining the protocol for MCP servers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Maybe</span></code>([obj, ignore_errors])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mapping</span></code>()</p></td>
+<td><p>A Mapping is a generic container for associating key/value pairs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Maybe</span></code>([obj, ignore_errors])</p></td>
 <td><p>A class that safely handles optional chaining for Python objects, emulating the <cite>?.</cite> operator found in languages like JavaScript.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MessageSequence</span></code>(elements)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MessageSequence</span></code>(elements)</p></td>
 <td><p>An immutable sequence of messages with functional manipulation methods.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
 <td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
 <td><p>All the operations on a read-write sequence.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParsedDocument</span></code>(*, name, sections)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParsedDocument</span></code>(*, name, sections)</p></td>
 <td><p>Represents a fully parsed document with its sections and metadata.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Path</span></code>(*args, **kwargs)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Path</span></code>(*args, **kwargs)</p></td>
 <td><p>PurePath subclass that can make system calls.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Prompt</span></code>(*, content[, compiled])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Prompt</span></code>(*, content[, compiled])</p></td>
 <td><p>Represents a text prompt that can contain template expressions.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunState</span></code>(*, iteration, tool_calls_amount[, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunState</span></code>(*, iteration, tool_calls_amount[, ...])</p></td>
 <td><p>Tracks the state of an agent's execution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
 <td><p>All the operations on a read-only sequence.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpeechToTextProvider</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpeechToTextProvider</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticKnowledge</span></code>(*, content[, cache, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticKnowledge</span></code>(*, content[, cache, ...])</p></td>
 <td><p>Static knowledge is a collection of knowledge that is provided to the agent at the time of creation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Step</span></code>(*[, step_id, step_type, timestamp, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Step</span></code>(*[, step_id, step_type, timestamp, ...])</p></td>
 <td><p>Represents a single execution step in an agent's reasoning process.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StringIO</span></code>([initial_value, newline])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StringIO</span></code>([initial_value, newline])</p></td>
 <td><p>Text I/O implementation using an in-memory buffer.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SuspensionManager</span></code>([store])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SuspensionManager</span></code>([store])</p></td>
 <td><p>Manages suspended agent executions for Human-in-the-Loop workflows.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TextPart</span></code>(*[, type])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TextPart</span></code>(*[, type])</p></td>
 <td><p>Represents a plain text part of a message.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tool</span></code>(*[, type, description])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tool</span></code>(*[, type, description])</p></td>
 <td><p>A callable tool that can be used by AI models to perform specific functions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolExecutionSuggestion</span></code>(*[, type, id, args])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolExecutionSuggestion</span></code>(*[, type, id, args])</p></td>
 <td><p>Represents a suggestion to execute a specific tool.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TraceParams</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TraceParams</span></code></p></td>
 <td><p>Parameters for tracking and analyzing LLM interactions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserMessage</span></code>(*[, role])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserMessage</span></code>(*[, role])</p></td>
 <td><p>Represents a message from a user in the system.</p></td>
 </tr>
 </tbody>

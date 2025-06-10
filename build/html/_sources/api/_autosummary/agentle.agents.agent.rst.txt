@@ -45,6 +45,7 @@ agentle.agents.agent
       Generator
       InMemoryDocumentCacheStore
       MCPServerProtocol
+      Mapping
       Maybe
       MessageSequence
       MutableMapping

@@ -644,6 +644,7 @@
     <span class="n">AsyncGenerator</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
     <span class="n">Generator</span><span class="p">,</span>
+    <span class="n">Mapping</span><span class="p">,</span>
     <span class="n">MutableMapping</span><span class="p">,</span>
     <span class="n">MutableSequence</span><span class="p">,</span>
     <span class="n">Sequence</span><span class="p">,</span>
@@ -940,7 +941,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Library-specific fields</span>
-    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">ModelKind</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">ModelKind</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The model to use for the agent&#39;s service provider.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -998,10 +999,14 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resolved_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">ModelKind</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">()</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="Agent.from_agent_card">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.from_agent_card">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_agent_card</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">agent_card</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Agent[Any]&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_agent_card</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">agent_card</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Agent[Any]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates an Agent instance from an A2A agent card.</span>
 
@@ -1793,7 +1798,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">agent_has_tools</span><span class="p">:</span>
             <span class="c1"># No tools, generate final response</span>
             <span class="n">generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
-                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
                 <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>
                 <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                 <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
@@ -1890,7 +1895,7 @@
 
             <span class="c1"># Generate tool call response</span>
             <span class="n">tool_call_generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
-                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
                 <span class="n">messages</span><span class="o">=</span><span class="n">MessageSequence</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">append_before_last_message</span><span class="p">(</span><span class="n">called_tools_prompt</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">elements</span><span class="p">,</span>
@@ -1921,7 +1926,7 @@
                 <span class="c1"># Generate final response if needed</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
                     <span class="n">generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
-                        <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                        <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
                         <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>
                         <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                         <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
@@ -2285,7 +2290,7 @@
             <span class="n">generation</span><span class="p">:</span> <span class="n">Generation</span><span class="p">[</span>
                 <span class="n">T_Schema</span>
             <span class="p">]</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
-                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
                 <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>
                 <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                 <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span>
@@ -2395,7 +2400,7 @@
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generating tool call response&quot;</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">tool_call_generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
-                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
                 <span class="n">messages</span><span class="o">=</span><span class="n">MessageSequence</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">append_before_last_message</span><span class="p">(</span><span class="n">called_tools_prompt</span><span class="p">)</span>
                 <span class="o">.</span><span class="n">elements</span><span class="p">,</span>
@@ -2436,7 +2441,7 @@
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generating structured response&quot;</span><span class="p">)</span>
                     <span class="p">)</span>
                     <span class="n">generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">create_generation_async</span><span class="p">(</span>
-                        <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                        <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
                         <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>
                         <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                         <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
@@ -3045,7 +3050,8 @@
         <span class="k">return</span> <span class="n">AgentTeam</span><span class="p">(</span>
             <span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">],</span>
             <span class="n">orchestrator_provider</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">generation_provider</span><span class="p">,</span>
-            <span class="n">orchestrator_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_provider</span><span class="o">.</span><span class="n">default_model</span><span class="p">,</span>
+            <span class="n">orchestrator_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_provider</span><span class="o">.</span><span class="n">default_model</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 </pre></div>
