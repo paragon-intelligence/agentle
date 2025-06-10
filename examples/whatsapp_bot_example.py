@@ -142,9 +142,7 @@ Eu sou seu **comediante particular** e estou aqui para transformar seu dia em al
 
 *Pode falar comigo como se estivéssemos num bar após o show* - sem formalidades, só diversão e bom humor! Eu aceito imagens, áudio e até mesmo vídeos!
 
-Então... **qual vai ser hoje?** Uma piada para quebrar o gelo ou prefere que eu comece fazendo uma observação cômica sobre algo que está acontecendo na sua vida? 🎭
-
-~~(Prometo que meu humor é não me fará ser preso!)~~""",
+Então... **qual vai ser hoje?** Uma piada para quebrar o gelo ou prefere que eu comece fazendo uma observação cômica sobre algo que está acontecendo na sua vida? 🎭""",
         error_message="Desculpe pelo inconveniente. Por favor, tente novamente mais tarde ou contate o suporte.",
     )
 
