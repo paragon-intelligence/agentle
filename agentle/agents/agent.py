@@ -37,6 +37,7 @@ from collections.abc import (
     AsyncGenerator,
     Callable,
     Generator,
+    Mapping,
     MutableMapping,
     MutableSequence,
     Sequence,
@@ -328,7 +329,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     """
 
     # Library-specific fields
-    model: str | ModelKind | None = Field(default=None)
+    model: str | ModelKind | Callable[..., str] | None = Field(default=None)
     """
     The model to use for the agent's service provider.
     """
@@ -386,8 +387,12 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         return self.config
 
+    @property
+    def resolved_model(self) -> str | ModelKind | None:
+        return self.model() if callable(self.model) else None
+
     @classmethod
-    def from_agent_card(cls, agent_card: dict[str, Any]) -> "Agent[Any]":
+    def from_agent_card(cls, agent_card: Mapping[str, Any]) -> "Agent[Any]":
         """
         Creates an Agent instance from an A2A agent card.
 
@@ -1157,7 +1162,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         if not agent_has_tools:
             # No tools, generate final response
             generation = await generation_provider.create_generation_async(
-                model=self.model,
+                model=self.resolved_model,
                 messages=context.message_history,
                 response_schema=self.response_schema,
                 generation_config=self.agent_config.generation_config,
@@ -1254,7 +1259,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
             # Generate tool call response
             tool_call_generation = await generation_provider.create_generation_async(
-                model=self.model,
+                model=self.resolved_model,
                 messages=MessageSequence(context.message_history)
                 .append_before_last_message(called_tools_prompt)
                 .elements,
@@ -1285,7 +1290,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 # Generate final response if needed
                 if self.response_schema is not None or not tool_call_generation.text:
                     generation = await generation_provider.create_generation_async(
-                        model=self.model,
+                        model=self.resolved_model,
                         messages=context.message_history,
                         response_schema=self.response_schema,
                         generation_config=self.agent_config.generation_config,
@@ -1647,7 +1652,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             generation: Generation[
                 T_Schema
             ] = await generation_provider.create_generation_async(
-                model=self.model,
+                model=self.resolved_model,
                 messages=context.message_history,
                 response_schema=self.response_schema,
                 generation_config=self.agent_config.generation_config
@@ -1757,7 +1762,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 lambda log: log.debug("Generating tool call response")
             )
             tool_call_generation = await generation_provider.create_generation_async(
-                model=self.model,
+                model=self.resolved_model,
                 messages=MessageSequence(context.message_history)
                 .append_before_last_message(called_tools_prompt)
                 .elements,
@@ -1798,7 +1803,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         lambda log: log.debug("Generating structured response")
                     )
                     generation = await generation_provider.create_generation_async(
-                        model=self.model,
+                        model=self.resolved_model,
                         messages=context.message_history,
                         response_schema=self.response_schema,
                         generation_config=self.agent_config.generation_config,
@@ -2400,5 +2405,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         return AgentTeam(
             agents=[self, other],
             orchestrator_provider=self.generation_provider,
-            orchestrator_model=self.model or self.generation_provider.default_model,
+            orchestrator_model=self.resolved_model
+            or self.generation_provider.default_model,
         )
