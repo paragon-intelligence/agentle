@@ -10,7 +10,7 @@ import time
 import threading
 import weakref
 from pathlib import Path
-from typing import Dict, Literal, Optional, Tuple, Union, override
+from typing import Literal, override
 
 from agentle.prompts.models.prompt import Prompt
 from agentle.prompts.prompt_providers.prompt_provider import PromptProvider
@@ -22,8 +22,8 @@ class FSPromptProvider(PromptProvider):
     """
     A prompt provider that retrieves prompts from the file system with TTL-based caching.
 
-    This provider reads prompt content from Markdown (.md) or text (.txt) files located
-    in a specified base directory. The prompt_id is used to construct the file path.
+    This provider reads prompt content from Markdown (.md), text (.txt), or XML (.xml)
+    files located in a specified base directory. The prompt_id is used to construct the file path.
 
     The caching system is thread-safe and does not block the main thread. Cached entries
     automatically expire after their TTL without requiring manual intervention.
@@ -37,11 +37,11 @@ class FSPromptProvider(PromptProvider):
             - None: No caching is performed
     """
 
-    base_path: Optional[str]
-    cache: Union[Literal["infinite"], int, Deactivated]
-    _cache_store: Dict[str, Tuple[Prompt, float]]  # {prompt_id: (prompt, timestamp)}
+    base_path: str | None
+    cache: Literal["infinite"] | int | Deactivated
+    _cache_store: dict[str, tuple[Prompt, float]]  # {prompt_id: (prompt, timestamp)}
     _cache_lock: threading.RLock
-    _cleanup_timer: Optional[threading.Timer]
+    _cleanup_timer: threading.Timer | None
     _cleanup_interval: int
 
     # Class-level tracking for resource management
@@ -50,8 +50,8 @@ class FSPromptProvider(PromptProvider):
 
     def __init__(
         self,
-        base_path: Optional[str] = None,
-        cache: Union[Literal["infinite"], int, Deactivated] = None,
+        base_path: str | None = None,
+        cache: Literal["infinite"] | int | Deactivated | None = None,
         cleanup_interval: int = 60,  # Run cleanup every 60 seconds by default
     ) -> None:
         """
@@ -114,7 +114,7 @@ class FSPromptProvider(PromptProvider):
         file_path = self._get_file_path(prompt_id)
 
         # Read the prompt content
-        prompt_content = file_path.read_text()
+        prompt_content = file_path.read_text(encoding="utf-8")
         prompt = Prompt(content=prompt_content)
 
         # Store in cache if caching is enabled
@@ -184,7 +184,7 @@ class FSPromptProvider(PromptProvider):
         """
         Get the file path for a prompt ID.
 
-        This method tries both .md and .txt extensions if not already specified.
+        This method tries .md, .txt, and .xml extensions if not already specified.
         If prompt_id contains forward slashes (e.g., 'folder/subfolder/name'),
         it will be treated as a path relative to base_dir.
 
@@ -200,20 +200,16 @@ class FSPromptProvider(PromptProvider):
         base_dir = Path(self.base_path) if self.base_path else Path()
 
         # Check if prompt_id already has an extension
-        if prompt_id.endswith((".md", ".txt")):
+        if prompt_id.endswith((".md", ".txt", ".xml")):
             file_path = base_dir / prompt_id
             if file_path.exists():
                 return file_path
 
-        # Try .md extension first
-        md_path = base_dir / f"{prompt_id}.md"
-        if md_path.exists():
-            return md_path
-
-        # Try .txt extension
-        txt_path = base_dir / f"{prompt_id}.txt"
-        if txt_path.exists():
-            return txt_path
+        # Try extensions in order of preference: .md, .xml, .txt
+        for extension in [".md", ".xml", ".txt"]:
+            file_path = base_dir / f"{prompt_id}{extension}"
+            if file_path.exists():
+                return file_path
 
         # If we got here, no matching file was found
         raise FileNotFoundError(f"No prompt file found for ID: {prompt_id}")
