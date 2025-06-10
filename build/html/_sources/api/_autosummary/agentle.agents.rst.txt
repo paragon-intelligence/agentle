@@ -27,6 +27,7 @@
    execution_state
    knowledge
    step
+   store
    suspension_manager
    ui
    whatsapp
