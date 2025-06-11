@@ -36,6 +36,9 @@ from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.contracts.stateful_observability_client import (
     StatefulObservabilityClient,
 )
+from agentle.resilience.circuit_breaker.circuit_breaker_protocol import (
+    CircuitBreakerProtocol,
+)
 
 type WithoutStructuredOutput = None
 
@@ -51,16 +54,22 @@ class FailoverGenerationProvider(GenerationProvider):
     The order of providers can be either maintained as specified or randomly shuffled
     for each request if load balancing across providers is desired.
 
+    Optionally supports circuit breaker pattern to avoid repeatedly trying providers
+    that have recently failed, improving response times in production scenarios.
+
     Attributes:
         generation_providers: Sequence of underlying generation providers to use.
         tracing_client: Optional client for observability and tracing of generation
             requests and responses.
         shuffle: Whether to randomly shuffle the order of providers for each request.
+        circuit_breaker: Optional circuit breaker to track provider failures and
+            temporarily skip failing providers.
     """
 
     generation_providers: Sequence[GenerationProvider]
     tracing_client: MaybeProtocol[StatefulObservabilityClient]
     shuffle: bool
+    circuit_breaker: CircuitBreakerProtocol | None
 
     def __init__(
         self,
@@ -70,6 +79,7 @@ class FailoverGenerationProvider(GenerationProvider):
         ],
         tracing_client: StatefulObservabilityClient | None = None,
         shuffle: bool = False,
+        circuit_breaker: CircuitBreakerProtocol | None = None,
     ) -> None:
         """
         Initialize the Failover Generation Provider.
@@ -81,6 +91,8 @@ class FailoverGenerationProvider(GenerationProvider):
                 of providers to try in order. Nested sequences will be flattened.
             shuffle: Whether to randomly shuffle the order of providers for each request.
                 Defaults to False (maintain the specified order).
+            circuit_breaker: Optional circuit breaker to track provider failures and
+                temporarily skip failing providers. If None, circuit breaker logic is disabled.
         """
         super().__init__(tracing_client=tracing_client)
 
@@ -96,6 +108,23 @@ class FailoverGenerationProvider(GenerationProvider):
 
         self.generation_providers = flattened_providers
         self.shuffle = shuffle
+        self.circuit_breaker = circuit_breaker
+
+    def _get_provider_circuit_id(self, provider: GenerationProvider) -> str:
+        """
+        Generate a unique identifier for a provider to use as circuit breaker key.
+
+        Uses a combination of provider class name, organization, and instance id
+        to create a reasonably unique identifier for circuit tracking.
+        """
+        # Use provider instance id as base
+        circuit_id = f"{provider.__class__.__name__}_{id(provider)}"
+
+        # Add organization if available for better grouping
+        if hasattr(provider, "organization"):
+            circuit_id = f"{provider.organization}_{circuit_id}"
+
+        return circuit_id
 
     @property
     @override
@@ -151,6 +180,9 @@ class FailoverGenerationProvider(GenerationProvider):
         until one succeeds. If a provider raises an exception, it catches the exception
         and tries the next provider. If all providers fail, it raises the first exception.
 
+        When a circuit breaker is configured, providers with open circuits are skipped
+        to avoid unnecessary delays from repeatedly trying failing providers.
+
         Args:
             model: The model identifier to use for generation.
             messages: A sequence of Message objects to send to the model.
@@ -164,29 +196,104 @@ class FailoverGenerationProvider(GenerationProvider):
         Raises:
             Exception: The exception from the first provider if all providers fail.
         """
-        exceptions: list[Exception] = []
+        exceptions: MutableSequence[tuple[GenerationProvider, Exception]] = []
 
+        # Get list of providers and optionally shuffle
         providers = list(self.generation_providers)
         if self.shuffle:
             random.shuffle(providers)
 
+        # Track which providers were skipped due to open circuits
+        skipped_providers: MutableSequence[GenerationProvider] = []
+
         for provider in providers:
+            # Check circuit breaker if configured
+            if self.circuit_breaker is not None:
+                circuit_id = self._get_provider_circuit_id(provider)
+
+                # Check if circuit is open
+                try:
+                    is_open = await self.circuit_breaker.is_open(circuit_id)
+                    if is_open:
+                        # Skip this provider as its circuit is open
+                        skipped_providers.append(provider)
+                        continue
+                except Exception:
+                    # If circuit breaker check fails, proceed with the provider
+                    # This ensures we don't break functionality if circuit breaker has issues
+                    pass
+
             try:
-                return await provider.create_generation_async(
+                # Attempt generation with this provider
+                result = await provider.create_generation_async(
                     model=model,
                     messages=messages,
                     response_schema=response_schema,
                     generation_config=generation_config,
                     tools=tools,
                 )
+
+                # Success - record it if circuit breaker is configured
+                if self.circuit_breaker is not None:
+                    circuit_id = self._get_provider_circuit_id(provider)
+                    try:
+                        await self.circuit_breaker.record_success(circuit_id)
+                    except Exception:
+                        # Don't fail the successful generation if circuit breaker has issues
+                        pass
+
+                return result
+
             except Exception as e:
-                exceptions.append(e)
+                # Record the failure
+                exceptions.append((provider, e))
+
+                # Record failure to circuit breaker if configured
+                if self.circuit_breaker is not None:
+                    circuit_id = self._get_provider_circuit_id(provider)
+                    try:
+                        await self.circuit_breaker.record_failure(circuit_id)
+                    except Exception:
+                        # Don't fail if circuit breaker has issues
+                        pass
+
                 continue
 
-        if not exceptions:
-            raise RuntimeError("Exception is None and the for loop went out.")
+        # If we skipped some providers due to open circuits and all others failed,
+        # we might want to retry the skipped ones as a last resort
+        if skipped_providers and exceptions:
+            for provider in skipped_providers:
+                try:
+                    result = await provider.create_generation_async(
+                        model=model,
+                        messages=messages,
+                        response_schema=response_schema,
+                        generation_config=generation_config,
+                        tools=tools,
+                    )
 
-        raise exceptions[0]
+                    # Success - the circuit might be recovering
+                    if self.circuit_breaker is not None:
+                        circuit_id = self._get_provider_circuit_id(provider)
+                        try:
+                            await self.circuit_breaker.record_success(circuit_id)
+                        except Exception:
+                            pass
+
+                    return result
+
+                except Exception as e:
+                    exceptions.append((provider, e))
+                    # Circuit is still failing, it will remain open
+                    continue
+
+        # All providers failed
+        if not exceptions:
+            raise RuntimeError(
+                "No providers available. All providers were skipped due to open circuits."
+            )
+
+        raise exceptions[0][1]
 
     @override
     def map_model_kind_to_provider_model(
@@ -234,6 +341,7 @@ class FailoverGenerationProvider(GenerationProvider):
             if self.tracing_client
             else None,
             shuffle=self.shuffle,
+            circuit_breaker=self.circuit_breaker,
         )
 
     def __sub__(
@@ -304,4 +412,5 @@ class FailoverGenerationProvider(GenerationProvider):
             if self.tracing_client
             else None,
             shuffle=self.shuffle,
+            circuit_breaker=self.circuit_breaker,
         )
