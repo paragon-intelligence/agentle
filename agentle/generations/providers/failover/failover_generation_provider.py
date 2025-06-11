@@ -16,11 +16,13 @@ require high availability and cannot tolerate downtime from any single AI provid
 """
 
 from __future__ import annotations
+
 import random
 from collections.abc import MutableSequence, Sequence
 from typing import override
 
 from rsb.contracts.maybe_protocol import MaybeProtocol
+from rsb.coroutines.fire_and_forget import fire_and_forget
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
@@ -237,7 +239,7 @@ class FailoverGenerationProvider(GenerationProvider):
                 if self.circuit_breaker is not None:
                     circuit_id = self._get_provider_circuit_id(provider)
                     try:
-                        await self.circuit_breaker.record_success(circuit_id)
+                        fire_and_forget(self.circuit_breaker.record_success, circuit_id)
                     except Exception:
                         # Don't fail the successful generation if circuit breaker has issues
                         pass
@@ -252,7 +254,7 @@ class FailoverGenerationProvider(GenerationProvider):
                 if self.circuit_breaker is not None:
                     circuit_id = self._get_provider_circuit_id(provider)
                     try:
-                        await self.circuit_breaker.record_failure(circuit_id)
+                        fire_and_forget(self.circuit_breaker.record_failure, circuit_id)
                     except Exception:
                         # Don't fail if circuit breaker has issues
                         pass
@@ -276,7 +278,9 @@ class FailoverGenerationProvider(GenerationProvider):
                     if self.circuit_breaker is not None:
                         circuit_id = self._get_provider_circuit_id(provider)
                         try:
-                            await self.circuit_breaker.record_success(circuit_id)
+                            fire_and_forget(
+                                self.circuit_breaker.record_success, circuit_id
+                            )
                         except Exception:
                             pass
 
