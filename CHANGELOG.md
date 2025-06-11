@@ -1,5 +1,5 @@
 # Changelog
 
-## v0.4.7
+## v0.4.8
 
-- feat: support for XML in `fs_prompt_provider`
+- 
