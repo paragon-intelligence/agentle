@@ -22,8 +22,10 @@ agentle.agents.context
       ExecutionState
       MutableMapping
       MutableSequence
+      Sequence
       Step
       TextPart
+      ToolExecutionResult
       Usage
       UserMessage
       datetime
