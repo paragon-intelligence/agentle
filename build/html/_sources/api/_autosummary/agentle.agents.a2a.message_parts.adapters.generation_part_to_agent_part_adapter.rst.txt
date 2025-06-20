@@ -15,6 +15,7 @@ agentle.agents.a2a.message\_parts.adapters.generation\_part\_to\_agent\_part\_ad
       GenerationPartToAgentPartAdapter
       GenerationTextPart
       GenerationTool
+      GenerationToolExecutionResult
       GenerationToolExecutionSuggestion
       TextPart
    
