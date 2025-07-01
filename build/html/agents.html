@@ -780,7 +780,7 @@
 <h3>How ModelKind Works<a class="headerlink" href="#how-modelkind-works" title="Link to this heading">¶</a></h3>
 <p>Behind the scenes, Agentle uses a decorator that:</p>
 <ol class="arabic simple">
-<li><p>Intercepts calls to the provider’s <code class="docutils literal notranslate"><span class="pre">create_generation_async</span></code> method</p></li>
+<li><p>Intercepts calls to the provider’s <code class="docutils literal notranslate"><span class="pre">generate_async</span></code> method</p></li>
 <li><p>Checks if the model parameter is a ModelKind value</p></li>
 <li><p>Calls the provider’s <code class="docutils literal notranslate"><span class="pre">map_model_kind_to_provider_model</span></code> method to get the provider-specific model name</p></li>
 <li><p>Substitutes this mapped value before the actual provider method is called</p></li>

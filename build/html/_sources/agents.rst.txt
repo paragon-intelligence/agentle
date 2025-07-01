@@ -144,7 +144,7 @@ How ModelKind Works
 
 Behind the scenes, Agentle uses a decorator that:
 
-1. Intercepts calls to the provider's ``create_generation_async`` method
+1. Intercepts calls to the provider's ``generate_async`` method
 2. Checks if the model parameter is a ModelKind value
 3. Calls the provider's ``map_model_kind_to_provider_model`` method to get the provider-specific model name
 4. Substitutes this mapped value before the actual provider method is called
