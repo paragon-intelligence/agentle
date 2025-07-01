@@ -30,6 +30,7 @@ agentle.agents.agent
       AssistantMessage
       AsyncGenerator
       Authentication
+      Awaitable
       BaseModel
       BytesIO
       Callable
