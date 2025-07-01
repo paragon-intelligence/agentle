@@ -24,7 +24,7 @@ agentle.agents.agent\_team
       Any
       BaseModel
       GenerationProvider
-      GoogleGenaiGenerationProvider
+      GoogleGenerationProvider
       MutableSequence
       Sequence
       UUID

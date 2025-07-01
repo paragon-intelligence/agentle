@@ -687,8 +687,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_input</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentInput</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.agent_run_output</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentRunOutput</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.base.generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenerationProvider</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_genai_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">GoogleGenaiGenerationProvider</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.google.google_generation_provider</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GoogleGenerationProvider</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -806,7 +806,7 @@
     <span class="p">)</span>
 
     <span class="n">orchestrator_provider</span><span class="p">:</span> <span class="n">GenerationProvider</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">,</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">GoogleGenerationProvider</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The generation provider used by the orchestrator agent.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
