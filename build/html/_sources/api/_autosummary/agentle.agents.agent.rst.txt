@@ -1,4 +1,4 @@
-agentle.agents.agent
+﻿agentle.agents.agent
 ====================
 
 .. automodule:: agentle.agents.agent
@@ -12,6 +12,7 @@ agentle.agents.agent
       asynccontextmanager
       cast
       contextmanager
+      dedent
       file_parser_default_factory
       get_default_suspension_manager
       is_module_available
@@ -51,7 +52,7 @@ agentle.agents.agent
       MessageSequence
       MutableMapping
       MutableSequence
-      ParsedDocument
+      ParsedFile
       Path
       Prompt
       RunState

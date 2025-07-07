@@ -15,7 +15,7 @@ agentle.agents.agent\_input
       Context
       DeveloperMessage
       FilePart
-      ParsedDocument
+      ParsedFile
       Path
       Prompt
       Sequence

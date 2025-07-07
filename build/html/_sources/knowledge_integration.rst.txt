@@ -142,7 +142,7 @@ You can also create completely custom document parsers by implementing the ``Doc
     from typing import override
     from pathlib import Path
     from agentle.parsing.document_parser import DocumentParser
-    from agentle.parsing.parsed_document import ParsedDocument
+    from agentle.parsing.parsed_document import ParsedFile
     from agentle.parsing.section_content import SectionContent
 
     # Create a custom parser
@@ -150,15 +150,15 @@ You can also create completely custom document parsers by implementing the ``Doc
         """Custom document parser implementation"""
         
         @override
-        async def parse_async(self, document_path: str) -> ParsedDocument:
+        async def parse_async(self, document_path: str) -> ParsedFile:
             # Implement your custom parsing logic here
             path = Path(document_path)
             
             # For this example, we'll just use a placeholder
             parsed_content = f"Content from {path.name} would be parsed with custom logic"
             
-            # Return in the standard ParsedDocument format
-            return ParsedDocument(
+            # Return in the standard ParsedFile format
+            return ParsedFile(
                 name=path.name,
                 sections=[
                     SectionContent(
