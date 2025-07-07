@@ -2398,16 +2398,16 @@
                     <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                         <span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
                         <span class="n">redundancy_warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;⚠️ REDUNDANT: &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; called </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> times with args: </span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;(warning) REDUNDANT: &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; called </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> times with args: </span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">&quot;</span>
                         <span class="p">)</span>
 
                 <span class="n">header_text</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
 <span class="s2">                    &lt;previous_tool_calls&gt;</span>
 <span class="s2">                    &lt;critical_rules&gt;</span>
-<span class="s2">                    🚫 NEVER call the same tool with identical arguments twice</span>
-<span class="s2">                    🚫 DO NOT repeat tool calls that already have results</span>
-<span class="s2">                    ⚠️  Check the results below BEFORE making any new tool call</span>
-<span class="s2">                    ⚠️  If information was already obtained, use it instead of calling again</span>
+<span class="s2">                    (danger) NEVER call the same tool with identical arguments twice</span>
+<span class="s2">                    (danger) DO NOT repeat tool calls that already have results</span>
+<span class="s2">                    (warning)  Check the results below BEFORE making any new tool call</span>
+<span class="s2">                    (warning)  If information was already obtained, use it instead of calling again</span>
 <span class="s2">                    &lt;/critical_rules&gt;</span>
 <span class="s2">                    </span>
 <span class="s2">                    &lt;iteration_info&gt;</span>
@@ -2419,7 +2419,7 @@
                 <span class="k">if</span> <span class="n">redundancy_warnings</span><span class="p">:</span>
                     <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&lt;redundancy_alerts&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
                     <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">redundancy_warnings</span><span class="p">)</span>
-                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">❌ These redundant calls are wasting resources and iterations!</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">(danger) These redundant calls are wasting resources and iterations!</span><span class="se">\n</span><span class="s2">&quot;</span>
                     <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;&lt;/redundancy_alerts&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
 
                 <span class="c1"># Add budget warnings</span>
@@ -2427,7 +2427,7 @@
                 <span class="k">for</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">tool_budget</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="n">MAX_CALLS_PER_TOOL</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                         <span class="n">budget_warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;⚠️ Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; approaching limit: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">MAX_CALLS_PER_TOOL</span><span class="si">}</span><span class="s2"> calls&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;(warning) Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; approaching limit: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">MAX_CALLS_PER_TOOL</span><span class="si">}</span><span class="s2"> calls&quot;</span>
                         <span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">budget_warnings</span><span class="p">:</span>
@@ -2468,7 +2468,7 @@
                                 <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Tool: </span><span class="si">{</span><span class="n">suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
                                 <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Args: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
                                 <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Result: </span><span class="si">{</span><span class="n">result_str</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                <span class="o">+</span> <span class="s2">&quot;Status: ✅ COMPLETED - DO NOT CALL AGAIN WITH SAME ARGS</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                <span class="o">+</span> <span class="s2">&quot;Status: (success) COMPLETED - DO NOT CALL AGAIN WITH SAME ARGS</span><span class="se">\n</span><span class="s2">&quot;</span>
                             <span class="p">)</span>
                         <span class="p">)</span>
 
