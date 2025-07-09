@@ -1,0 +1,35 @@
+agentle.agents.templates.data\_collection.progressive\_profilling\_agent
+========================================================================
+
+.. automodule:: agentle.agents.templates.data_collection.progressive_profilling_agent
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      PrivateAttr
+      asynccontextmanager
+      contextmanager
+      dedent
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Agent
+      AgentRunOutput
+      Any
+      AsyncGenerator
+      BaseModel
+      CollectedData
+      ConfigDict
+      FieldSpec
+      GenerationProvider
+      Generator
+      Mapping
+      MutableMapping
+      MutableSequence
+      ProgressiveProfilingAgent
+      Sequence
+   

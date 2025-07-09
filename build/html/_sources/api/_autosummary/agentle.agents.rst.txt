@@ -29,5 +29,6 @@
    step
    store
    suspension_manager
+   templates
    ui
    whatsapp
