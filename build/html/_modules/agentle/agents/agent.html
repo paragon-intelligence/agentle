@@ -2485,8 +2485,6 @@
 
                     <span class="c1"># Truncate very long results but keep them meaningful</span>
                     <span class="n">result_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result_str</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">:</span>
-                        <span class="n">result_str</span> <span class="o">=</span> <span class="n">result_str</span><span class="p">[:</span><span class="mi">500</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;... [truncated]&quot;</span>
 
                     <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="n">TextPart</span><span class="p">(</span>
