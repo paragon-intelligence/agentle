@@ -2481,21 +2481,22 @@
                                 <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;[End of file]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">),</span>
                             <span class="p">]</span>
                         <span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="c1"># Truncate very long results but keep them meaningful</span>
-                        <span class="n">result_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result_str</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">:</span>
-                            <span class="n">result_str</span> <span class="o">=</span> <span class="n">result_str</span><span class="p">[:</span><span class="mi">500</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;... [truncated]&quot;</span>
+                        <span class="k">continue</span>
 
-                        <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="n">TextPart</span><span class="p">(</span>
-                                <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[Execution #</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Tool: </span><span class="si">{</span><span class="n">suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Args: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Result: </span><span class="si">{</span><span class="n">result_str</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                <span class="o">+</span> <span class="s2">&quot;Status: (success) COMPLETED - DO NOT CALL AGAIN WITH SAME ARGS</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="p">)</span>
+                    <span class="c1"># Truncate very long results but keep them meaningful</span>
+                    <span class="n">result_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result_str</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">500</span><span class="p">:</span>
+                        <span class="n">result_str</span> <span class="o">=</span> <span class="n">result_str</span><span class="p">[:</span><span class="mi">500</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;... [truncated]&quot;</span>
+
+                    <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">TextPart</span><span class="p">(</span>
+                            <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[Execution #</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Tool: </span><span class="si">{</span><span class="n">suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Args: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Result: </span><span class="si">{</span><span class="n">result_str</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="o">+</span> <span class="s2">&quot;Status: (success) COMPLETED - DO NOT CALL AGAIN WITH SAME ARGS</span><span class="se">\n</span><span class="s2">&quot;</span>
                         <span class="p">)</span>
+                    <span class="p">)</span>
 
                 <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&lt;/completed_tool_executions&gt;&quot;</span><span class="p">)</span>
