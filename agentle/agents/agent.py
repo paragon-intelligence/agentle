@@ -49,6 +49,7 @@ from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any, cast
 
+import pydantic
 from async_lru import alru_cache
 from rsb.containers.maybe import Maybe
 from rsb.coroutines.run_sync import run_sync
@@ -131,7 +132,6 @@ def is_module_available(module_name: str) -> bool:
 HAS_PANDAS = is_module_available("pandas")
 HAS_NUMPY = is_module_available("numpy")
 HAS_PIL = is_module_available("PIL")
-HAS_PYDANTIC = is_module_available("pydantic")
 
 
 class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
@@ -1746,6 +1746,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         MAX_CALLS_PER_TOOL = 3
         MAX_IDENTICAL_CALLS = 1
 
+        if self.response_schema is not None:
+            final_answer_tool = self._create_final_answer_tool()
+            all_tools.append(final_answer_tool)
+
         while state.iteration < self.agent_config.maxIterations:
             current_iteration = state.iteration + 1
             _logger.bind_optional(
@@ -1891,37 +1895,6 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                     token_usage=tool_call_generation.usage,
                 )
 
-                # Only make another call if we need structured output or didn't get text
-                if self.response_schema is not None or not tool_call_generation.text:
-                    _logger.bind_optional(
-                        lambda log: log.debug("Generating structured response")
-                    )
-                    generation = await generation_provider.generate_async(
-                        model=self.resolved_model,
-                        messages=MessageSequence(context.message_history)
-                        .append_before_last_message(called_tools_prompt)
-                        .elements,
-                        response_schema=self.response_schema,
-                        generation_config=self.agent_config.generation_config,
-                    )
-                    _logger.bind_optional(
-                        lambda log: log.debug("Final generation complete")
-                    )
-
-                    # Update the step with the final generation results
-                    final_step.generation_text = generation.text
-                    final_step.token_usage = generation.usage
-                    final_step_duration = (time.time() - final_step_start_time) * 1000
-                    final_step.mark_completed(duration_ms=final_step_duration)
-                    context.add_step(final_step)
-
-                    # Update context with final generation and complete execution
-                    context.update_token_usage(generation.usage)
-                    context.complete_execution()
-                    return self._build_agent_run_output(
-                        context=context, generation=generation
-                    )
-
                 # If we got text and don't need structure, use what we have
                 _logger.bind_optional(
                     lambda log: log.debug("Using existing text response")
@@ -1960,6 +1933,18 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             skipped_tools: MutableSequence[str] = []
 
             for tool_execution_suggestion in tool_call_generation.tool_calls:
+                if tool_execution_suggestion.tool_name == "FINAL_ANSWER":
+                    parsed_data: T_Schema = self._parse_final_answer_tool_args(
+                        tool_execution_suggestion.args,
+                    )
+
+                    tool_call_generation.set_parsed_data(parsed_data)
+
+                    return self._build_agent_run_output(
+                        generation=cast(Generation[T_Schema], tool_call_generation),
+                        context=context,
+                    )
+
                 pattern_key = self._get_tool_call_pattern_key(
                     tool_execution_suggestion.tool_name,
                     dict(tool_execution_suggestion.args),
@@ -2259,6 +2244,43 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             url=new_url or self.url,
             suspension_manager=new_suspension_manager or self.suspension_manager,
             document_cache_store=new_document_cache_store or self.document_cache_store,
+        )
+
+    def _create_final_answer_tool(self) -> Tool[T_Schema]:
+        """Create a tool that represents the final structured answer."""
+
+        # Convert Pydantic schema to tool parameters
+        schema_dict: Mapping[str, Any] = cast(
+            Mapping[str, Any],
+            self.response_schema.model_json_schema(),  # type: ignore
+        )
+
+        # Create a tool with schema as parameters
+        tool: Tool[T_Schema] = Tool(
+            name="FINAL_ANSWER",
+            description="Provide the final answer in the required format. "
+            + "Use this tool when you have all the information needed "
+            + "to answer the user's question.",
+            parameters=schema_dict.get("properties", {}),
+        )
+
+        def ref(kwargs: Any) -> Any:
+            return kwargs
+
+        tool.set_callable_ref(ref)
+
+        return tool
+
+    def _parse_final_answer_tool_args(self, args: Mapping[str, Any]) -> T_Schema:
+        if self.response_schema is None:
+            raise ValueError(
+                "ERROR while trying to parse final Agent's final "
+                + "answer args. response_schema is None."
+            )
+
+        return cast(
+            T_Schema,
+            cast(pydantic.BaseModel, self.response_schema).model_validate(args),
         )
 
     def _build_agent_run_output(
@@ -2561,22 +2583,15 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 ]
             )
 
-        # Handle Pydantic models if available
-        elif HAS_PYDANTIC:
-            try:
-                from pydantic import BaseModel as PydanticBaseModel
-
-                if isinstance(input, PydanticBaseModel):
-                    # Convert Pydantic model to JSON string
-                    text = input.model_dump_json(indent=2)
-                    return Context(
-                        message_history=[
-                            developer_message,
-                            UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
-                        ]
-                    )
-            except (ImportError, AttributeError):
-                pass
+        elif isinstance(input, pydantic.BaseModel):
+            # Convert Pydantic model to JSON string
+            text = input.model_dump_json(indent=2)
+            return Context(
+                message_history=[
+                    developer_message,
+                    UserMessage(parts=[TextPart(text=f"```json\n{text}\n```")]),
+                ]
+            )
 
         elif isinstance(input, (dict, list, tuple, set, frozenset)):
             # Convert dict, list, tuple, set, frozenset to JSON string
