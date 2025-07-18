@@ -28,7 +28,6 @@ agentle.agents.agent
       AgentConfigDict
       AgentRunOutput
       AgentSkill
-      Agent[Any]
       Any
       AssistantMessage
       AsyncGenerator
