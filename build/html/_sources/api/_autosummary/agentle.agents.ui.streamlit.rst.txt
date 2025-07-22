@@ -1,4 +1,4 @@
-agentle.agents.ui.streamlit
+﻿agentle.agents.ui.streamlit
 ===========================
 
 .. automodule:: agentle.agents.ui.streamlit
@@ -15,7 +15,6 @@ agentle.agents.ui.streamlit
    .. autosummary::
    
       Adapter
-      Agent
       AgentToStreamlit
       Any
       Callable
