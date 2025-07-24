@@ -29,6 +29,7 @@ agentle.agents.agent
       AgentRunOutput
       AgentSkill
       AgentToStreamlit
+      Agent[Any]
       Any
       AssistantMessage
       AsyncGenerator
@@ -40,6 +41,7 @@ agentle.agents.agent
       Capabilities
       ConfigDict
       Context
+      ConversationStore
       DeveloperMessage
       DocumentCacheStore
       DocumentParser

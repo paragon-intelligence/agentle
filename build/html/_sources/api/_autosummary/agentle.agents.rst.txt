@@ -22,6 +22,7 @@
    asgi
    context
    context_state
+   conversations
    errors
    exceptions
    execution_state
