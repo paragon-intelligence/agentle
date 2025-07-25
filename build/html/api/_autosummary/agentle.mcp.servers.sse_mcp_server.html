@@ -635,12 +635,12 @@
           <section id="module-agentle.mcp.servers.sse_mcp_server">
 <span id="agentle-mcp-servers-sse-mcp-server"></span><h1>agentle.mcp.servers.sse_mcp_server<a class="headerlink" href="#module-agentle.mcp.servers.sse_mcp_server" title="Link to this heading">¶</a></h1>
 <p>Server-Sent Events (SSE) implementation of the Model Context Protocol (MCP) server client.</p>
-<p>This module provides a client implementation for interacting with MCP servers over
-Server-Sent Events (SSE). It enables connection management, tool discovery,
-resource querying, and tool execution through SSE for server-to-client streaming
-and HTTP POST for client-to-server communication.</p>
-<p>The implementation follows the MCPServerProtocol interface and uses aiohttp for
-asynchronous HTTP communication with SSE support.</p>
+<p>FIXED VERSION for aiohttp with proper SSE protocol implementation:
+- Correct endpoint discovery mechanism
+- Proper sessionId handling in POST requests (FIXED: No duplicate sessionId parameters)
+- Fixed SSE parsing for aiohttp
+- Connection state management fixes
+- Proper protocol implementation matching the Node.js server</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -650,6 +650,15 @@ asynchronous HTTP communication with SSE support.</p>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrivateAttr</span></code>()</p></td>
 <td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_qs</span></code>(qs[, keep_blank_values, ...])</p></td>
+<td><p>Parse a query given as a string argument.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">urljoin</span></code>(base, url[, allow_fragments])</p></td>
+<td><p>Join a base URL and a possibly relative URL to form an absolute interpretation of the latter.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">urlparse</span></code>(url[, scheme, allow_fragments])</p></td>
+<td><p>Parse a URL into 6 components: &lt;scheme&gt;://&lt;netloc&gt;/&lt;path&gt;;&lt;params&gt;?&lt;query&gt;#&lt;fragment&gt;</p></td>
 </tr>
 </tbody>
 </table>

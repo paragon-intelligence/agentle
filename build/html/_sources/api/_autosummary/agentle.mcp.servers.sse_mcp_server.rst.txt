@@ -1,4 +1,4 @@
-agentle.mcp.servers.sse\_mcp\_server
+﻿agentle.mcp.servers.sse\_mcp\_server
 ====================================
 
 .. automodule:: agentle.mcp.servers.sse_mcp_server
@@ -10,6 +10,9 @@ agentle.mcp.servers.sse\_mcp\_server
    
       Field
       PrivateAttr
+      parse_qs
+      urljoin
+      urlparse
    
    .. rubric:: Classes
 
