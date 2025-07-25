@@ -627,14 +627,19 @@
         <article role="main" id="furo-main-content">
           <h1>Source code for agentle.mcp.servers.stdio_mcp_server</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Stdio implementation of the Model Context Protocol (MCP) server client.</span>
+<span class="sd">Production-ready Stdio implementation of the Model Context Protocol (MCP) server client.</span>
 
-<span class="sd">This module provides a client implementation for interacting with MCP servers over</span>
-<span class="sd">standard input/output streams. It enables connection management, tool discovery,</span>
-<span class="sd">resource querying, and tool execution through stdin/stdout communication.</span>
+<span class="sd">FIXES APPLIED:</span>
+<span class="sd">1. Correct JSON-RPC method names per MCP spec</span>
+<span class="sd">2. Updated protocol version to 2024-11-05</span>
+<span class="sd">3. Fixed parameter structures</span>
+<span class="sd">4. Added process health monitoring</span>
+<span class="sd">5. Improved error handling and resource cleanup</span>
+<span class="sd">6. Better connection state management</span>
+<span class="sd">7. Proper signal handling for graceful shutdown</span>
 
-<span class="sd">The implementation follows the MCPServerProtocol interface and uses asyncio streams</span>
-<span class="sd">for communication.</span>
+<span class="sd">ENHANCEMENTS:</span>
+<span class="sd">1. Added extensive, detailed logging to trace execution flow and debug connection issues.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
@@ -644,6 +649,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shlex</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">NotRequired</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">override</span>
 
@@ -670,7 +676,7 @@
     <span class="n">clientInfo</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
     <span class="n">capabilities</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span>
     <span class="n">uri</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
-    <span class="n">tool</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>  <span class="c1"># FIXED: Changed from &#39;tool&#39; to &#39;name&#39;</span>
     <span class="n">arguments</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
 
 
@@ -704,35 +710,50 @@
 <a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">StdioMCPServer</span><span class="p">(</span><span class="n">MCPServerProtocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Stdio implementation of the MCP (Model Context Protocol) server client.</span>
+<span class="sd">    Production-ready Stdio implementation of the MCP (Model Context Protocol) server client.</span>
+
+<span class="sd">    FIXED VERSION with proper protocol compliance, error handling, and resource management.</span>
 
 <span class="sd">    This class provides a client implementation for interacting with MCP servers</span>
-<span class="sd">    over standard input/output streams. It handles connection management, tool discovery,</span>
-<span class="sd">    resource management, and tool invocation through stdin/stdout communication.</span>
+<span class="sd">    over standard input/output streams. The server is launched as a subprocess and</span>
+<span class="sd">    communication happens through stdin/stdout pipes.</span>
+
+<span class="sd">    Key Features:</span>
+<span class="sd">    - Proper MCP protocol compliance (2024-11-05)</span>
+<span class="sd">    - Robust process lifecycle management</span>
+<span class="sd">    - Health monitoring and connection validation</span>
+<span class="sd">    - Graceful error handling and cleanup</span>
+<span class="sd">    - Signal handling for proper shutdown</span>
+<span class="sd">    - Resource leak prevention</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        server_name (str): A human-readable name for the server</span>
-<span class="sd">        command (str): The command to run the server executable</span>
-<span class="sd">        server_env (MutableMapping[str, str]): Environment variables to pass to the server process</span>
+<span class="sd">        command (str): The command to launch the MCP server subprocess</span>
+<span class="sd">        server_env (MutableMapping[str, str]): Environment variables for the server process</span>
 <span class="sd">        working_dir (str): Working directory for the server process</span>
+<span class="sd">        request_timeout_s (float): Timeout for individual requests</span>
+<span class="sd">        startup_timeout_s (float): Timeout for server startup</span>
+<span class="sd">        shutdown_timeout_s (float): Timeout for graceful shutdown</span>
 
 <span class="sd">    Usage:</span>
 <span class="sd">        server = StdioMCPServer(</span>
-<span class="sd">            server_name=&quot;Example MCP&quot;,</span>
-<span class="sd">            command=&quot;path/to/server&quot;,</span>
-<span class="sd">            server_env={&quot;DEBUG&quot;: &quot;1&quot;},</span>
-<span class="sd">            working_dir=&quot;/path/to/working/dir&quot;</span>
+<span class="sd">            server_name=&quot;OpenMemory MCP&quot;,</span>
+<span class="sd">            command=&quot;npx openmemory&quot;,</span>
+<span class="sd">            server_env={&quot;OPENMEMORY_API_KEY&quot;: &quot;your-key&quot;},</span>
 <span class="sd">        )</span>
-<span class="sd">        await server.connect()</span>
-<span class="sd">        tools = await server.list_tools()</span>
-<span class="sd">        result = await server.call_tool(&quot;tool_name&quot;, {&quot;param&quot;: &quot;value&quot;})</span>
-<span class="sd">        await server.cleanup()</span>
+
+<span class="sd">        try:</span>
+<span class="sd">            await server.connect()</span>
+<span class="sd">            tools = await server.list_tools()</span>
+<span class="sd">            result = await server.call_tool(&quot;search&quot;, {&quot;query&quot;: &quot;test&quot;})</span>
+<span class="sd">        finally:</span>
+<span class="sd">            await server.cleanup()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Required configuration fields</span>
     <span class="n">server_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Human-readable name for the MCP server&quot;</span><span class="p">)</span>
     <span class="n">command</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Command to run the MCP server process&quot;</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Command to launch the MCP server subprocess&quot;</span>
     <span class="p">)</span>
 
     <span class="c1"># Optional configuration fields</span>
@@ -745,13 +766,20 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Working directory for the server process&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">request_timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout in seconds for requests&quot;</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout in seconds for individual requests&quot;</span>
+    <span class="p">)</span>
+    <span class="n">startup_timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout in seconds for server startup&quot;</span>
+    <span class="p">)</span>
+    <span class="n">shutdown_timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout in seconds for graceful shutdown&quot;</span>
     <span class="p">)</span>
 
     <span class="c1"># Internal state</span>
     <span class="n">_process</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">Process</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_stdin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">StreamWriter</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_stdout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">StreamReader</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_stderr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">StreamReader</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_next_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">_pending_requests</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">[</span><span class="n">_JsonRpcResponse</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
@@ -760,6 +788,34 @@
         <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">_read_task</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_stderr_task</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_health_check_task</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">_initialized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_connection_lock</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@override</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a readable name for the server.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the server process is running and its I/O streams are available.&quot;&quot;&quot;</span>
+        <span class="n">is_proc_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="n">is_stdin_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">is_closing</span><span class="p">()</span>
+        <span class="n">is_stdout_ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="c1"># This check verifies the transport layer is up. The protocol-level</span>
+        <span class="c1"># _initialized flag is managed by the connect_async flow to prevent</span>
+        <span class="c1"># premature API calls. Removing it from this check resolves the deadlock.</span>
+        <span class="n">connected</span> <span class="o">=</span> <span class="n">is_proc_ok</span> <span class="ow">and</span> <span class="n">is_stdin_ok</span> <span class="ow">and</span> <span class="n">is_stdout_ok</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Checking connection status for &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39;: &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;process_ok=</span><span class="si">{</span><span class="n">is_proc_ok</span><span class="si">}</span><span class="s2">, stdin_ok=</span><span class="si">{</span><span class="n">is_stdin_ok</span><span class="si">}</span><span class="s2">, stdout_ok=</span><span class="si">{</span><span class="n">is_stdout_ok</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;-&gt; connected=</span><span class="si">{</span><span class="n">connected</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">connected</span>
 
 <div class="viewcode-block" id="StdioMCPServer.connect_async">
 <a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.connect_async">[docs]</a>
@@ -768,24 +824,58 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Connect to the MCP server over stdin/stdout.</span>
 
-<span class="sd">        Launches the server process and sets up communication channels.</span>
-<span class="sd">        Initializes the MCP protocol.</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server process cannot be started</span>
-<span class="sd">            TimeoutError: If the initialization takes too long</span>
+<span class="sd">        FIXED: Proper protocol compliance and error handling.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting MCP server process: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Acquiring connection lock for &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39;...&quot;</span><span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connection lock acquired for &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Already connected to MCP server &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39;. Skipping connection.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
 
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting connection process for &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Step 1: Starting server process...&quot;</span><span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_server_process</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Step 2: Initializing MCP protocol...&quot;</span><span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_protocol</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Step 3: Starting background tasks...&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_start_background_tasks</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;MCP server &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39; connected successfully. Status: initialized=True&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;!!! Critical failure during connect_async for &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_resources</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not connect to MCP server &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_start_server_process</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start the server subprocess with proper configuration.&quot;&quot;&quot;</span>
         <span class="c1"># Prepare environment variables</span>
         <span class="n">env</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">env</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_env</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server environment variables: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_env</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Disable Python buffering for immediate I/O</span>
+        <span class="n">env</span><span class="p">[</span><span class="s2">&quot;PYTHONUNBUFFERED&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># Split command into args if provided as a string</span>
-            <span class="n">cmd_args</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">()</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span>
-            <span class="p">)</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">()</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span>
+            <span class="n">cmd_args</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing command: </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd_args</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Working directory: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="c1"># Start the server process</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_subprocess_exec</span><span class="p">(</span>
@@ -795,247 +885,565 @@
                 <span class="n">stderr</span><span class="o">=</span><span class="n">asyncio</span><span class="o">.</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
                 <span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
                 <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span>
+                <span class="c1"># ADDED: Ensure process gets killed if parent dies</span>
+                <span class="n">preexec_fn</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">setsid</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">!=</span> <span class="s2">&quot;win32&quot;</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server process started with PID: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                    <span class="s2">&quot;Failed to open stdin/stdout pipes to server process&quot;</span>
-                <span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdin</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdout</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stderr</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Subprocess pipes (stdin/stdout/stderr) are None.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Failed to open pipes to server process&quot;</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdin</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stdout</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stderr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">stderr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Successfully assigned stdin, stdout, stderr streams.&quot;</span><span class="p">)</span>
 
-            <span class="c1"># Start background task to read from stdout</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_read_responses</span><span class="p">())</span>
+            <span class="c1"># Wait briefly to ensure process started successfully</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
 
-            <span class="c1"># Initialize the MCP protocol</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_protocol</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Server process exited immediately after start with code </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Server process exited immediately with code </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Server process is running.&quot;</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to start server process: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">cleanup_async</span><span class="p">()</span>
-            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not start server process: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to execute or start server process: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to start server process: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-
-    <span class="nd">@property</span>
-    <span class="nd">@override</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get a readable name for the server.</span>
+<span class="sd">        Initialize the MCP protocol with the server.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            str: The human-readable server name</span>
+<span class="sd">        FIXED: Correct protocol version and method names.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing MCP protocol...&quot;</span><span class="p">)</span>
+
+        <span class="c1"># FIXED: Use correct protocol version and structure</span>
+        <span class="n">initialize_request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialize&quot;</span><span class="p">,</span>  <span class="c1"># Correct method name</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;protocolVersion&quot;</span><span class="p">:</span> <span class="s2">&quot;2024-11-05&quot;</span><span class="p">,</span>  <span class="c1"># FIXED: Current protocol version</span>
+                <span class="s2">&quot;clientInfo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;agentle-mcp-client&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;capabilities&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;resources&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;prompts&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Constructed initialize request: </span><span class="si">{</span><span class="n">initialize_request</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Start a temporary reader task to get the response for initialization</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Starting temporary reader for initialization...&quot;</span><span class="p">)</span>
+            <span class="n">temp_read_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_read_responses</span><span class="p">())</span>
+
+            <span class="c1"># Send initialize with timeout</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Sending &#39;initialize&#39; request with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">startup_timeout_s</span><span class="si">}</span><span class="s2">s timeout.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">initialize_request</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">startup_timeout_s</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received &#39;initialize&#39; response: </span><span class="si">{</span><span class="n">response</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Server returned an error during initialization: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to initialize MCP protocol: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Validate server response</span>
+            <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Invalid initialization response: missing result&quot;</span><span class="p">)</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;protocolVersion&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">or</span> <span class="s2">&quot;serverInfo&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Initialization response missing required fields &#39;protocolVersion&#39; or &#39;serverInfo&#39;. Got: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid initialization response: missing required fields&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initialization result validated: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Send initialized notification</span>
+            <span class="n">initialized_notification</span><span class="p">:</span> <span class="n">_JsonRpcNotification</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;notifications/initialized&quot;</span><span class="p">,</span>  <span class="c1"># Correct notification method</span>
+                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="p">}</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_notification</span><span class="p">(</span><span class="n">initialized_notification</span><span class="p">)</span>
+
+            <span class="c1"># Cancel the temporary reader task, a permanent one will be started next</span>
+            <span class="n">temp_read_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">temp_read_task</span>
+            <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Temporary reader task cancelled as expected.&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;MCP protocol initialized successfully with server: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;serverInfo&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;unknown&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Protocol initialization timed out after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">startup_timeout_s</span><span class="si">}</span><span class="s2">s. No response from server.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Protocol initialization timed out after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">startup_timeout_s</span><span class="si">}</span><span class="s2">s&quot;</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;An unexpected error occurred during initialization: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_start_background_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Start background tasks for reading responses and monitoring health.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_read_responses</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;read-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Started response reader task: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Could not start response reader: stdout is None or task already exists.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stderr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_read_stderr</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;stderr-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Started stderr reader task: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_stderr_task</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Could not start stderr reader: stderr is None or task already exists.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Start health monitoring</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_health_check_task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_health_check_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_monitor_process_health</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;health-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Started health monitor task: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_health_check_task</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not start health monitor: task already exists.&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_read_responses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Background task to read responses from the server.</span>
+
+<span class="sd">        IMPROVED: Better error handling and connection monitoring.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Cannot read responses, stdout stream is None.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Response reader task started.&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span><span class="o">.</span><span class="n">at_eof</span><span class="p">():</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span><span class="o">.</span><span class="n">readline</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Server process terminated (code </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">) while waiting for data.&quot;</span>
+                        <span class="p">)</span>
+                        <span class="k">break</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Server closed stdout (readline returned empty bytes).&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">break</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">message_str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">message_str</span><span class="p">:</span>
+                        <span class="k">continue</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;- RECV: </span><span class="si">{</span><span class="n">message_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">message</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">message_str</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
+                        <span class="n">request_id</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Received message is a response for ID: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                        <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">future</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">future</span><span class="o">.</span><span class="n">cancelled</span><span class="p">():</span>
+                            <span class="n">future</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Future for request ID </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2"> resolved.&quot;</span>
+                            <span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">future</span> <span class="ow">and</span> <span class="n">future</span><span class="o">.</span><span class="n">cancelled</span><span class="p">():</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Received response for already cancelled request ID: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="p">)</span>
+                        <span class="k">elif</span> <span class="ow">not</span> <span class="n">future</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Received response for unknown or already handled request ID: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="p">)</span>
+                    <span class="k">elif</span> <span class="s2">&quot;method&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Received message is a server notification: </span><span class="si">{</span><span class="n">message</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_server_notification</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Received unknown message type: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">message_str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to parse JSON from server: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Line was: &#39;</span><span class="si">{</span><span class="n">message_str</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to decode UTF-8 message from server: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Response reading task was cancelled.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;!!! Unhandled error in response reader task: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">future</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+                    <span class="n">future</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span>
+                        <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server communication error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Response reader task finished.&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_read_stderr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Background task to read and log stderr from the server.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stderr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Cannot read stderr, stderr stream is None.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Stderr reader task started.&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stderr</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                        <span class="n">level</span> <span class="ow">in</span> <span class="n">message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;exception&quot;</span><span class="p">,</span> <span class="s2">&quot;failed&quot;</span><span class="p">,</span> <span class="s2">&quot;traceback&quot;</span><span class="p">]</span>
+                    <span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server stderr: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">any</span><span class="p">(</span><span class="n">level</span> <span class="ow">in</span> <span class="n">message</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span> <span class="s2">&quot;warning&quot;</span><span class="p">]):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server stderr: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server stderr: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stderr reading task was cancelled.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;!!! Unhandled error in stderr reader task: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stderr reader task finished.&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_monitor_process_health</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Monitor the health of the server process.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Process health monitor started.&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">&quot;Health monitor: Process object is None. Stopping monitor.&quot;</span>
+                    <span class="p">)</span>
+                    <span class="k">break</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Health monitor: Server process has died with return code: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">. PID: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">for</span> <span class="n">request_id</span><span class="p">,</span> <span class="n">future</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">future</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+                            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Server process died with code </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="n">future</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span><span class="ne">ConnectionError</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Failing pending request </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2"> due to process death.&quot;</span>
+                            <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Health check: Process </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">pid</span><span class="si">}</span><span class="s2"> is alive.&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Process health monitor was cancelled.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;!!! Unhandled error in health monitor task: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Process health monitor finished.&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_handle_server_notification</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle notifications sent by the server.&quot;&quot;&quot;</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;params&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Handling server notification &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; with params: </span><span class="si">{</span><span class="n">params</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;notifications/message&quot;</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="s2">&quot;info&quot;</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">)(</span>
+                <span class="sa">f</span><span class="s2">&quot;Server notification: </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received unhandled server notification: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="StdioMCPServer.cleanup_async">
 <a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.cleanup_async">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">cleanup_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Clean up the server connection.</span>
+<span class="sd">        Clean up the server connection with proper resource management.</span>
 
-<span class="sd">        Terminates the server process and cleans up resources.</span>
+<span class="sd">        IMPROVED: Better cleanup sequence and error handling.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Cancel the read task if it exists</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span>
-            <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Acquiring connection lock for cleanup of &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39;...&quot;</span>
+        <span class="p">)</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starting cleanup for MCP server: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Close pipes</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;Cleanup called on an already clean or uninitialized server. Nothing to do.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
 
-        <span class="c1"># Terminate the process</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Terminating MCP server process: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Set initialized=False to prevent new operations.&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cancelling </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="p">)</span><span class="si">}</span><span class="s2"> pending requests during shutdown.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">request_id</span><span class="p">,</span> <span class="n">future</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">future</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+                        <span class="n">future</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span><span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Server is shutting down&quot;</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cancelled pending request </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_resources</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cleanup for &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&#39; complete.&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_cleanup_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clean up all resources in the proper order.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Cleaning up background tasks and process resources.&quot;</span><span class="p">)</span>
+        <span class="n">tasks_to_cancel</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;read_task&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;stderr_task&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_task</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;health_check_task&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_health_check_task</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">task_name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks_to_cancel</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cancelling </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+                <span class="n">task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">wait</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2"> cancelled successfully.&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2"> was already cancelled.&quot;</span><span class="p">)</span>
                 <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Server process did not terminate, killing it&quot;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
-                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-            <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
-                <span class="c1"># Process already terminated</span>
-                <span class="k">pass</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="kc">None</span></div>
-
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize the MCP protocol with the server.</span>
-
-<span class="sd">        Sends the initialize request and waits for the response.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing MCP protocol&quot;</span><span class="p">)</span>
-
-        <span class="n">initialize_request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
-            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialize&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;protocolVersion&quot;</span><span class="p">:</span> <span class="s2">&quot;0.9.0&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;clientInfo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;agentle-mcp-client&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">},</span>
-                <span class="s2">&quot;capabilities&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;resources&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;prompts&quot;</span><span class="p">:</span> <span class="p">{}},</span>
-            <span class="p">},</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">initialize_request</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Failed to initialize MCP protocol: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-
-        <span class="c1"># Send initialized notification</span>
-        <span class="n">initialized_notification</span><span class="p">:</span> <span class="n">_JsonRpcNotification</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialized&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
-        <span class="p">}</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_notification</span><span class="p">(</span><span class="n">initialized_notification</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MCP protocol initialized successfully&quot;</span><span class="p">)</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_read_responses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Background task to read responses from the server.</span>
-
-<span class="sd">        Continuously reads JSON-RPC messages from stdout and resolves pending requests.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="c1"># Read a line from stdout</span>
-                <span class="n">line</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Server closed stdout&quot;</span><span class="p">)</span>
-                    <span class="k">break</span>
-
-                <span class="c1"># Parse the JSON-RPC message</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">message_str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-                    <span class="n">message</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">message_str</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received message: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-                    <span class="c1"># Handle response to a request</span>
-                    <span class="k">if</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
-                        <span class="n">request_id</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
-                        <span class="k">if</span> <span class="n">request_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="p">:</span>
-                            <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">)</span>
-                            <span class="n">future</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                                <span class="sa">f</span><span class="s2">&quot;Received response for unknown request ID: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">&quot;</span>
-                            <span class="p">)</span>
-
-                    <span class="c1"># Handle notification or request from server</span>
-                    <span class="k">elif</span> <span class="s2">&quot;method&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
-                        <span class="c1"># TODO: Implement handling of server requests and notifications if needed</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;Received notification or request: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
-                        <span class="p">)</span>
-
-                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">message_str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Failed to parse JSON from server: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">, line: </span><span class="si">{</span><span class="n">message_str</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timeout waiting for </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2"> to cancel.&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Error during cancellation of </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
 
-            <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
-                <span class="c1"># Task was cancelled, exit gracefully</span>
-                <span class="k">break</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_read_task</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stderr_task</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_health_check_task</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Closing stdin stream...&quot;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">is_closing</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Stdin stream closed.&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading from server: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="c1"># Continue reading, don&#39;t break the loop on errors</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error closing stdin: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stderr</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_terminate_process</span><span class="p">()</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_terminate_process</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Terminate the server process gracefully, with force if needed.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Terminate process called, but no process exists.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">pid</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">pid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Terminating server process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">process</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sending SIGTERM to process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span>
+                        <span class="n">process</span><span class="o">.</span><span class="n">wait</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shutdown_timeout_s</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2"> terminated gracefully with code </span><span class="si">{</span><span class="n">process</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2"> did not terminate gracefully after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shutdown_timeout_s</span><span class="si">}</span><span class="s2">s. Killing it (SIGKILL).&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">process</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">wait</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2"> killed successfully.&quot;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Failed to kill process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2"> after waiting.&quot;</span>
+                        <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2"> was already terminated with code </span><span class="si">{</span><span class="n">process</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Could not find process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2"> to terminate. It may have already exited.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error while terminating process </span><span class="si">{</span><span class="n">pid</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_JsonRpcResponse</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Send a request to the server and wait for the response.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            request (_JsonRpcRequest): The JSON-RPC request to send</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            _JsonRpcResponse: The JSON-RPC response</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">            TimeoutError: If the request times out</span>
+<span class="sd">        IMPROVED: Better connection validation and error handling.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdout</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Server not connected&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Set up a future to receive the response</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span>
         <span class="n">request_id</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preparing to send request &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; (id: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot send request &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. Server not connected.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Server not connected. Failed to send request &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Should be caught by _is_connected, but as a safeguard</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Server stdin not available&quot;</span><span class="p">)</span>
+
         <span class="n">response_future</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">[</span><span class="n">_JsonRpcResponse</span><span class="p">]</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="p">[</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">response_future</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Future created for request ID </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">. Total pending: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
 
-        <span class="c1"># Send the request</span>
-        <span class="n">request_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">request_json</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">drain</span><span class="p">()</span>
-
-        <span class="c1"># Wait for the response with timeout</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span>
+            <span class="n">request_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;-&gt; SEND: </span><span class="si">{</span><span class="n">request_json</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">request_json</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">drain</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Request &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; (id: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">) written to stdin and drained.&quot;</span>
+            <span class="p">)</span>
+
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span>
                 <span class="n">response_future</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">request_timeout_s</span>
             <span class="p">)</span>
-        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Request timed out after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">request_timeout_s</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Response received for &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; (id: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+
+        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Request &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; (id: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">) timed out after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">request_timeout_s</span><span class="si">}</span><span class="s2">s.&quot;</span>
             <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">response_future</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span><span class="s2">&quot;Request timed out&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Request </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> timed out after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">request_timeout_s</span><span class="si">}</span><span class="s2">s&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Connection error while sending request &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; (id: </span><span class="si">{</span><span class="n">request_id</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">request_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">response_future</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+                <span class="n">response_future</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error sending request </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_notification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notification</span><span class="p">:</span> <span class="n">_JsonRpcNotification</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Send a notification to the server.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            notification (_JsonRpcNotification): The JSON-RPC notification to send</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a notification to the server.&quot;&quot;&quot;</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">notification</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Preparing to send notification &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Cannot send notification &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. Server not connected.&quot;</span>
+            <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Server not connected&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Send the notification</span>
-        <span class="n">notification_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">notification</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">notification_json</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">drain</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">notification_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">notification</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;-&gt; SEND: </span><span class="si">{</span><span class="n">notification_json</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">notification_json</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="o">.</span><span class="n">drain</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Notification &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39; written to stdin and drained.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Connection error while sending notification &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error sending notification </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># FIXED: All protocol methods now use correct method names and parameter structures</span>
 
 <div class="viewcode-block" id="StdioMCPServer.list_tools_async">
 <a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_tools_async">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_tools_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List the tools available on the server.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Sequence[Tool]: A list of Tool objects available on the server</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List the tools available on the server.&quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing list_tools_async&quot;</span><span class="p">)</span>
         <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
             <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
-            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;listTools&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;tools/list&quot;</span><span class="p">,</span>
             <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -1043,32 +1451,26 @@
         <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to list tools: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;tools&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;tools&#39; in result&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="p">[</span><span class="n">Tool</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;tools&quot;</span><span class="p">]]</span></div>
+        <span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="n">Tool</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;tools&quot;</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully listed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tools</span><span class="p">)</span><span class="si">}</span><span class="s2"> tools.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tools</span></div>
 
 
 <div class="viewcode-block" id="StdioMCPServer.list_resources_async">
 <a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_resources_async">[docs]</a>
     <span class="nd">@override</span>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resources_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Resource</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List the resources available on the server.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Sequence[Resource]: A list of Resource objects available on the server</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List the resources available on the server.&quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resource</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Executing list_resources_async&quot;</span><span class="p">)</span>
         <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
             <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
-            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;listResources&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;resources/list&quot;</span><span class="p">,</span>
             <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -1076,14 +1478,15 @@
         <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to list resources: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;resources&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;resources&#39; in result&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="p">[</span>
+        <span class="n">resources</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">Resource</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;resources&quot;</span><span class="p">]</span>
-        <span class="p">]</span></div>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully listed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">resources</span><span class="p">)</span><span class="si">}</span><span class="s2"> resources.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">resources</span></div>
 
 
 <div class="viewcode-block" id="StdioMCPServer.list_resource_contents_async">
@@ -1092,24 +1495,14 @@
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resource_contents_async</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TextResourceContents</span> <span class="o">|</span> <span class="n">BlobResourceContents</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List contents of a specific resource.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            uri (str): The URI of the resource to retrieve contents for</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Sequence[TextResourceContents | BlobResourceContents]: A list of resource contents</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List contents of a specific resource.&quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobResourceContents</span><span class="p">,</span> <span class="n">TextResourceContents</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Executing list_resource_contents_async for uri: </span><span class="si">{</span><span class="n">uri</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
             <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
-            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;readResource&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;resources/read&quot;</span><span class="p">,</span>
             <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="n">uri</span><span class="p">},</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -1117,16 +1510,19 @@
         <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to read resource contents: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;contents&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;contents&#39; in result&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="p">[</span>
+        <span class="n">contents</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">TextResourceContents</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span>
             <span class="k">else</span> <span class="n">BlobResourceContents</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;contents&quot;</span><span class="p">]</span>
-        <span class="p">]</span></div>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Successfully read </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span><span class="si">}</span><span class="s2"> content parts from resource </span><span class="si">{</span><span class="n">uri</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">contents</span></div>
 
 
 <div class="viewcode-block" id="StdioMCPServer.call_tool_async">
@@ -1135,37 +1531,70 @@
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_tool_async</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CallToolResult&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Invoke a tool on the server.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            tool_name (str): The name of the tool to call</span>
-<span class="sd">            arguments (MutableMapping[str, object] | None): The arguments to pass to the tool</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            CallToolResult: The result of the tool invocation</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Invoke a tool on the server.&quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallToolResult</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Executing call_tool_async for tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; with args: </span><span class="si">{</span><span class="n">arguments</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
         <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
             <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span><span class="p">),</span>
-            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;callTool&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;tool&quot;</span><span class="p">:</span> <span class="n">tool_name</span><span class="p">,</span> <span class="s2">&quot;arguments&quot;</span><span class="p">:</span> <span class="n">arguments</span> <span class="ow">or</span> <span class="p">{}},</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;tools/call&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">tool_name</span><span class="p">,</span>
+                <span class="s2">&quot;arguments&quot;</span><span class="p">:</span> <span class="n">arguments</span> <span class="ow">or</span> <span class="p">{},</span>
+            <span class="p">},</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_next_id</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to call tool: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;result&#39;&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">CallToolResult</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span></div>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">CallToolResult</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully called tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="c1"># Additional utility methods</span>
+
+<div class="viewcode-block" id="StdioMCPServer.get_process_info">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.get_process_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_process_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get information about the server process for debugging.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;not_started&quot;</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;running&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;terminated&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pid&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span>
+            <span class="s2">&quot;returncode&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span>
+            <span class="s2">&quot;command&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">()</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">,</span>
+            <span class="s2">&quot;initialized&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span><span class="p">,</span>
+            <span class="s2">&quot;pending_requests&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pending_requests</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="StdioMCPServer.ping">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.ping">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ping</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test if the server is responsive by attempting to list tools.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if server responds, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Pinging server...&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">list_tools_async</span><span class="p">(),</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Ping successful.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ping failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
 </div>
 
 </pre></div>

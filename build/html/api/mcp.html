@@ -1082,20 +1082,33 @@ which can be either text or binary data.</p>
 </section>
 <section id="stdio-mcp-server">
 <h2>Stdio MCP Server<a class="headerlink" href="#stdio-mcp-server" title="Link to this heading">¶</a></h2>
-<p id="module-agentle.mcp.servers.stdio_mcp_server">Stdio implementation of the Model Context Protocol (MCP) server client.</p>
-<p>This module provides a client implementation for interacting with MCP servers over
-standard input/output streams. It enables connection management, tool discovery,
-resource querying, and tool execution through stdin/stdout communication.</p>
-<p>The implementation follows the MCPServerProtocol interface and uses asyncio streams
-for communication.</p>
+<p id="module-agentle.mcp.servers.stdio_mcp_server">Production-ready Stdio implementation of the Model Context Protocol (MCP) server client.</p>
+<p>FIXES APPLIED:
+1. Correct JSON-RPC method names per MCP spec
+2. Updated protocol version to 2024-11-05
+3. Fixed parameter structures
+4. Added process health monitoring
+5. Improved error handling and resource cleanup
+6. Better connection state management
+7. Proper signal handling for graceful shutdown</p>
+<p>ENHANCEMENTS:
+1. Added extensive, detailed logging to trace execution flow and debug connection issues.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StdioMCPServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">command</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_env=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">working_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_timeout_s=100.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StdioMCPServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">command</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_env=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">working_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_timeout_s=30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startup_timeout_s=10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shutdown_timeout_s=5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#agentle.mcp.servers.mcp_server_protocol.MCPServerProtocol" title="agentle.mcp.servers.mcp_server_protocol.MCPServerProtocol"><code class="xref py py-class docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code></a></p>
-<p>Stdio implementation of the MCP (Model Context Protocol) server client.</p>
+<p>Production-ready Stdio implementation of the MCP (Model Context Protocol) server client.</p>
+<p>FIXED VERSION with proper protocol compliance, error handling, and resource management.</p>
 <p>This class provides a client implementation for interacting with MCP servers
-over standard input/output streams. It handles connection management, tool discovery,
-resource management, and tool invocation through stdin/stdout communication.</p>
+over standard input/output streams. The server is launched as a subprocess and
+communication happens through stdin/stdout pipes.</p>
+<p>Key Features:
+- Proper MCP protocol compliance (2024-11-05)
+- Robust process lifecycle management
+- Health monitoring and connection validation
+- Graceful error handling and cleanup
+- Signal handling for proper shutdown
+- Resource leak prevention</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1104,6 +1117,8 @@ resource management, and tool invocation through stdin/stdout communication.</p>
 <li><p><strong>server_env</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.MutableMapping" title="(in Python v3.13)"><em>MutableMapping</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>]</em>)</p></li>
 <li><p><strong>working_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>)</p></li>
 <li><p><strong>request_timeout_s</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+<li><p><strong>startup_timeout_s</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
+<li><p><strong>shutdown_timeout_s</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>)</p></li>
 </ul>
 </dd>
 </dl>
@@ -1121,7 +1136,7 @@ resource management, and tool invocation through stdin/stdout communication.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.command">
 <span class="sig-name descname"><span class="pre">command</span></span><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.command" title="Link to this definition">¶</a></dt>
-<dd><p>The command to run the server executable</p>
+<dd><p>The command to launch the MCP server subprocess</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a></p>
@@ -1132,7 +1147,7 @@ resource management, and tool invocation through stdin/stdout communication.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.server_env">
 <span class="sig-name descname"><span class="pre">server_env</span></span><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.server_env" title="Link to this definition">¶</a></dt>
-<dd><p>Environment variables to pass to the server process</p>
+<dd><p>Environment variables for the server process</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>MutableMapping[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>]</p>
@@ -1151,19 +1166,55 @@ resource management, and tool invocation through stdin/stdout communication.</p>
 </dl>
 </dd></dl>
 
-<dl>
-<dt>Usage:</dt><dd><dl class="simple">
-<dt>server = StdioMCPServer(</dt><dd><p>server_name=”Example MCP”,
-command=”path/to/server”,
-server_env={“DEBUG”: “1”},
-working_dir=”/path/to/working/dir”</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.request_timeout_s">
+<span class="sig-name descname"><span class="pre">request_timeout_s</span></span><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.request_timeout_s" title="Link to this definition">¶</a></dt>
+<dd><p>Timeout for individual requests</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
 </dd>
 </dl>
-<p>)
-await server.connect()
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.startup_timeout_s">
+<span class="sig-name descname"><span class="pre">startup_timeout_s</span></span><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.startup_timeout_s" title="Link to this definition">¶</a></dt>
+<dd><p>Timeout for server startup</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.shutdown_timeout_s">
+<span class="sig-name descname"><span class="pre">shutdown_timeout_s</span></span><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.shutdown_timeout_s" title="Link to this definition">¶</a></dt>
+<dd><p>Timeout for graceful shutdown</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl>
+<dt>Usage:</dt><dd><dl class="simple">
+<dt>server = StdioMCPServer(</dt><dd><p>server_name=”OpenMemory MCP”,
+command=”npx openmemory”,
+server_env={“OPENMEMORY_API_KEY”: “your-key”},</p>
+</dd>
+</dl>
+<p>)</p>
+<dl class="simple">
+<dt>try:</dt><dd><p>await server.connect()
 tools = await server.list_tools()
-result = await server.call_tool(“tool_name”, {“param”: “value”})
-await server.cleanup()</p>
+result = await server.call_tool(“search”, {“query”: “test”})</p>
+</dd>
+<dt>finally:</dt><dd><p>await server.cleanup()</p>
+</dd>
+</dl>
 </dd>
 </dl>
 <dl class="py attribute">
@@ -1187,39 +1238,34 @@ await server.cleanup()</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.request_timeout_s">
-<span class="sig-name descname"><span class="pre">request_timeout_s</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.request_timeout_s" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">request_timeout_s</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.connect_async">
-<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connect_async</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer.connect_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.connect_async" title="Link to this definition">¶</a></dt>
-<dd><p>Connect to the MCP server over stdin/stdout.</p>
-<p>Launches the server process and sets up communication channels.
-Initializes the MCP protocol.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ConnectionError" title="(in Python v3.13)"><strong>ConnectionError</strong></a> – If the server process cannot be started</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TimeoutError" title="(in Python v3.13)"><strong>TimeoutError</strong></a> – If the initialization takes too long</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
-</dd>
-</dl>
-</dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">startup_timeout_s</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">shutdown_timeout_s</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.name">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></em><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.name" title="Link to this definition">¶</a></dt>
 <dd><p>Get a readable name for the server.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.connect_async">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connect_async</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer.connect_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.connect_async" title="Link to this definition">¶</a></dt>
+<dd><p>Connect to the MCP server over stdin/stdout.</p>
+<p>FIXED: Proper protocol compliance and error handling.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The human-readable server name</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a></p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1227,8 +1273,8 @@ Initializes the MCP protocol.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.cleanup_async">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cleanup_async</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer.cleanup_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.cleanup_async" title="Link to this definition">¶</a></dt>
-<dd><p>Clean up the server connection.</p>
-<p>Terminates the server process and cleans up resources.</p>
+<dd><p>Clean up the server connection with proper resource management.</p>
+<p>IMPROVED: Better cleanup sequence and error handling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
@@ -1241,14 +1287,8 @@ Initializes the MCP protocol.</p>
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_tools_async</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer.list_tools_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_tools_async" title="Link to this definition">¶</a></dt>
 <dd><p>List the tools available on the server.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A list of Tool objects available on the server</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Sequence[Tool]</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ConnectionError" title="(in Python v3.13)"><strong>ConnectionError</strong></a> – If the server is not connected</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sequence[Tool]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1258,14 +1298,8 @@ Initializes the MCP protocol.</p>
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_resources_async</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer.list_resources_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_resources_async" title="Link to this definition">¶</a></dt>
 <dd><p>List the resources available on the server.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A list of Resource objects available on the server</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Sequence[Resource]</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ConnectionError" title="(in Python v3.13)"><strong>ConnectionError</strong></a> – If the server is not connected</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sequence[Resource]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1276,16 +1310,10 @@ Initializes the MCP protocol.</p>
 <dd><p>List contents of a specific resource.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>uri</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The URI of the resource to retrieve contents for</p>
+<dd class="field-odd"><p><strong>uri</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A list of resource contents</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Sequence[TextResourceContents | BlobResourceContents]</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ConnectionError" title="(in Python v3.13)"><strong>ConnectionError</strong></a> – If the server is not connected</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sequence[TextResourceContents | BlobResourceContents]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1297,18 +1325,37 @@ Initializes the MCP protocol.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>tool_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name of the tool to call</p></li>
-<li><p><strong>arguments</strong> (<em>MutableMapping</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><em>object</em></a><em>] </em><em>| </em><em>None</em>) – The arguments to pass to the tool</p></li>
+<li><p><strong>tool_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>)</p></li>
+<li><p><strong>arguments</strong> (<em>MutableMapping</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><em>object</em></a><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The result of the tool invocation</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>CallToolResult</p>
 </dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.get_process_info">
+<span class="sig-name descname"><span class="pre">get_process_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer.get_process_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.get_process_info" title="Link to this definition">¶</a></dt>
+<dd><p>Get information about the server process for debugging.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>CallToolResult</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>]</p>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ConnectionError" title="(in Python v3.13)"><strong>ConnectionError</strong></a> – If the server is not connected</p>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.ping">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ping</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/stdio_mcp_server.html#StdioMCPServer.ping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.ping" title="Link to this definition">¶</a></dt>
+<dd><p>Test if the server is responsive by attempting to list tools.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if server responds, False otherwise</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1710,18 +1757,25 @@ session data needs to be shared across multiple workers.</p>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.command"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.command</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.server_env"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.server_env</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.working_dir"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.working_dir</span></code></a></li>
+<li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.request_timeout_s"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.request_timeout_s</span></code></a></li>
+<li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.startup_timeout_s"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.startup_timeout_s</span></code></a></li>
+<li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.shutdown_timeout_s"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.shutdown_timeout_s</span></code></a></li>
 <li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.server_name</span></code></a></li>
 <li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.command</span></code></a></li>
 <li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.server_env</span></code></a></li>
 <li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.working_dir</span></code></a></li>
-<li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.request_timeout_s"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.request_timeout_s</span></code></a></li>
-<li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.connect_async"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.connect_async()</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.request_timeout_s</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.startup_timeout_s</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.shutdown_timeout_s</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.name"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.name</span></code></a></li>
+<li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.connect_async"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.connect_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.cleanup_async"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.cleanup_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_tools_async"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.list_tools_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_resources_async"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.list_resources_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.list_resource_contents_async"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.list_resource_contents_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.call_tool_async"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.call_tool_async()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.get_process_info"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.get_process_info()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.ping"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.ping()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.model_config"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.model_config</span></code></a></li>
 <li><a class="reference internal" href="#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer.model_post_init"><code class="docutils literal notranslate"><span class="pre">StdioMCPServer.model_post_init()</span></code></a></li>
 </ul>

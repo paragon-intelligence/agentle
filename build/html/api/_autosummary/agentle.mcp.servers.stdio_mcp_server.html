@@ -634,12 +634,17 @@
         <article role="main" id="furo-main-content">
           <section id="module-agentle.mcp.servers.stdio_mcp_server">
 <span id="agentle-mcp-servers-stdio-mcp-server"></span><h1>agentle.mcp.servers.stdio_mcp_server<a class="headerlink" href="#module-agentle.mcp.servers.stdio_mcp_server" title="Link to this heading">¶</a></h1>
-<p>Stdio implementation of the Model Context Protocol (MCP) server client.</p>
-<p>This module provides a client implementation for interacting with MCP servers over
-standard input/output streams. It enables connection management, tool discovery,
-resource querying, and tool execution through stdin/stdout communication.</p>
-<p>The implementation follows the MCPServerProtocol interface and uses asyncio streams
-for communication.</p>
+<p>Production-ready Stdio implementation of the Model Context Protocol (MCP) server client.</p>
+<p>FIXES APPLIED:
+1. Correct JSON-RPC method names per MCP spec
+2. Updated protocol version to 2024-11-05
+3. Fixed parameter structures
+4. Added process health monitoring
+5. Improved error handling and resource cleanup
+6. Better connection state management
+7. Proper signal handling for graceful shutdown</p>
+<p>ENHANCEMENTS:
+1. Added extensive, detailed logging to trace execution flow and debug connection issues.</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -679,7 +684,7 @@ for communication.</p>
 <td><p>All the operations on a read-only sequence.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="../mcp.html#agentle.mcp.servers.stdio_mcp_server.StdioMCPServer" title="agentle.mcp.servers.stdio_mcp_server.StdioMCPServer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StdioMCPServer</span></code></a>(*, server_name, command[, ...])</p></td>
-<td><p>Stdio implementation of the MCP (Model Context Protocol) server client.</p></td>
+<td><p>Production-ready Stdio implementation of the MCP (Model Context Protocol) server client.</p></td>
 </tr>
 </tbody>
 </table>
