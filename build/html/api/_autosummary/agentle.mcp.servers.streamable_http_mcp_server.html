@@ -634,13 +634,13 @@
         <article role="main" id="furo-main-content">
           <section id="module-agentle.mcp.servers.streamable_http_mcp_server">
 <span id="agentle-mcp-servers-streamable-http-mcp-server"></span><h1>agentle.mcp.servers.streamable_http_mcp_server<a class="headerlink" href="#module-agentle.mcp.servers.streamable_http_mcp_server" title="Link to this heading">¶</a></h1>
-<p>Streamable HTTP implementation of the Model Context Protocol (MCP) server client.</p>
-<p>This module provides an HTTP client implementation for interacting with MCP servers
-using the Streamable HTTP transport as defined in the MCP 2025-03-26 specification.
-It enables connection management, tool discovery, resource querying, and tool execution
-through a standardized MCP endpoint.</p>
-<p>The implementation follows the MCPServerProtocol interface and uses httpx for
-asynchronous HTTP communication.</p>
+<p>Production-ready fixes for StreamableHTTPMCPServer</p>
+<p>Key issues fixed:
+1. Same connection restoration bug as SSE
+2. Inefficient client creation for each request
+3. No connection pooling
+4. Better error handling and retry logic
+5. Resource management improvements</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -683,7 +683,7 @@ asynchronous HTTP communication.</p>
 <td><p>Abstract base class for MCP session management.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="../mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer" title="agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StreamableHTTPMCPServer</span></code></a>(*, server_name, ...)</p></td>
-<td><p>Streamable HTTP implementation of the MCP (Model Context Protocol) server client.</p></td>
+<td><p>Production-ready Streamable HTTP implementation of MCP server client.</p></td>
 </tr>
 </tbody>
 </table>

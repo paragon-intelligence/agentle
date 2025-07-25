@@ -627,19 +627,19 @@
         <article role="main" id="furo-main-content">
           <h1>Source code for agentle.mcp.servers.streamable_http_mcp_server</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Streamable HTTP implementation of the Model Context Protocol (MCP) server client.</span>
+<span class="sd">Production-ready fixes for StreamableHTTPMCPServer</span>
 
-<span class="sd">This module provides an HTTP client implementation for interacting with MCP servers</span>
-<span class="sd">using the Streamable HTTP transport as defined in the MCP 2025-03-26 specification.</span>
-<span class="sd">It enables connection management, tool discovery, resource querying, and tool execution</span>
-<span class="sd">through a standardized MCP endpoint.</span>
-
-<span class="sd">The implementation follows the MCPServerProtocol interface and uses httpx for</span>
-<span class="sd">asynchronous HTTP communication.</span>
+<span class="sd">Key issues fixed:</span>
+<span class="sd">1. Same connection restoration bug as SSE</span>
+<span class="sd">2. Inefficient client creation for each request</span>
+<span class="sd">3. No connection pooling</span>
+<span class="sd">4. Better error handling and retry logic</span>
+<span class="sd">5. Resource management improvements</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
@@ -667,453 +667,397 @@
 <a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">StreamableHTTPMCPServer</span><span class="p">(</span><span class="n">MCPServerProtocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Streamable HTTP implementation of the MCP (Model Context Protocol) server client.</span>
+<span class="sd">    Production-ready Streamable HTTP implementation of MCP server client.</span>
 
-<span class="sd">    This class provides a client implementation for interacting with remote MCP servers</span>
-<span class="sd">    over HTTP using the Streamable HTTP transport (MCP 2025-03-26 spec). It supports</span>
-<span class="sd">    both regular and streaming responses, session management, and handles connection</span>
-<span class="sd">    management, tool discovery, resource management, and tool execution.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        server_name (str): A human-readable name for the server</span>
-<span class="sd">        server_url (AnyUrl): The base URL of the HTTP server</span>
-<span class="sd">        mcp_endpoint (str): The endpoint path for MCP requests (e.g., &quot;/mcp&quot;)</span>
-<span class="sd">        headers (MutableMapping[str, str]): HTTP headers to include with each request</span>
-<span class="sd">        timeout_s (float): Request timeout in seconds</span>
-<span class="sd">        session_manager (SessionManager): Manager for storing session information</span>
-
-<span class="sd">    Usage:</span>
-<span class="sd">        server = StreamableHTTPMCPServer(server_name=&quot;Example MCP&quot;, server_url=&quot;http://example.com&quot;, mcp_endpoint=&quot;/mcp&quot;)</span>
-<span class="sd">        await server.connect()</span>
-<span class="sd">        tools = await server.list_tools()</span>
-<span class="sd">        result = await server.call_tool(&quot;tool_name&quot;, {&quot;param&quot;: &quot;value&quot;})</span>
-<span class="sd">        await server.cleanup()</span>
+<span class="sd">    FIXED ISSUES:</span>
+<span class="sd">    - Connection restoration bug</span>
+<span class="sd">    - Inefficient client creation</span>
+<span class="sd">    - Better error handling</span>
+<span class="sd">    - Connection pooling</span>
+<span class="sd">    - Retry logic</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># Required configuration fields</span>
+    <span class="c1"># Configuration fields</span>
     <span class="n">server_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Human-readable name for the MCP server&quot;</span><span class="p">)</span>
     <span class="n">server_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Base URL for the HTTP MCP server&quot;</span><span class="p">)</span>
     <span class="n">mcp_endpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;/mcp&quot;</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The endpoint path for MCP requests, relative to the server URL&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;/mcp&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The endpoint path for MCP requests&quot;</span>
+    <span class="p">)</span>
+    <span class="n">headers</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Custom HTTP headers&quot;</span>
+    <span class="p">)</span>
+    <span class="n">timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Request timeout in seconds&quot;</span><span class="p">)</span>
+    <span class="n">session_manager</span><span class="p">:</span> <span class="n">SessionManager</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">InMemorySessionManager</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Session manager&quot;</span>
     <span class="p">)</span>
 
-    <span class="c1"># Optional configuration fields</span>
-    <span class="n">headers</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Custom HTTP headers to include with each request&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">timeout_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout in seconds for HTTP requests&quot;</span>
-    <span class="p">)</span>
-    <span class="n">session_manager</span><span class="p">:</span> <span class="n">SessionManager</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">InMemorySessionManager</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Session manager for storing session state&quot;</span><span class="p">,</span>
+    <span class="c1"># Production settings</span>
+    <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Maximum retry attempts&quot;</span><span class="p">)</span>
+    <span class="n">retry_delay_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Base retry delay&quot;</span><span class="p">)</span>
+    <span class="n">connection_pool_limits</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;max_keepalive_connections&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="s2">&quot;max_connections&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Connection pool limits&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># Internal state</span>
     <span class="n">_logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">),</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
     <span class="p">)</span>
-    <span class="c1"># Session state stored as primitives</span>
+    <span class="n">_client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_last_event_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">_jsonrpc_id_counter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">_initialized</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">_connection_lock</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get a readable name for the server.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            str: The human-readable server name</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_server_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get a unique key for this server for session tracking.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            str: A unique identifier for this server instance</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_url</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_create_client</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a new HTTP client for the current event loop.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if client is connected and valid.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">is_closed</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span>
+        <span class="p">)</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            httpx.AsyncClient: A new HTTP client instance</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Set up the HTTP client with proper headers for Streamable HTTP</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_create_client</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new HTTP client with connection pooling.&quot;&quot;&quot;</span>
         <span class="n">base_headers</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json, text/event-stream&quot;</span><span class="p">,</span>
             <span class="s2">&quot;Cache-Control&quot;</span><span class="p">:</span> <span class="s2">&quot;no-cache&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="s2">&quot;agentle-mcp-client/0.1.0&quot;</span><span class="p">,</span>
         <span class="p">}</span>
 
-        <span class="c1"># Merge with user-provided headers</span>
         <span class="n">all_headers</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">base_headers</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating new HTTP client with headers: </span><span class="si">{</span><span class="n">all_headers</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># FIXED: Use connection pooling for production</span>
+        <span class="n">limits</span> <span class="o">=</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Limits</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_pool_limits</span><span class="p">)</span>
 
-        <span class="c1"># Create a fresh client bound to the current event loop</span>
         <span class="k">return</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">(</span>
-            <span class="n">base_url</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_url</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout_s</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">all_headers</span>
+            <span class="n">base_url</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server_url</span><span class="p">),</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">httpx</span><span class="o">.</span><span class="n">Timeout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout_s</span><span class="p">),</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">all_headers</span><span class="p">,</span>
+            <span class="n">limits</span><span class="o">=</span><span class="n">limits</span><span class="p">,</span>
+            <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Handle redirects</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="StreamableHTTPMCPServer.connect_async">
 <a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.connect_async">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">connect_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Connect to the HTTP MCP server and initialize the MCP protocol.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Connect with proper session restoration and validation.&quot;&quot;&quot;</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection_lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">():</span>
+                <span class="k">return</span>
 
-<span class="sd">        Establishes an HTTP client connection to the server and performs the</span>
-<span class="sd">        initialization handshake as defined in the MCP specification.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connecting to HTTP server: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the connection to the server cannot be established</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connecting to HTTP server: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># FIXED: Load session but don&#39;t skip connection establishment</span>
+            <span class="n">server_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span>
+            <span class="n">session_data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">)</span>
 
-        <span class="c1"># Check if we have existing session information</span>
-        <span class="n">server_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span>
-        <span class="n">session_data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">)</span>
+            <span class="c1"># Restore session data</span>
+            <span class="k">if</span> <span class="n">session_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found existing session for </span><span class="si">{</span><span class="n">server_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;session_id&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_last_event_id</span> <span class="o">=</span> <span class="n">session_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_event_id&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span> <span class="o">=</span> <span class="n">session_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jsonrpc_counter&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">session_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found existing session for </span><span class="si">{</span><span class="n">server_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;session_id&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_last_event_id</span> <span class="o">=</span> <span class="n">session_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_event_id&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span> <span class="o">=</span> <span class="n">session_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jsonrpc_counter&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">return</span>
+            <span class="c1"># ALWAYS create new client connection</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_establish_connection</span><span class="p">()</span></div>
 
-        <span class="c1"># Create a new client for this operation</span>
-        <span class="n">client</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_client</span><span class="p">()</span>
 
-        <span class="c1"># Initialize the MCP protocol</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_establish_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Establish HTTP client and initialize protocol.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Send initialization request</span>
-            <span class="n">initialize_request</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span><span class="p">),</span>
-                <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialize&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;protocolVersion&quot;</span><span class="p">:</span> <span class="s2">&quot;2024-11-05&quot;</span><span class="p">,</span>  <span class="c1"># Use an older version for better compatibility</span>
-                    <span class="s2">&quot;clientInfo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;agentle-mcp-client&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">},</span>
-                    <span class="s2">&quot;capabilities&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;resources&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;prompts&quot;</span><span class="p">:</span> <span class="p">{}},</span>
-                <span class="p">},</span>
-            <span class="p">}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># Clean up existing client</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">is_closed</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">aclose</span><span class="p">()</span>
 
-            <span class="c1"># POST the initialize request to the MCP endpoint</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">)</span>
-                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">,</span>
-                <span class="n">json</span><span class="o">=</span><span class="n">initialize_request</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="c1"># Create new client</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_client</span><span class="p">()</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Initialization response status: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initialization response headers: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Initialization response content: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span>
-            <span class="p">)</span>
+            <span class="c1"># Validate connection with health check</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_health_check</span><span class="p">()</span>
 
-            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Server responded with status </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Failed to initialize: HTTP </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
+            <span class="c1"># Initialize protocol if not already done</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_protocol</span><span class="p">()</span>
 
-            <span class="c1"># Check the content type before parsing</span>
-            <span class="n">content_type</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="s2">&quot;text/event-stream&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="p">:</span>
-                <span class="c1"># Handle SSE stream response</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Received SSE stream response during initialization&quot;</span><span class="p">)</span>
-                <span class="c1"># Process the stream to find the initialization response</span>
-                <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_sse_stream</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
-                    <span class="n">data</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
-                    <span class="c1"># Check if this is the response to our initialization request</span>
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
-                        <span class="ow">and</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">data</span>
-                        <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-                    <span class="p">):</span>
-                        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                                <span class="sa">f</span><span class="s2">&quot;Failed to initialize: </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-                            <span class="p">)</span>
-                        <span class="n">init_result</span> <span class="o">=</span> <span class="n">data</span>
-                        <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># If we didn&#39;t find a matching response</span>
-                    <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                        <span class="s2">&quot;Did not receive initialization response in SSE stream&quot;</span>
-                    <span class="p">)</span>
-            <span class="k">elif</span> <span class="s2">&quot;application/json&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="p">:</span>
-                <span class="c1"># Parse the JSON response</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">init_result</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">init_result</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;Failed to initialize: </span><span class="si">{</span><span class="n">init_result</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-                        <span class="p">)</span>
-                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to parse JSON response: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Failed to parse initialization response: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Unexpected content type</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected content type: </span><span class="si">{</span><span class="n">content_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Unexpected content type during initialization: </span><span class="si">{</span><span class="n">content_type</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-
-            <span class="c1"># Check for session ID in headers</span>
-            <span class="n">session_id</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">session_id</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_id</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Session established with ID: </span><span class="si">{</span><span class="n">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="c1"># Send initialized notification</span>
-            <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">:</span>
-                <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
-
-            <span class="n">notification</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialized&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
-            <span class="p">}</span>
-            <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">)</span>
-                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">,</span>
-                <span class="n">json</span><span class="o">=</span><span class="n">notification</span><span class="p">,</span>
-                <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="c1"># Store session info using session manager</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">store_session</span><span class="p">(</span>
-                <span class="n">server_key</span><span class="p">,</span>
-                <span class="p">{</span>
-                    <span class="s2">&quot;session_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span>
-                    <span class="s2">&quot;last_event_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_event_id</span><span class="p">,</span>
-                    <span class="s2">&quot;jsonrpc_counter&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span><span class="p">,</span>
-                <span class="p">},</span>
-            <span class="p">)</span>
-
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_session_data</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MCP protocol initialized successfully&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;HTTP MCP connection established successfully&quot;</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error connecting to server: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error establishing connection: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_client</span><span class="p">()</span>
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not connect to server </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="c1"># Always close the client</span>
-            <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">aclose</span><span class="p">()</span></div>
 
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_health_check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform a health check to validate connection.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Client not initialized&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Try a simple request to validate connectivity</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/health&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+            <span class="c1"># Don&#39;t fail on 404 - server might not have health endpoint</span>
+            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server error: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">httpx</span><span class="o">.</span><span class="n">ConnectError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot connect to server: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">httpx</span><span class="o">.</span><span class="n">TimeoutException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connection timeout: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_initialize_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize MCP protocol with retry logic.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing MCP protocol&quot;</span><span class="p">)</span>
+
+        <span class="n">initialize_request</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span><span class="p">),</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialize&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;protocolVersion&quot;</span><span class="p">:</span> <span class="s2">&quot;2024-11-05&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;clientInfo&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;agentle-mcp-client&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.1.0&quot;</span><span class="p">},</span>
+                <span class="s2">&quot;capabilities&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;resources&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;tools&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;prompts&quot;</span><span class="p">:</span> <span class="p">{}},</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># FIXED: Retry initialization with exponential backoff</span>
+        <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_retries</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request_internal</span><span class="p">(</span><span class="n">initialize_request</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to initialize: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Send initialized notification</span>
+                <span class="n">notification</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;initialized&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{},</span>
+                <span class="p">}</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_notification_internal</span><span class="p">(</span><span class="n">notification</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MCP protocol initialized successfully&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">attempt</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to initialize after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_retries</span><span class="si">}</span><span class="s2"> attempts: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">delay</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retry_delay_s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">attempt</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Initialization attempt </span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed, retrying in </span><span class="si">{</span><span class="n">delay</span><span class="si">}</span><span class="s2">s: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
 
 <div class="viewcode-block" id="StreamableHTTPMCPServer.cleanup_async">
 <a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.cleanup_async">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">cleanup_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Clean up the server connection.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clean up resources with proper session termination.&quot;&quot;&quot;</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cleaning up connection to: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-<span class="sd">        Closes the HTTP client connection if it exists. If a session ID was</span>
-<span class="sd">        established, attempts to terminate the session with a DELETE request.</span>
+            <span class="c1"># Terminate session if active</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">is_closed</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_terminate_session</span><span class="p">()</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            None</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Closing connection with HTTP server: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_client</span><span class="p">()</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-        <span class="c1"># If we have a session ID, try to terminate the session</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_last_event_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_cleanup_client</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clean up HTTP client resources.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">is_closed</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">aclose</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_terminate_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Terminate session with the server.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">}</span>
+            <span class="n">endpoint</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">)</span>
+                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span>
+            <span class="p">)</span>
+
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">5.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Session terminated: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Remove from session manager</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to terminate session: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_store_session_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Store session data with error handling.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">session_data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;session_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">,</span>
+                <span class="s2">&quot;last_event_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_event_id</span><span class="p">,</span>
+                <span class="s2">&quot;jsonrpc_counter&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">store_session</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span><span class="p">,</span> <span class="n">session_data</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to store session data: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_request_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal request sending with proper error handling.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">is_closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Client not connected&quot;</span><span class="p">)</span>
+
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">:</span>
-            <span class="n">client</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">client</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_client</span><span class="p">()</span>
-                <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">}</span>
-                <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">)</span>
-                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">,</span>
-                    <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Session terminated: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
 
-                <span class="c1"># Remove from session manager</span>
-                <span class="n">server_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">)</span>
-
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to terminate session: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">finally</span><span class="p">:</span>
-                <span class="c1"># Always close the client</span>
-                <span class="k">if</span> <span class="n">client</span><span class="p">:</span>
-                    <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">aclose</span><span class="p">()</span>
-
-        <span class="c1"># Close the session manager</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_last_event_id</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span></div>
-
-
-<div class="viewcode-block" id="StreamableHTTPMCPServer.list_tools_async">
-<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.list_tools_async">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_tools_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List the tools available on the server.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Sequence[Tool]: A list of Tool objects available on the server</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">            httpx.RequestError: If there&#39;s an error during the HTTP request</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
-
-        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="s2">&quot;tools/list&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;result&#39;&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;tools&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;tools&#39; in result&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="p">[</span><span class="n">Tool</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;tools&quot;</span><span class="p">]]</span></div>
-
-
-<div class="viewcode-block" id="StreamableHTTPMCPServer.list_resources_async">
-<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.list_resources_async">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resources_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Resource</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List the resources available on the server.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Sequence[Resource]: A list of Resource objects available on the server</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">            httpx.RequestError: If there&#39;s an error during the HTTP request</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resource</span>
-
-        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="s2">&quot;resources/list&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;result&#39;&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;resources&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;resources&#39; in result&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="n">Resource</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;resources&quot;</span><span class="p">]</span>
-        <span class="p">]</span></div>
-
-
-<div class="viewcode-block" id="StreamableHTTPMCPServer.list_resource_contents_async">
-<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.list_resource_contents_async">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resource_contents_async</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TextResourceContents</span> <span class="o">|</span> <span class="n">BlobResourceContents</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        List contents of a specific resource.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            uri (str): The URI of the resource to retrieve contents for</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Sequence[TextResourceContents | BlobResourceContents]: A list of resource contents</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">            httpx.RequestError: If there&#39;s an error during the HTTP request</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobResourceContents</span><span class="p">,</span> <span class="n">TextResourceContents</span>
-
-        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="s2">&quot;resources/read&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="n">uri</span><span class="p">})</span>
-
-        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;result&#39;&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="s2">&quot;contents&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;contents&#39; in result&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="n">TextResourceContents</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span>
-            <span class="k">else</span> <span class="n">BlobResourceContents</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;contents&quot;</span><span class="p">]</span>
-        <span class="p">]</span></div>
-
-
-<div class="viewcode-block" id="StreamableHTTPMCPServer.call_tool_async">
-<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.call_tool_async">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_tool_async</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CallToolResult</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Invoke a tool on the server.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            tool_name (str): The name of the tool to call</span>
-<span class="sd">            arguments (MutableMapping[str, object] | None): The arguments to pass to the tool</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            CallToolResult: The result of the tool invocation</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">            httpx.RequestError: If there&#39;s an error during the HTTP request</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallToolResult</span>
-
-        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span>
-            <span class="s2">&quot;tools/call&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">tool_name</span><span class="p">,</span> <span class="s2">&quot;arguments&quot;</span><span class="p">:</span> <span class="n">arguments</span> <span class="ow">or</span> <span class="p">{}}</span>
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">()</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format: missing &#39;result&#39;&quot;</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">request</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">CallToolResult</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span></div>
+        <span class="c1"># Handle session ID from response</span>
+        <span class="n">session_id</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">session_id</span> <span class="ow">and</span> <span class="n">session_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">session_id</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_session_data</span><span class="p">()</span>
 
+        <span class="c1"># Handle different response types</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">:</span>
+            <span class="c1"># Session expired, reconnect</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Session expired, reconnecting...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Session expired&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HTTP </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">content_type</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;text/event-stream&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="p">:</span>
+            <span class="c1"># Handle SSE response</span>
+            <span class="n">request_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+            <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_sse_stream</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">request_id</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JSON-RPC error: </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">data</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No matching response in SSE stream&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="s2">&quot;application/json&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="p">:</span>
+            <span class="c1"># Handle JSON response</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JSON-RPC error: </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">data</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected content type: </span><span class="si">{</span><span class="n">content_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_notification_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notification</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal notification sending.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">is_closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Client not connected&quot;</span><span class="p">)</span>
+
+        <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">:</span>
+            <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
+
+        <span class="n">endpoint</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">()</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span>
+        <span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">notification</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_request</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Send request with retry logic and connection management.&quot;&quot;&quot;</span>
+        <span class="c1"># Ensure connection</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">():</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_async</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Failed to establish connection&quot;</span><span class="p">)</span>
+
+        <span class="n">request_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">request</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">params</span> <span class="ow">or</span> <span class="p">{},</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Retry logic with exponential backoff</span>
+        <span class="n">last_exception</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_retries</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_session_data</span><span class="p">()</span>
+                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request_internal</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">last_exception</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="k">if</span> <span class="s2">&quot;Session expired&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+                    <span class="c1"># Reconnect and retry</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_async</span><span class="p">()</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">attempt</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_retries</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+                <span class="n">delay</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retry_delay_s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">attempt</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Request attempt </span><span class="si">{</span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed, retrying in </span><span class="si">{</span><span class="n">delay</span><span class="si">}</span><span class="s2">s: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c1"># Non-recoverable errors</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request failed with non-recoverable error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span>
+
+        <span class="k">raise</span> <span class="n">last_exception</span> <span class="ow">or</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Request failed after all retries&quot;</span><span class="p">)</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_parse_sse_stream</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Response</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Parse an SSE stream from an HTTP response.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            response (httpx.Response): The HTTP response with the SSE stream</span>
-
-<span class="sd">        Yields:</span>
-<span class="sd">            MutableMapping[str, Any]: Parsed SSE events as dictionaries</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse SSE stream with proper event handling.&quot;&quot;&quot;</span>
         <span class="n">event_data</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="n">event_id</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">event_type</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">async</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">aiter_lines</span><span class="p">():</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\r</span><span class="s2">&quot;</span><span class="p">)</span>
+
             <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
-                <span class="c1"># End of event, yield if we have data</span>
                 <span class="k">if</span> <span class="n">event_data</span><span class="p">:</span>
+                    <span class="n">event_data</span> <span class="o">=</span> <span class="n">event_data</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">event_data</span><span class="p">)</span>
                         <span class="k">yield</span> <span class="p">{</span>
@@ -1122,19 +1066,11 @@
                             <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
                         <span class="p">}</span>
 
-                        <span class="c1"># Track the last event ID for potential resumability</span>
+                        <span class="c1"># Update last event ID</span>
                         <span class="k">if</span> <span class="n">event_id</span><span class="p">:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">_last_event_id</span> <span class="o">=</span> <span class="n">event_id</span>
+                            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_session_data</span><span class="p">()</span>
 
-                            <span class="c1"># Update session data</span>
-                            <span class="n">server_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span>
-                            <span class="n">session_data</span> <span class="o">=</span> <span class="p">(</span>
-                                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-                            <span class="p">)</span>
-                            <span class="n">session_data</span><span class="p">[</span><span class="s2">&quot;last_event_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_id</span>
-                            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">store_session</span><span class="p">(</span>
-                                <span class="n">server_key</span><span class="p">,</span> <span class="n">session_data</span>
-                            <span class="p">)</span>
                     <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
                         <span class="k">yield</span> <span class="p">{</span>
                             <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">event_id</span><span class="p">,</span>
@@ -1142,175 +1078,108 @@
                             <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">event_data</span><span class="p">,</span>
                         <span class="p">}</span>
 
-                    <span class="c1"># Reset for next event</span>
                     <span class="n">event_data</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
                     <span class="n">event_id</span> <span class="o">=</span> <span class="kc">None</span>
                     <span class="n">event_type</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="k">continue</span>
 
             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">):</span>
-                <span class="c1"># Comment, ignore</span>
                 <span class="k">continue</span>
 
-            <span class="c1"># Parse field:value format</span>
             <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;([^:]+)(?::(.*))?&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
                 <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
 
                 <span class="k">if</span> <span class="n">field</span> <span class="o">==</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span>
-                    <span class="n">event_data</span> <span class="o">+=</span> <span class="n">value</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="k">if</span> <span class="n">event_data</span><span class="p">:</span>
+                        <span class="n">event_data</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">value</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">event_data</span> <span class="o">=</span> <span class="n">value</span>
                 <span class="k">elif</span> <span class="n">field</span> <span class="o">==</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span>
                     <span class="n">event_id</span> <span class="o">=</span> <span class="n">value</span>
                 <span class="k">elif</span> <span class="n">field</span> <span class="o">==</span> <span class="s2">&quot;event&quot;</span><span class="p">:</span>
                     <span class="n">event_type</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_request</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Send a JSON-RPC request to the server.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            method (str): The JSON-RPC method to call</span>
-<span class="sd">            params (MutableMapping[str, Any], optional): The parameters for the method</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            MutableMapping[str, Any]: The JSON-RPC response</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ConnectionError: If the server is not connected</span>
-<span class="sd">            httpx.RequestError: If there&#39;s an error during the HTTP request</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Ensure we&#39;re connected first</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Server not initialized, connecting first&quot;</span><span class="p">)</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_async</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Failed to initialize connection&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Create a new client for this request (bound to current event loop)</span>
-        <span class="n">client</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_client</span><span class="p">()</span>
+    <span class="c1"># MCP Protocol methods with proper error handling</span>
+<div class="viewcode-block" id="StreamableHTTPMCPServer.list_tools_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.list_tools_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_tools_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List tools with error handling.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Create the JSON-RPC request</span>
-            <span class="n">request_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span> <span class="o">+=</span> <span class="mi">1</span>
-
-            <span class="c1"># Update the counter in session data</span>
-            <span class="n">server_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span>
-            <span class="n">session_data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-            <span class="n">session_data</span><span class="p">[</span><span class="s2">&quot;jsonrpc_counter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jsonrpc_id_counter</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">store_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">,</span> <span class="n">session_data</span><span class="p">)</span>
-
-            <span class="n">request</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;jsonrpc&quot;</span><span class="p">:</span> <span class="s2">&quot;2.0&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
-                <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="p">,</span>
-                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">params</span> <span class="ow">or</span> <span class="p">{},</span>
-            <span class="p">}</span>
-
-            <span class="c1"># Prepare headers</span>
-            <span class="n">headers</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">:</span>
-                <span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
-
-            <span class="c1"># Send the request</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">)</span>
-                <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcp_endpoint</span><span class="p">,</span>
-                <span class="n">json</span><span class="o">=</span><span class="n">request</span><span class="p">,</span>
-                <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="c1"># Check for session ID in response</span>
-            <span class="k">if</span> <span class="s2">&quot;Mcp-Session-Id&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Mcp-Session-Id&quot;</span><span class="p">]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Session established with ID: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-                <span class="c1"># Update session ID in session data</span>
-                <span class="n">server_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_key</span>
-                <span class="n">session_data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
-                <span class="n">session_data</span><span class="p">[</span><span class="s2">&quot;session_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">store_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">,</span> <span class="n">session_data</span><span class="p">)</span>
-
-            <span class="c1"># Handle different response types</span>
-            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">404</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span><span class="p">:</span>
-                <span class="c1"># Session expired, we need to reconnect</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Session expired, reconnecting...&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_session_id</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_initialized</span> <span class="o">=</span> <span class="kc">False</span>
-
-                <span class="c1"># Clear session</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_manager</span><span class="o">.</span><span class="n">delete_session</span><span class="p">(</span><span class="n">server_key</span><span class="p">)</span>
-
-                <span class="c1"># Reconnect and retry the request</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connect_async</span><span class="p">()</span>  <span class="c1"># Reconnect</span>
-                <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>  <span class="c1"># Retry the request</span>
-
-            <span class="k">elif</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Server returned error: HTTP </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-
-            <span class="n">content_type</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="s2">&quot;text/event-stream&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="p">:</span>
-                <span class="c1"># This is an SSE stream</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Received SSE stream response&quot;</span><span class="p">)</span>
-
-                <span class="c1"># Process the stream and find the response for our request</span>
-                <span class="k">async</span> <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_sse_stream</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
-                    <span class="n">data</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
-
-                    <span class="c1"># Check if this is the response to our request</span>
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
-                        <span class="ow">and</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">data</span>
-                        <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">request_id</span>
-                    <span class="p">):</span>
-                        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JSON-RPC error: </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                        <span class="c1"># Create a new dictionary with explicit typing</span>
-                        <span class="n">result</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-                        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                            <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-                        <span class="k">return</span> <span class="n">result</span>
-
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Did not receive response for request in SSE stream&quot;</span><span class="p">)</span>
-
-            <span class="k">elif</span> <span class="s2">&quot;application/json&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="p">:</span>
-                <span class="c1"># This is a direct JSON response</span>
-                <span class="n">data_raw</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-
-                <span class="c1"># Create a new dictionary with explicit typing</span>
-                <span class="n">_data</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data_raw</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-
-                <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">_data</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JSON-RPC error: </span><span class="si">{</span><span class="n">_data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-                <span class="k">return</span> <span class="n">_data</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected content type: </span><span class="si">{</span><span class="n">content_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="k">except</span> <span class="n">httpx</span><span class="o">.</span><span class="n">RequestError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HTTP request error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">raise</span>
-        <span class="k">except</span> <span class="ne">ConnectionError</span><span class="p">:</span>
-            <span class="c1"># Re-raise connection errors</span>
-            <span class="k">raise</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="s2">&quot;tools/list&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;tools&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Tool</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;tools&quot;</span><span class="p">]]</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># Handle other exceptions</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error sending request: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error sending request: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="c1"># Always close the client</span>
-            <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">aclose</span><span class="p">()</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to list tools: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+<div class="viewcode-block" id="StreamableHTTPMCPServer.list_resources_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.list_resources_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resources_async</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Resource</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List resources with error handling.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Resource</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="s2">&quot;resources/list&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;resources&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">Resource</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;resources&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to list resources: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+<div class="viewcode-block" id="StreamableHTTPMCPServer.list_resource_contents_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.list_resource_contents_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resource_contents_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TextResourceContents</span> <span class="o">|</span> <span class="n">BlobResourceContents</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List resource contents with error handling.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobResourceContents</span><span class="p">,</span> <span class="n">TextResourceContents</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span><span class="s2">&quot;resources/read&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="n">uri</span><span class="p">})</span>
+            <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span> <span class="ow">or</span> <span class="s2">&quot;contents&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="n">TextResourceContents</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;text&quot;</span>
+                <span class="k">else</span> <span class="n">BlobResourceContents</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">][</span><span class="s2">&quot;contents&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to read resource </span><span class="si">{</span><span class="n">uri</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+<div class="viewcode-block" id="StreamableHTTPMCPServer.call_tool_async">
+<a class="viewcode-back" href="../../../../api/mcp.html#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer.call_tool_async">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_tool_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CallToolResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call tool with error handling.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">mcp.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallToolResult</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_request</span><span class="p">(</span>
+                <span class="s2">&quot;tools/call&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">tool_name</span><span class="p">,</span> <span class="s2">&quot;arguments&quot;</span><span class="p">:</span> <span class="n">arguments</span> <span class="ow">or</span> <span class="p">{}}</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;result&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid response format&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">CallToolResult</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to call tool </span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span></div>
+</div>
 
 </pre></div>
         </article>
