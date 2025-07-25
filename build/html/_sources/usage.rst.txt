@@ -15,7 +15,7 @@ Create and use Agentle agents in your Python applications:
    agent = Agent(
        name="Quick Start Agent",
        generation_provider=GoogleGenaiGenerationProvider(),
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="You are a helpful assistant who provides concise, accurate information."
    )
 
@@ -54,7 +54,7 @@ Enhance your agents with domain-specific knowledge from various sources:
    travel_expert = Agent(
        name="Japan Travel Expert",
        generation_provider=GoogleGenaiGenerationProvider(),
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="You are a Japan travel expert who provides detailed information about Japanese destinations.",
        # Provide static knowledge from multiple sources
        static_knowledge=[
@@ -96,7 +96,7 @@ Extend your agents with custom tools to perform actions beyond text generation:
    weather_agent = Agent(
        name="Weather Assistant",
        generation_provider=GoogleGenaiGenerationProvider(),
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="You are a helpful assistant that can answer questions about the weather.",
        tools=[get_weather]  # Pass the function as a tool
    )
@@ -127,7 +127,7 @@ Get strongly-typed responses from your agents using Pydantic models:
    structured_agent = Agent(
        name="Weather Agent",
        generation_provider=GoogleGenaiGenerationProvider(),
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
        response_schema=WeatherForecast  # Define the expected response structure
    )
@@ -158,7 +158,7 @@ Connect agents in a sequence where the output of one becomes the input to the ne
    research_agent = Agent(
        name="Research Agent",
        generation_provider=provider,
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="""You are a research agent focused on gathering information.
        Be thorough and prioritize accuracy over speculation."""
    )
@@ -166,7 +166,7 @@ Connect agents in a sequence where the output of one becomes the input to the ne
    analysis_agent = Agent(
        name="Analysis Agent",
        generation_provider=provider,
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="""You are an analysis agent that identifies patterns.
        Highlight meaningful relationships and insights from the data."""
    )
@@ -174,7 +174,7 @@ Connect agents in a sequence where the output of one becomes the input to the ne
    summary_agent = Agent(
        name="Summary Agent",
        generation_provider=provider,
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="""You are a summary agent that creates concise summaries.
        Present key findings in a logical order with accessible language."""
    )
@@ -205,7 +205,7 @@ Create teams of specialized agents with an orchestrator that dynamically selects
        name="Research Agent",
        description="Specialized in finding accurate information on various topics",
        generation_provider=provider,
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="You are a research agent focused on gathering accurate information.",
        skills=[
            AgentSkill(name="search", description="Find information on any topic"),
@@ -217,7 +217,7 @@ Create teams of specialized agents with an orchestrator that dynamically selects
        name="Coding Agent",
        description="Specialized in writing and debugging code",
        generation_provider=provider,
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="You are a coding expert focused on writing clean, efficient code.",
        skills=[
            AgentSkill(name="code-generation", description="Write code in various languages"),
@@ -229,7 +229,7 @@ Create teams of specialized agents with an orchestrator that dynamically selects
    team = AgentTeam(
        agents=[research_agent, coding_agent],
        orchestrator_provider=provider,
-       orchestrator_model="gemini-2.0-flash",
+       orchestrator_model="gemini-2.5-flash",
    )
 
    # Run the team with different queries
@@ -255,7 +255,7 @@ Expose your agent as a RESTful API:
        name="Code Assistant",
        description="An AI assistant specialized in helping with programming tasks.",
        generation_provider=GoogleGenaiGenerationProvider(),
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="""You are a helpful programming assistant.
        You can answer questions about programming languages, help debug code,
        explain programming concepts, and provide code examples.""",
@@ -284,7 +284,7 @@ Create a chat interface for your agent:
        name="Travel Guide",
        description="A helpful travel guide that answers questions about destinations.",
        generation_provider=GoogleGenaiGenerationProvider(),
-       model="gemini-2.0-flash",
+       model="gemini-2.5-flash",
        instructions="""You are a knowledgeable travel guide who helps users plan trips.""",
    )
 

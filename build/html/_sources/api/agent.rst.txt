@@ -210,7 +210,7 @@ Basic Usage
     agent = Agent(
         name="Basic Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant."
     )
 
@@ -232,7 +232,7 @@ With Tools
     agent_with_tool = Agent(
         name="Weather Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You provide weather information.",
         tools=[get_weather]
     )
@@ -257,7 +257,7 @@ With Structured Output
     structured_agent = Agent(
         name="Structured Weather Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You provide weather forecasts.",
         response_schema=WeatherForecast
     )
@@ -277,7 +277,7 @@ With Static Knowledge
     knowledgeable_agent = Agent(
         name="Knowledgeable Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are an expert on company policies.",
         static_knowledge=[
             StaticKnowledge(content="docs/company_policy.pdf", cache=3600),
@@ -303,7 +303,7 @@ You can control how the agent handles validation errors for structured outputs:
     agent = Agent(
         name="Validating Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You provide structured data.",
         response_schema=YourResponseSchema,
         validation_behavior=ValidationBehavior.WARN  # Options: STRICT, WARN, IGNORE
@@ -322,7 +322,7 @@ For use with agent teams, you can define agent skills:
     agent = Agent(
         name="Skilled Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You have specialized skills.",
         skills=[
             AgentSkill(name="code-generation", description="Write code in various languages"),

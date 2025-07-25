@@ -651,21 +651,21 @@
 <span class="sd">research_agent = Agent(</span>
 <span class="sd">    name=&quot;Research Agent&quot;,</span>
 <span class="sd">    instructions=&quot;You are a research agent. Your task is to gather information on a topic.&quot;,</span>
-<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">    generation_provider=GoogleGenaiGenerationProvider(),</span>
 <span class="sd">)</span>
 
 <span class="sd">analysis_agent = Agent(</span>
 <span class="sd">    name=&quot;Analysis Agent&quot;,</span>
 <span class="sd">    instructions=&quot;You are an analysis agent. Your task is to analyze information and identify patterns.&quot;,</span>
-<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">    generation_provider=GoogleGenaiGenerationProvider(),</span>
 <span class="sd">)</span>
 
 <span class="sd">summary_agent = Agent(</span>
 <span class="sd">    name=&quot;Summary Agent&quot;,</span>
 <span class="sd">    instructions=&quot;You are a summary agent. Your task is to create concise summaries.&quot;,</span>
-<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">    generation_provider=GoogleGenaiGenerationProvider(),</span>
 <span class="sd">)</span>
 
@@ -721,13 +721,13 @@
 <span class="sd">        english_to_french = Agent(</span>
 <span class="sd">            name=&quot;English to French&quot;,</span>
 <span class="sd">            instructions=&quot;Translate English text to French.&quot;,</span>
-<span class="sd">            model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">            model=&quot;gemini-2.5-flash&quot;</span>
 <span class="sd">        )</span>
 
 <span class="sd">        french_to_spanish = Agent(</span>
 <span class="sd">            name=&quot;French to Spanish&quot;,</span>
 <span class="sd">            instructions=&quot;Translate French text to Spanish.&quot;,</span>
-<span class="sd">            model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">            model=&quot;gemini-2.5-flash&quot;</span>
 <span class="sd">        )</span>
 
 <span class="sd">        # Chain the agents into a pipeline</span>

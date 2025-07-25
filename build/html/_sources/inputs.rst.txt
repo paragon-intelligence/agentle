@@ -17,7 +17,7 @@ Here are the most common input types you can pass to the ``run`` method:
     # Create a basic agent
     agent = Agent(
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a versatile assistant that can analyze different types of data."
     )
 

@@ -36,7 +36,7 @@ Here's a simple example of integrating a tool with an agent:
     weather_agent = Agent(
         name="Weather Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant that can answer questions about the weather.",
         tools=[get_weather]  # Pass the function as a tool
     )
@@ -133,7 +133,7 @@ You can add multiple tools to an agent:
     travel_assistant = Agent(
         name="Travel Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful travel assistant.",
         tools=[get_weather, convert_currency]  # Multiple tools
     )
@@ -165,7 +165,7 @@ For even more powerful agents, combine tool calling with structured outputs:
     travel_agent = Agent(
         name="Travel Advisor",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a travel advisor that provides structured recommendations for city visits.""",
         tools=[get_city_data],
         response_schema=TravelRecommendation,
@@ -193,7 +193,7 @@ You can also use methods from classes as tools:
     math_agent = Agent(
         name="Math Helper",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a math assistant.",
         tools=[calculator.add, calculator.subtract]
     )

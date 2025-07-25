@@ -661,7 +661,7 @@ research_agent = Agent(</p>
 <div><p>name=”Research Agent”,
 description=”Specialized in finding information and data on various topics”,
 generation_provider=provider,
-model=”gemini-2.0-flash”,
+model=”gemini-2.5-flash”,
 instructions=”You are a research agent focused on gathering accurate information.”,</p>
 </div></blockquote>
 <p>)</p>
@@ -669,7 +669,7 @@ instructions=”You are a research agent focused on gathering accurate informati
 <dt>coding_agent = Agent(</dt><dd><p>name=”Coding Agent”,
 description=”Specialized in writing and debugging code in various languages”,
 generation_provider=provider,
-model=”gemini-2.0-flash”,
+model=”gemini-2.5-flash”,
 instructions=”You are a coding expert that writes clean, efficient code.”,</p>
 </dd>
 </dl>
@@ -678,7 +678,7 @@ instructions=”You are a coding expert that writes clean, efficient code.”,</
 <dt>writing_agent = Agent(</dt><dd><p>name=”Writing Agent”,
 description=”Specialized in creating clear and engaging written content”,
 generation_provider=provider,
-model=”gemini-2.0-flash”,
+model=”gemini-2.5-flash”,
 instructions=”You are a writing expert that creates compelling content.”,</p>
 </dd>
 </dl>
@@ -688,7 +688,7 @@ team = AgentTeam(</p>
 <blockquote>
 <div><p>agents=[research_agent, coding_agent, writing_agent],
 orchestrator_provider=provider,
-orchestrator_model=”gemini-2.0-flash”,
+orchestrator_model=”gemini-2.5-flash”,
 team_config=AgentConfig(maxIterations=10)</p>
 </div></blockquote>
 <p>)</p>

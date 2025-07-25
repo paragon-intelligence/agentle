@@ -657,7 +657,7 @@
 <span class="sd">    name=&quot;Research Agent&quot;,</span>
 <span class="sd">    description=&quot;Specialized in finding information and data on various topics&quot;,</span>
 <span class="sd">    generation_provider=provider,</span>
-<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">    instructions=&quot;You are a research agent focused on gathering accurate information.&quot;,</span>
 <span class="sd">)</span>
 
@@ -665,7 +665,7 @@
 <span class="sd">    name=&quot;Coding Agent&quot;,</span>
 <span class="sd">    description=&quot;Specialized in writing and debugging code in various languages&quot;,</span>
 <span class="sd">    generation_provider=provider,</span>
-<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">    instructions=&quot;You are a coding expert that writes clean, efficient code.&quot;,</span>
 <span class="sd">)</span>
 
@@ -673,7 +673,7 @@
 <span class="sd">    name=&quot;Writing Agent&quot;,</span>
 <span class="sd">    description=&quot;Specialized in creating clear and engaging written content&quot;,</span>
 <span class="sd">    generation_provider=provider,</span>
-<span class="sd">    model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">    instructions=&quot;You are a writing expert that creates compelling content.&quot;,</span>
 <span class="sd">)</span>
 
@@ -681,7 +681,7 @@
 <span class="sd">team = AgentTeam(</span>
 <span class="sd">    agents=[research_agent, coding_agent, writing_agent],</span>
 <span class="sd">    orchestrator_provider=provider,</span>
-<span class="sd">    orchestrator_model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">    orchestrator_model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">    team_config=AgentConfig(maxIterations=10)</span>
 <span class="sd">)</span>
 
@@ -781,7 +781,7 @@
 <span class="sd">            name=&quot;Math Agent&quot;,</span>
 <span class="sd">            description=&quot;Expert in solving mathematical problems&quot;,</span>
 <span class="sd">            generation_provider=provider,</span>
-<span class="sd">            model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">            model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">            instructions=&quot;You are a mathematics expert.&quot;</span>
 <span class="sd">        )</span>
 
@@ -789,14 +789,14 @@
 <span class="sd">            name=&quot;Language Agent&quot;,</span>
 <span class="sd">            description=&quot;Expert in language translation and linguistics&quot;,</span>
 <span class="sd">            generation_provider=provider,</span>
-<span class="sd">            model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">            model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">            instructions=&quot;You are a language and translation expert.&quot;</span>
 <span class="sd">        )</span>
 
 <span class="sd">        team = AgentTeam(</span>
 <span class="sd">            agents=[math_agent, language_agent],</span>
 <span class="sd">            orchestrator_provider=provider,</span>
-<span class="sd">            orchestrator_model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">            orchestrator_model=&quot;gemini-2.5-flash&quot;</span>
 <span class="sd">        )</span>
 
 <span class="sd">        # Run the team on a task</span>
@@ -809,7 +809,7 @@
 <span class="sd">        custom_team = AgentTeam(</span>
 <span class="sd">            agents=[agent1, agent2, agent3],</span>
 <span class="sd">            orchestrator_provider=provider,</span>
-<span class="sd">            orchestrator_model=&quot;gemini-2.0-flash&quot;,</span>
+<span class="sd">            orchestrator_model=&quot;gemini-2.5-flash&quot;,</span>
 <span class="sd">            team_config=AgentConfig(</span>
 <span class="sd">                maxIterations=15,  # Allow more iterations than default</span>
 <span class="sd">                maxToolCalls=20    # Allow more tool calls if agents use tools</span>
@@ -1105,7 +1105,7 @@
 <span class="sd">            team = AgentTeam(</span>
 <span class="sd">                agents=[research_agent, writing_agent, code_agent],</span>
 <span class="sd">                orchestrator_provider=provider,</span>
-<span class="sd">                orchestrator_model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">                orchestrator_model=&quot;gemini-2.5-flash&quot;</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # Simple string input</span>
@@ -1155,7 +1155,7 @@
 <span class="sd">                team = AgentTeam(</span>
 <span class="sd">                    agents=[agent1, agent2, agent3],</span>
 <span class="sd">                    orchestrator_provider=provider,</span>
-<span class="sd">                    orchestrator_model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">                    orchestrator_model=&quot;gemini-2.5-flash&quot;</span>
 <span class="sd">                )</span>
 
 <span class="sd">                result = await team.run_async(&quot;Perform this complex multi-step task&quot;)</span>
@@ -1374,7 +1374,7 @@
 <span class="sd">            basic_team = AgentTeam(</span>
 <span class="sd">                agents=[agent1, agent2],</span>
 <span class="sd">                orchestrator_provider=provider,</span>
-<span class="sd">                orchestrator_model=&quot;gemini-2.0-flash&quot;</span>
+<span class="sd">                orchestrator_model=&quot;gemini-2.5-flash&quot;</span>
 <span class="sd">            )</span>
 
 <span class="sd">            # Add another agent</span>

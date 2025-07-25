@@ -33,7 +33,7 @@ Agentle integrates with Langfuse for tracing, which allows you to monitor your a
     agent = Agent(
         name="Traceable Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant."
     )
 
@@ -99,7 +99,7 @@ When using agent compositions, Agentle automatically traces the entire workflow:
     team = AgentTeam(
         agents=[research_agent, coding_agent, math_agent],
         orchestrator_provider=provider,  # Using the provider with tracing enabled
-        orchestrator_model="gemini-2.0-flash"
+        orchestrator_model="gemini-2.5-flash"
     )
 
     # Run the team with trace parameters

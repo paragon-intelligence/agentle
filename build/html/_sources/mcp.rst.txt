@@ -148,7 +148,7 @@ You can use MCP servers with Agentle agents using the ``start_mcp_servers()`` co
     agent = Agent(
         name="MCP-Enhanced Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You're an assistant with access to external tools.",
         mcp_servers=[StreamableHTTPMCPServer(
             server_name="Data API",

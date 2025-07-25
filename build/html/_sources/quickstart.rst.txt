@@ -24,7 +24,7 @@ Let's start by creating a simple agent:
     agent = Agent(
         name="Quick Start Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant who provides concise, accurate information."
     )
 
@@ -71,7 +71,7 @@ Now let's enhance our agent by adding a tool:
     weather_agent = Agent(
         name="Weather Assistant",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant that can answer questions about the weather.",
         tools=[get_weather]  # Pass the function as a tool
     )
@@ -106,7 +106,7 @@ Let's create an agent that returns strongly-typed results using Pydantic:
     structured_agent = Agent(
         name="Weather Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
         response_schema=WeatherForecast  # Define the expected response structure
     )
@@ -138,7 +138,7 @@ Let's create an agent with domain-specific knowledge:
     travel_expert = Agent(
         name="Japan Travel Expert",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a Japan travel expert who provides detailed information about Japanese destinations.",
         # Provide static knowledge from multiple sources
         static_knowledge=[
@@ -170,7 +170,7 @@ Now let's create a pipeline of specialized agents:
     research_agent = Agent(
         name="Research Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a research agent focused on gathering information.
         Be thorough and prioritize accuracy over speculation."""
     )
@@ -178,7 +178,7 @@ Now let's create a pipeline of specialized agents:
     analysis_agent = Agent(
         name="Analysis Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are an analysis agent that identifies patterns.
         Highlight meaningful relationships and insights from the data."""
     )
@@ -186,7 +186,7 @@ Now let's create a pipeline of specialized agents:
     summary_agent = Agent(
         name="Summary Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a summary agent that creates concise summaries.
         Present key findings in a logical order with accessible language."""
     )
@@ -217,7 +217,7 @@ Let's deploy an agent as a web API:
         name="Code Assistant",
         description="An AI assistant specialized in helping with programming tasks.",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a helpful programming assistant.
         You can answer questions about programming languages, help debug code,
         explain programming concepts, and provide code examples.""",
@@ -253,7 +253,7 @@ Let's create a chat interface for our agent:
         name="Travel Guide",
         description="A helpful travel guide that answers questions about destinations.",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a knowledgeable travel guide who helps users plan trips.""",
     )
 

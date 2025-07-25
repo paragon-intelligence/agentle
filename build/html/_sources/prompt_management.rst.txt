@@ -269,7 +269,7 @@ In Agent Instructions
     agent = Agent(
         name="Coding Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions=compiled_instructions
     )
 

@@ -179,7 +179,7 @@ The most common way to use tools is to pass them directly to an agent:
     agent = Agent(
         name="Weather Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant that can answer questions about the weather.",
         tools=[get_weather]  # Pass the function as a tool
     )
@@ -199,7 +199,7 @@ You can add tools to an existing agent using the ``with_tools()`` method:
     agent = Agent(
         name="Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant."
     )
 
@@ -364,7 +364,7 @@ For advanced use cases, you can implement custom tool execution logic:
     agent = Agent(
         name="Rate Limited Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You use tools with rate limiting.",
         tools=[get_weather, search_database],
         tool_executor=CustomToolExecutor(rate_limit_per_minute=30)

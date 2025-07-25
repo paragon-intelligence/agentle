@@ -19,7 +19,7 @@ Here's how to create a basic agent:
         name="Basic Agent",
         description="A helpful assistant for general purposes.",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant who provides accurate information."
     )
 
@@ -41,7 +41,7 @@ The ``Agent`` class accepts the following key parameters:
    * - ``generation_provider``
      - The provider that handles generation (e.g., GoogleGenaiGenerationProvider)
    * - ``model``
-     - The specific model to use (e.g., "gemini-2.0-flash")
+     - The specific model to use (e.g., "gemini-2.5-flash")
    * - ``instructions``
      - Detailed instructions that guide the agent's behavior
    * - ``tools``
@@ -66,7 +66,7 @@ Agentle provides a powerful abstraction called ``ModelKind`` that decouples your
     # Using provider-specific model name
     agent1 = Agent(
         generation_provider=GoogleGenerationProvider(),
-        model="gemini-2.0-flash",  # Only works with Google
+        model="gemini-2.5-flash",  # Only works with Google
         instructions="You are a helpful assistant."
     )
 
@@ -163,7 +163,7 @@ You can create agents specialized for particular domains by customizing the inst
         name="Travel Guide",
         description="A helpful travel guide that answers questions about destinations.",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a knowledgeable travel guide who helps users plan trips.
         You provide information about destinations, offer travel tips, suggest itineraries,
         and answer questions about local customs, attractions, and practical travel matters."""
@@ -174,7 +174,7 @@ You can create agents specialized for particular domains by customizing the inst
         name="Coding Assistant",
         description="An expert in writing and debugging code across multiple languages.",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a coding expert who helps with programming tasks.
         You can write code, debug issues, explain concepts, and provide best practices
         across languages like Python, JavaScript, Java, C++, and others."""

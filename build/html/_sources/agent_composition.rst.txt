@@ -27,7 +27,7 @@ Here's how to create a basic agent pipeline:
     research_agent = Agent(
         name="Research Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a research agent focused on gathering information.
         Be thorough and prioritize accuracy over speculation."""
     )
@@ -35,7 +35,7 @@ Here's how to create a basic agent pipeline:
     analysis_agent = Agent(
         name="Analysis Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are an analysis agent that identifies patterns.
         Highlight meaningful relationships and insights from the data."""
     )
@@ -43,7 +43,7 @@ Here's how to create a basic agent pipeline:
     summary_agent = Agent(
         name="Summary Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a summary agent that creates concise summaries.
         Present key findings in a logical order with accessible language."""
     )
@@ -95,7 +95,7 @@ You can create pipelines with agents that use different models:
     analysis_agent = Agent(
         name="Analysis Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",  # Balanced model for analysis
+        model="gemini-2.5-flash",  # Balanced model for analysis
         instructions="You identify patterns and insights from the information."
     )
 
@@ -103,7 +103,7 @@ You can create pipelines with agents that use different models:
     summary_agent = Agent(
         name="Summary Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",  # Fast model for summarization
+        model="gemini-2.5-flash",  # Fast model for summarization
         instructions="You create concise, clear summaries."
     )
 
@@ -137,7 +137,7 @@ Here's how to create a basic agent team:
         name="Research Agent",
         description="Specialized in finding accurate information on various topics",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a research agent focused on gathering accurate information.",
         skills=[
             AgentSkill(name="search", description="Find information on any topic"),
@@ -149,7 +149,7 @@ Here's how to create a basic agent team:
         name="Coding Assistant",
         description="Specialized in writing and debugging code",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a coding expert focused on writing clean, efficient code.",
         skills=[
             AgentSkill(name="code-generation", description="Write code in various languages"),
@@ -161,7 +161,7 @@ Here's how to create a basic agent team:
     team = AgentTeam(
         agents=[research_agent, coding_agent],
         orchestrator_provider=provider,
-        orchestrator_model="gemini-2.0-flash",
+        orchestrator_model="gemini-2.5-flash",
     )
 
     # Run the team with different queries
@@ -191,7 +191,7 @@ The orchestrator can be configured with specific instructions:
     team = AgentTeam(
         agents=[research_agent, coding_agent, math_agent],
         orchestrator_provider=provider,
-        orchestrator_model="gemini-2.0-flash",
+        orchestrator_model="gemini-2.5-flash",
         orchestrator_instructions="""You are a query router that analyzes user requests
         and determines which specialized agent would be best suited to handle the request.
         Consider the skills and expertise of each agent when making your decision."""

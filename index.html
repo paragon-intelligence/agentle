@@ -292,7 +292,7 @@ from agentle.generations.providers.google import GoogleGenerationProvider
 agent = Agent(
     name="Quick Start Agent",
     generation_provider=GoogleGenerationProvider(),
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     instructions="You are a helpful assistant."
 )
 
@@ -540,7 +540,7 @@ print(response.text)</code></pre>
 weather_agent = Agent(
     name="Weather Assistant",
     generation_provider=GoogleGenaiGenerationProvider(),
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     instructions="You are a helpful assistant that can answer questions about the weather.",
     tools=[get_weather]  # Pass the function as a tool
 )
@@ -588,7 +588,7 @@ class WeatherForecast(BaseModel):
 structured_agent = Agent(
     name="Weather Agent",
     generation_provider=GoogleGenerationProvider(),
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
     response_schema=WeatherForecast  # Define the expected response structure
 )
@@ -635,7 +635,7 @@ from agentle.agents.agent_pipeline import AgentPipeline
 research_agent = Agent(
     name="Research Agent",
     generation_provider=provider,
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     instructions="""You are a research agent focused on gathering information.
     Be thorough and prioritize accuracy over speculation."""
 )
@@ -643,7 +643,7 @@ research_agent = Agent(
 analysis_agent = Agent(
     name="Analysis Agent",
     generation_provider=provider,
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     instructions="""You are an analysis agent that identifies patterns.
     Highlight meaningful relationships and insights from the data."""
 )
@@ -651,7 +651,7 @@ analysis_agent = Agent(
 summary_agent = Agent(
     name="Summary Agent",
     generation_provider=provider,
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     instructions="""You are a summary agent that creates concise summaries.
     Present key findings in a logical order with accessible language."""
 )

@@ -28,7 +28,7 @@ Here's a simple example of using structured outputs:
     structured_agent = Agent(
         name="Weather Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
         response_schema=WeatherForecast  # Define the expected response structure
     )
@@ -87,7 +87,7 @@ You can use nested models and complex structures:
     detailed_weather_agent = Agent(
         name="Detailed Weather Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a weather forecasting assistant that provides detailed, structured forecasts.",
         response_schema=DetailedWeatherForecast
     )
@@ -145,7 +145,7 @@ For even more powerful agents, combine structured outputs with tool calling:
     travel_agent = Agent(
         name="Travel Advisor",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a travel advisor that provides structured recommendations for city visits.""",
         tools=[get_city_data],
         response_schema=TravelRecommendation,

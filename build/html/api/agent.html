@@ -825,7 +825,7 @@ This page documentation and others in this module are a WIP. If you want to chec
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Basic Agent&quot;</span><span class="p">,</span>
     <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.5-flash&quot;</span><span class="p">,</span>
     <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span>
 <span class="p">)</span>
 
@@ -846,7 +846,7 @@ This page documentation and others in this module are a WIP. If you want to chec
 <span class="n">agent_with_tool</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Weather Agent&quot;</span><span class="p">,</span>
     <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.5-flash&quot;</span><span class="p">,</span>
     <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You provide weather information.&quot;</span><span class="p">,</span>
     <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">]</span>
 <span class="p">)</span>
@@ -870,7 +870,7 @@ This page documentation and others in this module are a WIP. If you want to chec
 <span class="n">structured_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Structured Weather Agent&quot;</span><span class="p">,</span>
     <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.5-flash&quot;</span><span class="p">,</span>
     <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You provide weather forecasts.&quot;</span><span class="p">,</span>
     <span class="n">response_schema</span><span class="o">=</span><span class="n">WeatherForecast</span>
 <span class="p">)</span>
@@ -889,7 +889,7 @@ This page documentation and others in this module are a WIP. If you want to chec
 <span class="n">knowledgeable_agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Knowledgeable Agent&quot;</span><span class="p">,</span>
     <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.5-flash&quot;</span><span class="p">,</span>
     <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are an expert on company policies.&quot;</span><span class="p">,</span>
     <span class="n">static_knowledge</span><span class="o">=</span><span class="p">[</span>
         <span class="n">StaticKnowledge</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="s2">&quot;docs/company_policy.pdf&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="mi">3600</span><span class="p">),</span>
@@ -913,7 +913,7 @@ This page documentation and others in this module are a WIP. If you want to chec
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Validating Agent&quot;</span><span class="p">,</span>
     <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.5-flash&quot;</span><span class="p">,</span>
     <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You provide structured data.&quot;</span><span class="p">,</span>
     <span class="n">response_schema</span><span class="o">=</span><span class="n">YourResponseSchema</span><span class="p">,</span>
     <span class="n">validation_behavior</span><span class="o">=</span><span class="n">ValidationBehavior</span><span class="o">.</span><span class="n">WARN</span>  <span class="c1"># Options: STRICT, WARN, IGNORE</span>
@@ -930,7 +930,7 @@ This page documentation and others in this module are a WIP. If you want to chec
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Skilled Agent&quot;</span><span class="p">,</span>
     <span class="n">generation_provider</span><span class="o">=</span><span class="n">GoogleGenaiGenerationProvider</span><span class="p">(),</span>
-    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.0-flash&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gemini-2.5-flash&quot;</span><span class="p">,</span>
     <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You have specialized skills.&quot;</span><span class="p">,</span>
     <span class="n">skills</span><span class="o">=</span><span class="p">[</span>
         <span class="n">AgentSkill</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;code-generation&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Write code in various languages&quot;</span><span class="p">),</span>

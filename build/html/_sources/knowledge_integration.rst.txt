@@ -19,7 +19,7 @@ Here's a simple example of integrating knowledge with an agent:
     travel_expert = Agent(
         name="Japan Travel Expert",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a Japan travel expert who provides detailed information about Japanese destinations.",
         # Provide static knowledge from multiple sources
         static_knowledge=[
@@ -196,7 +196,7 @@ Here's a comprehensive example showing how to create a legal assistant with doma
     legal_assistant = Agent(
         name="Legal Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a legal assistant specialized in contract law. Help users understand legal concepts and review contracts.",
         
         # Provide multiple knowledge sources with different caching strategies

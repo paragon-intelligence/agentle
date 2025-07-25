@@ -25,7 +25,7 @@ Here's how to deploy a simple agent as an API:
         name="Code Assistant",
         description="An AI assistant specialized in helping with programming tasks.",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a helpful programming assistant.
         You can answer questions about programming languages, help debug code,
         explain programming concepts, and provide code examples.""",
@@ -62,7 +62,7 @@ For more complex asynchronous workloads, you can expose your agent using the Age
         name="Async Code Assistant",
         description="An AI assistant specialized in helping with programming tasks asynchronously.",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a helpful programming assistant.
         You can answer questions about programming languages, help debug code,
         explain programming concepts, and provide code examples.""",
@@ -106,7 +106,7 @@ Create a chat interface for your agent using Streamlit:
         name="Travel Guide",
         description="A helpful travel guide that answers questions about destinations.",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a knowledgeable travel guide who helps users plan trips.""",
     )
 
@@ -154,7 +154,7 @@ Flask Integration
     assistant = Agent(
         name="Flask Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant integrated with a Flask application."
     )
 
@@ -200,7 +200,7 @@ FastAPI Integration
     assistant = Agent(
         name="FastAPI Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant integrated with a FastAPI application."
     )
 

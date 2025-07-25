@@ -33,7 +33,7 @@ Here's a simple example of using the A2A interface:
     agent = Agent(
         name="Example Agent", 
         generation_provider=provider, 
-        model="gemini-2.0-flash"
+        model="gemini-2.5-flash"
     )
     a2a = A2AInterface(agent=agent)
 
@@ -78,7 +78,7 @@ The main entry point for A2A functionality:
     agent = Agent(
         name="Travel Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a travel agent that helps plan trips."
     )
 
@@ -184,7 +184,7 @@ For production use, you can expose your A2A interface as a RESTful API:
         name="Travel Agent",
         description="An AI assistant specialized in planning travel itineraries.",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a travel agent specialized in creating detailed
         itineraries and providing travel recommendations.""",
     )

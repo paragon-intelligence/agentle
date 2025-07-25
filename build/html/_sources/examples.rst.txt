@@ -17,7 +17,7 @@ Here's a simple example to get you started with Agentle:
     agent = Agent(
         name="Quick Start Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant who provides concise, accurate information."
     )
 
@@ -38,7 +38,7 @@ Creating agents with different generation providers:
     google_agent = Agent(
         name="Google Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant powered by Google Gemini."
     )
 
@@ -70,7 +70,7 @@ Agents can be initialized with static knowledge from various sources:
     agent = Agent(
         name="Product Support Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a product support agent. Answer questions based on the provided knowledge.",
         knowledge_sources=[file_source, text_source, url_source]
     )
@@ -108,7 +108,7 @@ Integrate external tools and functions with your agents:
     weather_agent = Agent(
         name="Weather Assistant",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant that can answer questions about the weather.",
         tools=[get_weather]  # Pass the function as a tool
     )
@@ -139,7 +139,7 @@ Get structured, type-safe responses from your agents:
     structured_agent = Agent(
         name="Weather Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
         response_schema=WeatherForecast  # Define the expected response structure
     )
@@ -167,7 +167,7 @@ Chain multiple specialized agents together in a sequential pipeline:
     research_agent = Agent(
         name="Research Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a research agent focused on gathering information.
         Be thorough and prioritize accuracy over speculation."""
     )
@@ -175,7 +175,7 @@ Chain multiple specialized agents together in a sequential pipeline:
     analysis_agent = Agent(
         name="Analysis Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are an analysis agent that identifies patterns.
         Highlight meaningful relationships and insights from the data."""
     )
@@ -183,7 +183,7 @@ Chain multiple specialized agents together in a sequential pipeline:
     summary_agent = Agent(
         name="Summary Agent",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="""You are a summary agent that creates concise summaries.
         Present key findings in a logical order with accessible language."""
     )
@@ -212,21 +212,21 @@ Build collaborative agent teams that can work together on complex tasks:
     researcher = Agent(
         name="Researcher",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a researcher who finds factual information about topics."
     )
     
     creative_writer = Agent(
         name="Creative Writer",
         generation_provider=provider,
-        model="gemini-2.0-flash", 
+        model="gemini-2.5-flash", 
         instructions="You are a creative writer who can produce engaging content."
     )
     
     editor = Agent(
         name="Editor",
         generation_provider=provider,
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are an editor who improves and refines content."
     )
     
@@ -263,7 +263,7 @@ Deploy your agents as a web API using BlackSheep:
     agent = Agent(
         name="API Agent",
         generation_provider=GoogleGenaiGenerationProvider(),
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         instructions="You are a helpful assistant accessible through an API."
     )
     
