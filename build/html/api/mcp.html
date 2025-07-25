@@ -886,24 +886,20 @@ which can be either text or binary data.</p>
 </section>
 <section id="streamable-http-mcp-server">
 <h2>Streamable HTTP MCP Server<a class="headerlink" href="#streamable-http-mcp-server" title="Link to this heading">¶</a></h2>
-<p id="module-agentle.mcp.servers.streamable_http_mcp_server">Production-ready fixes for StreamableHTTPMCPServer</p>
-<p>Key issues fixed:
-1. Same connection restoration bug as SSE
-2. Inefficient client creation for each request
-3. No connection pooling
-4. Better error handling and retry logic
-5. Resource management improvements</p>
+<p id="module-agentle.mcp.servers.streamable_http_mcp_server">Production-ready fixes for StreamableHTTPMCPServer using aiohttp</p>
+<p>This version is a refactor of the original httpx-based implementation.</p>
+<p>Key changes:
+1. Replaced httpx.AsyncClient with aiohttp.ClientSession for connection pooling.
+2. Adapted exception handling to aiohttp-specific errors (e.g., aiohttp.ClientError).
+3. Updated response handling to use await on methods like .json() and .text().
+4. Maintained all original functionality, retry logic, and session management.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StreamableHTTPMCPServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mcp_endpoint='/mcp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_s=100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_manager=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_delay_s=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connection_pool_limits=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/mcp/servers/streamable_http_mcp_server.html#StreamableHTTPMCPServer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.mcp.servers.streamable_http_mcp_server.StreamableHTTPMCPServer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#agentle.mcp.servers.mcp_server_protocol.MCPServerProtocol" title="agentle.mcp.servers.mcp_server_protocol.MCPServerProtocol"><code class="xref py py-class docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code></a></p>
-<p>Production-ready Streamable HTTP implementation of MCP server client.</p>
-<p>FIXED ISSUES:
-- Connection restoration bug
-- Inefficient client creation
-- Better error handling
-- Connection pooling
-- Retry logic</p>
+<p>Production-ready Streamable HTTP implementation of MCP server client using aiohttp.</p>
+<p>This version uses aiohttp.ClientSession for improved performance and follows
+the library’s best practices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

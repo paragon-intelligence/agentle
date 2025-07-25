@@ -1,4 +1,4 @@
-agentle.mcp.servers.streamable\_http\_mcp\_server
+﻿agentle.mcp.servers.streamable\_http\_mcp\_server
 =================================================
 
 .. automodule:: agentle.mcp.servers.streamable_http_mcp_server
@@ -18,10 +18,12 @@ agentle.mcp.servers.streamable\_http\_mcp\_server
       Any
       AsyncIterator
       Callable
+      ClientTimeout
       InMemorySessionManager
       MCPServerProtocol
       MutableMapping
       Sequence
       SessionManager
       StreamableHTTPMCPServer
+      TCPConnector
    
