@@ -7,12 +7,13 @@ A pipeline is a sequence of agents where the output from one agent becomes the i
 
 from agentle.agents.agent import Agent
 from agentle.agents.agent_pipeline import AgentPipeline
-from agentle.generations.providers.google.google_genai_generation_provider import (
-    GoogleGenaiGenerationProvider,
+from agentle.generations.providers.google.google_generation_provider import (
+    GoogleGenerationProvider,
 )
 
+
 # Create a common provider for all agents
-provider = GoogleGenaiGenerationProvider()
+provider = GoogleGenerationProvider()
 
 # Step 1: Create specialized agents for each stage of the pipeline
 
