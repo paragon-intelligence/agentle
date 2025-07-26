@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Callable, MutableSequence, Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast
 
 from rsb.coroutines.run_sync import run_sync
@@ -14,6 +14,7 @@ from agentle.agents.context import Context
 from agentle.agents.whatsapp.models.data import Data
 from agentle.agents.whatsapp.models.message import Message
 from agentle.agents.whatsapp.models.whatsapp_bot_config import WhatsAppBotConfig
+
 from agentle.agents.whatsapp.models.whatsapp_media_message import WhatsAppMediaMessage
 from agentle.agents.whatsapp.models.whatsapp_message import WhatsAppMessage
 from agentle.agents.whatsapp.models.whatsapp_session import WhatsAppSession
@@ -48,12 +49,38 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+class MessageBatch:
+    """Represents a batch of messages from the same user."""
+
+    def __init__(self, phone_number: str):
+        self.phone_number = phone_number
+        self.messages: MutableSequence[WhatsAppMessage] = []
+        self.created_at = datetime.now()
+        self.lock = asyncio.Lock()
+
+    async def add_message(self, message: WhatsAppMessage) -> None:
+        """Add a message to the batch."""
+        async with self.lock:
+            self.messages.append(message)
+
+    async def get_messages(self) -> Sequence[WhatsAppMessage]:
+        """Get all messages in the batch."""
+        async with self.lock:
+            return list(self.messages)
+
+    async def clear(self) -> None:
+        """Clear all messages from the batch."""
+        async with self.lock:
+            self.messages.clear()
+
+
 class WhatsAppBot:
     """
     WhatsApp bot that wraps an Agentle agent.
 
     This class handles the integration between WhatsApp messages
-    and the Agentle agent, managing sessions and message conversion.
+    and the Agentle agent, managing sessions, flood protection,
+    and message batching.
     """
 
     agent: AgentProtocol[Any]
@@ -62,6 +89,9 @@ class WhatsAppBot:
     context_manager: SessionManager[Context]
     _running: bool
     _webhook_handlers: MutableSequence[Callable[..., Any]]
+    _message_batches: dict[str, MessageBatch]
+    _processing_locks: dict[str, asyncio.Lock]
+    _batch_tasks: dict[str, asyncio.Task[Any]]
 
     def __init__(
         self,
@@ -84,6 +114,9 @@ class WhatsAppBot:
         self.config = config or WhatsAppBotConfig()
         self._running = False
         self._webhook_handlers: MutableSequence[Callable[..., Any]] = []
+        self._message_batches: dict[str, MessageBatch] = {}
+        self._processing_locks: dict[str, asyncio.Lock] = {}
+        self._batch_tasks: dict[str, asyncio.Task[Any]] = {}
 
         # Initialize context manager using existing session system
         if context_manager is None:
@@ -95,11 +128,11 @@ class WhatsAppBot:
         else:
             self.context_manager = context_manager
 
-    def startt(self) -> None:
+    def start(self) -> None:
         """Start the WhatsApp bot."""
         run_sync(self.start_async)
 
-    def stopp(self) -> None:
+    def stop(self) -> None:
         """Stop the WhatsApp bot."""
         run_sync(self.stop_async)
 
@@ -107,18 +140,146 @@ class WhatsAppBot:
         """Start the WhatsApp bot."""
         await self.provider.initialize()
         self._running = True
-        logger.info("WhatsApp bot started for agent:")
+        logger.info("WhatsApp bot started for agent.")
 
     async def stop_async(self) -> None:
         """Stop the WhatsApp bot."""
         self._running = False
+
+        # Cancel all batch tasks
+        for task in self._batch_tasks.values():
+            task.cancel()
+
+        # Wait for tasks to complete
+        if self._batch_tasks:
+            await asyncio.gather(*self._batch_tasks.values(), return_exceptions=True)
+
         await self.provider.shutdown()
         await self.context_manager.close()
-        logger.info("WhatsApp bot stopped for agent:")
+        logger.info("WhatsApp bot stopped for agent.")
+
+    async def _check_flood_protection(
+        self, session: WhatsAppSession, message: WhatsAppMessage
+    ) -> tuple[bool, str | None]:
+        """
+        Check if message should be allowed based on flood protection rules.
+
+        Returns:
+            Tuple of (is_allowed, error_message)
+        """
+        if not self.config.enable_flood_protection:
+            return True, None
+
+        flood_tracker = session.get_or_create_flood_tracker()
+
+        # Check if user is banned
+        if flood_tracker.check_ban_expired():
+            # Ban expired, clear old data
+            flood_tracker.message_timestamps.clear()
+
+        if flood_tracker.is_banned:
+            return False, self.config.flood_ban_message
+
+        # Clean old timestamps
+        cutoff_time = datetime.now() - timedelta(minutes=1)
+        flood_tracker.clean_old_timestamps(cutoff_time)
+
+        # Check rate limit
+        recent_count = flood_tracker.get_recent_message_count(seconds=60)
+        if recent_count >= self.config.max_messages_per_minute:
+            # Ban the user
+            flood_tracker.is_banned = True
+            flood_tracker.ban_expires_at = datetime.now() + timedelta(
+                minutes=self.config.flood_ban_duration_minutes
+            )
+            return False, self.config.flood_ban_message
+
+        # Add current message
+        flood_tracker.add_message(message.id)
+
+        # Warn if approaching limit
+        if recent_count >= self.config.max_messages_per_minute - 2:
+            return True, self.config.flood_warning_message
+
+        return True, None
+
+    async def _get_or_create_message_batch(self, phone_number: str) -> MessageBatch:
+        """Get or create a message batch for a phone number."""
+        if phone_number not in self._message_batches:
+            self._message_batches[phone_number] = MessageBatch(phone_number)
+        return self._message_batches[phone_number]
+
+    async def _process_batch_after_delay(self, phone_number: str) -> None:
+        """Process batched messages after the configured delay."""
+        try:
+            # Wait for the configured batch wait time
+            await asyncio.sleep(self.config.batch_wait_seconds)
+
+            # Get the batch
+            batch = self._message_batches.get(phone_number)
+            if not batch:
+                return
+
+            # Get all messages
+            messages = await batch.get_messages()
+            if not messages:
+                return
+
+            # Clear the batch
+            await batch.clear()
+
+            # Get session
+            session = await self.provider.get_session(phone_number)
+            if not session:
+                logger.error(f"Failed to get session for {phone_number}")
+                return
+
+            # Process all messages as a single batch
+            await self._process_message_batch(messages, session)
+
+        except asyncio.CancelledError:
+            # Task was cancelled, this is expected
+            pass
+        except Exception as e:
+            logger.error(
+                f"Error processing batch for {phone_number}: {e}", exc_info=True
+            )
+        finally:
+            # Clean up
+            self._batch_tasks.pop(phone_number, None)
+
+    async def _process_message_batch(
+        self, messages: Sequence[WhatsAppMessage], session: WhatsAppSession
+    ) -> None:
+        """Process a batch of messages together."""
+        try:
+            # Show typing indicator
+            if self.config.typing_indicator:
+                await self.provider.send_typing_indicator(
+                    messages[0].from_number, self.config.typing_duration
+                )
+
+            # Convert messages to agent input
+            agent_input = await self._convert_messages_to_input(messages, session)
+
+            # Process with agent
+            response = await self._process_with_agent(agent_input, session)
+
+            # Send response (reply to the first message)
+            await self._send_response(messages[0].from_number, response, messages[0].id)
+
+            # Update session
+            session.message_count += len(messages)
+            session.last_activity = datetime.now()
+            await self.provider.update_session(session)
+
+        except Exception as e:
+            logger.error(f"Error processing message batch: {e}", exc_info=True)
+            await self._send_error_message(messages[0].from_number, messages[0].id)
 
     async def handle_message(self, message: WhatsAppMessage) -> None:
         """
-        Handle incoming WhatsApp message.
+        Handle incoming WhatsApp message with flood protection and batching.
 
         Args:
             message: The incoming WhatsApp message
@@ -134,35 +295,112 @@ class WhatsAppBot:
                 logger.error(f"Failed to get session for {message.from_number}")
                 return
 
+            # Check flood protection
+            is_allowed, warning_message = await self._check_flood_protection(
+                session, message
+            )
+
+            if not is_allowed:
+                # User is banned or rate limited
+                await self.provider.send_text_message(
+                    message.from_number,
+                    warning_message or self.config.flood_ban_message,
+                )
+                return
+
+            # Send warning if provided
+            if warning_message:
+                await self.provider.send_text_message(
+                    message.from_number, warning_message
+                )
+
             # Check if this is first interaction
             if session.message_count == 0 and self.config.welcome_message:
                 await self.provider.send_text_message(
                     message.from_number, self.config.welcome_message
                 )
 
-            # Show typing indicator
-            if self.config.typing_indicator:
-                await self.provider.send_typing_indicator(
-                    message.from_number, self.config.typing_duration
+            # Get processing lock for this user
+            if message.from_number not in self._processing_locks:
+                self._processing_locks[message.from_number] = asyncio.Lock()
+
+            processing_lock = self._processing_locks[message.from_number]
+
+            # Check if we're already processing for this user
+            if processing_lock.locked() and self.config.enable_message_batching:
+                # Add to batch
+                batch = await self._get_or_create_message_batch(message.from_number)
+                await batch.add_message(message)
+
+                # Cancel existing batch task if any
+                if message.from_number in self._batch_tasks:
+                    self._batch_tasks[message.from_number].cancel()
+
+                # Schedule new batch processing task
+                self._batch_tasks[message.from_number] = asyncio.create_task(
+                    self._process_batch_after_delay(message.from_number)
                 )
 
-            # Convert WhatsApp message to agent input
-            agent_input = await self._convert_message_to_input(message, session)
+                return
 
-            # Process with agent
-            response = await self._process_with_agent(agent_input, session)
+            # Process message normally
+            async with processing_lock:
+                # Mark as processing
+                flood_tracker = session.get_or_create_flood_tracker()
+                flood_tracker.is_processing = True
+                flood_tracker.processing_started_at = datetime.now()
 
-            # Send response
-            await self._send_response(message.from_number, response, message.id)
+                try:
+                    # If batching is enabled, add to batch and wait
+                    if self.config.enable_message_batching:
+                        batch = await self._get_or_create_message_batch(
+                            message.from_number
+                        )
+                        await batch.add_message(message)
 
-            # Update session
-            session.message_count += 1
-            session.last_activity = datetime.now()
-            await self.provider.update_session(session)
+                        # Schedule batch processing
+                        self._batch_tasks[message.from_number] = asyncio.create_task(
+                            self._process_batch_after_delay(message.from_number)
+                        )
+
+                        # Wait for batch task to complete
+                        await self._batch_tasks[message.from_number]
+                    else:
+                        # Process single message immediately
+                        await self._process_single_message(message, session)
+
+                finally:
+                    # Mark as not processing
+                    flood_tracker.is_processing = False
+                    flood_tracker.processing_started_at = None
 
         except Exception as e:
             logger.error(f"Error handling message: {e}", exc_info=True)
             await self._send_error_message(message.from_number, message.id)
+
+    async def _process_single_message(
+        self, message: WhatsAppMessage, session: WhatsAppSession
+    ) -> None:
+        """Process a single message (legacy behavior)."""
+        # Show typing indicator
+        if self.config.typing_indicator:
+            await self.provider.send_typing_indicator(
+                message.from_number, self.config.typing_duration
+            )
+
+        # Convert WhatsApp message to agent input
+        agent_input = await self._convert_message_to_input(message, session)
+
+        # Process with agent
+        response = await self._process_with_agent(agent_input, session)
+
+        # Send response
+        await self._send_response(message.from_number, response, message.id)
+
+        # Update session
+        session.message_count += 1
+        session.last_activity = datetime.now()
+        await self.provider.update_session(session)
 
     async def handle_webhook(self, payload: WhatsAppWebhookPayload) -> None:
         """
@@ -302,6 +540,76 @@ class WhatsAppBot:
 
         # Create user message
         user_message = UserMessage.create_named(parts=parts, name=message.push_name)
+
+        # Get or create agent context with proper persistence
+        context: Context
+        if session.agent_context_id:
+            # Load existing context from storage
+            existing_context = await self.context_manager.get_session(
+                session.agent_context_id, refresh_ttl=True
+            )
+            if existing_context:
+                context = existing_context
+                logger.debug(f"Loaded existing context: {session.agent_context_id}")
+            else:
+                # Context expired or not found, create new one
+                context = Context(context_id=session.agent_context_id)
+                logger.debug(
+                    f"Context not found, created new: {session.agent_context_id}"
+                )
+        else:
+            # Create new context
+            context = Context()
+            session.agent_context_id = context.context_id
+            logger.debug(f"Created new context: {context.context_id}")
+
+        # Add message to context
+        context.message_history.append(user_message)
+
+        # Save context to storage
+        await self.context_manager.update_session(
+            context.context_id, context, create_if_missing=True
+        )
+
+        return context
+
+    async def _convert_messages_to_input(
+        self, messages: Sequence[WhatsAppMessage], session: WhatsAppSession
+    ) -> Any:
+        """Convert multiple WhatsApp messages to agent input with proper batching."""
+        parts: MutableSequence[TextPart | FilePart] = []
+
+        # Process each message
+        for i, message in enumerate(messages):
+            # Add separator between messages (except for the first one)
+            if i > 0:
+                parts.append(TextPart(text=self.config.batch_separator))
+
+            # Handle text messages
+            if isinstance(message, WhatsAppTextMessage):
+                parts.append(TextPart(text=message.text))
+
+            # Handle media messages
+            elif isinstance(message, WhatsAppMediaMessage):
+                # Download media
+                try:
+                    media_data = await self.provider.download_media(message.id)
+                    parts.append(
+                        FilePart(data=media_data.data, mime_type=media_data.mime_type)
+                    )
+
+                    # Add caption if present
+                    if message.caption:
+                        parts.append(TextPart(text=f"Caption: {message.caption}"))
+
+                except Exception as e:
+                    logger.error(f"Failed to download media: {e}")
+                    parts.append(TextPart(text="[Media file - failed to download]"))
+
+        # Create user message with all parts
+        user_message = UserMessage.create_named(
+            parts=parts, name=messages[0].push_name if messages else None
+        )
 
         # Get or create agent context with proper persistence
         context: Context
@@ -494,7 +802,7 @@ class WhatsAppBot:
                         from_number=from_number,
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
-                            getattr(data, "messageTimestamp", 0)
+                            int(data.get("messageTimestamp", 0))
                             / 1000  # Convert from milliseconds
                         ),
                         text=text or ".",
@@ -514,7 +822,7 @@ class WhatsAppBot:
                         push_name=data["pushName"],
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
-                            getattr(data, "messageTimestamp", 0) / 1000
+                            int(data.get("messageTimestamp", 0)) / 1000
                         ),
                         text=text,
                     )
@@ -528,7 +836,7 @@ class WhatsAppBot:
                         push_name=data["pushName"],
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
-                            getattr(data, "messageTimestamp", 0) / 1000
+                            int(data.get("messageTimestamp", 0)) / 1000
                         ),
                         media_url=image_msg.get("url", "") if image_msg else "",
                         media_mime_type=image_msg.get("mimetype", "image/jpeg")
@@ -546,7 +854,7 @@ class WhatsAppBot:
                         push_name=data["pushName"],
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
-                            getattr(data, "messageTimestamp", 0) / 1000
+                            int(data.get("messageTimestamp", 0)) / 1000
                         ),
                         media_url=doc_msg.get("url", "") if doc_msg else "",
                         media_mime_type=doc_msg.get(
@@ -567,7 +875,7 @@ class WhatsAppBot:
                         push_name=data["pushName"],
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
-                            getattr(data, "messageTimestamp", 0) / 1000
+                            int(data.get("messageTimestamp", 0)) / 1000
                         ),
                         media_url=audio_msg.get("url", "") if audio_msg else "",
                         media_mime_type=audio_msg.get("mimetype", "audio/ogg")
@@ -583,7 +891,7 @@ class WhatsAppBot:
                         caption=video_msg.get("caption") if video_msg else None,
                         to_number=self.provider.get_instance_identifier(),
                         timestamp=datetime.fromtimestamp(
-                            getattr(data, "messageTimestamp", 0) / 1000
+                            int(data.get("messageTimestamp", 0)) / 1000
                         ),
                         media_url=video_msg.get("url", "") if video_msg else "",
                         media_mime_type=video_msg.get("mimetype", "")
