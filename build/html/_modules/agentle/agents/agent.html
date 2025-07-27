@@ -654,6 +654,7 @@
 <span class="c1"># type: ignore[reportGeneralTypeIssues]</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jsonpickle</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
@@ -1066,17 +1067,13 @@
 <div class="viewcode-block" id="Agent.serialize">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.serialize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">jsonpickle</span>
-
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="Agent.desserialize">
-<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.desserialize">[docs]</a>
+<div class="viewcode-block" id="Agent.deserialize">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.deserialize">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">desserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">encoded</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">jsonpickle</span>
-
+    <span class="k">def</span><span class="w"> </span><span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">encoded</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoded</span><span class="p">))</span></div>
 
 
