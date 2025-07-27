@@ -1,4 +1,4 @@
-agentle.agents.whatsapp.whatsapp\_bot
+﻿agentle.agents.whatsapp.whatsapp\_bot
 =====================================
 
 .. automodule:: agentle.agents.whatsapp.whatsapp_bot
@@ -8,7 +8,10 @@ agentle.agents.whatsapp.whatsapp\_bot
 
    .. autosummary::
    
+      Field
+      PrivateAttr
       cast
+      override
       run_sync
    
    .. rubric:: Classes
@@ -17,7 +20,9 @@ agentle.agents.whatsapp.whatsapp\_bot
    
       AgentProtocol
       Any
+      BaseModel
       Callable
+      ConfigDict
       Context
       Data
       FilePart
