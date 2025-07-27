@@ -1,4 +1,4 @@
-agentle.agents.agent
+﻿agentle.agents.agent
 ====================
 
 .. automodule:: agentle.agents.agent
@@ -30,6 +30,7 @@ agentle.agents.agent
       AgentRunOutput
       AgentSkill
       AgentToStreamlit
+      Agent[Any]
       Any
       AssistantMessage
       AsyncGenerator
