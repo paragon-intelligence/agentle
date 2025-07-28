@@ -634,7 +634,7 @@
         <article role="main" id="furo-main-content">
           <section id="module-agentle.agents.whatsapp.providers.evolution.evolution_api_provider">
 <span id="agentle-agents-whatsapp-providers-evolution-evolution-api-provider"></span><h1>agentle.agents.whatsapp.providers.evolution.evolution_api_provider<a class="headerlink" href="#module-agentle.agents.whatsapp.providers.evolution.evolution_api_provider" title="Link to this heading">¶</a></h1>
-<p>Evolution API implementation for WhatsApp.</p>
+<p>Evolution API implementation for WhatsApp with enhanced resilience.</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -662,10 +662,16 @@
 <td><p>Configuration for Evolution API.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EvolutionAPIProvider</span></code>(config[, ...])</p></td>
-<td><p>Evolution API implementation for WhatsApp messaging.</p></td>
+<td><p>Evolution API implementation for WhatsApp messaging with enhanced resilience.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemorySessionStore</span></code>([cleanup_interval_seconds])</p></td>
-<td><p>In-memory session storage implementation.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemoryCircuitBreaker</span></code>([failure_threshold, ...])</p></td>
+<td><p>In-memory circuit breaker implementation with enhanced features.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemoryRateLimiter</span></code>([default_config, ...])</p></td>
+<td><p>In-memory rate limiter implementation using sliding window algorithm.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemorySessionStore</span></code>([...])</p></td>
+<td><p>In-memory session storage implementation with enhanced features.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mapping</span></code>()</p></td>
 <td><p>A Mapping is a generic container for associating key/value pairs.</p></td>
@@ -698,7 +704,7 @@
 <td><p>Abstract base class for WhatsApp API providers.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppSession</span></code>(*, session_id, phone_number, ...)</p></td>
-<td><p>WhatsApp conversation session.</p></td>
+<td><p>WhatsApp conversation session with message batching and spam protection.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppTextMessage</span></code>(*, id[, type, ...])</p></td>
 <td><p>Text message model.</p></td>

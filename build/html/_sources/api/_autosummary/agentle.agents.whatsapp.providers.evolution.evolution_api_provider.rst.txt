@@ -1,4 +1,4 @@
-agentle.agents.whatsapp.providers.evolution.evolution\_api\_provider
+﻿agentle.agents.whatsapp.providers.evolution.evolution\_api\_provider
 ====================================================================
 
 .. automodule:: agentle.agents.whatsapp.providers.evolution.evolution_api_provider
@@ -19,6 +19,8 @@ agentle.agents.whatsapp.providers.evolution.evolution\_api\_provider
       DownloadedMedia
       EvolutionAPIConfig
       EvolutionAPIProvider
+      InMemoryCircuitBreaker
+      InMemoryRateLimiter
       InMemorySessionStore
       Mapping
       MutableMapping

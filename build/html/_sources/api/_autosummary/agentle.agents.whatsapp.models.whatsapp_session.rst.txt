@@ -1,4 +1,4 @@
-agentle.agents.whatsapp.models.whatsapp\_session
+﻿agentle.agents.whatsapp.models.whatsapp\_session
 ================================================
 
 .. automodule:: agentle.agents.whatsapp.models.whatsapp_session
@@ -17,6 +17,7 @@ agentle.agents.whatsapp.models.whatsapp\_session
       Any
       BaseModel
       MutableMapping
+      MutableSequence
       WhatsAppContact
       WhatsAppSession
       datetime

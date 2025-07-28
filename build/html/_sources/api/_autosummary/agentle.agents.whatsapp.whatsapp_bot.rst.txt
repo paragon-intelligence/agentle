@@ -28,6 +28,7 @@
       FilePart
       InMemorySessionStore
       Message
+      MutableMapping
       MutableSequence
       Sequence
       SessionManager
