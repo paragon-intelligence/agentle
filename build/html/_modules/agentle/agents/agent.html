@@ -1687,13 +1687,11 @@
                     <span class="n">knowledge_contents</span>
                 <span class="p">)</span>
 
-        <span class="n">instructions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_instructions_to_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">)</span>
+        <span class="n">instructions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">instructions2str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">static_knowledge_prompt</span><span class="p">:</span>
             <span class="n">instructions</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">static_knowledge_prompt</span>
 
-        <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_input_to_context</span><span class="p">(</span>
-            <span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span>
-        <span class="p">)</span>
+        <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input2context</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
             <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -3091,8 +3089,11 @@
             <span class="n">parsed</span><span class="o">=</span><span class="n">parsed</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_instructions_to_str</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Prompt</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<div class="viewcode-block" id="Agent.instructions2str">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.instructions2str">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">instructions2str</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Prompt</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Converts the instructions to a string.</span>
@@ -3113,10 +3114,14 @@
         <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">instructions</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">instructions</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">instructions</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">instructions</span><span class="p">)</span></div>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_input_to_context</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
+
+<div class="viewcode-block" id="Agent.input2context">
+<a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.input2context">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">input2context</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
         <span class="nb">input</span><span class="p">:</span> <span class="n">AgentInput</span> <span class="o">|</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Context</span><span class="p">:</span>
@@ -3409,7 +3414,8 @@
                 <span class="n">developer_message</span><span class="p">,</span>
                 <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">text</span><span class="p">)]),</span>  <span class="c1"># type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]</span>
             <span class="p">]</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_tool_call_pattern_key</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tool_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
