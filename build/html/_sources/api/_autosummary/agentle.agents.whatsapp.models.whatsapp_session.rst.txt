@@ -21,4 +21,5 @@
       WhatsAppContact
       WhatsAppSession
       datetime
+      timedelta
    
