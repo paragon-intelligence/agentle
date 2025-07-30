@@ -14,7 +14,7 @@ Here's a simple example of using structured outputs:
     from pydantic import BaseModel
     from typing import List, Optional
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Define your output schema
     class WeatherForecast(BaseModel):
@@ -27,7 +27,7 @@ Here's a simple example of using structured outputs:
     # Create an agent with structured output
     structured_agent = Agent(
         name="Weather Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
         response_schema=WeatherForecast  # Define the expected response structure
@@ -86,7 +86,7 @@ You can use nested models and complex structures:
     # Create an agent with the complex schema
     detailed_weather_agent = Agent(
         name="Detailed Weather Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a weather forecasting assistant that provides detailed, structured forecasts.",
         response_schema=DetailedWeatherForecast
@@ -144,7 +144,7 @@ For even more powerful agents, combine structured outputs with tool calling:
     # Create an agent with both tools and a structured output schema
     travel_agent = Agent(
         name="Travel Advisor",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="""You are a travel advisor that provides structured recommendations for city visits.""",
         tools=[get_city_data],

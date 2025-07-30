@@ -14,7 +14,7 @@ Agentle integrates with Langfuse for tracing, which allows you to monitor your a
     import os
     from agentle.generations.tracing.langfuse import LangfuseObservabilityClient
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create a tracing client
     tracing_client = LangfuseObservabilityClient(
@@ -24,7 +24,7 @@ Agentle integrates with Langfuse for tracing, which allows you to monitor your a
     )
 
     # Create a generation provider with tracing enabled
-    provider = GoogleGenaiGenerationProvider(
+    provider = GoogleGenerationProvider(
         api_key=os.environ.get("GOOGLE_API_KEY"),
         tracing_client=tracing_client
     )

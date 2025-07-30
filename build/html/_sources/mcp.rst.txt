@@ -142,12 +142,12 @@ You can use MCP servers with Agentle agents using the ``start_mcp_servers()`` co
 
     from agentle.agents.agent import Agent
     from agentle.mcp.servers.streamable_http_mcp_server import StreamableHTTPMCPServer
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create an agent with MCP server
     agent = Agent(
         name="MCP-Enhanced Assistant",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You're an assistant with access to external tools.",
         mcp_servers=[StreamableHTTPMCPServer(

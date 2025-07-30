@@ -18,13 +18,13 @@ Here's how to deploy a simple agent as an API:
 
     from agentle.agents.agent import Agent
     from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create your agent
     code_assistant = Agent(
         name="Code Assistant",
         description="An AI assistant specialized in helping with programming tasks.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="""You are a helpful programming assistant.
         You can answer questions about programming languages, help debug code,
@@ -55,13 +55,13 @@ For more complex asynchronous workloads, you can expose your agent using the Age
     from agentle.agents.a2a.a2a_interface import A2AInterface
     from agentle.agents.agent import Agent
     from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create your agent
     code_assistant = Agent(
         name="Async Code Assistant",
         description="An AI assistant specialized in helping with programming tasks asynchronously.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="""You are a helpful programming assistant.
         You can answer questions about programming languages, help debug code,
@@ -99,13 +99,13 @@ Create a chat interface for your agent using Streamlit:
 
     from agentle.agents.agent import Agent
     from agentle.agents.ui.streamlit import AgentToStreamlit
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create your agent
     travel_agent = Agent(
         name="Travel Guide",
         description="A helpful travel guide that answers questions about destinations.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="""You are a knowledgeable travel guide who helps users plan trips.""",
     )
@@ -146,14 +146,14 @@ Flask Integration
 
     from flask import Flask, request, jsonify
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     app = Flask(__name__)
 
     # Create your agent
     assistant = Agent(
         name="Flask Assistant",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a helpful assistant integrated with a Flask application."
     )
@@ -185,7 +185,7 @@ FastAPI Integration
     from fastapi import FastAPI, HTTPException
     from pydantic import BaseModel
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     app = FastAPI()
 
@@ -199,7 +199,7 @@ FastAPI Integration
     # Create your agent
     assistant = Agent(
         name="FastAPI Assistant",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a helpful assistant integrated with a FastAPI application."
     )

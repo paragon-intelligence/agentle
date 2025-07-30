@@ -12,13 +12,13 @@ Here's how to create a basic agent:
 .. code-block:: python
 
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create a general-purpose agent
     agent = Agent(
         name="Basic Agent",
         description="A helpful assistant for general purposes.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a helpful assistant who provides accurate information."
     )
@@ -39,7 +39,7 @@ The ``Agent`` class accepts the following key parameters:
    * - ``description``
      - Optional description of the agent's purpose and capabilities
    * - ``generation_provider``
-     - The provider that handles generation (e.g., GoogleGenaiGenerationProvider)
+     - The provider that handles generation (e.g., GoogleGenerationProvider)
    * - ``model``
      - The specific model to use (e.g., "gemini-2.5-flash")
    * - ``instructions``
@@ -162,7 +162,7 @@ You can create agents specialized for particular domains by customizing the inst
     travel_agent = Agent(
         name="Travel Guide",
         description="A helpful travel guide that answers questions about destinations.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="""You are a knowledgeable travel guide who helps users plan trips.
         You provide information about destinations, offer travel tips, suggest itineraries,
@@ -173,7 +173,7 @@ You can create agents specialized for particular domains by customizing the inst
     coding_agent = Agent(
         name="Coding Assistant",
         description="An expert in writing and debugging code across multiple languages.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="""You are a coding expert who helps with programming tasks.
         You can write code, debug issues, explain concepts, and provide best practices

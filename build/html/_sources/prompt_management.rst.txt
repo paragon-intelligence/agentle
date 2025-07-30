@@ -268,7 +268,7 @@ In Agent Instructions
     # Create an agent with the compiled instructions
     agent = Agent(
         name="Coding Assistant",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions=compiled_instructions
     )

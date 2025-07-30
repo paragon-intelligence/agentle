@@ -539,7 +539,7 @@ print(response.text)</code></pre>
 # Create an agent with a tool
 weather_agent = Agent(
     name="Weather Assistant",
-    generation_provider=GoogleGenaiGenerationProvider(),
+    generation_provider=GoogleGenerationProvider(),
     model="gemini-2.5-flash",
     instructions="You are a helpful assistant that can answer questions about the weather.",
     tools=[get_weather]  # Pass the function as a tool

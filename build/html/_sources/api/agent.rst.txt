@@ -204,12 +204,12 @@ Basic Usage
 .. code-block:: python
 
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create a basic agent
     agent = Agent(
         name="Basic Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a helpful assistant."
     )
@@ -231,7 +231,7 @@ With Tools
     # Create an agent with a tool
     agent_with_tool = Agent(
         name="Weather Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You provide weather information.",
         tools=[get_weather]
@@ -256,7 +256,7 @@ With Structured Output
     # Create an agent with structured output
     structured_agent = Agent(
         name="Structured Weather Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You provide weather forecasts.",
         response_schema=WeatherForecast
@@ -276,7 +276,7 @@ With Static Knowledge
     # Create an agent with static knowledge
     knowledgeable_agent = Agent(
         name="Knowledgeable Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are an expert on company policies.",
         static_knowledge=[
@@ -302,7 +302,7 @@ You can control how the agent handles validation errors for structured outputs:
     # Create an agent with custom validation behavior
     agent = Agent(
         name="Validating Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You provide structured data.",
         response_schema=YourResponseSchema,
@@ -321,7 +321,7 @@ For use with agent teams, you can define agent skills:
     # Create an agent with skills
     agent = Agent(
         name="Skilled Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You have specialized skills.",
         skills=[

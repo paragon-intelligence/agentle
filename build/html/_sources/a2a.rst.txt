@@ -26,10 +26,10 @@ Here's a simple example of using the A2A interface:
     from agentle.agents.a2a.tasks.task_send_params import TaskSendParams
     from agentle.agents.a2a.tasks.task_state import TaskState
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Set up agent and A2A interface
-    provider = GoogleGenaiGenerationProvider(api_key=os.environ.get("GOOGLE_API_KEY"))
+    provider = GoogleGenerationProvider(api_key=os.environ.get("GOOGLE_API_KEY"))
     agent = Agent(
         name="Example Agent", 
         generation_provider=provider, 
@@ -177,13 +177,13 @@ For production use, you can expose your A2A interface as a RESTful API:
     from agentle.agents.a2a.a2a_interface import A2AInterface
     from agentle.agents.agent import Agent
     from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create your agent
     travel_agent = Agent(
         name="Travel Agent",
         description="An AI assistant specialized in planning travel itineraries.",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="""You are a travel agent specialized in creating detailed
         itineraries and providing travel recommendations.""",

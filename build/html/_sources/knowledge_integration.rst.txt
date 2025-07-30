@@ -13,12 +13,12 @@ Here's a simple example of integrating knowledge with an agent:
 
     from agentle.agents.agent import Agent
     from agentle.agents.knowledge.static_knowledge import StaticKnowledge
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create an agent with static knowledge
     travel_expert = Agent(
         name="Japan Travel Expert",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a Japan travel expert who provides detailed information about Japanese destinations.",
         # Provide static knowledge from multiple sources
@@ -189,13 +189,13 @@ Here's a comprehensive example showing how to create a legal assistant with doma
 
     from agentle.agents.agent import Agent
     from agentle.agents.knowledge.static_knowledge import StaticKnowledge
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
     from agentle.parsing.factories.file_parser_default_factory import file_parser_default_factory
 
     # Create a legal assistant with domain-specific knowledge
     legal_assistant = Agent(
         name="Legal Assistant",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a legal assistant specialized in contract law. Help users understand legal concepts and review contracts.",
         

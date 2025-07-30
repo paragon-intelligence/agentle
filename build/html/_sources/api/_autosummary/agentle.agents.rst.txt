@@ -27,7 +27,9 @@
    exceptions
    execution_state
    knowledge
+   performance_metrics
    step
+   step_metric
    store
    suspension_manager
    templates

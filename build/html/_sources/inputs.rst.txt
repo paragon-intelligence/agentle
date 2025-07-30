@@ -12,11 +12,11 @@ Here are the most common input types you can pass to the ``run`` method:
 .. code-block:: python
 
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create a basic agent
     agent = Agent(
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a versatile assistant that can analyze different types of data."
     )

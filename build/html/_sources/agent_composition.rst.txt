@@ -18,10 +18,10 @@ Here's how to create a basic agent pipeline:
 
     from agentle.agents.agent import Agent
     from agentle.agents.agent_pipeline import AgentPipeline
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create a provider for all agents
-    provider = GoogleGenaiGenerationProvider()
+    provider = GoogleGenerationProvider()
 
     # Create specialized agents
     research_agent = Agent(
@@ -127,10 +127,10 @@ Here's how to create a basic agent team:
     from agentle.agents.agent import Agent
     from agentle.agents.agent_team import AgentTeam
     from agentle.agents.a2a.models.agent_skill import AgentSkill
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create a provider for all agents
-    provider = GoogleGenaiGenerationProvider()
+    provider = GoogleGenerationProvider()
 
     # Create specialized agents with different skills
     research_agent = Agent(

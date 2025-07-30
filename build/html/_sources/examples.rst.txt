@@ -11,12 +11,12 @@ Here's a simple example to get you started with Agentle:
 .. code-block:: python
 
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
     # Create a simple agent
     agent = Agent(
         name="Quick Start Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a helpful assistant who provides concise, accurate information."
     )
@@ -37,7 +37,7 @@ Creating agents with different generation providers:
     # With Google Gemini
     google_agent = Agent(
         name="Google Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a helpful assistant powered by Google Gemini."
     )
@@ -58,7 +58,7 @@ Agents can be initialized with static knowledge from various sources:
 .. code-block:: python
 
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
     from agentle.knowledge.knowledge_source import FileKnowledgeSource, TextKnowledgeSource, URLKnowledgeSource
 
     # Create knowledge sources
@@ -69,7 +69,7 @@ Agents can be initialized with static knowledge from various sources:
     # Create agent with knowledge
     agent = Agent(
         name="Product Support Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a product support agent. Answer questions based on the provided knowledge.",
         knowledge_sources=[file_source, text_source, url_source]
@@ -107,7 +107,7 @@ Integrate external tools and functions with your agents:
     # Create an agent with a tool
     weather_agent = Agent(
         name="Weather Assistant",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a helpful assistant that can answer questions about the weather.",
         tools=[get_weather]  # Pass the function as a tool
@@ -138,7 +138,7 @@ Get structured, type-safe responses from your agents:
     # Create an agent with structured output
     structured_agent = Agent(
         name="Weather Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
         response_schema=WeatherForecast  # Define the expected response structure
@@ -255,14 +255,14 @@ Deploy your agents as a web API using BlackSheep:
 
     from blacksheep import Application, json, get, post
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
     
     app = Application()
     
     # Create an agent
     agent = Agent(
         name="API Agent",
-        generation_provider=GoogleGenaiGenerationProvider(),
+        generation_provider=GoogleGenerationProvider(),
         model="gemini-2.5-flash",
         instructions="You are a helpful assistant accessible through an API."
     )

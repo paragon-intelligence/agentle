@@ -18,6 +18,7 @@ agentle.agents.agent\_run\_output
       BaseModel
       Context
       Generation
+      PerformanceMetrics
       Sequence
       ToolExecutionResult
    

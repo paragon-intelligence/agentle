@@ -12,11 +12,11 @@ Let's start by creating a simple agent:
 .. code-block:: python
 
     from agentle.agents.agent import Agent
-    from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+    from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
     import os
 
     # Create a generation provider (Google AI in this example)
-    provider = GoogleGenaiGenerationProvider(
+    provider = GoogleGenerationProvider(
         api_key=os.environ.get("GOOGLE_API_KEY")  # Get API key from environment variable
     )
 

@@ -9,12 +9,12 @@ Create and use Agentle agents in your Python applications:
 .. code-block:: python
 
    from agentle.agents.agent import Agent
-   from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+   from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
    # Create a simple agent
    agent = Agent(
        name="Quick Start Agent",
-       generation_provider=GoogleGenaiGenerationProvider(),
+       generation_provider=GoogleGenerationProvider(),
        model="gemini-2.5-flash",
        instructions="You are a helpful assistant who provides concise, accurate information."
    )
@@ -48,12 +48,12 @@ Enhance your agents with domain-specific knowledge from various sources:
 
    from agentle.agents.agent import Agent
    from agentle.agents.knowledge.static_knowledge import StaticKnowledge
-   from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+   from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
    # Create an agent with static knowledge
    travel_expert = Agent(
        name="Japan Travel Expert",
-       generation_provider=GoogleGenaiGenerationProvider(),
+       generation_provider=GoogleGenerationProvider(),
        model="gemini-2.5-flash",
        instructions="You are a Japan travel expert who provides detailed information about Japanese destinations.",
        # Provide static knowledge from multiple sources
@@ -95,7 +95,7 @@ Extend your agents with custom tools to perform actions beyond text generation:
    # Create an agent with a tool
    weather_agent = Agent(
        name="Weather Assistant",
-       generation_provider=GoogleGenaiGenerationProvider(),
+       generation_provider=GoogleGenerationProvider(),
        model="gemini-2.5-flash",
        instructions="You are a helpful assistant that can answer questions about the weather.",
        tools=[get_weather]  # Pass the function as a tool
@@ -126,7 +126,7 @@ Get strongly-typed responses from your agents using Pydantic models:
    # Create an agent with structured output
    structured_agent = Agent(
        name="Weather Agent",
-       generation_provider=GoogleGenaiGenerationProvider(),
+       generation_provider=GoogleGenerationProvider(),
        model="gemini-2.5-flash",
        instructions="You are a weather forecasting assistant. Provide accurate forecasts.",
        response_schema=WeatherForecast  # Define the expected response structure
@@ -248,13 +248,13 @@ Expose your agent as a RESTful API:
 
    from agentle.agents.agent import Agent
    from agentle.agents.asgi.blacksheep.agent_to_blacksheep_application_adapter import AgentToBlackSheepApplicationAdapter
-   from agentle.generations.providers.google.google_genai_generation_provider import GoogleGenaiGenerationProvider
+   from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider
 
    # Create your agent
    code_assistant = Agent(
        name="Code Assistant",
        description="An AI assistant specialized in helping with programming tasks.",
-       generation_provider=GoogleGenaiGenerationProvider(),
+       generation_provider=GoogleGenerationProvider(),
        model="gemini-2.5-flash",
        instructions="""You are a helpful programming assistant.
        You can answer questions about programming languages, help debug code,
@@ -283,7 +283,7 @@ Create a chat interface for your agent:
    travel_agent = Agent(
        name="Travel Guide",
        description="A helpful travel guide that answers questions about destinations.",
-       generation_provider=GoogleGenaiGenerationProvider(),
+       generation_provider=GoogleGenerationProvider(),
        model="gemini-2.5-flash",
        instructions="""You are a knowledgeable travel guide who helps users plan trips.""",
    )

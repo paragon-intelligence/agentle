@@ -1,0 +1,21 @@
+agentle.agents.performance\_metrics
+===================================
+
+.. automodule:: agentle.agents.performance_metrics
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseModel
+      PerformanceMetrics
+      Sequence
+      StepMetric
+   
