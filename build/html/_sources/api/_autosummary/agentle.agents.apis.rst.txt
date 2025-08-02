@@ -1,0 +1,25 @@
+agentle.agents.apis
+===================
+
+.. automodule:: agentle.agents.apis
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   api
+   array_schema
+   endpoint
+   endpoint_parameter
+   endpoints_to_tools
+   http_method
+   object_schema
+   object_serialization_style
+   parameter_location
+   parameter_schema
+   params
+   primitive_schema
+   request_config

@@ -8,8 +8,6 @@ agentle.agents.agent\_protocol
 
    .. autosummary::
    
-      asynccontextmanager
-      contextmanager
       runtime_checkable
    
    .. rubric:: Classes
@@ -18,7 +16,5 @@ agentle.agents.agent\_protocol
    
       AgentProtocol
       Any
-      AsyncGenerator
-      Generator
       Protocol
    

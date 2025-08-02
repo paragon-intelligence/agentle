@@ -1,0 +1,13 @@
+agentle.agents.apis.http\_method
+================================
+
+.. automodule:: agentle.agents.apis.http_method
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      HTTPMethod
+      StrEnum
+   
