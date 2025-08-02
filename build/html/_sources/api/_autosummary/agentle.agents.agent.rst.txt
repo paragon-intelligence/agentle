@@ -30,6 +30,7 @@ agentle.agents.agent
       AgentRunOutput
       AgentSkill
       AgentToStreamlit
+      Agent[Any]
       Any
       AssistantMessage
       AsyncGenerator
