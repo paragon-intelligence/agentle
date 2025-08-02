@@ -59,12 +59,14 @@ agentle.agents.agent
       MutableSequence
       ParsedFile
       Path
+      PerformanceMetrics
       Prompt
       RunState
       Sequence
       SpeechToTextProvider
       StaticKnowledge
       Step
+      StepMetric
       StringIO
       SuspensionManager
       TextPart
