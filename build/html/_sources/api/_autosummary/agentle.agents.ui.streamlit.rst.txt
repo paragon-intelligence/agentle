@@ -21,6 +21,8 @@
       FilePart
       StaticKnowledge
       TextPart
+      Tool
+      ToolExecutionResult
       ToolExecutionSuggestion
       UserMessage
    

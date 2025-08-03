@@ -32,6 +32,9 @@
       Sequence
       SessionManager
       TextPart
+      Tool
+      ToolExecutionResult
+      ToolExecutionSuggestion
       UserMessage
       WhatsAppAudioMessage
       WhatsAppBot
