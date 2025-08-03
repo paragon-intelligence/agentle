@@ -1,4 +1,4 @@
-agentle.agents.whatsapp.whatsapp\_bot
+﻿agentle.agents.whatsapp.whatsapp\_bot
 =====================================
 
 .. automodule:: agentle.agents.whatsapp.whatsapp_bot
@@ -8,6 +8,8 @@ agentle.agents.whatsapp.whatsapp\_bot
 
    .. autosummary::
    
+      Field
+      PrivateAttr
       cast
       run_sync
    
@@ -15,14 +17,17 @@ agentle.agents.whatsapp.whatsapp\_bot
 
    .. autosummary::
    
-      AgentProtocol
+      Agent
       Any
+      BaseModel
       Callable
+      ConfigDict
       Context
       Data
       FilePart
       InMemorySessionStore
       Message
+      MutableMapping
       MutableSequence
       Sequence
       SessionManager

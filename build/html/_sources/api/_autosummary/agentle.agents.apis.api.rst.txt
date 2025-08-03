@@ -1,0 +1,25 @@
+agentle.agents.apis.api
+=======================
+
+.. automodule:: agentle.agents.apis.api
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      API
+      Any
+      BaseModel
+      Endpoint
+      MutableMapping
+      RequestConfig
+      Sequence
+      Tool
+   

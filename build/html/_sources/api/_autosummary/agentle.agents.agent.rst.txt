@@ -14,6 +14,7 @@ agentle.agents.agent
       cast
       contextmanager
       dedent
+      endpoints_to_tools
       file_parser_default_factory
       get_default_suspension_manager
       is_module_available
@@ -24,6 +25,7 @@ agentle.agents.agent
 
    .. autosummary::
    
+      API
       Agent
       AgentConfig
       AgentConfigDict
@@ -45,6 +47,7 @@ agentle.agents.agent
       DeveloperMessage
       DocumentCacheStore
       DocumentParser
+      Endpoint
       FilePart
       Generation
       GenerationProvider
@@ -59,16 +62,19 @@ agentle.agents.agent
       MutableSequence
       ParsedFile
       Path
+      PerformanceMetrics
       Prompt
       RunState
       Sequence
       SpeechToTextProvider
       StaticKnowledge
       Step
+      StepMetric
       StringIO
       SuspensionManager
       TextPart
       Tool
+      ToolExecutionResult
       ToolExecutionSuggestion
       TraceParams
       UserMessage

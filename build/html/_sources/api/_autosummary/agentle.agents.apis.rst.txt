@@ -4,6 +4,15 @@ agentle.agents.apis
 .. automodule:: agentle.agents.apis
 
    
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ArraySchema
+      EndpointParameter
+      ObjectSchema
+      PrimitiveSchema
+   
 .. rubric:: Modules
 
 .. autosummary::
@@ -19,7 +28,6 @@ agentle.agents.apis
    object_schema
    object_serialization_style
    parameter_location
-   parameter_schema
    params
    primitive_schema
    request_config

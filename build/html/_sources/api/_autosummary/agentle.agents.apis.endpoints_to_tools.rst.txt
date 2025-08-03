@@ -1,0 +1,24 @@
+agentle.agents.apis.endpoints\_to\_tools
+========================================
+
+.. automodule:: agentle.agents.apis.endpoints_to_tools
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      endpoints_to_tools
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      API
+      Any
+      Endpoint
+      MutableMapping
+      MutableSequence
+      Sequence
+      Tool
+   
