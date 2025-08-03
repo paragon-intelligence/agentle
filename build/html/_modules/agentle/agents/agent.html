@@ -1976,8 +1976,6 @@
         <span class="c1"># Initialize tracking systems before the while loop</span>
         <span class="n">tool_call_patterns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># pattern_hash -&gt; count</span>
         <span class="n">tool_budget</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># tool_name -&gt; call_count</span>
-        <span class="n">MAX_CALLS_PER_TOOL</span> <span class="o">=</span> <span class="mi">3</span>
-        <span class="n">MAX_IDENTICAL_CALLS</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="k">while</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">:</span>
             <span class="n">current_iteration</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
@@ -2030,9 +2028,9 @@
                 <span class="c1"># Add budget warnings</span>
                 <span class="n">budget_warnings</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">tool_budget</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="n">MAX_CALLS_PER_TOOL</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
                         <span class="n">budget_warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;(warning) Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; approaching limit: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">MAX_CALLS_PER_TOOL</span><span class="si">}</span><span class="s2"> calls&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;(warning) Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; approaching limit: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span><span class="si">}</span><span class="s2"> calls&quot;</span>
                         <span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">budget_warnings</span><span class="p">:</span>
@@ -2378,7 +2376,7 @@
 
                 <span class="c1"># Check if this exact pattern was already called</span>
                 <span class="n">pattern_count</span> <span class="o">=</span> <span class="n">tool_call_patterns</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pattern_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">pattern_count</span> <span class="o">&gt;=</span> <span class="n">MAX_IDENTICAL_CALLS</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">pattern_count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIdenticalToolCalls</span><span class="p">:</span>
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                             <span class="s2">&quot;Blocking redundant tool call: </span><span class="si">%s</span><span class="s2"> with args: </span><span class="si">%s</span><span class="s2"> (already called </span><span class="si">%d</span><span class="s2"> times)&quot;</span><span class="p">,</span>
@@ -2433,7 +2431,7 @@
                 <span class="c1"># Check budget</span>
                 <span class="n">tool_name</span> <span class="o">=</span> <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span>
                 <span class="n">current_tool_calls</span> <span class="o">=</span> <span class="n">tool_budget</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">current_tool_calls</span> <span class="o">&gt;=</span> <span class="n">MAX_CALLS_PER_TOOL</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">current_tool_calls</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span><span class="p">:</span>
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                             <span class="s2">&quot;Tool budget exceeded for: </span><span class="si">%s</span><span class="s2"> (already called </span><span class="si">%d</span><span class="s2"> times)&quot;</span><span class="p">,</span>
@@ -2442,7 +2440,7 @@
                         <span class="p">)</span>
                     <span class="p">)</span>
 
-                    <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; budget exceeded (</span><span class="si">{</span><span class="n">MAX_CALLS_PER_TOOL</span><span class="si">}</span><span class="s2"> calls max)&quot;</span>
+                    <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; budget exceeded (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span><span class="si">}</span><span class="s2"> calls max)&quot;</span>
                     <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
                         <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
                         <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
