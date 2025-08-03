@@ -1610,7 +1610,7 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            AgentRunOutput[T_Schema]: The result of the agent execution with performance metrics,</span>
-<span class="sd">                                     possibly with a structured response according to the defined schema.</span>
+<span class="sd">                                    possibly with a structured response according to the defined schema.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            MaxToolCallsExceededError: If the maximum number of tool calls is exceeded.</span>
@@ -1988,114 +1988,60 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
-            <span class="n">called_tools_prompt</span><span class="p">:</span> <span class="n">UserMessage</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)])</span>
+            <span class="c1"># Clone message history to avoid modifying the original context</span>
+            <span class="n">message_history</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
+
+            <span class="c1"># Add tool execution results directly to the last user message if any exist</span>
             <span class="k">if</span> <span class="n">called_tools</span><span class="p">:</span>
-                <span class="c1"># Build a comprehensive prompt with anti-repetition instructions</span>
-                <span class="n">called_tools_prompt_parts</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span>
-                    <span class="n">TextPart</span>
-                    <span class="o">|</span> <span class="n">FilePart</span>
-                    <span class="o">|</span> <span class="n">Tool</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
-                    <span class="o">|</span> <span class="n">ToolExecutionSuggestion</span>
-                    <span class="o">|</span> <span class="n">ToolExecutionResult</span>
-                <span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-
-                <span class="c1"># Add strong header with warnings</span>
-                <span class="n">redundancy_warnings</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">tool_call_patterns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="n">tool_name</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-                        <span class="n">redundancy_warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;(warning) REDUNDANT: &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; called </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> times with args: </span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s2">&quot;</span>
-                        <span class="p">)</span>
-
-                <span class="n">header_text</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\</span>
-<span class="s2">                    &lt;previous_tool_calls&gt;</span>
-<span class="s2">                    &lt;critical_rules&gt;</span>
-<span class="s2">                    (danger) NEVER call the same tool with identical arguments twice</span>
-<span class="s2">                    (danger) DO NOT repeat tool calls that already have results</span>
-<span class="s2">                    (warning)  Check the results below BEFORE making any new tool call</span>
-<span class="s2">                    (warning)  If information was already obtained, use it instead of calling again</span>
-<span class="s2">                    &lt;/critical_rules&gt;</span>
-<span class="s2">                    </span>
-<span class="s2">                    &lt;iteration_info&gt;</span>
-<span class="s2">                    Current iteration: </span><span class="si">{</span><span class="n">current_iteration</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="si">}</span>
-<span class="s2">                    Total tools called so far: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">called_tools</span><span class="p">)</span><span class="si">}</span>
-<span class="s2">                    &lt;/iteration_info&gt;</span>
-<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">redundancy_warnings</span><span class="p">:</span>
-                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&lt;redundancy_alerts&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">redundancy_warnings</span><span class="p">)</span>
-                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">(danger) These redundant calls are wasting resources and iterations!</span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;&lt;/redundancy_alerts&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-                <span class="c1"># Add budget warnings</span>
-                <span class="n">budget_warnings</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">tool_name</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">tool_budget</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="n">budget_warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;(warning) Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; approaching limit: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span><span class="si">}</span><span class="s2"> calls&quot;</span>
-                        <span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">budget_warnings</span><span class="p">:</span>
-                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&lt;budget_warnings&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">budget_warnings</span><span class="p">)</span>
-                    <span class="n">header_text</span> <span class="o">+=</span> <span class="s2">&quot;&lt;/budget_warnings&gt;</span><span class="se">\n</span><span class="s2">&quot;</span>
-
-                <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">header_text</span><span class="p">))</span>
-
-                <span class="c1"># Add the actual tool results as ToolExecutionResult objects</span>
-                <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&lt;completed_tool_executions&gt;&quot;</span><span class="p">)</span>
-                <span class="p">)</span>
-
-                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">suggestion</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">called_tools</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="mi">1</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">FilePart</span><span class="p">):</span>
-                        <span class="c1"># For file results, still use the existing approach but also add ToolExecutionResult</span>
-                        <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-                            <span class="p">[</span>
-                                <span class="n">TextPart</span><span class="p">(</span>
-                                    <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[Execution #</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">]</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Tool: </span><span class="si">{</span><span class="n">suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Args: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                    <span class="o">+</span> <span class="s2">&quot;Result: [File generated - see below]&quot;</span>
-                                <span class="p">),</span>
-                                <span class="n">result</span><span class="p">,</span>
-                                <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;[End of file]</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">),</span>
-                            <span class="p">]</span>
-                        <span class="p">)</span>
-
-                    <span class="c1"># Add ToolExecutionResult for proper Google API compliance</span>
-                    <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
-                        <span class="n">suggestion</span><span class="o">=</span><span class="n">suggestion</span><span class="p">,</span>
-                        <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-                        <span class="n">execution_time_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># You can add timing if tracked</span>
-                        <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Set based on actual execution status</span>
-                        <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Set if there were execution errors</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">&quot;Adding </span><span class="si">%d</span><span class="s2"> tool execution results to message&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">called_tools</span><span class="p">)</span>
                     <span class="p">)</span>
-                    <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_execution_result</span><span class="p">)</span>
-
-                <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&lt;/completed_tool_executions&gt;&quot;</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">called_tools_prompt_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&lt;/previous_tool_calls&gt;&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
 
-                <span class="n">called_tools_prompt</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="n">called_tools_prompt_parts</span><span class="p">)</span>
+                <span class="c1"># Find the last user message and clone it</span>
+                <span class="n">last_user_message_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">UserMessage</span><span class="p">):</span>
+                        <span class="n">last_user_message_index</span> <span class="o">=</span> <span class="n">i</span>
+                        <span class="k">break</span>
+
+                <span class="k">if</span> <span class="n">last_user_message_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">original_user_message</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">last_user_message_index</span><span class="p">]</span>
+                    <span class="c1"># Clone the user message to avoid modifying the original</span>
+                    <span class="n">cloned_user_message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span>
+                        <span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_user_message</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Add tool execution results as proper parts</span>
+                    <span class="k">for</span> <span class="n">suggestion</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">called_tools</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                        <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                            <span class="n">suggestion</span><span class="o">=</span><span class="n">suggestion</span><span class="p">,</span>
+                            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                            <span class="n">execution_time_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Could be tracked if needed</span>
+                            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Set based on actual execution status</span>
+                            <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Set if there were execution errors</span>
+                        <span class="p">)</span>
+                        <span class="n">cloned_user_message</span><span class="o">.</span><span class="n">insert_at_end</span><span class="p">(</span><span class="n">tool_execution_result</span><span class="p">)</span>
+
+                    <span class="c1"># Replace the last user message with the modified one</span>
+                    <span class="n">message_history</span><span class="p">[</span><span class="n">last_user_message_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_user_message</span>
+
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                            <span class="s2">&quot;Added tool execution results to user message. &quot;</span>
+                            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Message now has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cloned_user_message</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2"> parts&quot;</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
 
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generating tool call response&quot;</span><span class="p">)</span>
             <span class="p">)</span>
 
-            <span class="n">_new_messages</span> <span class="o">=</span> <span class="n">MessageSequence</span><span class="p">(</span>
-                <span class="n">context</span><span class="o">.</span><span class="n">message_history</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">merge_with_last_user_message</span><span class="p">(</span><span class="n">called_tools_prompt</span><span class="p">)</span>
-
             <span class="n">generation_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
             <span class="n">tool_call_generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">generate_async</span><span class="p">(</span>
                 <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
-                <span class="n">messages</span><span class="o">=</span><span class="n">_new_messages</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span>
+                <span class="n">messages</span><span class="o">=</span><span class="n">message_history</span><span class="p">,</span>
                 <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
                 <span class="n">tools</span><span class="o">=</span><span class="n">all_tools</span><span class="p">,</span>
             <span class="p">)</span>
@@ -2137,58 +2083,11 @@
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generating structured response&quot;</span><span class="p">)</span>
                     <span class="p">)</span>
 
-                    <span class="c1"># --- IMPROVED CONTEXT BLOCK ---</span>
-
-                    <span class="c1"># 1. Get the text from the previous turn&#39;s tool-use prompt.</span>
-                    <span class="c1"># This contains the history of all tools called so far.</span>
-                    <span class="n">called_tools_history_text</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">called_tools_prompt</span><span class="o">.</span><span class="n">text</span>
-                        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">called_tools_prompt</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-                        <span class="k">else</span> <span class="s2">&quot;&lt;no_tools_were_called_in_previous_iterations&gt;&quot;</span>
-                    <span class="p">)</span>
-
-                    <span class="n">available_tools_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tool</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">all_tools</span><span class="p">)</span>
-
-                    <span class="c1"># 2. Construct a clear, structured prompt for the final formatting task.</span>
-                    <span class="n">reformatting_context_prompt</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">                    &lt;final_formatting_instructions&gt;</span>
-<span class="s2">                        &lt;objective&gt;</span>
-<span class="s2">                        (critical) Your previous response was generated as plain text. Your ONLY task now is to analyze that text and the full context to format the final answer into the required structured JSON schema. DO NOT generate new information or call more tools.</span>
-<span class="s2">                        &lt;/objective&gt;</span>
-<span class="s2">                        </span>
-<span class="s2">                        &lt;source_text_to_format&gt;</span>
-<span class="s2">                        &lt;reasoning&gt;This was your internal thought process and final answer text before formatting.&lt;/reasoning&gt;</span>
-<span class="s2">                        &lt;content&gt;</span>
-<span class="s2">                            </span><span class="si">{</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">text</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s2">&quot;No text was generated in the previous step. Synthesize a response based on the tool history.&quot;</span><span class="si">}</span>
-<span class="s2">                        &lt;/content&gt;</span>
-<span class="s2">                        &lt;/source_text_to_format&gt;</span>
-<span class="s2">                        </span>
-<span class="s2">                        &lt;full_context&gt;</span>
-<span class="s2">                        &lt;summary&gt;This is the context you had in the previous step. Use it to ensure your final structured output is correct.&lt;/summary&gt;</span>
-<span class="s2">                        </span>
-<span class="s2">                        &lt;tool_execution_history&gt;</span>
-<span class="s2">                            </span><span class="si">{</span><span class="n">called_tools_history_text</span><span class="si">}</span>
-<span class="s2">                        &lt;/tool_execution_history&gt;</span>
-<span class="s2">                        </span>
-<span class="s2">                        &lt;available_tools&gt;</span>
-<span class="s2">                            </span><span class="si">{</span><span class="n">available_tools_text</span><span class="si">}</span>
-<span class="s2">                        &lt;/available_tools&gt;</span>
-<span class="s2">                        &lt;/full_context&gt;</span>
-<span class="s2">                    &lt;/final_formatting_instructions&gt;</span>
-<span class="s2">                    &quot;&quot;&quot;</span><span class="p">)</span>
-
-                    <span class="c1"># 3. Create the new message sequence for the final generation call.</span>
-                    <span class="c1"># We replace the previous turn&#39;s messy context with our clean, structured one.</span>
-                    <span class="n">messages_for_final_generation</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">MessageSequence</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
-                        <span class="o">.</span><span class="n">append_before_last_message</span><span class="p">(</span><span class="n">reformatting_context_prompt</span><span class="p">)</span>
-                        <span class="o">.</span><span class="n">elements</span>
-                    <span class="p">)</span>
-
+                    <span class="c1"># Generate final structured response</span>
                     <span class="n">generation_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
                     <span class="n">generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">generate_async</span><span class="p">(</span>
                         <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="n">messages_for_final_generation</span><span class="p">,</span>
+                        <span class="n">messages</span><span class="o">=</span><span class="n">message_history</span><span class="p">,</span>
                         <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                         <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -2196,7 +2095,6 @@
                         <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">generation_start</span>
                     <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
                     <span class="n">generation_time_total</span> <span class="o">+=</span> <span class="n">generation_time_single</span>
-                    <span class="c1"># --- END OF IMPROVEMENT ---</span>
 
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Final generation complete&quot;</span><span class="p">)</span>
@@ -2380,6 +2278,14 @@
 
                 <span class="c1"># Check if this exact pattern was already called</span>
                 <span class="n">pattern_count</span> <span class="o">=</span> <span class="n">tool_call_patterns</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pattern_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+                <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Tool pattern &#39;</span><span class="si">{</span><span class="n">pattern_key</span><span class="si">}</span><span class="s2">&#39; has been called </span><span class="si">{</span><span class="n">pattern_count</span><span class="si">}</span><span class="s2"> times. &quot;</span>
+                        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Max allowed: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIdenticalToolCalls</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
                 <span class="k">if</span> <span class="n">pattern_count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIdenticalToolCalls</span><span class="p">:</span>
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
