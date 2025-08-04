@@ -658,6 +658,9 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
 <td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cast</span></code>(typ, val)</p></td>
+<td><p>Cast a value to a type.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -671,22 +674,43 @@
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArraySchema</span></code>(*[, type, min_items, max_items, ...])</p></td>
+<td><p>Schema definition for array parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Endpoint</span></code>(*, name, description[, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Endpoint</span></code>(*, name, description[, ...])</p></td>
 <td><p>Represents a single HTTP API endpoint that can be called by an agent.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EndpointParameter</span></code>(*, name, description[, ...])</p></td>
+<td><p>Represents a parameter for an API endpoint with proper object support.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mapping</span></code>()</p></td>
+<td><p>A Mapping is a generic container for associating key/value pairs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
 <td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestConfig</span></code>(*[, timeout, max_retries, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
+<td><p>All the operations on a read-write sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ObjectSchema</span></code>(*[, type, properties, ...])</p></td>
+<td><p>Schema definition for object parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Path</span></code>(*args, **kwargs)</p></td>
+<td><p>PurePath subclass that can make system calls.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrimitiveSchema</span></code>(*, type[, format, enum, ...])</p></td>
+<td><p>Schema definition for primitive parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestConfig</span></code>(*[, timeout, max_retries, ...])</p></td>
 <td><p>Configuration for HTTP requests.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
 <td><p>All the operations on a read-only sequence.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tool</span></code>(*[, type, description])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tool</span></code>(*[, type, description])</p></td>
 <td><p>A callable tool that can be used by AI models to perform specific functions.</p></td>
 </tr>
 </tbody>

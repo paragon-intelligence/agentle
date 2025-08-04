@@ -9,6 +9,7 @@ agentle.agents.apis.api
    .. autosummary::
    
       Field
+      cast
    
    .. rubric:: Classes
 
@@ -16,9 +17,16 @@ agentle.agents.apis.api
    
       API
       Any
+      ArraySchema
       BaseModel
       Endpoint
+      EndpointParameter
+      Mapping
       MutableMapping
+      MutableSequence
+      ObjectSchema
+      Path
+      PrimitiveSchema
       RequestConfig
       Sequence
       Tool
