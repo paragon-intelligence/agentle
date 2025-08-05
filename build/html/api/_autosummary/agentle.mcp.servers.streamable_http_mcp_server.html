@@ -657,7 +657,8 @@
 1. Replaced httpx.AsyncClient with aiohttp.ClientSession for connection pooling.
 2. Adapted exception handling to aiohttp-specific errors (e.g., aiohttp.ClientError).
 3. Updated response handling to use await on methods like .json() and .text().
-4. Maintained all original functionality, retry logic, and session management.</p>
+4. Maintained all original functionality, retry logic, and session management.
+5. FIXED: JSON-RPC 2.0 compliance - only include params when they exist and are not empty.</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
