@@ -26,6 +26,7 @@ agentle.agents.context
       Step
       TextPart
       ToolExecutionResult
+      ToolExecutionSuggestion
       Usage
       UserMessage
       datetime
