@@ -21,4 +21,5 @@ agentle.agents.agent\_run\_output
       PerformanceMetrics
       Sequence
       ToolExecutionResult
+      ToolExecutionSuggestion
    
