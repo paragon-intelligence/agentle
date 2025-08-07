@@ -1978,9 +1978,6 @@
         <span class="n">tool_call_patterns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># pattern_hash -&gt; count</span>
         <span class="n">tool_budget</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># tool_name -&gt; call_count</span>
 
-        <span class="c1"># FIX: Track all tool suggestions to ensure unique IDs</span>
-        <span class="n">all_tool_suggestions</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-
         <span class="k">while</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">:</span>
             <span class="n">current_iteration</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="n">iteration_count</span> <span class="o">=</span> <span class="n">current_iteration</span>
@@ -1995,7 +1992,7 @@
             <span class="c1"># Clone message history to avoid modifying the original context</span>
             <span class="n">message_history</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
 
-            <span class="c1"># Add tool execution results directly to the last user message if any exist</span>
+            <span class="c1"># FIX: Build tool execution results properly</span>
             <span class="k">if</span> <span class="n">called_tools</span><span class="p">:</span>
                 <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                     <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -2003,81 +2000,88 @@
                     <span class="p">)</span>
                 <span class="p">)</span>
 
-                <span class="c1"># Find the last user message and clone it</span>
-                <span class="n">last_user_message_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">UserMessage</span><span class="p">):</span>
-                        <span class="n">last_user_message_index</span> <span class="o">=</span> <span class="n">i</span>
-                        <span class="k">break</span>
-
-                <span class="n">original_user_message</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">last_user_message_index</span><span class="p">]</span>
-                <span class="n">cloned_user_message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span>
-                    <span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_user_message</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
-                <span class="p">)</span>
-
-                <span class="c1"># Find the last assistant message and clone it</span>
-                <span class="n">last_assistant_message_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="c1"># Find the last assistant message that contains tool suggestions</span>
+                <span class="n">last_assistant_with_tools_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">assistant_tool_suggestions</span> <span class="o">=</span> <span class="p">[]</span>
+                
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">AssistantMessage</span><span class="p">):</span>
-                        <span class="n">last_assistant_message_index</span> <span class="o">=</span> <span class="n">i</span>
-                        <span class="k">break</span>
+                        <span class="n">msg_tool_suggestions</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="n">part</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">parts</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionSuggestion</span><span class="p">)</span>
+                        <span class="p">]</span>
+                        <span class="k">if</span> <span class="n">msg_tool_suggestions</span><span class="p">:</span>
+                            <span class="n">last_assistant_with_tools_index</span> <span class="o">=</span> <span class="n">i</span>
+                            <span class="n">assistant_tool_suggestions</span> <span class="o">=</span> <span class="n">msg_tool_suggestions</span>
+                            <span class="k">break</span>
 
-                <span class="c1"># Add tool execution results as proper parts</span>
-                <span class="k">for</span> <span class="n">suggestion</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">called_tools</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-                    <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
-                        <span class="n">suggestion</span><span class="o">=</span><span class="n">suggestion</span><span class="p">,</span>
-                        <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-                        <span class="n">execution_time_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Could be tracked if needed</span>
-                        <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Set based on actual execution status</span>
-                        <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Set if there were execution errors</span>
-                    <span class="p">)</span>
-                    <span class="n">cloned_user_message</span><span class="o">.</span><span class="n">insert_at_beggining</span><span class="p">(</span><span class="n">tool_execution_result</span><span class="p">)</span>
-
-                <span class="c1"># Replace the last user message with the modified one</span>
-                <span class="n">message_history</span><span class="p">[</span><span class="n">last_user_message_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_user_message</span>
-
-
-                <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Added tool execution results to user message. &quot;</span>
-                        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Message now has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cloned_user_message</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2"> parts&quot;</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-
-                <span class="c1"># FIX: Validate message history before continuing</span>
-                <span class="c1"># Check that tool suggestions match tool results</span>
-                <span class="n">assistant_suggestions</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">part</span>
-                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">message_history</span><span class="p">[</span><span class="n">last_assistant_message_index</span><span class="p">]</span><span class="o">.</span><span class="n">parts</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionSuggestion</span><span class="p">)</span>
-                <span class="p">]</span>
-                <span class="n">user_results</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">part</span>
-                    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">cloned_user_message</span><span class="o">.</span><span class="n">parts</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionResult</span><span class="p">)</span>
-                <span class="p">]</span>
-
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">assistant_suggestions</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_results</span><span class="p">):</span>
-                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                            <span class="s2">&quot;Mismatch: </span><span class="si">%d</span><span class="s2"> tool suggestions but </span><span class="si">%d</span><span class="s2"> tool results&quot;</span><span class="p">,</span>
-                            <span class="nb">len</span><span class="p">(</span><span class="n">assistant_suggestions</span><span class="p">),</span>
-                            <span class="nb">len</span><span class="p">(</span><span class="n">user_results</span><span class="p">),</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-                    <span class="c1"># Log the actual suggestions and results for debugging</span>
-                    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">assistant_suggestions</span><span class="p">:</span>
+                <span class="c1"># Only proceed if we found an assistant message with tool suggestions</span>
+                <span class="k">if</span> <span class="n">last_assistant_with_tools_index</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">assistant_tool_suggestions</span><span class="p">:</span>
+                    <span class="c1"># Find or create the next user message after this assistant message</span>
+                    <span class="n">next_user_message_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last_assistant_with_tools_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)):</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">UserMessage</span><span class="p">):</span>
+                            <span class="n">next_user_message_index</span> <span class="o">=</span> <span class="n">i</span>
+                            <span class="k">break</span>
+                    
+                    <span class="k">if</span> <span class="n">next_user_message_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="c1"># Clone the existing user message</span>
+                        <span class="n">original_user_message</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">next_user_message_index</span><span class="p">]</span>
+                        
+                        <span class="c1"># Check if this user message already has tool results</span>
+                        <span class="n">existing_results</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="n">part</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">original_user_message</span><span class="o">.</span><span class="n">parts</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionResult</span><span class="p">)</span>
+                        <span class="p">]</span>
+                        
+                        <span class="c1"># Only add results if they&#39;re not already there</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_results</span><span class="p">:</span>
+                            <span class="n">cloned_user_message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span>
+                                <span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_user_message</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+                            <span class="p">)</span>
+                            
+                            <span class="c1"># Add tool execution results for each suggestion</span>
+                            <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">assistant_tool_suggestions</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">called_tools</span><span class="p">:</span>
+                                    <span class="n">_</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">called_tools</span><span class="p">[</span><span class="n">suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                                    <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                                        <span class="n">suggestion</span><span class="o">=</span><span class="n">suggestion</span><span class="p">,</span>
+                                        <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                                        <span class="n">execution_time_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                        <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                    <span class="p">)</span>
+                                    <span class="n">cloned_user_message</span><span class="o">.</span><span class="n">insert_at_beggining</span><span class="p">(</span><span class="n">tool_execution_result</span><span class="p">)</span>
+                            
+                            <span class="c1"># Replace the user message with the modified one</span>
+                            <span class="n">message_history</span><span class="p">[</span><span class="n">next_user_message_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_user_message</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># No user message after assistant message with tools</span>
+                        <span class="c1"># This shouldn&#39;t happen in normal flow, but let&#39;s handle it</span>
                         <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                                <span class="s2">&quot;Suggestion ID: </span><span class="si">%s</span><span class="s2">, Tool: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">tool_name</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="s2">&quot;No user message found after assistant message with tool suggestions&quot;</span>
                             <span class="p">)</span>
                         <span class="p">)</span>
-                    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">user_results</span><span class="p">:</span>
-                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                                <span class="s2">&quot;Result for suggestion ID: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">suggestion</span><span class="o">.</span><span class="n">id</span>
-                            <span class="p">)</span>
-                        <span class="p">)</span>
+                        
+                        <span class="c1"># Create a new user message with just the tool results</span>
+                        <span class="n">tool_results_parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolExecutionResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">assistant_tool_suggestions</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">called_tools</span><span class="p">:</span>
+                                <span class="n">_</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">called_tools</span><span class="p">[</span><span class="n">suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                                <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                                    <span class="n">suggestion</span><span class="o">=</span><span class="n">suggestion</span><span class="p">,</span>
+                                    <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                                    <span class="n">execution_time_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                    <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="p">)</span>
+                                <span class="n">tool_results_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_execution_result</span><span class="p">)</span>
+                        
+                        <span class="k">if</span> <span class="n">tool_results_parts</span><span class="p">:</span>
+                            <span class="c1"># Add a new user message with the results</span>
+                            <span class="n">new_user_message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="n">tool_results_parts</span><span class="p">)</span>
+                            <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_user_message</span><span class="p">)</span>
 
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generating tool call response&quot;</span><span class="p">)</span>
@@ -2090,26 +2094,11 @@
                 <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
                 <span class="n">tools</span><span class="o">=</span><span class="n">all_tools</span><span class="p">,</span>
             <span class="p">)</span>
-
-            <span class="c1"># FIX: Validate that tool suggestions have unique IDs</span>
-            <span class="n">generated_suggestions</span> <span class="o">=</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">tool_calls</span>
-            <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">generated_suggestions</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
-                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                            <span class="s2">&quot;Duplicate tool suggestion ID detected: </span><span class="si">%s</span><span class="s2">. Creating new ID.&quot;</span><span class="p">,</span>
-                            <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-                    <span class="c1"># Create a new unique ID for the duplicate</span>
-                    <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
-
-                    <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
-                <span class="n">all_tool_suggestions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-
-            <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
-            <span class="p">)</span>
+            
+            <span class="c1"># Store the assistant message WITH tool suggestions</span>
+            <span class="n">assistant_message_with_tools</span> <span class="o">=</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assistant_message_with_tools</span><span class="p">)</span>
+            
             <span class="n">generation_time_single</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">generation_start</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
             <span class="n">generation_time_total</span> <span class="o">+=</span> <span class="n">generation_time_single</span>
 
@@ -2323,6 +2312,9 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
+            <span class="c1"># Clear called_tools for this iteration to ensure fresh results</span>
+            <span class="n">called_tools</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
             <span class="c1"># Create a step to track this iteration&#39;s tool executions</span>
             <span class="n">step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
             <span class="n">step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
@@ -2432,10 +2424,9 @@
 
                 <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                     <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Executing tool: </span><span class="si">%s</span><span class="s2"> with args: </span><span class="si">%s</span><span class="s2"> (ID: </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;Executing tool: </span><span class="si">%s</span><span class="s2"> with args: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
                         <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="p">,</span>
                         <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
-                        <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
 
@@ -2685,6 +2676,7 @@
         <span class="n">context</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;execution_summary_on_failure&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">execution_summary</span>
 
         <span class="k">raise</span> <span class="n">MaxToolCallsExceededError</span><span class="p">(</span><span class="n">enhanced_error_message</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="Agent.to_api">
