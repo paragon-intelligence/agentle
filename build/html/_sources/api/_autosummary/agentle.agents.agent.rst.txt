@@ -9,7 +9,6 @@ agentle.agents.agent
    .. autosummary::
    
       Field
-      alru_cache
       asynccontextmanager
       cast
       contextmanager
@@ -79,6 +78,7 @@ agentle.agents.agent
       TraceParams
       UserMessage
       VectorStore
+      cached
    
    .. rubric:: Exceptions
 

@@ -677,37 +677,34 @@ tools=[get_weather],</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
 <td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">alru_cache</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asynccontextmanager</span></code>(func)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">asynccontextmanager</span></code>(func)</p></td>
 <td><p>&#64;asynccontextmanager decorator.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cast</span></code>(typ, val)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cast</span></code>(typ, val)</p></td>
 <td><p>Cast a value to a type.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">contextmanager</span></code>(func)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">contextmanager</span></code>(func)</p></td>
 <td><p>&#64;contextmanager decorator.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dedent</span></code>(text)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dedent</span></code>(text)</p></td>
 <td><p>Remove any common leading whitespace from every line in <cite>text</cite>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">endpoints_to_tools</span></code>(endpoints[, base_url, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">endpoints_to_tools</span></code>(endpoints[, base_url, ...])</p></td>
 <td><p>Convert a list of endpoints and APIs to tools.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">file_parser_default_factory</span></code>([...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">file_parser_default_factory</span></code>([...])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_default_suspension_manager</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_default_suspension_manager</span></code>()</p></td>
 <td><p>Get the default global suspension manager instance.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../agents.html#agentle.agents.agent.is_module_available" title="agentle.agents.agent.is_module_available"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_module_available</span></code></a>(module_name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="../agents.html#agentle.agents.agent.is_module_available" title="agentle.agents.agent.is_module_available"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_module_available</span></code></a>(module_name)</p></td>
 <td><p>Check if a module is available without importing it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">override</span></code>(method, /)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">override</span></code>(method, /)</p></td>
 <td><p>Indicate that a method is intended to override a method in a base class.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_sync</span></code>(func[, timeout])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_sync</span></code>(func[, timeout])</p></td>
 <td><p>Runs an async function synchronously using a shared background event loop.</p></td>
 </tr>
 </tbody>
@@ -878,6 +875,9 @@ tools=[get_weather],</p>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">VectorStore</span></code>(*[, default_collection_name, ...])</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cached</span></code>([ttl, key, namespace, key_builder, ...])</p></td>
+<td><p>Caches the functions return value into a key generated with module_name, function_name and args.</p></td>
 </tr>
 </tbody>
 </table>

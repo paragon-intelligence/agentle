@@ -697,7 +697,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">override</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dill</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">async_lru</span><span class="w"> </span><span class="kn">import</span> <span class="n">alru_cache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">aiocache</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rsb.containers.maybe</span><span class="w"> </span><span class="kn">import</span> <span class="n">Maybe</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rsb.coroutines.run_sync</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_sync</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rsb.models.base_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
@@ -1222,25 +1222,58 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            str: The serialized agent instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">pickle_bytes</span> <span class="o">=</span> <span class="n">dill</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">encoded</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;uid&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">uid</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;instructions&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">,</span>
+            <span class="s2">&quot;endpoints&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">endpoints</span><span class="p">,</span>
+            <span class="s2">&quot;apis&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">apis</span><span class="p">,</span>
+            <span class="c1"># &quot;tools&quot;: self.tools,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># pickle_bytes = dill.dumps(self)</span>
+        <span class="n">pickle_bytes</span> <span class="o">=</span> <span class="n">dill</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">encoded</span><span class="p">)</span>
 
         <span class="c1"># Encode to base64 and then decode to string</span>
         <span class="n">base64_bytes</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">pickle_bytes</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">base64_bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">base64_bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Agent.deserialize">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.deserialize">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">encoded</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-        <span class="n">base64_bytes</span> <span class="o">=</span> <span class="n">encoded</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="n">base64_bytes</span> <span class="o">=</span> <span class="n">encoded</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
         <span class="n">pickle_bytes</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">base64_bytes</span><span class="p">)</span>
-        
+
         <span class="c1"># Deserialize with dill</span>
-        <span class="k">return</span> <span class="n">dill</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pickle_bytes</span><span class="p">)</span></div>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">dill</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pickle_bytes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Version not found&quot;</span><span class="p">)</span>
+
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">obj</span><span class="p">)</span>
+
+            <span class="k">match</span> <span class="n">version</span><span class="p">:</span>
+                <span class="k">case</span> <span class="s2">&quot;0.0.1&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;Agent&quot;</span><span class="p">,</span>
+                        <span class="n">uid</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uid&quot;</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()),</span>
+                        <span class="n">instructions</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instructions&quot;</span><span class="p">)</span>
+                        <span class="ow">or</span> <span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">,</span>
+                        <span class="n">endpoints</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;endpoints&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span>
+                        <span class="n">apis</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;apis&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span>
+                        <span class="n">tools</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tools&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span>
+                    <span class="p">)</span>
+                <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented yet.&quot;</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;not supported yet.&quot;</span><span class="p">)</span></div>
 
 
-    <span class="nd">@alru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">typed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nd">@cached</span><span class="p">(</span><span class="n">ttl</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_all_tools</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
         <span class="c1"># Reconstruct the tool execution environment</span>
         <span class="n">mcp_tools</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">MCPServerProtocol</span><span class="p">,</span> <span class="n">MCPTool</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2042,21 +2075,23 @@
                 <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="c1"># Agent has tools. We must iterate until generate the final answer.</span>
+        <span class="c1"># # Agent has tools. We must iterate until generate the final answer.</span>
 
-        <span class="n">all_tools</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">Tool</span><span class="o">.</span><span class="n">from_mcp_tool</span><span class="p">(</span><span class="n">mcp_tool</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span> <span class="n">server</span><span class="o">=</span><span class="n">server</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">server</span><span class="p">,</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">mcp_tools</span>
-        <span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
-            <span class="n">Tool</span><span class="o">.</span><span class="n">from_callable</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">tool</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tool</span><span class="p">,</span> <span class="n">Tool</span><span class="p">)</span>
-            <span class="k">else</span> <span class="n">tool</span>
-            <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tools</span>
-        <span class="p">]</span>
+        <span class="c1"># all_tools: MutableSequence[Tool[Any]] = [</span>
+        <span class="c1">#     Tool.from_mcp_tool(mcp_tool=tool, server=server)</span>
+        <span class="c1">#     for server, tool in mcp_tools</span>
+        <span class="c1"># ] + [</span>
+        <span class="c1">#     Tool.from_callable(tool)</span>
+        <span class="c1">#     if callable(tool) and not isinstance(tool, Tool)</span>
+        <span class="c1">#     else tool</span>
+        <span class="c1">#     for tool in self.tools</span>
+        <span class="c1"># ]</span>
 
-        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using </span><span class="si">%d</span><span class="s2"> tools in total&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_tools</span><span class="p">))</span>
-        <span class="p">)</span>
+        <span class="c1"># _logger.bind_optional(</span>
+        <span class="c1">#     lambda log: log.debug(&quot;Using %d tools in total&quot;, len(all_tools))</span>
+        <span class="c1"># )</span>
+
+        <span class="n">all_tools</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">]</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">],</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_tools</span><span class="p">())</span>
 
         <span class="n">available_tools</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tool</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">tool</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">tool</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">all_tools</span>
@@ -3043,7 +3078,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="n">all_tools</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_tools</span><span class="p">()</span>
+        <span class="n">all_tools</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">]</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">],</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_tools</span><span class="p">())</span>
 
         <span class="n">available_tools</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tool</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">tool</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">tool</span> <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">all_tools</span>
