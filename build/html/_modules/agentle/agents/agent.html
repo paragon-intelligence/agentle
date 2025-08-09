@@ -1680,6 +1680,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            input: The input for the agent, which can be of various types.</span>
 <span class="sd">            trace_params: Optional trace parameters for observability purposes.</span>
+<span class="sd">            chat_id: Optional chat ID for conversation persistence.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            AgentRunOutput[T_Schema]: The result of the agent execution with performance metrics,</span>
@@ -1847,18 +1848,25 @@
         <span class="k">if</span> <span class="n">static_knowledge_prompt</span><span class="p">:</span>
             <span class="n">instructions</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">static_knowledge_prompt</span>
 
+        <span class="c1"># Create context with current input</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input2context</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span><span class="p">)</span>
-
+        
+        <span class="c1"># CRITICAL: Store the current user message BEFORE replacing message history</span>
+        <span class="n">current_user_message</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">last_message</span>
+        
+        <span class="c1"># Handle conversation store integration</span>
         <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
             <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
-                <span class="n">chat_id</span><span class="p">,</span> <span class="n">context</span><span class="o">.</span><span class="n">last_message</span>
-            <span class="p">)</span>
-
-            <span class="n">context</span><span class="o">.</span><span class="n">add_messages</span><span class="p">(</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">get_conversation_history_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">)</span>
-            <span class="p">)</span>
+            
+            <span class="c1"># Get existing conversation history</span>
+            <span class="n">conversation_history</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">get_conversation_history_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">)</span>
+            
+            <span class="c1"># Replace message history with conversation history, keeping developer messages</span>
+            <span class="k">if</span> <span class="n">conversation_history</span><span class="p">:</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">replace_message_history</span><span class="p">(</span><span class="n">conversation_history</span><span class="p">,</span> <span class="n">keep_developer_messages</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># Add the current user message to the context</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_user_message</span><span class="p">)</span>
+            <span class="c1"># If no conversation history, context already has the current message, so we&#39;re good</span>
 
         <span class="c1"># Start execution tracking</span>
         <span class="n">context</span><span class="o">.</span><span class="n">start_execution</span><span class="p">()</span>
@@ -1990,6 +1998,13 @@
                 <span class="n">longest_step_duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">,</span>
                 <span class="n">shortest_step_duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">,</span>
             <span class="p">)</span>
+
+            <span class="c1"># Save to conversation store after successful execution</span>
+            <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="c1"># Add the current user message and AI response to conversation store</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span><span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">())</span>
 
             <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
                 <span class="n">generation</span><span class="o">=</span><span class="n">generation</span><span class="p">,</span>
@@ -2268,6 +2283,13 @@
                         <span class="p">),</span>
                     <span class="p">)</span>
 
+                    <span class="c1"># Save to conversation store after successful execution</span>
+                    <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
+                        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                        <span class="c1"># Add the current user message and AI response to conversation store</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span><span class="p">)</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">())</span>
+
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
                         <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
                         <span class="n">generation</span><span class="o">=</span><span class="n">generation</span><span class="p">,</span>
@@ -2344,6 +2366,13 @@
                         <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span>
                     <span class="p">),</span>
                 <span class="p">)</span>
+
+                <span class="c1"># Save to conversation store after successful execution</span>
+                <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="c1"># Add the current user message and AI response to conversation store</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span><span class="p">)</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">())</span>
 
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
                     <span class="n">generation</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">Generation</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">],</span> <span class="n">tool_call_generation</span><span class="p">),</span>
