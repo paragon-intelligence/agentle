@@ -672,10 +672,12 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ssl</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -694,7 +696,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">textwrap</span><span class="w"> </span><span class="kn">import</span> <span class="n">dedent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">override</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">jsonpickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dill</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">async_lru</span><span class="w"> </span><span class="kn">import</span> <span class="n">alru_cache</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rsb.containers.maybe</span><span class="w"> </span><span class="kn">import</span> <span class="n">Maybe</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rsb.coroutines.run_sync</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_sync</span>
@@ -786,6 +788,11 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a module is available without importing it.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
 
+
+
+<span class="nd">@dill</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">ssl</span><span class="o">.</span><span class="n">SSLContext</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_save_sslcontext</span><span class="p">(</span><span class="n">pickler</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">ssl</span><span class="o">.</span><span class="n">SSLContext</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+    <span class="k">return</span> <span class="n">ssl</span><span class="o">.</span><span class="n">create_default_context</span><span class="p">,</span> <span class="p">()</span>
 
 
 <span class="c1"># Pre-check for common optional dependencies</span>
@@ -1209,14 +1216,28 @@
 <div class="viewcode-block" id="Agent.serialize">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.serialize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">serialize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Serializes the agent instance to a string.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The serialized agent instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pickle_bytes</span> <span class="o">=</span> <span class="n">dill</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Encode to base64 and then decode to string</span>
+        <span class="n">base64_bytes</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">pickle_bytes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">base64_bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Agent.deserialize">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.deserialize">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">deserialize</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">encoded</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Agent</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">jsonpickle</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoded</span><span class="p">))</span></div>
+        <span class="n">base64_bytes</span> <span class="o">=</span> <span class="n">encoded</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="n">pickle_bytes</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">base64_bytes</span><span class="p">)</span>
+        
+        <span class="c1"># Deserialize with dill</span>
+        <span class="k">return</span> <span class="n">dill</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pickle_bytes</span><span class="p">)</span></div>
 
 
     <span class="nd">@alru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">typed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1850,20 +1871,24 @@
 
         <span class="c1"># Create context with current input</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input2context</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span><span class="p">)</span>
-        
+
         <span class="c1"># CRITICAL: Store the current user message BEFORE replacing message history</span>
         <span class="n">current_user_message</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">last_message</span>
-        
+
         <span class="c1"># Handle conversation store integration</span>
         <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
             <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            
+
             <span class="c1"># Get existing conversation history</span>
-            <span class="n">conversation_history</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">get_conversation_history_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">)</span>
-            
+            <span class="n">conversation_history</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">get_conversation_history_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">)</span>
+            <span class="p">)</span>
+
             <span class="c1"># Replace message history with conversation history, keeping developer messages</span>
             <span class="k">if</span> <span class="n">conversation_history</span><span class="p">:</span>
-                <span class="n">context</span><span class="o">.</span><span class="n">replace_message_history</span><span class="p">(</span><span class="n">conversation_history</span><span class="p">,</span> <span class="n">keep_developer_messages</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">replace_message_history</span><span class="p">(</span>
+                    <span class="n">conversation_history</span><span class="p">,</span> <span class="n">keep_developer_messages</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
                 <span class="c1"># Add the current user message to the context</span>
                 <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_user_message</span><span class="p">)</span>
             <span class="c1"># If no conversation history, context already has the current message, so we&#39;re good</span>
@@ -2003,8 +2028,12 @@
             <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
                 <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                 <span class="c1"># Add the current user message and AI response to conversation store</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span><span class="p">)</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">())</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                    <span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span>
+                <span class="p">)</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                    <span class="n">chat_id</span><span class="p">,</span> <span class="n">generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
+                <span class="p">)</span>
 
             <span class="k">return</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
                 <span class="n">generation</span><span class="o">=</span><span class="n">generation</span><span class="p">,</span>
@@ -2287,8 +2316,12 @@
                     <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
                         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                         <span class="c1"># Add the current user message and AI response to conversation store</span>
-                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span><span class="p">)</span>
-                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">())</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                            <span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span>
+                        <span class="p">)</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                            <span class="n">chat_id</span><span class="p">,</span> <span class="n">generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
+                        <span class="p">)</span>
 
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
                         <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
@@ -2371,8 +2404,12 @@
                 <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
                     <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                     <span class="c1"># Add the current user message and AI response to conversation store</span>
-                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span><span class="p">)</span>
-                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">())</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                        <span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span>
+                    <span class="p">)</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                        <span class="n">chat_id</span><span class="p">,</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
+                    <span class="p">)</span>
 
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
                     <span class="n">generation</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">Generation</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">],</span> <span class="n">tool_call_generation</span><span class="p">),</span>
