@@ -17,6 +17,7 @@ agentle.agents.agent
       file_parser_default_factory
       get_default_suspension_manager
       is_module_available
+      overload
       override
       run_sync
    
@@ -31,9 +32,11 @@ agentle.agents.agent
       AgentRunOutput
       AgentSkill
       AgentToStreamlit
+      Agent[Any]
       Any
       AssistantMessage
       AsyncGenerator
+      AsyncIterator
       Authentication
       Awaitable
       BaseModel

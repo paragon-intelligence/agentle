@@ -15,6 +15,7 @@ agentle.agents.agent\_run\_output
    .. autosummary::
    
       AgentRunOutput
+      Any
       BaseModel
       Context
       Generation

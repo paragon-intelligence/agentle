@@ -701,10 +701,13 @@ tools=[get_weather],</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="../agents.html#agentle.agents.agent.is_module_available" title="agentle.agents.agent.is_module_available"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_module_available</span></code></a>(module_name)</p></td>
 <td><p>Check if a module is available without importing it.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">override</span></code>(method, /)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">overload</span></code>(func)</p></td>
+<td><p>Decorator for overloaded functions/methods.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">override</span></code>(method, /)</p></td>
 <td><p>Indicate that a method is intended to override a method in a base class.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_sync</span></code>(func[, timeout])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_sync</span></code>(func[, timeout])</p></td>
 <td><p>Runs an async function synchronously using a shared background event loop.</p></td>
 </tr>
 </tbody>
@@ -717,7 +720,7 @@ tools=[get_weather],</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">API</span></code>(*, name[, description, headers, ...])</p></td>
 <td><p>Represents a collection of related API endpoints with shared configuration.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../agents.html#agentle.agents.agent.Agent" title="agentle.agents.agent.Agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent</span></code></a>(*[, uid, name, description, url, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="../agents.html#id92" title="agentle.agents.agent.Agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent</span></code></a>(*[, uid, name, description, url, ...])</p></td>
 <td><p>The main class of the Agentle framework that represents an intelligent agent.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentConfig</span></code>(*[, generationConfig, ...])</p></td>
@@ -735,13 +738,19 @@ tools=[get_weather],</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AgentToStreamlit</span></code>([title, description, ...])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent[Any]</span></code>(*[, uid, name, description, url, ...])</p></td>
+<td><p>The main class of the Agentle framework that represents an intelligent agent.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssistantMessage</span></code>(*[, role])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssistantMessage</span></code>(*[, role])</p></td>
 <td><p>Represents a message from an assistant in the system.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AsyncGenerator</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AsyncGenerator</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AsyncIterator</span></code>()</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Authentication</span></code>(*, schemes[, credentials])</p></td>
