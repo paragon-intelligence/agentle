@@ -1728,7 +1728,7 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">trace_params</span><span class="p">:</span> <span class="n">TraceParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">chat_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">stream</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">stream</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]:</span> <span class="o">...</span>
 
     <span class="nd">@overload</span>
@@ -1754,6 +1754,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs the agent asynchronously with the provided input and collects comprehensive performance metrics.</span>
 
+<span class="sd">        Now supports streaming responses for real-time output generation.</span>
+
 <span class="sd">        This main method processes user input, interacts with the</span>
 <span class="sd">        generation provider, and optionally calls tools until reaching a final response.</span>
 <span class="sd">        It now includes detailed performance monitoring to help identify optimization opportunities.</span>
@@ -1765,15 +1767,29 @@
 <span class="sd">            input: The input for the agent, which can be of various types.</span>
 <span class="sd">            trace_params: Optional trace parameters for observability purposes.</span>
 <span class="sd">            chat_id: Optional chat ID for conversation persistence.</span>
+<span class="sd">            stream: Whether to stream the response. Requires provider to support streaming.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            AgentRunOutput[T_Schema]: The result of the agent execution with performance metrics,</span>
-<span class="sd">                                    possibly with a structured response according to the defined schema.</span>
+<span class="sd">            AgentRunOutput[T_Schema] | AsyncIterator[AgentRunOutput[T_Schema]]:</span>
+<span class="sd">                The result of the agent execution with performance metrics,</span>
+<span class="sd">                possibly with a structured response according to the defined schema.</span>
+<span class="sd">                If streaming is enabled, returns an async iterator of partial results.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            MaxToolCallsExceededError: If the maximum number of tool calls is exceeded.</span>
+<span class="sd">            ValueError: If streaming is requested but the provider doesn&#39;t support it.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.providers.base.supports_streaming</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">SupportsStreaming</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check if streaming is supported when requested</span>
+        <span class="k">if</span> <span class="n">stream</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation_provider</span><span class="p">,</span> <span class="n">SupportsStreaming</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Streaming is not supported by </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation_provider</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;The provider must implement the SupportsStreaming interface.&quot;</span>
+            <span class="p">)</span>
 
         <span class="c1"># Start overall timing</span>
         <span class="n">execution_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
@@ -1799,11 +1815,11 @@
         <span class="c1"># Phase 1: Input Processing</span>
         <span class="n">input_processing_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
 
-        <span class="c1"># Logging with proper type ignore</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">&quot;Starting agent run with input type: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="nb">input</span><span class="p">)),</span>  <span class="c1"># type: ignore[reportGeneralTypeIssues, reportUnknownArgumentType]</span>
+                <span class="s2">&quot;Starting agent run with input type: </span><span class="si">%s</span><span class="s2"> (streaming=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">),</span>
+                <span class="n">stream</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">generation_provider</span><span class="p">:</span> <span class="n">GenerationProvider</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_provider</span>
@@ -1954,7 +1970,6 @@
                 <span class="p">)</span>
                 <span class="c1"># Add the current user message to the context</span>
                 <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_user_message</span><span class="p">)</span>
-            <span class="c1"># If no conversation history, context already has the current message, so we&#39;re good</span>
 
         <span class="c1"># Start execution tracking</span>
         <span class="n">context</span><span class="o">.</span><span class="n">start_execution</span><span class="p">()</span>
@@ -1994,19 +2009,206 @@
             <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Agent has tools: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">agent_has_tools</span><span class="p">)</span>
         <span class="p">)</span>
 
+        <span class="c1"># Handle non-tool agents (simpler case)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">agent_has_tools</span><span class="p">:</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No tools available, generating direct response&quot;</span><span class="p">)</span>
             <span class="p">)</span>
 
-            <span class="c1"># Create a step to track the direct generation</span>
+            <span class="k">if</span> <span class="n">stream</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">generation_provider</span><span class="p">,</span> <span class="n">SupportsStreaming</span><span class="p">):</span>
+                <span class="c1"># Streaming path for non-tool agents</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">&quot;Using streaming generation for direct response&quot;</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_stream_direct_response</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span>
+                    <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]</span>
+                <span class="p">]:</span>
+                    <span class="k">nonlocal</span> <span class="n">generation_time_total</span><span class="p">,</span> <span class="n">total_tokens_processed</span>
+
+                    <span class="n">step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                    <span class="n">step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
+                        <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;generation&quot;</span><span class="p">,</span>
+                        <span class="n">iteration</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">tool_execution_suggestions</span><span class="o">=</span><span class="p">[],</span>
+                        <span class="n">generation_text</span><span class="o">=</span><span class="s2">&quot;Generating streaming response...&quot;</span><span class="p">,</span>
+                        <span class="n">token_usage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="n">generation_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+                    <span class="c1"># Stream the generation</span>
+                    <span class="n">chunk_count</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">final_generation</span><span class="p">:</span> <span class="n">Generation</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+                    <span class="k">async</span> <span class="k">for</span> <span class="n">generation_chunk</span> <span class="ow">in</span> <span class="n">cast</span><span class="p">(</span>
+                        <span class="n">SupportsStreaming</span><span class="p">,</span> <span class="n">generation_provider</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">stream_async</span><span class="p">(</span>
+                        <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
+                        <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>
+                        <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
+                        <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span>
+                        <span class="k">if</span> <span class="n">trace_params</span> <span class="ow">is</span> <span class="kc">None</span>
+                        <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span>
+                            <span class="n">new_trace_params</span><span class="o">=</span><span class="n">trace_params</span>
+                        <span class="p">),</span>
+                    <span class="p">):</span>
+                        <span class="n">generation_chunk</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Generation</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">],</span> <span class="n">generation_chunk</span><span class="p">)</span>
+                        <span class="n">chunk_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">generation_time_single</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">generation_start</span>
+                        <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+                        <span class="c1"># Update metrics</span>
+                        <span class="k">if</span> <span class="n">generation_chunk</span><span class="o">.</span><span class="n">usage</span><span class="p">:</span>
+                            <span class="n">total_tokens_processed</span> <span class="o">=</span> <span class="n">generation_chunk</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span>
+
+                        <span class="c1"># Create partial performance metrics</span>
+                        <span class="n">partial_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
+                            <span class="n">total_execution_time_ms</span><span class="o">=</span><span class="p">(</span>
+                                <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
+                            <span class="p">)</span>
+                            <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+                            <span class="n">input_processing_time_ms</span><span class="o">=</span><span class="n">input_processing_time</span><span class="p">,</span>
+                            <span class="n">static_knowledge_processing_time_ms</span><span class="o">=</span><span class="n">static_knowledge_time</span><span class="p">,</span>
+                            <span class="n">mcp_tools_preparation_time_ms</span><span class="o">=</span><span class="n">mcp_tools_time</span><span class="p">,</span>
+                            <span class="n">generation_time_ms</span><span class="o">=</span><span class="n">generation_time_single</span><span class="p">,</span>
+                            <span class="n">tool_execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">final_response_processing_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">iteration_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="n">tool_calls_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="n">total_tokens_processed</span><span class="o">=</span><span class="n">total_tokens_processed</span><span class="p">,</span>
+                            <span class="n">cache_hit_rate</span><span class="o">=</span><span class="p">(</span>
+                                <span class="n">cache_hits</span> <span class="o">/</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+                            <span class="p">)</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                            <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">step_metrics</span><span class="o">=</span><span class="p">[],</span>
+                            <span class="n">average_generation_time_ms</span><span class="o">=</span><span class="n">generation_time_single</span><span class="p">,</span>
+                            <span class="n">average_tool_execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">longest_step_duration_ms</span><span class="o">=</span><span class="n">generation_time_single</span><span class="p">,</span>
+                            <span class="n">shortest_step_duration_ms</span><span class="o">=</span><span class="n">generation_time_single</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Yield intermediate chunk</span>
+                        <span class="k">yield</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
+                            <span class="n">generation</span><span class="o">=</span><span class="n">generation_chunk</span><span class="p">,</span>
+                            <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                            <span class="n">parsed</span><span class="o">=</span><span class="n">generation_chunk</span><span class="o">.</span><span class="n">parsed</span>
+                            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">generation_chunk</span><span class="p">,</span> <span class="s2">&quot;parsed&quot;</span><span class="p">)</span>
+                            <span class="k">else</span> <span class="n">cast</span><span class="p">(</span><span class="n">T_Schema</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                            <span class="n">is_streaming_chunk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">is_final_chunk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">performance_metrics</span><span class="o">=</span><span class="n">partial_metrics</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                        <span class="n">final_generation</span> <span class="o">=</span> <span class="n">generation_chunk</span>
+
+                    <span class="c1"># After streaming completes</span>
+                    <span class="k">if</span> <span class="n">final_generation</span><span class="p">:</span>
+                        <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">final_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
+                        <span class="p">)</span>
+                        <span class="n">generation_time_total</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">generation_start</span>
+                        <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                <span class="s2">&quot;Streamed response with </span><span class="si">%d</span><span class="s2"> chunks, </span><span class="si">%d</span><span class="s2"> tokens&quot;</span><span class="p">,</span>
+                                <span class="n">chunk_count</span><span class="p">,</span>
+                                <span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Update step with final results</span>
+                        <span class="n">step</span><span class="o">.</span><span class="n">generation_text</span> <span class="o">=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span>
+                        <span class="n">step</span><span class="o">.</span><span class="n">token_usage</span> <span class="o">=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span>
+                        <span class="n">step_duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">step_start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                        <span class="n">step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span><span class="n">duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">)</span>
+
+                        <span class="c1"># Track step metrics</span>
+                        <span class="n">step_metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">StepMetric</span><span class="p">(</span>
+                                <span class="n">step_id</span><span class="o">=</span><span class="n">step</span><span class="o">.</span><span class="n">step_id</span><span class="p">,</span>
+                                <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;generation&quot;</span><span class="p">,</span>
+                                <span class="n">duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">,</span>
+                                <span class="n">iteration</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">tool_calls_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                <span class="n">generation_tokens</span><span class="o">=</span><span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span><span class="p">,</span>
+                                <span class="n">cache_hits</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                <span class="n">cache_misses</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Add step to context</span>
+                        <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+                        <span class="n">context</span><span class="o">.</span><span class="n">update_token_usage</span><span class="p">(</span><span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+                        <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
+
+                        <span class="n">total_tokens_processed</span> <span class="o">=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span>
+                        <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
+                        <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+                        <span class="c1"># Create final performance metrics</span>
+                        <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
+                            <span class="n">total_execution_time_ms</span><span class="o">=</span><span class="n">total_execution_time</span><span class="p">,</span>
+                            <span class="n">input_processing_time_ms</span><span class="o">=</span><span class="n">input_processing_time</span><span class="p">,</span>
+                            <span class="n">static_knowledge_processing_time_ms</span><span class="o">=</span><span class="n">static_knowledge_time</span><span class="p">,</span>
+                            <span class="n">mcp_tools_preparation_time_ms</span><span class="o">=</span><span class="n">mcp_tools_time</span><span class="p">,</span>
+                            <span class="n">generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span><span class="p">,</span>
+                            <span class="n">tool_execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">final_response_processing_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">iteration_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="n">tool_calls_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="n">total_tokens_processed</span><span class="o">=</span><span class="n">total_tokens_processed</span><span class="p">,</span>
+                            <span class="n">cache_hit_rate</span><span class="o">=</span><span class="p">(</span>
+                                <span class="n">cache_hits</span> <span class="o">/</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+                            <span class="p">)</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                            <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">step_metrics</span><span class="o">=</span><span class="n">step_metrics</span><span class="p">,</span>
+                            <span class="n">average_generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span><span class="p">,</span>
+                            <span class="n">average_tool_execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">longest_step_duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">,</span>
+                            <span class="n">shortest_step_duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Save to conversation store after successful execution</span>
+                        <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
+                            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                                <span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span>
+                            <span class="p">)</span>
+                            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                                <span class="n">chat_id</span><span class="p">,</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
+                            <span class="p">)</span>
+
+                        <span class="c1"># Yield final chunk</span>
+                        <span class="k">yield</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
+                            <span class="n">generation</span><span class="o">=</span><span class="n">final_generation</span><span class="p">,</span>
+                            <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                            <span class="n">parsed</span><span class="o">=</span><span class="n">final_generation</span><span class="o">.</span><span class="n">parsed</span><span class="p">,</span>
+                            <span class="n">is_streaming_chunk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">is_final_chunk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                <span class="c1"># Create and return the async generator</span>
+                <span class="n">stream_generator</span> <span class="o">=</span> <span class="n">_stream_direct_response</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">stream_generator</span>
+
+            <span class="c1"># Non-streaming path (existing code)</span>
             <span class="n">step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
             <span class="n">step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
                 <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;generation&quot;</span><span class="p">,</span>
                 <span class="n">iteration</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">tool_execution_suggestions</span><span class="o">=</span><span class="p">[],</span>  <span class="c1"># No tools called</span>
+                <span class="n">tool_execution_suggestions</span><span class="o">=</span><span class="p">[],</span>
                 <span class="n">generation_text</span><span class="o">=</span><span class="s2">&quot;Generating direct response...&quot;</span><span class="p">,</span>
-                <span class="n">token_usage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Will be updated after generation</span>
+                <span class="n">token_usage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="n">generation_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
@@ -2033,9 +2235,7 @@
             <span class="c1"># Update the step with the actual generation results</span>
             <span class="n">step</span><span class="o">.</span><span class="n">generation_text</span> <span class="o">=</span> <span class="n">generation</span><span class="o">.</span><span class="n">text</span>
             <span class="n">step</span><span class="o">.</span><span class="n">token_usage</span> <span class="o">=</span> <span class="n">generation</span><span class="o">.</span><span class="n">usage</span>
-            <span class="n">step_duration</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">step_start_time</span>
-            <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># Convert to milliseconds</span>
+            <span class="n">step_duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">step_start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
             <span class="n">step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span><span class="n">duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">)</span>
 
             <span class="c1"># Track step metrics</span>
@@ -2061,9 +2261,7 @@
 
             <span class="n">total_tokens_processed</span> <span class="o">=</span> <span class="n">generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span>
             <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
-            <span class="n">final_response_processing_time</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="mf">0.0</span>  <span class="c1"># Minimal processing for direct response</span>
-            <span class="p">)</span>
+            <span class="n">final_response_processing_time</span> <span class="o">=</span> <span class="mf">0.0</span>
 
             <span class="c1"># Create performance metrics</span>
             <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
@@ -2090,7 +2288,6 @@
             <span class="c1"># Save to conversation store after successful execution</span>
             <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
                 <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="c1"># Add the current user message and AI response to conversation store</span>
                 <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
                     <span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span>
                 <span class="p">)</span>
@@ -2105,22 +2302,7 @@
                 <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="c1"># # Agent has tools. We must iterate until generate the final answer.</span>
-
-        <span class="c1"># all_tools: MutableSequence[Tool[Any]] = [</span>
-        <span class="c1">#     Tool.from_mcp_tool(mcp_tool=tool, server=server)</span>
-        <span class="c1">#     for server, tool in mcp_tools</span>
-        <span class="c1"># ] + [</span>
-        <span class="c1">#     Tool.from_callable(tool)</span>
-        <span class="c1">#     if callable(tool) and not isinstance(tool, Tool)</span>
-        <span class="c1">#     else tool</span>
-        <span class="c1">#     for tool in self.tools</span>
-        <span class="c1"># ]</span>
-
-        <span class="c1"># _logger.bind_optional(</span>
-        <span class="c1">#     lambda log: log.debug(&quot;Using %d tools in total&quot;, len(all_tools))</span>
-        <span class="c1"># )</span>
-
+        <span class="c1"># Agent has tools - handle streaming and non-streaming paths</span>
         <span class="n">all_tools</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">]</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tool</span><span class="p">],</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_tools</span><span class="p">())</span>
 
         <span class="n">available_tools</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tool</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -2134,9 +2316,916 @@
         <span class="n">all_tool_results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ToolExecutionSuggestion</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># Initialize tracking systems before the while loop</span>
-        <span class="n">tool_call_patterns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># pattern_hash -&gt; count</span>
-        <span class="n">tool_budget</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># tool_name -&gt; call_count</span>
+        <span class="n">tool_call_patterns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">tool_budget</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
+        <span class="c1"># For streaming with tools, we need a different approach</span>
+        <span class="k">if</span> <span class="n">stream</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">generation_provider</span><span class="p">,</span> <span class="n">SupportsStreaming</span><span class="p">):</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using streaming generation with tools&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_stream_with_tools</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]]:</span>
+                <span class="k">nonlocal</span> \
+                    <span class="n">state</span><span class="p">,</span> \
+                    <span class="n">all_tool_suggestions</span><span class="p">,</span> \
+                    <span class="n">all_tool_results</span><span class="p">,</span> \
+                    <span class="n">tool_call_patterns</span><span class="p">,</span> \
+                    <span class="n">tool_budget</span>
+                <span class="k">nonlocal</span> \
+                    <span class="n">generation_time_total</span><span class="p">,</span> \
+                    <span class="n">tool_execution_time_total</span><span class="p">,</span> \
+                    <span class="n">iteration_count</span><span class="p">,</span> \
+                    <span class="n">tool_calls_count</span><span class="p">,</span> \
+                    <span class="n">total_tokens_processed</span>
+
+                <span class="n">total_tokens_processed</span> <span class="o">=</span> <span class="n">total_tokens_processed</span>
+
+                <span class="k">while</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">:</span>
+                    <span class="n">current_iteration</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">iteration_count</span> <span class="o">=</span> <span class="n">current_iteration</span>
+
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="s2">&quot;Starting streaming iteration </span><span class="si">%d</span><span class="s2"> of </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">current_iteration</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Build message history for this iteration</span>
+                    <span class="n">message_history</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
+
+                    <span class="c1"># If we have tool results from ANY previous iterations, we need to add them</span>
+                    <span class="k">if</span> <span class="n">all_tool_results</span><span class="p">:</span>
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> total tool results across all iterations&quot;</span><span class="p">,</span>
+                                <span class="nb">len</span><span class="p">(</span><span class="n">all_tool_results</span><span class="p">),</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Find the last assistant message with tool suggestions</span>
+                        <span class="n">last_assistant_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">AssistantMessage</span><span class="p">):</span>
+                                <span class="n">last_assistant_index</span> <span class="o">=</span> <span class="n">i</span>
+                                <span class="k">break</span>
+
+                        <span class="k">if</span> <span class="n">last_assistant_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="c1"># Clone the assistant message and ensure it has ALL tool suggestions</span>
+                            <span class="n">original_assistant</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">last_assistant_index</span><span class="p">]</span>
+                            <span class="n">cloned_assistant</span> <span class="o">=</span> <span class="n">AssistantMessage</span><span class="p">(</span>
+                                <span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_assistant</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Add any missing tool suggestions to the assistant message</span>
+                            <span class="n">existing_suggestion_ids</span> <span class="o">=</span> <span class="p">{</span>
+                                <span class="n">part</span><span class="o">.</span><span class="n">id</span>
+                                <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span>
+                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionSuggestion</span><span class="p">)</span>
+                            <span class="p">}</span>
+
+                            <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_suggestion_ids</span><span class="p">:</span>
+                                    <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggestion</span><span class="p">)</span>
+
+                            <span class="n">message_history</span><span class="p">[</span><span class="n">last_assistant_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_assistant</span>
+
+                            <span class="c1"># Now find or create the user message after the assistant message</span>
+                            <span class="n">next_user_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                                <span class="n">last_assistant_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span>
+                            <span class="p">):</span>
+                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">UserMessage</span><span class="p">):</span>
+                                    <span class="n">next_user_index</span> <span class="o">=</span> <span class="n">i</span>
+                                    <span class="k">break</span>
+
+                            <span class="k">if</span> <span class="n">next_user_index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                                <span class="c1"># Create a new user message</span>
+                                <span class="n">new_user_message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[])</span>
+                                <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_user_message</span><span class="p">)</span>
+                                <span class="n">next_user_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+                            <span class="c1"># Clone the user message and add ALL tool results</span>
+                            <span class="n">original_user</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">next_user_index</span><span class="p">]</span>
+                            <span class="n">cloned_user</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_user</span><span class="o">.</span><span class="n">parts</span><span class="p">))</span>
+
+                            <span class="c1"># Remove any existing tool results to avoid duplicates</span>
+                            <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+                                <span class="n">part</span>
+                                <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span>
+                                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionResult</span><span class="p">)</span>
+                            <span class="p">]</span>
+
+                            <span class="c1"># Add ALL tool results that correspond to suggestions in the assistant message</span>
+                            <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">suggestion</span><span class="p">,</span> <span class="n">ToolExecutionSuggestion</span><span class="p">):</span>
+                                    <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">all_tool_results</span><span class="p">:</span>
+                                        <span class="n">_</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">all_tool_results</span><span class="p">[</span><span class="n">suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+                                        <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                                            <span class="n">suggestion</span><span class="o">=</span><span class="n">suggestion</span><span class="p">,</span>
+                                            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                                            <span class="n">execution_time_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                            <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="p">)</span>
+                                        <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+                                            <span class="mi">0</span><span class="p">,</span> <span class="n">tool_execution_result</span>
+                                        <span class="p">)</span>
+
+                            <span class="n">message_history</span><span class="p">[</span><span class="n">next_user_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_user</span>
+
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Streaming tool call generation&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="n">generation_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+
+                    <span class="c1"># Stream tool call generation (no response_schema for tool calls)</span>
+                    <span class="n">final_tool_generation</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="n">Generation</span><span class="p">[</span><span class="n">WithoutStructuredOutput</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+                    <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">chunk_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+                    <span class="k">async</span> <span class="k">for</span> <span class="n">tool_generation_chunk</span> <span class="ow">in</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">stream_async</span><span class="p">(</span>
+                        <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
+                        <span class="n">messages</span><span class="o">=</span><span class="n">message_history</span><span class="p">,</span>
+                        <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
+                        <span class="n">tools</span><span class="o">=</span><span class="n">all_tools</span><span class="p">,</span>
+                    <span class="p">):</span>
+                        <span class="n">chunk_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">final_tool_generation</span> <span class="o">=</span> <span class="n">tool_generation_chunk</span>
+
+                        <span class="c1"># We don&#39;t yield intermediate chunks for tool calls</span>
+                        <span class="c1"># since we need to execute the tools first</span>
+
+                    <span class="k">if</span> <span class="n">final_tool_generation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">break</span>
+
+                    <span class="n">final_tool_generation</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                        <span class="n">Generation</span><span class="p">[</span><span class="n">WithoutStructuredOutput</span><span class="p">],</span> <span class="n">final_tool_generation</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Add this generation to context</span>
+                    <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
+                    <span class="p">)</span>
+
+                    <span class="n">generation_time_single</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">generation_start</span>
+                    <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                    <span class="n">generation_time_total</span> <span class="o">+=</span> <span class="n">generation_time_single</span>
+
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                            <span class="s2">&quot;Tool call streaming completed with </span><span class="si">%d</span><span class="s2"> chunks, </span><span class="si">%d</span><span class="s2"> tool calls&quot;</span><span class="p">,</span>
+                            <span class="n">chunk_count</span><span class="p">,</span>
+                            <span class="n">cast</span><span class="p">(</span>
+                                <span class="n">Generation</span><span class="p">[</span><span class="n">WithoutStructuredOutput</span><span class="p">],</span>
+                                <span class="n">final_tool_generation</span><span class="p">,</span>
+                            <span class="p">)</span><span class="o">.</span><span class="n">tool_calls_amount</span><span class="p">(),</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Update context with token usage from this generation</span>
+                    <span class="n">context</span><span class="o">.</span><span class="n">update_token_usage</span><span class="p">(</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+                    <span class="n">total_tokens_processed</span> <span class="o">+=</span> <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span>
+
+                    <span class="n">agent_didnt_call_any_tool</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">tool_calls_amount</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">agent_didnt_call_any_tool</span><span class="p">:</span>
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                <span class="s2">&quot;Agent didn&#39;t call any tool, generating final streaming response&quot;</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Create a step for the final generation</span>
+                        <span class="n">final_step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                        <span class="n">final_step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
+                            <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;generation&quot;</span><span class="p">,</span>
+                            <span class="n">iteration</span><span class="o">=</span><span class="n">current_iteration</span><span class="p">,</span>
+                            <span class="n">tool_execution_suggestions</span><span class="o">=</span><span class="p">[],</span>
+                            <span class="n">generation_text</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span>
+                            <span class="ow">or</span> <span class="s2">&quot;Generating final response...&quot;</span><span class="p">,</span>
+                            <span class="n">token_usage</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Only make another call if we need structured output or didn&#39;t get text</span>
+                        <span class="k">if</span> <span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                            <span class="ow">or</span> <span class="ow">not</span> <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span>
+                        <span class="p">):</span>
+                            <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                                <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Streaming structured response&quot;</span><span class="p">)</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Stream final structured response (no tools for structured output)</span>
+                            <span class="n">generation_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                            <span class="n">final_generation</span><span class="p">:</span> <span class="n">Generation</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+                            <span class="n">chunk_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+                            <span class="k">async</span> <span class="k">for</span> <span class="p">(</span>
+                                <span class="n">generation_chunk</span>
+                            <span class="p">)</span> <span class="ow">in</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">stream_async</span><span class="p">(</span>
+                                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
+                                <span class="n">messages</span><span class="o">=</span><span class="n">message_history</span><span class="p">,</span>
+                                <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
+                                <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
+                            <span class="p">):</span>
+                                <span class="n">generation_chunk</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span>
+                                    <span class="n">Generation</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">],</span> <span class="n">generation_chunk</span>
+                                <span class="p">)</span>
+                                <span class="n">chunk_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                                <span class="n">generation_time_single</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">generation_start</span>
+                                <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+                                <span class="c1"># Update metrics</span>
+                                <span class="k">if</span> <span class="n">generation_chunk</span><span class="o">.</span><span class="n">usage</span><span class="p">:</span>
+                                    <span class="n">total_tokens_processed</span> <span class="o">+=</span> <span class="p">(</span>
+                                        <span class="n">generation_chunk</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">completion_tokens</span>
+                                    <span class="p">)</span>
+
+                                <span class="c1"># CRITICAL: Append ALL tool calls to the generation</span>
+                                <span class="k">if</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
+                                    <span class="n">generation_chunk</span><span class="o">.</span><span class="n">append_tool_calls</span><span class="p">(</span>
+                                        <span class="n">all_tool_suggestions</span>
+                                    <span class="p">)</span>
+
+                                <span class="c1"># Create partial performance metrics</span>
+                                <span class="n">partial_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
+                                    <span class="n">total_execution_time_ms</span><span class="o">=</span><span class="p">(</span>
+                                        <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
+                                    <span class="p">)</span>
+                                    <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+                                    <span class="n">input_processing_time_ms</span><span class="o">=</span><span class="n">input_processing_time</span><span class="p">,</span>
+                                    <span class="n">static_knowledge_processing_time_ms</span><span class="o">=</span><span class="n">static_knowledge_time</span><span class="p">,</span>
+                                    <span class="n">mcp_tools_preparation_time_ms</span><span class="o">=</span><span class="n">mcp_tools_time</span><span class="p">,</span>
+                                    <span class="n">generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span>
+                                    <span class="o">+</span> <span class="n">generation_time_single</span><span class="p">,</span>
+                                    <span class="n">tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span><span class="p">,</span>
+                                    <span class="n">final_response_processing_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="n">iteration_count</span><span class="o">=</span><span class="n">iteration_count</span><span class="p">,</span>
+                                    <span class="n">tool_calls_count</span><span class="o">=</span><span class="n">tool_calls_count</span><span class="p">,</span>
+                                    <span class="n">total_tokens_processed</span><span class="o">=</span><span class="n">total_tokens_processed</span><span class="p">,</span>
+                                    <span class="n">cache_hit_rate</span><span class="o">=</span><span class="p">(</span>
+                                        <span class="n">cache_hits</span> <span class="o">/</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+                                    <span class="p">)</span>
+                                    <span class="k">if</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                                    <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="n">step_metrics</span><span class="o">=</span><span class="n">step_metrics</span><span class="p">,</span>
+                                    <span class="n">average_generation_time_ms</span><span class="o">=</span><span class="p">(</span>
+                                        <span class="n">generation_time_total</span> <span class="o">+</span> <span class="n">generation_time_single</span>
+                                    <span class="p">)</span>
+                                    <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">iteration_count</span><span class="p">),</span>
+                                    <span class="n">average_tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span>
+                                    <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tool_calls_count</span><span class="p">),</span>
+                                    <span class="n">longest_step_duration_ms</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span>
+                                        <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span>
+                                        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="p">),</span>
+                                    <span class="n">shortest_step_duration_ms</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span>
+                                        <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span>
+                                        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="p">),</span>
+                                <span class="p">)</span>
+
+                                <span class="c1"># Yield intermediate chunk</span>
+                                <span class="k">yield</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
+                                    <span class="n">generation</span><span class="o">=</span><span class="n">generation_chunk</span><span class="p">,</span>
+                                    <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                                    <span class="n">parsed</span><span class="o">=</span><span class="n">generation_chunk</span><span class="o">.</span><span class="n">parsed</span>
+                                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">generation_chunk</span><span class="p">,</span> <span class="s2">&quot;parsed&quot;</span><span class="p">)</span>
+                                    <span class="k">else</span> <span class="n">cast</span><span class="p">(</span><span class="n">T_Schema</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                                    <span class="n">is_streaming_chunk</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">is_final_chunk</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">performance_metrics</span><span class="o">=</span><span class="n">partial_metrics</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+                                <span class="n">final_generation</span> <span class="o">=</span> <span class="n">generation_chunk</span>
+
+                            <span class="k">if</span> <span class="n">final_generation</span><span class="p">:</span>
+                                <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                    <span class="n">final_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
+                                <span class="p">)</span>
+                                <span class="n">generation_time_single</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">generation_start</span>
+                                <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                                <span class="n">generation_time_total</span> <span class="o">+=</span> <span class="n">generation_time_single</span>
+
+                                <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                                    <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                        <span class="s2">&quot;Final streaming generation complete with </span><span class="si">%d</span><span class="s2"> chunks&quot;</span><span class="p">,</span>
+                                        <span class="n">chunk_count</span><span class="p">,</span>
+                                    <span class="p">)</span>
+                                <span class="p">)</span>
+
+                                <span class="c1"># Update the step with the final generation results</span>
+                                <span class="n">final_step</span><span class="o">.</span><span class="n">generation_text</span> <span class="o">=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span>
+                                <span class="n">final_step</span><span class="o">.</span><span class="n">token_usage</span> <span class="o">=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span>
+                                <span class="n">final_step_duration</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">final_step_start_time</span>
+                                <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                                <span class="n">final_step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span>
+                                    <span class="n">duration_ms</span><span class="o">=</span><span class="n">final_step_duration</span>
+                                <span class="p">)</span>
+                                <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">final_step</span><span class="p">)</span>
+
+                                <span class="c1"># Track step metrics</span>
+                                <span class="n">step_metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                    <span class="n">StepMetric</span><span class="p">(</span>
+                                        <span class="n">step_id</span><span class="o">=</span><span class="n">final_step</span><span class="o">.</span><span class="n">step_id</span><span class="p">,</span>
+                                        <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;generation&quot;</span><span class="p">,</span>
+                                        <span class="n">duration_ms</span><span class="o">=</span><span class="n">final_step_duration</span><span class="p">,</span>
+                                        <span class="n">iteration</span><span class="o">=</span><span class="n">current_iteration</span><span class="p">,</span>
+                                        <span class="n">tool_calls_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                        <span class="n">generation_tokens</span><span class="o">=</span><span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span><span class="p">,</span>
+                                        <span class="n">cache_hits</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                        <span class="n">cache_misses</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                    <span class="p">)</span>
+                                <span class="p">)</span>
+
+                                <span class="c1"># Update context with final generation and complete execution</span>
+                                <span class="n">context</span><span class="o">.</span><span class="n">update_token_usage</span><span class="p">(</span><span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">)</span>
+                                <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
+                                <span class="n">total_tokens_processed</span> <span class="o">+=</span> <span class="p">(</span>
+                                    <span class="n">final_generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span>
+                                <span class="p">)</span>
+
+                                <span class="c1"># Calculate final metrics</span>
+                                <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
+                                <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                                <span class="n">final_response_processing_time</span> <span class="o">=</span> <span class="mf">10.0</span>
+
+                                <span class="c1"># Create performance metrics</span>
+                                <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
+                                    <span class="n">total_execution_time_ms</span><span class="o">=</span><span class="n">total_execution_time</span><span class="p">,</span>
+                                    <span class="n">input_processing_time_ms</span><span class="o">=</span><span class="n">input_processing_time</span><span class="p">,</span>
+                                    <span class="n">static_knowledge_processing_time_ms</span><span class="o">=</span><span class="n">static_knowledge_time</span><span class="p">,</span>
+                                    <span class="n">mcp_tools_preparation_time_ms</span><span class="o">=</span><span class="n">mcp_tools_time</span><span class="p">,</span>
+                                    <span class="n">generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span><span class="p">,</span>
+                                    <span class="n">tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span><span class="p">,</span>
+                                    <span class="n">final_response_processing_time_ms</span><span class="o">=</span><span class="n">final_response_processing_time</span><span class="p">,</span>
+                                    <span class="n">iteration_count</span><span class="o">=</span><span class="n">iteration_count</span><span class="p">,</span>
+                                    <span class="n">tool_calls_count</span><span class="o">=</span><span class="n">tool_calls_count</span><span class="p">,</span>
+                                    <span class="n">total_tokens_processed</span><span class="o">=</span><span class="n">total_tokens_processed</span><span class="p">,</span>
+                                    <span class="n">cache_hit_rate</span><span class="o">=</span><span class="p">(</span>
+                                        <span class="n">cache_hits</span> <span class="o">/</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+                                    <span class="p">)</span>
+                                    <span class="k">if</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                                    <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="n">step_metrics</span><span class="o">=</span><span class="n">step_metrics</span><span class="p">,</span>
+                                    <span class="n">average_generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span>
+                                    <span class="o">/</span> <span class="nb">max</span><span class="p">(</span>
+                                        <span class="mi">1</span><span class="p">,</span>
+                                        <span class="nb">len</span><span class="p">(</span>
+                                            <span class="p">[</span>
+                                                <span class="n">s</span>
+                                                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span>
+                                                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="s2">&quot;generation&quot;</span>
+                                            <span class="p">]</span>
+                                        <span class="p">),</span>
+                                    <span class="p">),</span>
+                                    <span class="n">average_tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span>
+                                    <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tool_calls_count</span><span class="p">),</span>
+                                    <span class="n">longest_step_duration_ms</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span>
+                                        <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span>
+                                        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="p">),</span>
+                                    <span class="n">shortest_step_duration_ms</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span>
+                                        <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span>
+                                        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="p">),</span>
+                                <span class="p">)</span>
+
+                                <span class="c1"># Save to conversation store after successful execution</span>
+                                <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
+                                    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                                        <span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span>
+                                    <span class="p">)</span>
+                                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                                        <span class="n">chat_id</span><span class="p">,</span>
+                                        <span class="n">final_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">(),</span>
+                                    <span class="p">)</span>
+
+                                <span class="c1"># Yield final result</span>
+                                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
+                                    <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                                    <span class="n">generation</span><span class="o">=</span><span class="n">final_generation</span><span class="p">,</span>
+                                    <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
+                                <span class="p">)</span>
+                                <span class="k">return</span>
+
+                        <span class="c1"># If we got text and don&#39;t need structure, use what we have</span>
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                <span class="s2">&quot;Using existing text response from streaming&quot;</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># CRITICAL: Append ALL tool calls to the final generation</span>
+                        <span class="k">if</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
+                            <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">append_tool_calls</span><span class="p">(</span>
+                                <span class="n">all_tool_suggestions</span>
+                            <span class="p">)</span>
+
+                        <span class="c1"># Complete the final step and add to context</span>
+                        <span class="n">final_step_duration</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">final_step_start_time</span>
+                        <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                        <span class="n">final_step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span><span class="n">duration_ms</span><span class="o">=</span><span class="n">final_step_duration</span><span class="p">)</span>
+                        <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">final_step</span><span class="p">)</span>
+
+                        <span class="c1"># Track step metrics</span>
+                        <span class="n">step_metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">StepMetric</span><span class="p">(</span>
+                                <span class="n">step_id</span><span class="o">=</span><span class="n">final_step</span><span class="o">.</span><span class="n">step_id</span><span class="p">,</span>
+                                <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;generation&quot;</span><span class="p">,</span>
+                                <span class="n">duration_ms</span><span class="o">=</span><span class="n">final_step_duration</span><span class="p">,</span>
+                                <span class="n">iteration</span><span class="o">=</span><span class="n">current_iteration</span><span class="p">,</span>
+                                <span class="n">tool_calls_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                <span class="n">generation_tokens</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span><span class="p">,</span>
+                                <span class="n">cache_hits</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                <span class="n">cache_misses</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Complete execution before returning</span>
+                        <span class="n">context</span><span class="o">.</span><span class="n">complete_execution</span><span class="p">()</span>
+
+                        <span class="c1"># Calculate final metrics</span>
+                        <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
+                        <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                        <span class="n">final_response_processing_time</span> <span class="o">=</span> <span class="mf">5.0</span>
+
+                        <span class="c1"># Create performance metrics</span>
+                        <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
+                            <span class="n">total_execution_time_ms</span><span class="o">=</span><span class="n">total_execution_time</span><span class="p">,</span>
+                            <span class="n">input_processing_time_ms</span><span class="o">=</span><span class="n">input_processing_time</span><span class="p">,</span>
+                            <span class="n">static_knowledge_processing_time_ms</span><span class="o">=</span><span class="n">static_knowledge_time</span><span class="p">,</span>
+                            <span class="n">mcp_tools_preparation_time_ms</span><span class="o">=</span><span class="n">mcp_tools_time</span><span class="p">,</span>
+                            <span class="n">generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span><span class="p">,</span>
+                            <span class="n">tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span><span class="p">,</span>
+                            <span class="n">final_response_processing_time_ms</span><span class="o">=</span><span class="n">final_response_processing_time</span><span class="p">,</span>
+                            <span class="n">iteration_count</span><span class="o">=</span><span class="n">iteration_count</span><span class="p">,</span>
+                            <span class="n">tool_calls_count</span><span class="o">=</span><span class="n">tool_calls_count</span><span class="p">,</span>
+                            <span class="n">total_tokens_processed</span><span class="o">=</span><span class="n">total_tokens_processed</span><span class="p">,</span>
+                            <span class="n">cache_hit_rate</span><span class="o">=</span><span class="p">(</span>
+                                <span class="n">cache_hits</span> <span class="o">/</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+                            <span class="p">)</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                            <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">step_metrics</span><span class="o">=</span><span class="n">step_metrics</span><span class="p">,</span>
+                            <span class="n">average_generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span>
+                            <span class="o">/</span> <span class="nb">max</span><span class="p">(</span>
+                                <span class="mi">1</span><span class="p">,</span>
+                                <span class="nb">len</span><span class="p">(</span>
+                                    <span class="p">[</span>
+                                        <span class="n">s</span>
+                                        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span>
+                                        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="s2">&quot;generation&quot;</span>
+                                    <span class="p">]</span>
+                                <span class="p">),</span>
+                            <span class="p">),</span>
+                            <span class="n">average_tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span>
+                            <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tool_calls_count</span><span class="p">),</span>
+                            <span class="n">longest_step_duration_ms</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span>
+                                <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span>
+                            <span class="p">),</span>
+                            <span class="n">shortest_step_duration_ms</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span>
+                                <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span>
+                            <span class="p">),</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Save to conversation store after successful execution</span>
+                        <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
+                            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                                <span class="n">chat_id</span><span class="p">,</span> <span class="n">current_user_message</span>
+                            <span class="p">)</span>
+                            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="o">.</span><span class="n">add_message_async</span><span class="p">(</span>
+                                <span class="n">chat_id</span><span class="p">,</span>
+                                <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">(),</span>
+                            <span class="p">)</span>
+
+                        <span class="c1"># Yield final result</span>
+                        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_agent_run_output</span><span class="p">(</span>
+                            <span class="n">generation</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span>
+                                <span class="n">Generation</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">],</span> <span class="n">final_tool_generation</span>
+                            <span class="p">),</span>
+                            <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                            <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="k">return</span>
+
+                    <span class="c1"># Agent called tools. Process them (no streaming for tool execution)</span>
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> tool calls&quot;</span><span class="p">,</span>
+                            <span class="nb">len</span><span class="p">(</span>
+                                <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">tool_calls</span>
+                                <span class="k">if</span> <span class="n">final_tool_generation</span>
+                                <span class="k">else</span> <span class="p">[]</span>
+                            <span class="p">),</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Add these tool suggestions to our tracking</span>
+                    <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+                        <span class="n">all_tool_suggestions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggestion</span><span class="p">)</span>
+
+                    <span class="c1"># Create a step to track this iteration&#39;s tool executions</span>
+                    <span class="n">step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                    <span class="n">step</span> <span class="o">=</span> <span class="n">Step</span><span class="p">(</span>
+                        <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;tool_execution&quot;</span><span class="p">,</span>
+                        <span class="n">iteration</span><span class="o">=</span><span class="n">current_iteration</span><span class="p">,</span>
+                        <span class="n">tool_execution_suggestions</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span>
+                            <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">tool_calls</span>
+                        <span class="p">),</span>
+                        <span class="n">generation_text</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+                        <span class="n">token_usage</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Track skipped tools for logging</span>
+                    <span class="n">skipped_tools</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">step_tool_execution_time</span> <span class="o">=</span> <span class="mf">0.0</span>
+                    <span class="n">step_tool_calls</span> <span class="o">=</span> <span class="mi">0</span>
+
+                    <span class="k">for</span> <span class="n">tool_execution_suggestion</span> <span class="ow">in</span> <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
+                        <span class="n">pattern_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_tool_call_pattern_key</span><span class="p">(</span>
+                            <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="p">,</span>
+                            <span class="nb">dict</span><span class="p">(</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">),</span>
+                        <span class="p">)</span>
+
+                        <span class="c1"># Check if this exact pattern was already called</span>
+                        <span class="n">pattern_count</span> <span class="o">=</span> <span class="n">tool_call_patterns</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pattern_key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;Tool pattern &#39;</span><span class="si">{</span><span class="n">pattern_key</span><span class="si">}</span><span class="s2">&#39; has been called </span><span class="si">{</span><span class="n">pattern_count</span><span class="si">}</span><span class="s2"> times. &quot;</span>
+                                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Max allowed: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIdenticalToolCalls</span><span class="si">}</span><span class="s2">&quot;</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="k">if</span> <span class="n">pattern_count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIdenticalToolCalls</span><span class="p">:</span>
+                            <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                                <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                    <span class="s2">&quot;Blocking redundant tool call: </span><span class="si">%s</span><span class="s2"> with args: </span><span class="si">%s</span><span class="s2"> (already called </span><span class="si">%d</span><span class="s2"> times)&quot;</span><span class="p">,</span>
+                                    <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="p">,</span>
+                                    <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
+                                    <span class="n">pattern_count</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Find the previous result from all_tool_results</span>
+                            <span class="n">previous_result</span> <span class="o">=</span> <span class="kc">None</span>
+                            <span class="k">for</span> <span class="p">(</span>
+                                <span class="n">prev_suggestion</span><span class="p">,</span>
+                                <span class="n">prev_result</span><span class="p">,</span>
+                            <span class="p">)</span> <span class="ow">in</span> <span class="n">all_tool_results</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                                <span class="k">if</span> <span class="p">(</span>
+                                    <span class="n">prev_suggestion</span><span class="o">.</span><span class="n">tool_name</span>
+                                    <span class="o">==</span> <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span>
+                                    <span class="ow">and</span> <span class="n">prev_suggestion</span><span class="o">.</span><span class="n">args</span>
+                                    <span class="o">==</span> <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span>
+                                <span class="p">):</span>
+                                    <span class="n">previous_result</span> <span class="o">=</span> <span class="n">prev_result</span>
+                                    <span class="k">break</span>
+
+                            <span class="k">if</span> <span class="n">previous_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                <span class="c1"># Reuse the previous result</span>
+                                <span class="n">all_tool_results</span><span class="p">[</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                    <span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                    <span class="n">previous_result</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+                                <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
+                                    <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                    <span class="n">result</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;[DUPLICATE BLOCKED - Using previous result] </span><span class="si">{</span><span class="n">previous_result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                                    <span class="n">execution_time_ms</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                    <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="c1"># This shouldn&#39;t happen, but handle it gracefully</span>
+                                <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;Duplicate tool call blocked but no previous result found&quot;</span>
+                                <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
+                                    <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                    <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                                    <span class="n">execution_time_ms</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                    <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">error_message</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                                <span class="p">)</span>
+
+                            <span class="n">skipped_tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="si">}</span><span class="s2"> (duplicate)&quot;</span>
+                            <span class="p">)</span>
+                            <span class="k">continue</span>
+
+                        <span class="c1"># Check budget</span>
+                        <span class="n">tool_name</span> <span class="o">=</span> <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span>
+                        <span class="n">current_tool_calls</span> <span class="o">=</span> <span class="n">tool_budget</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">current_tool_calls</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span><span class="p">:</span>
+                            <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                                <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                    <span class="s2">&quot;Tool budget exceeded for: </span><span class="si">%s</span><span class="s2"> (already called </span><span class="si">%d</span><span class="s2"> times)&quot;</span><span class="p">,</span>
+                                    <span class="n">tool_name</span><span class="p">,</span>
+                                    <span class="n">current_tool_calls</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+
+                            <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; budget exceeded (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span><span class="si">}</span><span class="s2"> calls max)&quot;</span>
+                            <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
+                                <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                                <span class="n">execution_time_ms</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                <span class="n">error_message</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                            <span class="p">)</span>
+
+                            <span class="n">skipped_tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2"> (budget exceeded)&quot;</span><span class="p">)</span>
+                            <span class="k">continue</span>
+
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                <span class="s2">&quot;Executing tool: </span><span class="si">%s</span><span class="s2"> with args: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span><span class="p">,</span>
+                                <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                        <span class="n">selected_tool</span> <span class="o">=</span> <span class="n">available_tools</span><span class="p">[</span>
+                            <span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">tool_name</span>
+                        <span class="p">]</span>
+
+                        <span class="c1"># Time the tool execution</span>
+                        <span class="n">tool_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">tool_result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">selected_tool</span><span class="o">.</span><span class="n">call_async</span><span class="p">(</span>
+                                <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span> <span class="o">**</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">args</span>
+                            <span class="p">)</span>
+                            <span class="n">tool_execution_time</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">tool_start_time</span>
+                            <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+                            <span class="n">step_tool_execution_time</span> <span class="o">+=</span> <span class="n">tool_execution_time</span>
+                            <span class="n">step_tool_calls</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="n">tool_calls_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                            <span class="n">tool_execution_time_total</span> <span class="o">+=</span> <span class="n">tool_execution_time</span>
+
+                            <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                                <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                                    <span class="s2">&quot;Tool execution result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">tool_result</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Update tracking structures</span>
+                            <span class="n">all_tool_results</span><span class="p">[</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                <span class="n">tool_result</span><span class="p">,</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Update pattern tracking</span>
+                            <span class="n">tool_call_patterns</span><span class="p">[</span><span class="n">pattern_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pattern_count</span> <span class="o">+</span> <span class="mi">1</span>
+
+                            <span class="c1"># Update budget</span>
+                            <span class="n">tool_budget</span><span class="p">[</span><span class="n">tool_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_tool_calls</span> <span class="o">+</span> <span class="mi">1</span>
+
+                            <span class="c1"># Add the tool execution result to the step</span>
+                            <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
+                                <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                <span class="n">result</span><span class="o">=</span><span class="n">tool_result</span><span class="p">,</span>
+                                <span class="n">execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time</span><span class="p">,</span>
+                                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="k">except</span> <span class="n">ToolSuspensionError</span> <span class="k">as</span> <span class="n">suspension_error</span><span class="p">:</span>
+                            <span class="c1"># Handle tool suspension for HITL workflows</span>
+                            <span class="n">suspension_reason</span> <span class="o">=</span> <span class="n">suspension_error</span><span class="o">.</span><span class="n">reason</span>
+                            <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                                <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                    <span class="s2">&quot;Tool execution suspended: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">suspension_reason</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Get the suspension manager (injected or default)</span>
+                            <span class="n">suspension_mgr</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">suspension_manager</span>
+                                <span class="ow">or</span> <span class="n">get_default_suspension_manager</span><span class="p">()</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Save suspension state with tracking info</span>
+                            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_suspension_state</span><span class="p">(</span>
+                                <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                                <span class="n">suspension_type</span><span class="o">=</span><span class="s2">&quot;tool_execution&quot;</span><span class="p">,</span>
+                                <span class="n">tool_suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                <span class="n">current_iteration</span><span class="o">=</span><span class="n">current_iteration</span><span class="p">,</span>
+                                <span class="n">all_tools</span><span class="o">=</span><span class="n">all_tools</span><span class="p">,</span>
+                                <span class="n">called_tools</span><span class="o">=</span><span class="n">all_tool_results</span><span class="p">,</span>
+                                <span class="n">current_step</span><span class="o">=</span><span class="n">step</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+                                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="s2">&quot;model_dump&quot;</span><span class="p">)</span>
+                                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Suspend the execution</span>
+                            <span class="n">resumption_token</span> <span class="o">=</span> <span class="k">await</span> <span class="n">suspension_mgr</span><span class="o">.</span><span class="n">suspend_execution</span><span class="p">(</span>
+                                <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                                <span class="n">reason</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+                                <span class="n">approval_data</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">approval_data</span><span class="p">,</span>
+                                <span class="n">timeout_hours</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">timeout_seconds</span> <span class="o">//</span> <span class="mi">3600</span>
+                                <span class="k">if</span> <span class="n">suspension_error</span><span class="o">.</span><span class="n">timeout_seconds</span>
+                                <span class="k">else</span> <span class="mi">24</span><span class="p">,</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Calculate partial metrics before suspension</span>
+                            <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
+                            <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+                            <span class="c1"># Create performance metrics for suspended execution</span>
+                            <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
+                                <span class="n">total_execution_time_ms</span><span class="o">=</span><span class="n">total_execution_time</span><span class="p">,</span>
+                                <span class="n">input_processing_time_ms</span><span class="o">=</span><span class="n">input_processing_time</span><span class="p">,</span>
+                                <span class="n">static_knowledge_processing_time_ms</span><span class="o">=</span><span class="n">static_knowledge_time</span><span class="p">,</span>
+                                <span class="n">mcp_tools_preparation_time_ms</span><span class="o">=</span><span class="n">mcp_tools_time</span><span class="p">,</span>
+                                <span class="n">generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span><span class="p">,</span>
+                                <span class="n">tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span><span class="p">,</span>
+                                <span class="n">final_response_processing_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                <span class="n">iteration_count</span><span class="o">=</span><span class="n">iteration_count</span><span class="p">,</span>
+                                <span class="n">tool_calls_count</span><span class="o">=</span><span class="n">tool_calls_count</span><span class="p">,</span>
+                                <span class="n">total_tokens_processed</span><span class="o">=</span><span class="n">total_tokens_processed</span><span class="p">,</span>
+                                <span class="n">cache_hit_rate</span><span class="o">=</span><span class="p">(</span>
+                                    <span class="n">cache_hits</span> <span class="o">/</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+                                <span class="p">)</span>
+                                <span class="k">if</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                                <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                                <span class="n">step_metrics</span><span class="o">=</span><span class="n">step_metrics</span><span class="p">,</span>
+                                <span class="n">average_generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span>
+                                <span class="o">/</span> <span class="nb">max</span><span class="p">(</span>
+                                    <span class="mi">1</span><span class="p">,</span>
+                                    <span class="nb">len</span><span class="p">(</span>
+                                        <span class="p">[</span>
+                                            <span class="n">s</span>
+                                            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span>
+                                            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="s2">&quot;generation&quot;</span>
+                                        <span class="p">]</span>
+                                    <span class="p">),</span>
+                                <span class="p">),</span>
+                                <span class="n">average_tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span>
+                                <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tool_calls_count</span><span class="p">),</span>
+                                <span class="n">longest_step_duration_ms</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span>
+                                    <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span>
+                                <span class="p">),</span>
+                                <span class="n">shortest_step_duration_ms</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span>
+                                    <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span>
+                                <span class="p">),</span>
+                            <span class="p">)</span>
+
+                            <span class="c1"># Yield suspended result</span>
+                            <span class="k">yield</span> <span class="n">AgentRunOutput</span><span class="p">(</span>
+                                <span class="n">generation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                                <span class="n">parsed</span><span class="o">=</span><span class="n">cast</span><span class="p">(</span><span class="n">T_Schema</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                                <span class="n">is_suspended</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="n">suspension_reason</span><span class="o">=</span><span class="n">suspension_error</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+                                <span class="n">resumption_token</span><span class="o">=</span><span class="n">resumption_token</span><span class="p">,</span>
+                                <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="k">return</span>
+
+                    <span class="c1"># Log skipped tools if any</span>
+                    <span class="k">if</span> <span class="n">skipped_tools</span><span class="p">:</span>
+                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                                <span class="s2">&quot;Skipped </span><span class="si">%d</span><span class="s2"> redundant tool calls: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                <span class="nb">len</span><span class="p">(</span><span class="n">skipped_tools</span><span class="p">),</span>
+                                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">skipped_tools</span><span class="p">),</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+                    <span class="c1"># Complete the step and add it to context</span>
+                    <span class="n">step_duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">step_start_time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+                    <span class="n">step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">(</span><span class="n">duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">)</span>
+                    <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+                    <span class="c1"># Track step metrics</span>
+                    <span class="n">step_metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">StepMetric</span><span class="p">(</span>
+                            <span class="n">step_id</span><span class="o">=</span><span class="n">step</span><span class="o">.</span><span class="n">step_id</span><span class="p">,</span>
+                            <span class="n">step_type</span><span class="o">=</span><span class="s2">&quot;tool_execution&quot;</span><span class="p">,</span>
+                            <span class="n">duration_ms</span><span class="o">=</span><span class="n">step_duration</span><span class="p">,</span>
+                            <span class="n">iteration</span><span class="o">=</span><span class="n">current_iteration</span><span class="p">,</span>
+                            <span class="n">tool_calls_count</span><span class="o">=</span><span class="n">step_tool_calls</span><span class="p">,</span>
+                            <span class="n">generation_tokens</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span><span class="p">,</span>
+                            <span class="n">cache_hits</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="n">cache_misses</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="n">state</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                        <span class="n">last_response</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+                        <span class="n">tool_calls_amount</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">tool_calls_amount</span><span class="p">(),</span>
+                        <span class="n">iteration</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="n">token_usage</span><span class="o">=</span><span class="n">final_tool_generation</span><span class="o">.</span><span class="n">usage</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># If we reach here, we&#39;ve exceeded max iterations</span>
+                <span class="n">execution_summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_tool_call_summary</span><span class="p">(</span><span class="n">all_tool_results</span><span class="p">)</span>
+                <span class="n">steps_summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_steps_summary</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
+                <span class="n">pattern_analysis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyze_tool_call_patterns</span><span class="p">(</span><span class="n">all_tool_results</span><span class="p">)</span>
+
+                <span class="n">execution_summary</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                EXECUTION SUMMARY:</span>
+<span class="s2">                ==================</span>
+<span class="s2">                Iterations completed: </span><span class="si">{</span><span class="n">iteration_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="si">}</span>
+<span class="s2">                Total messages in context: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span>
+<span class="s2">                </span><span class="si">{</span><span class="n">execution_summary</span><span class="si">}</span>
+<span class="s2">                </span>
+<span class="s2">                </span><span class="si">{</span><span class="n">steps_summary</span><span class="si">}</span>
+<span class="s2">                </span>
+<span class="s2">                </span><span class="si">{</span><span class="n">pattern_analysis</span><span class="si">}</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+                <span class="c1"># Add token usage if available</span>
+                <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">total_token_usage</span><span class="p">:</span>
+                    <span class="n">usage</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">total_token_usage</span>
+                    <span class="n">execution_summary</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Token usage: </span><span class="si">{</span><span class="n">usage</span><span class="o">.</span><span class="n">prompt_tokens</span><span class="si">}</span><span class="s2"> prompt + </span><span class="si">{</span><span class="n">usage</span><span class="o">.</span><span class="n">completion_tokens</span><span class="si">}</span><span class="s2"> completion = </span><span class="si">{</span><span class="n">usage</span><span class="o">.</span><span class="n">total_tokens</span><span class="si">}</span><span class="s2"> total&quot;</span>
+
+                <span class="c1"># Create enhanced error message</span>
+                <span class="n">enhanced_error_message</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                Max tool calls exceeded after </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="si">}</span><span class="s2"> iterations.</span>
+<span class="s2">                </span>
+<span class="s2">                </span><span class="si">{</span><span class="n">execution_summary</span><span class="si">}</span>
+<span class="s2">                </span>
+<span class="s2">                RECOMMENDATIONS:</span>
+<span class="s2">                - Review the tool calls above to identify potential loops or inefficiencies</span>
+<span class="s2">                - Consider increasing maxIterations if the agent is making progress</span>
+<span class="s2">                - Check if tools are returning expected results</span>
+<span class="s2">                - Verify that the agent&#39;s instructions are clear and specific</span>
+<span class="s2">                - Look for repeated calls with same arguments (potential infinite loops)</span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+                <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="s2">&quot;Max tool calls exceeded with execution summary:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">execution_summary</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Mark context as failed due to max iterations exceeded</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">fail_execution</span><span class="p">(</span><span class="n">error_message</span><span class="o">=</span><span class="n">enhanced_error_message</span><span class="p">)</span>
+
+                <span class="c1"># Calculate final metrics before raising exception</span>
+                <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
+                <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+                <span class="c1"># Create performance metrics for failed execution</span>
+                <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
+                    <span class="n">total_execution_time_ms</span><span class="o">=</span><span class="n">total_execution_time</span><span class="p">,</span>
+                    <span class="n">input_processing_time_ms</span><span class="o">=</span><span class="n">input_processing_time</span><span class="p">,</span>
+                    <span class="n">static_knowledge_processing_time_ms</span><span class="o">=</span><span class="n">static_knowledge_time</span><span class="p">,</span>
+                    <span class="n">mcp_tools_preparation_time_ms</span><span class="o">=</span><span class="n">mcp_tools_time</span><span class="p">,</span>
+                    <span class="n">generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span><span class="p">,</span>
+                    <span class="n">tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span><span class="p">,</span>
+                    <span class="n">final_response_processing_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                    <span class="n">iteration_count</span><span class="o">=</span><span class="n">iteration_count</span><span class="p">,</span>
+                    <span class="n">tool_calls_count</span><span class="o">=</span><span class="n">tool_calls_count</span><span class="p">,</span>
+                    <span class="n">total_tokens_processed</span><span class="o">=</span><span class="n">total_tokens_processed</span><span class="p">,</span>
+                    <span class="n">cache_hit_rate</span><span class="o">=</span><span class="p">(</span><span class="n">cache_hits</span> <span class="o">/</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">cache_hits</span> <span class="o">+</span> <span class="n">cache_misses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                    <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="n">step_metrics</span><span class="o">=</span><span class="n">step_metrics</span><span class="p">,</span>
+                    <span class="n">average_generation_time_ms</span><span class="o">=</span><span class="n">generation_time_total</span>
+                    <span class="o">/</span> <span class="nb">max</span><span class="p">(</span>
+                        <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">step_type</span> <span class="o">==</span> <span class="s2">&quot;generation&quot;</span><span class="p">])</span>
+                    <span class="p">),</span>
+                    <span class="n">average_tool_execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time_total</span>
+                    <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">tool_calls_count</span><span class="p">),</span>
+                    <span class="n">longest_step_duration_ms</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span>
+                    <span class="p">),</span>
+                    <span class="n">shortest_step_duration_ms</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">duration_ms</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">step_metrics</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Store metrics and execution summary in context for debugging</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;performance_metrics&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">performance_metrics</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;execution_summary_on_failure&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">execution_summary</span>
+
+                <span class="k">raise</span> <span class="n">MaxToolCallsExceededError</span><span class="p">(</span><span class="n">enhanced_error_message</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">_stream_with_tools</span><span class="p">()</span>
+
+        <span class="c1"># Non-streaming path with tools (existing code)</span>
         <span class="k">while</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">:</span>
             <span class="n">current_iteration</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="n">iteration_count</span> <span class="o">=</span> <span class="n">current_iteration</span>
@@ -2340,9 +3429,7 @@
                     <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
                     <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
-                    <span class="n">final_response_processing_time</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="mf">10.0</span>  <span class="c1"># Estimated time for response building</span>
-                    <span class="p">)</span>
+                    <span class="n">final_response_processing_time</span> <span class="o">=</span> <span class="mf">10.0</span>
 
                     <span class="c1"># Create performance metrics</span>
                     <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
@@ -2431,9 +3518,7 @@
                 <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">execution_start_time</span>
                 <span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
-                <span class="n">final_response_processing_time</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="mf">5.0</span>  <span class="c1"># Estimated time for response building</span>
-                <span class="p">)</span>
+                <span class="n">final_response_processing_time</span> <span class="o">=</span> <span class="mf">5.0</span>
 
                 <span class="c1"># Create performance metrics</span>
                 <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">PerformanceMetrics</span><span class="p">(</span>
