@@ -345,6 +345,7 @@
 <li class="toctree-l5"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.knowledge.url_knowledge.html">agentle.agents.knowledge.url_knowledge</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.message_history_fixer.html">agentle.agents.message_history_fixer</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.performance_metrics.html">agentle.agents.performance_metrics</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.step.html">agentle.agents.step</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/_autosummary/agentle.agents.step_metric.html">agentle.agents.step_metric</a></li>
@@ -2311,11 +2312,8 @@
 
         <span class="n">state</span> <span class="o">=</span> <span class="n">RunState</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]</span><span class="o">.</span><span class="n">init_state</span><span class="p">()</span>
 
-        <span class="c1"># CRITICAL: Track ALL tool suggestions and results across ALL iterations</span>
-        <span class="n">all_tool_suggestions</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="n">ToolExecutionSuggestion</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># FIXED: Track tool suggestions and results for deduplication only</span>
         <span class="n">all_tool_results</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ToolExecutionSuggestion</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="c1"># Initialize tracking systems before the while loop</span>
         <span class="n">tool_call_patterns</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">tool_budget</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -2326,20 +2324,13 @@
             <span class="p">)</span>
 
             <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_stream_with_tools</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]]:</span>
-                <span class="k">nonlocal</span> \
-                    <span class="n">state</span><span class="p">,</span> \
-                    <span class="n">all_tool_suggestions</span><span class="p">,</span> \
-                    <span class="n">all_tool_results</span><span class="p">,</span> \
-                    <span class="n">tool_call_patterns</span><span class="p">,</span> \
-                    <span class="n">tool_budget</span>
+                <span class="k">nonlocal</span> <span class="n">state</span><span class="p">,</span> <span class="n">all_tool_results</span><span class="p">,</span> <span class="n">tool_call_patterns</span><span class="p">,</span> <span class="n">tool_budget</span>
                 <span class="k">nonlocal</span> \
                     <span class="n">generation_time_total</span><span class="p">,</span> \
                     <span class="n">tool_execution_time_total</span><span class="p">,</span> \
                     <span class="n">iteration_count</span><span class="p">,</span> \
                     <span class="n">tool_calls_count</span><span class="p">,</span> \
                     <span class="n">total_tokens_processed</span>
-
-                <span class="n">total_tokens_processed</span> <span class="o">=</span> <span class="n">total_tokens_processed</span>
 
                 <span class="k">while</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">:</span>
                     <span class="n">current_iteration</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
@@ -2353,88 +2344,8 @@
                         <span class="p">)</span>
                     <span class="p">)</span>
 
-                    <span class="c1"># Build message history for this iteration</span>
-                    <span class="n">message_history</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
-
-                    <span class="c1"># If we have tool results from ANY previous iterations, we need to add them</span>
-                    <span class="k">if</span> <span class="n">all_tool_results</span><span class="p">:</span>
-                        <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                            <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                                <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> total tool results across all iterations&quot;</span><span class="p">,</span>
-                                <span class="nb">len</span><span class="p">(</span><span class="n">all_tool_results</span><span class="p">),</span>
-                            <span class="p">)</span>
-                        <span class="p">)</span>
-
-                        <span class="c1"># Find the last assistant message with tool suggestions</span>
-                        <span class="n">last_assistant_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">AssistantMessage</span><span class="p">):</span>
-                                <span class="n">last_assistant_index</span> <span class="o">=</span> <span class="n">i</span>
-                                <span class="k">break</span>
-
-                        <span class="k">if</span> <span class="n">last_assistant_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-                            <span class="c1"># Clone the assistant message and ensure it has ALL tool suggestions</span>
-                            <span class="n">original_assistant</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">last_assistant_index</span><span class="p">]</span>
-                            <span class="n">cloned_assistant</span> <span class="o">=</span> <span class="n">AssistantMessage</span><span class="p">(</span>
-                                <span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_assistant</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
-                            <span class="p">)</span>
-
-                            <span class="c1"># Add any missing tool suggestions to the assistant message</span>
-                            <span class="n">existing_suggestion_ids</span> <span class="o">=</span> <span class="p">{</span>
-                                <span class="n">part</span><span class="o">.</span><span class="n">id</span>
-                                <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span>
-                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionSuggestion</span><span class="p">)</span>
-                            <span class="p">}</span>
-
-                            <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
-                                <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_suggestion_ids</span><span class="p">:</span>
-                                    <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggestion</span><span class="p">)</span>
-
-                            <span class="n">message_history</span><span class="p">[</span><span class="n">last_assistant_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_assistant</span>
-
-                            <span class="c1"># Now find or create the user message after the assistant message</span>
-                            <span class="n">next_user_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
-                                <span class="n">last_assistant_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span>
-                            <span class="p">):</span>
-                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">UserMessage</span><span class="p">):</span>
-                                    <span class="n">next_user_index</span> <span class="o">=</span> <span class="n">i</span>
-                                    <span class="k">break</span>
-
-                            <span class="k">if</span> <span class="n">next_user_index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                                <span class="c1"># Create a new user message</span>
-                                <span class="n">new_user_message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[])</span>
-                                <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_user_message</span><span class="p">)</span>
-                                <span class="n">next_user_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-
-                            <span class="c1"># Clone the user message and add ALL tool results</span>
-                            <span class="n">original_user</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">next_user_index</span><span class="p">]</span>
-                            <span class="n">cloned_user</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_user</span><span class="o">.</span><span class="n">parts</span><span class="p">))</span>
-
-                            <span class="c1"># Remove any existing tool results to avoid duplicates</span>
-                            <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
-                                <span class="n">part</span>
-                                <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span>
-                                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionResult</span><span class="p">)</span>
-                            <span class="p">]</span>
-
-                            <span class="c1"># Add ALL tool results that correspond to suggestions in the assistant message</span>
-                            <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
-                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">suggestion</span><span class="p">,</span> <span class="n">ToolExecutionSuggestion</span><span class="p">):</span>
-                                    <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">all_tool_results</span><span class="p">:</span>
-                                        <span class="n">_</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">all_tool_results</span><span class="p">[</span><span class="n">suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
-                                        <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
-                                            <span class="n">suggestion</span><span class="o">=</span><span class="n">suggestion</span><span class="p">,</span>
-                                            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-                                            <span class="n">execution_time_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                                            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                            <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                                        <span class="p">)</span>
-                                        <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
-                                            <span class="mi">0</span><span class="p">,</span> <span class="n">tool_execution_result</span>
-                                        <span class="p">)</span>
-
-                            <span class="n">message_history</span><span class="p">[</span><span class="n">next_user_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_user</span>
+                    <span class="c1"># FIXED: Use context message history directly</span>
+                    <span class="n">message_history</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">message_history</span>
 
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Streaming tool call generation&quot;</span><span class="p">)</span>
@@ -2467,7 +2378,7 @@
                         <span class="n">Generation</span><span class="p">[</span><span class="n">WithoutStructuredOutput</span><span class="p">],</span> <span class="n">final_tool_generation</span>
                     <span class="p">)</span>
 
-                    <span class="c1"># Add this generation to context</span>
+                    <span class="c1"># FIXED: Add this generation to context immediately</span>
                     <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
                     <span class="p">)</span>
@@ -2531,7 +2442,7 @@
                                 <span class="n">generation_chunk</span>
                             <span class="p">)</span> <span class="ow">in</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">stream_async</span><span class="p">(</span>
                                 <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
-                                <span class="n">messages</span><span class="o">=</span><span class="n">message_history</span><span class="p">,</span>
+                                <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>  <span class="c1"># Use clean context</span>
                                 <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                                 <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
                             <span class="p">):</span>
@@ -2547,12 +2458,6 @@
                                 <span class="k">if</span> <span class="n">generation_chunk</span><span class="o">.</span><span class="n">usage</span><span class="p">:</span>
                                     <span class="n">total_tokens_processed</span> <span class="o">+=</span> <span class="p">(</span>
                                         <span class="n">generation_chunk</span><span class="o">.</span><span class="n">usage</span><span class="o">.</span><span class="n">completion_tokens</span>
-                                    <span class="p">)</span>
-
-                                <span class="c1"># CRITICAL: Append ALL tool calls to the generation</span>
-                                <span class="k">if</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
-                                    <span class="n">generation_chunk</span><span class="o">.</span><span class="n">append_tool_calls</span><span class="p">(</span>
-                                        <span class="n">all_tool_suggestions</span>
                                     <span class="p">)</span>
 
                                 <span class="c1"># Create partial performance metrics</span>
@@ -2728,12 +2633,6 @@
                             <span class="p">)</span>
                         <span class="p">)</span>
 
-                        <span class="c1"># CRITICAL: Append ALL tool calls to the final generation</span>
-                        <span class="k">if</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
-                            <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">append_tool_calls</span><span class="p">(</span>
-                                <span class="n">all_tool_suggestions</span>
-                            <span class="p">)</span>
-
                         <span class="c1"># Complete the final step and add to context</span>
                         <span class="n">final_step_duration</span> <span class="o">=</span> <span class="p">(</span>
                             <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">final_step_start_time</span>
@@ -2824,21 +2723,21 @@
                         <span class="p">)</span>
                         <span class="k">return</span>
 
-                    <span class="c1"># Agent called tools. Process them (no streaming for tool execution)</span>
+                    <span class="c1"># FIXED: Process tools for this iteration only</span>
                     <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                         <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                             <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> tool calls&quot;</span><span class="p">,</span>
                             <span class="nb">len</span><span class="p">(</span>
-                                <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">tool_calls</span>
-                                <span class="k">if</span> <span class="n">final_tool_generation</span>
-                                <span class="k">else</span> <span class="p">[]</span>
+                                <span class="n">cast</span><span class="p">(</span>
+                                    <span class="n">Generation</span><span class="p">[</span><span class="n">WithoutStructuredOutput</span><span class="p">],</span>
+                                    <span class="n">final_tool_generation</span><span class="p">,</span>
+                                <span class="p">)</span><span class="o">.</span><span class="n">tool_calls</span>
                             <span class="p">),</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
 
-                    <span class="c1"># Add these tool suggestions to our tracking</span>
-                    <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-                        <span class="n">all_tool_suggestions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggestion</span><span class="p">)</span>
+                    <span class="c1"># FIXED: Create tool results for this iteration</span>
+                    <span class="n">tool_results_for_this_iteration</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolExecutionResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
                     <span class="c1"># Create a step to track this iteration&#39;s tool executions</span>
                     <span class="n">step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
@@ -2899,11 +2798,15 @@
                                     <span class="k">break</span>
 
                             <span class="k">if</span> <span class="n">previous_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                                <span class="c1"># Reuse the previous result</span>
-                                <span class="n">all_tool_results</span><span class="p">[</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                                    <span class="n">tool_execution_suggestion</span><span class="p">,</span>
-                                    <span class="n">previous_result</span><span class="p">,</span>
+                                <span class="c1"># FIXED: Create tool result for this iteration</span>
+                                <span class="n">tool_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                                    <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                    <span class="n">result</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;[DUPLICATE BLOCKED - Using previous result] </span><span class="si">{</span><span class="n">previous_result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                                    <span class="n">execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                    <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                 <span class="p">)</span>
+                                <span class="n">tool_results_for_this_iteration</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_result</span><span class="p">)</span>
 
                                 <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
                                     <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
@@ -2914,6 +2817,15 @@
                             <span class="k">else</span><span class="p">:</span>
                                 <span class="c1"># This shouldn&#39;t happen, but handle it gracefully</span>
                                 <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;Duplicate tool call blocked but no previous result found&quot;</span>
+                                <span class="n">tool_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                                    <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                    <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                                    <span class="n">execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                    <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">error_message</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                                <span class="p">)</span>
+                                <span class="n">tool_results_for_this_iteration</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_result</span><span class="p">)</span>
+
                                 <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
                                     <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
                                     <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
@@ -2940,6 +2852,15 @@
                             <span class="p">)</span>
 
                             <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; budget exceeded (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span><span class="si">}</span><span class="s2"> calls max)&quot;</span>
+                            <span class="n">tool_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                                <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                                <span class="n">execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                                <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                <span class="n">error_message</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="n">tool_results_for_this_iteration</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_result</span><span class="p">)</span>
+
                             <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
                                 <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
                                 <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
@@ -2995,6 +2916,18 @@
 
                             <span class="c1"># Update budget</span>
                             <span class="n">tool_budget</span><span class="p">[</span><span class="n">tool_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_tool_calls</span> <span class="o">+</span> <span class="mi">1</span>
+
+                            <span class="c1"># FIXED: Create tool result for this iteration</span>
+                            <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                                <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                                <span class="n">result</span><span class="o">=</span><span class="n">tool_result</span><span class="p">,</span>
+                                <span class="n">execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time</span><span class="p">,</span>
+                                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="n">tool_results_for_this_iteration</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                <span class="n">tool_execution_result</span>
+                            <span class="p">)</span>
 
                             <span class="c1"># Add the tool execution result to the step</span>
                             <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
@@ -3096,6 +3029,13 @@
                                 <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
                             <span class="p">)</span>
                             <span class="k">return</span>
+
+                    <span class="c1"># FIXED: Add tool results to context as a clean user message</span>
+                    <span class="k">if</span> <span class="n">tool_results_for_this_iteration</span><span class="p">:</span>
+                        <span class="n">user_message_with_results</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span>
+                            <span class="n">parts</span><span class="o">=</span><span class="n">tool_results_for_this_iteration</span>
+                        <span class="p">)</span>
+                        <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user_message_with_results</span><span class="p">)</span>
 
                     <span class="c1"># Log skipped tools if any</span>
                     <span class="k">if</span> <span class="n">skipped_tools</span><span class="p">:</span>
@@ -3225,7 +3165,7 @@
 
             <span class="k">return</span> <span class="n">_stream_with_tools</span><span class="p">()</span>
 
-        <span class="c1"># Non-streaming path with tools (existing code)</span>
+        <span class="c1"># FIXED: Non-streaming path with tools - simplified message history management</span>
         <span class="k">while</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxIterations</span><span class="p">:</span>
             <span class="n">current_iteration</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span>
             <span class="n">iteration_count</span> <span class="o">=</span> <span class="n">current_iteration</span>
@@ -3237,84 +3177,8 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
-            <span class="c1"># Build message history for this iteration</span>
-            <span class="n">message_history</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
-
-            <span class="c1"># If we have tool results from ANY previous iterations, we need to add them</span>
-            <span class="k">if</span> <span class="n">all_tool_results</span><span class="p">:</span>
-                <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                        <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> total tool results across all iterations&quot;</span><span class="p">,</span>
-                        <span class="nb">len</span><span class="p">(</span><span class="n">all_tool_results</span><span class="p">),</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-
-                <span class="c1"># Find the last assistant message with tool suggestions</span>
-                <span class="n">last_assistant_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">AssistantMessage</span><span class="p">):</span>
-                        <span class="n">last_assistant_index</span> <span class="o">=</span> <span class="n">i</span>
-                        <span class="k">break</span>
-
-                <span class="k">if</span> <span class="n">last_assistant_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="c1"># Clone the assistant message and ensure it has ALL tool suggestions</span>
-                    <span class="n">original_assistant</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">last_assistant_index</span><span class="p">]</span>
-                    <span class="n">cloned_assistant</span> <span class="o">=</span> <span class="n">AssistantMessage</span><span class="p">(</span>
-                        <span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_assistant</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
-                    <span class="p">)</span>
-
-                    <span class="c1"># Add any missing tool suggestions to the assistant message</span>
-                    <span class="n">existing_suggestion_ids</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="n">part</span><span class="o">.</span><span class="n">id</span>
-                        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span>
-                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionSuggestion</span><span class="p">)</span>
-                    <span class="p">}</span>
-
-                    <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_suggestion_ids</span><span class="p">:</span>
-                            <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggestion</span><span class="p">)</span>
-
-                    <span class="n">message_history</span><span class="p">[</span><span class="n">last_assistant_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_assistant</span>
-
-                    <span class="c1"># Now find or create the user message after the assistant message</span>
-                    <span class="n">next_user_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last_assistant_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)):</span>
-                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message_history</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">UserMessage</span><span class="p">):</span>
-                            <span class="n">next_user_index</span> <span class="o">=</span> <span class="n">i</span>
-                            <span class="k">break</span>
-
-                    <span class="k">if</span> <span class="n">next_user_index</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                        <span class="c1"># Create a new user message</span>
-                        <span class="n">new_user_message</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[])</span>
-                        <span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_user_message</span><span class="p">)</span>
-                        <span class="n">next_user_index</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">message_history</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-
-                    <span class="c1"># Clone the user message and add ALL tool results</span>
-                    <span class="n">original_user</span> <span class="o">=</span> <span class="n">message_history</span><span class="p">[</span><span class="n">next_user_index</span><span class="p">]</span>
-                    <span class="n">cloned_user</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">original_user</span><span class="o">.</span><span class="n">parts</span><span class="p">))</span>
-
-                    <span class="c1"># Remove any existing tool results to avoid duplicates</span>
-                    <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
-                        <span class="n">part</span>
-                        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">ToolExecutionResult</span><span class="p">)</span>
-                    <span class="p">]</span>
-
-                    <span class="c1"># Add ALL tool results that correspond to suggestions in the assistant message</span>
-                    <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">cloned_assistant</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">suggestion</span><span class="p">,</span> <span class="n">ToolExecutionSuggestion</span><span class="p">):</span>
-                            <span class="k">if</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">all_tool_results</span><span class="p">:</span>
-                                <span class="n">_</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">all_tool_results</span><span class="p">[</span><span class="n">suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
-                                <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
-                                    <span class="n">suggestion</span><span class="o">=</span><span class="n">suggestion</span><span class="p">,</span>
-                                    <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-                                    <span class="n">execution_time_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                                    <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                    <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                                <span class="p">)</span>
-                                <span class="n">cloned_user</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tool_execution_result</span><span class="p">)</span>
-
-                    <span class="n">message_history</span><span class="p">[</span><span class="n">next_user_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">cloned_user</span>
+            <span class="c1"># FIXED: Use context message history directly - no complex reconstruction</span>
+            <span class="n">message_history</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">message_history</span>
 
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generating tool call response&quot;</span><span class="p">)</span>
@@ -3328,7 +3192,7 @@
                 <span class="n">tools</span><span class="o">=</span><span class="n">all_tools</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="c1"># Add this generation to context</span>
+            <span class="c1"># FIXED: Add the generation to context immediately after generation</span>
             <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
             <span class="p">)</span>
@@ -3376,14 +3240,10 @@
                     <span class="n">generation_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
                     <span class="n">generation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">generation_provider</span><span class="o">.</span><span class="n">generate_async</span><span class="p">(</span>
                         <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">resolved_model</span><span class="p">,</span>
-                        <span class="n">messages</span><span class="o">=</span><span class="n">message_history</span><span class="p">,</span>
+                        <span class="n">messages</span><span class="o">=</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">,</span>  <span class="c1"># Use clean context</span>
                         <span class="n">response_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">response_schema</span><span class="p">,</span>
                         <span class="n">generation_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">generation_config</span><span class="p">,</span>
                     <span class="p">)</span>
-
-                    <span class="c1"># CRITICAL: Append ALL tool calls to the final generation</span>
-                    <span class="k">if</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
-                        <span class="n">generation</span><span class="o">.</span><span class="n">append_tool_calls</span><span class="p">(</span><span class="n">all_tool_suggestions</span><span class="p">)</span>
 
                     <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="n">generation</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">to_assistant_message</span><span class="p">()</span>
@@ -3486,10 +3346,6 @@
                     <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using existing text response&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
 
-                <span class="c1"># CRITICAL: Append ALL tool calls to the final generation</span>
-                <span class="k">if</span> <span class="n">all_tool_suggestions</span><span class="p">:</span>
-                    <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">append_tool_calls</span><span class="p">(</span><span class="n">all_tool_suggestions</span><span class="p">)</span>
-
                 <span class="c1"># Complete the final step and add to context</span>
                 <span class="n">final_step_duration</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">final_step_start_time</span>
@@ -3567,16 +3423,15 @@
                     <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
                 <span class="p">)</span>
 
-            <span class="c1"># Agent called tools. Process them with deduplication and budgeting.</span>
+            <span class="c1"># FIXED: Process tools and create clean tool results for this iteration</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                     <span class="s2">&quot;Processing </span><span class="si">%d</span><span class="s2"> tool calls&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tool_call_generation</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
-            <span class="c1"># Add these tool suggestions to our tracking</span>
-            <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">tool_call_generation</span><span class="o">.</span><span class="n">tool_calls</span><span class="p">:</span>
-                <span class="n">all_tool_suggestions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggestion</span><span class="p">)</span>
+            <span class="c1"># FIXED: Create tool results for this iteration only</span>
+            <span class="n">tool_results_for_this_iteration</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ToolExecutionResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
             <span class="c1"># Create a step to track this iteration&#39;s tool executions</span>
             <span class="n">step_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
@@ -3631,11 +3486,15 @@
                             <span class="k">break</span>
 
                     <span class="k">if</span> <span class="n">previous_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="c1"># Reuse the previous result</span>
-                        <span class="n">all_tool_results</span><span class="p">[</span><span class="n">tool_execution_suggestion</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="n">tool_execution_suggestion</span><span class="p">,</span>
-                            <span class="n">previous_result</span><span class="p">,</span>
+                        <span class="c1"># FIXED: Create tool result for this iteration</span>
+                        <span class="n">tool_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                            <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                            <span class="n">result</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;[DUPLICATE BLOCKED - Using previous result] </span><span class="si">{</span><span class="n">previous_result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="p">)</span>
+                        <span class="n">tool_results_for_this_iteration</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_result</span><span class="p">)</span>
 
                         <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
                             <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
@@ -3648,6 +3507,15 @@
                         <span class="n">error_msg</span> <span class="o">=</span> <span class="p">(</span>
                             <span class="s2">&quot;Duplicate tool call blocked but no previous result found&quot;</span>
                         <span class="p">)</span>
+                        <span class="n">tool_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                            <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                            <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                            <span class="n">execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">error_message</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="n">tool_results_for_this_iteration</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_result</span><span class="p">)</span>
+
                         <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
                             <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
                             <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
@@ -3674,6 +3542,15 @@
                     <span class="p">)</span>
 
                     <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Tool &#39;</span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">&#39; budget exceeded (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_config</span><span class="o">.</span><span class="n">maxCallPerTool</span><span class="si">}</span><span class="s2"> calls max)&quot;</span>
+                    <span class="n">tool_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                        <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                        <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                        <span class="n">execution_time_ms</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                        <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">error_message</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">tool_results_for_this_iteration</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_result</span><span class="p">)</span>
+
                     <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
                         <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
                         <span class="n">result</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
@@ -3725,6 +3602,16 @@
 
                     <span class="c1"># Update budget</span>
                     <span class="n">tool_budget</span><span class="p">[</span><span class="n">tool_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_tool_calls</span> <span class="o">+</span> <span class="mi">1</span>
+
+                    <span class="c1"># FIXED: Create tool result for this iteration</span>
+                    <span class="n">tool_execution_result</span> <span class="o">=</span> <span class="n">ToolExecutionResult</span><span class="p">(</span>
+                        <span class="n">suggestion</span><span class="o">=</span><span class="n">tool_execution_suggestion</span><span class="p">,</span>
+                        <span class="n">result</span><span class="o">=</span><span class="n">tool_result</span><span class="p">,</span>
+                        <span class="n">execution_time_ms</span><span class="o">=</span><span class="n">tool_execution_time</span><span class="p">,</span>
+                        <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">error_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">tool_results_for_this_iteration</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tool_execution_result</span><span class="p">)</span>
 
                     <span class="c1"># Add the tool execution result to the step</span>
                     <span class="n">step</span><span class="o">.</span><span class="n">add_tool_execution_result</span><span class="p">(</span>
@@ -3818,6 +3705,13 @@
                         <span class="n">resumption_token</span><span class="o">=</span><span class="n">resumption_token</span><span class="p">,</span>
                         <span class="n">performance_metrics</span><span class="o">=</span><span class="n">performance_metrics</span><span class="p">,</span>
                     <span class="p">)</span>
+
+            <span class="c1"># FIXED: Add tool results to context as a clean user message</span>
+            <span class="k">if</span> <span class="n">tool_results_for_this_iteration</span><span class="p">:</span>
+                <span class="n">user_message_with_results</span> <span class="o">=</span> <span class="n">UserMessage</span><span class="p">(</span>
+                    <span class="n">parts</span><span class="o">=</span><span class="n">tool_results_for_this_iteration</span>
+                <span class="p">)</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user_message_with_results</span><span class="p">)</span>
 
             <span class="c1"># Log skipped tools if any</span>
             <span class="k">if</span> <span class="n">skipped_tools</span><span class="p">:</span>

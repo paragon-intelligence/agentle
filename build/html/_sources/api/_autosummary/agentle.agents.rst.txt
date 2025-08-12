@@ -28,6 +28,7 @@
    exceptions
    execution_state
    knowledge
+   message_history_fixer
    performance_metrics
    step
    step_metric

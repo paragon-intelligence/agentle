@@ -1,0 +1,25 @@
+agentle.agents.message\_history\_fixer
+======================================
+
+.. automodule:: agentle.agents.message_history_fixer
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      deepcopy
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      AssistantMessage
+      DeveloperMessage
+      MessageHistoryFixer
+      Sequence
+      ToolExecutionResult
+      ToolExecutionSuggestion
+      UserMessage
+   
