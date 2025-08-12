@@ -678,7 +678,9 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib.util</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">queue</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">ssl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -687,6 +689,7 @@
     <span class="n">Awaitable</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
     <span class="n">Generator</span><span class="p">,</span>
+    <span class="n">Iterator</span><span class="p">,</span>
     <span class="n">Mapping</span><span class="p">,</span>
     <span class="n">MutableMapping</span><span class="p">,</span>
     <span class="n">MutableSequence</span><span class="p">,</span>
@@ -1669,6 +1672,28 @@
         <span class="p">)</span></div>
 
 
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">input</span><span class="p">:</span> <span class="n">AgentInput</span> <span class="o">|</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">trace_params</span><span class="p">:</span> <span class="n">TraceParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chat_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stream</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">input</span><span class="p">:</span> <span class="n">AgentInput</span> <span class="o">|</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">trace_params</span><span class="p">:</span> <span class="n">TraceParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chat_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stream</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]]:</span> <span class="o">...</span>
+
 <div class="viewcode-block" id="Agent.run">
 <a class="viewcode-back" href="../../../api/agents.html#agentle.agents.agent.Agent.run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
@@ -1679,25 +1704,33 @@
         <span class="n">trace_params</span><span class="p">:</span> <span class="n">TraceParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">chat_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">stream</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]</span> <span class="o">|</span> <span class="n">AsyncIterator</span><span class="p">[</span><span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]</span> <span class="o">|</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs the agent synchronously with the provided input.</span>
 
 <span class="sd">        This method is a synchronous wrapper for run_async, allowing</span>
-<span class="sd">        easy use in synchronous contexts.</span>
+<span class="sd">        easy use in synchronous contexts. When streaming is enabled,</span>
+<span class="sd">        it returns an iterator that yields chunks synchronously.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            input: The input for the agent, which can be of various types.</span>
 <span class="sd">            timeout: Optional time limit in seconds for execution.</span>
 <span class="sd">            trace_params: Optional trace parameters for observability purposes.</span>
+<span class="sd">            chat_id: Optional chat ID for conversation persistence.</span>
+<span class="sd">            stream: Whether to stream responses. If True, returns an iterator.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            AgentRunOutput[T_Schema]: The result of the agent execution.</span>
+<span class="sd">            AgentRunOutput[T_Schema] | Iterator[AgentRunOutput[T_Schema]]:</span>
+<span class="sd">                Single result or iterator of streaming chunks.</span>
 
 <span class="sd">        Example:</span>
 <span class="sd">            ```python</span>
-<span class="sd">            # Input as string</span>
+<span class="sd">            # Non-streaming</span>
 <span class="sd">            result = agent.run(&quot;What is the weather in London?&quot;)</span>
+
+<span class="sd">            # Streaming</span>
+<span class="sd">            for chunk in agent.run(&quot;What is the weather in London?&quot;, stream=True):</span>
+<span class="sd">                print(chunk.generation.text)</span>
 
 <span class="sd">            # Input as UserMessage object</span>
 <span class="sd">            from agentle.generations.models.messages.user_message import UserMessage</span>
@@ -1708,10 +1741,56 @@
 <span class="sd">            ```</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">stream</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Streaming is not supported in the synchronous version &quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;of the run function. Use the asynchronous version instead.&quot;</span>
-            <span class="p">)</span>
+            <span class="c1"># Create a sync iterator that bridges the async iterator</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">_sync_stream_iterator</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]]:</span>
+                <span class="c1"># Queue to store chunks as they arrive</span>
+
+                <span class="n">chunk_queue</span><span class="p">:</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="n">AgentRunOutput</span><span class="p">[</span><span class="n">T_Schema</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="n">exception_holder</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="ne">Exception</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="c1"># Background thread to consume async iterator</span>
+                <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_consume_async_iterator</span><span class="p">():</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">async</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_async</span><span class="p">(</span>
+                            <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span>
+                            <span class="n">trace_params</span><span class="o">=</span><span class="n">trace_params</span><span class="p">,</span>
+                            <span class="n">chat_id</span><span class="o">=</span><span class="n">chat_id</span><span class="p">,</span>
+                            <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="p">):</span>
+                            <span class="n">chunk_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+                        <span class="n">chunk_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># Signal end</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">exception_holder</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                        <span class="n">chunk_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>  <span class="c1"># Signal end</span>
+
+                <span class="c1"># Start the async consumption in background</span>
+                <span class="k">def</span><span class="w"> </span><span class="nf">run_async_consumer</span><span class="p">():</span>
+                    <span class="n">run_sync</span><span class="p">(</span><span class="n">_consume_async_iterator</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+
+                <span class="n">consumer_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">run_async_consumer</span><span class="p">)</span>
+                <span class="n">consumer_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+                <span class="c1"># Yield chunks as they become available</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">exception_holder</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="n">exception_holder</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">chunk</span> <span class="o">=</span> <span class="n">chunk_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span> <span class="ow">or</span> <span class="mi">30</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">chunk</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># End signal</span>
+                                <span class="k">break</span>
+                            <span class="k">yield</span> <span class="n">chunk</span>
+                        <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">exception_holder</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="n">exception_holder</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Timeout waiting for next chunk&quot;</span><span class="p">)</span>
+                <span class="k">finally</span><span class="p">:</span>
+                    <span class="n">consumer_thread</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">_sync_stream_iterator</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">run_sync</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">run_async</span><span class="p">,</span>

@@ -32,7 +32,6 @@ agentle.agents.agent
       AgentRunOutput
       AgentSkill
       AgentToStreamlit
-      Agent[Any]
       Any
       AssistantMessage
       AsyncGenerator
@@ -56,6 +55,7 @@ agentle.agents.agent
       Generator
       GoogleGenerationProvider
       InMemoryDocumentCacheStore
+      Iterator
       MCPServerProtocol
       Mapping
       Maybe
