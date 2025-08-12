@@ -725,6 +725,7 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.errors.tool_suspension_error</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolSuspensionError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">NO_CACHE</span><span class="p">,</span> <span class="n">StaticKnowledge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.message_history_fixer</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageHistoryFixer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.performance_metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">PerformanceMetrics</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.step</span><span class="w"> </span><span class="kn">import</span> <span class="n">Step</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.step_metric</span><span class="w"> </span><span class="kn">import</span> <span class="n">StepMetric</span>
@@ -1951,6 +1952,9 @@
 
         <span class="c1"># Create context with current input</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input2context</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span><span class="p">)</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">message_history</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="n">MessageHistoryFixer</span><span class="p">()</span><span class="o">.</span><span class="n">fix_message_history</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
+        <span class="p">)</span>
 
         <span class="c1"># CRITICAL: Store the current user message BEFORE replacing message history</span>
         <span class="n">current_user_message</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">last_message</span>
