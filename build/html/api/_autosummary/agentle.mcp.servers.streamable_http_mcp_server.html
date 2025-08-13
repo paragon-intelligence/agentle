@@ -653,13 +653,13 @@
           <section id="module-agentle.mcp.servers.streamable_http_mcp_server">
 <span id="agentle-mcp-servers-streamable-http-mcp-server"></span><h1>agentle.mcp.servers.streamable_http_mcp_server<a class="headerlink" href="#module-agentle.mcp.servers.streamable_http_mcp_server" title="Link to this heading">¶</a></h1>
 <p>Production-ready fixes for StreamableHTTPMCPServer using aiohttp</p>
-<p>This version is a refactor of the original httpx-based implementation.</p>
-<p>Key changes:
-1. Replaced httpx.AsyncClient with aiohttp.ClientSession for connection pooling.
-2. Adapted exception handling to aiohttp-specific errors (e.g., aiohttp.ClientError).
-3. Updated response handling to use await on methods like .json() and .text().
-4. Maintained all original functionality, retry logic, and session management.
-5. FIXED: JSON-RPC 2.0 compliance - only include params when they exist and are not empty.</p>
+<p>This version fixes the JSON-RPC 2.0 compliance issues and protocol version problems.</p>
+<p>Key fixes:
+1. Updated protocol version to “2025-06-18”
+2. Fixed notification method name to “notifications/initialized”
+3. Ensured proper endpoint handling to avoid redirects
+4. Improved parameter handling for requests
+5. Better error handling and logging</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
