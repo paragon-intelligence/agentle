@@ -50,7 +50,6 @@ agentle.agents.agent
       DocumentParser
       Endpoint
       FilePart
-      GeneratedAssistantMessage
       Generation
       GenerationProvider
       Generator
