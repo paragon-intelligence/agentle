@@ -654,15 +654,22 @@
 <span id="agentle-mcp-servers-stdio-mcp-server"></span><h1>agentle.mcp.servers.stdio_mcp_server<a class="headerlink" href="#module-agentle.mcp.servers.stdio_mcp_server" title="Link to this heading">¶</a></h1>
 <p>Production-ready Stdio implementation of the Model Context Protocol (MCP) server client.</p>
 <p>FIXES APPLIED:
-1. Correct JSON-RPC method names per MCP spec
-2. Updated protocol version to 2024-11-05
-3. Fixed parameter structures
-4. Added process health monitoring
-5. Improved error handling and resource cleanup
-6. Better connection state management
-7. Proper signal handling for graceful shutdown</p>
+1. Updated protocol version to 2025-06-18 (current version)
+2. Fixed client capabilities structure (roots, sampling, elicitation)
+3. Added progress tracking support with callbacks
+4. Added cancellation support (notifications/cancelled)
+5. Added ping/pong functionality for health monitoring
+6. Improved response validation and error handling
+7. Fixed connection state race conditions
+8. Added configurable logging levels
+9. Enhanced error messages with more context
+10. Added proper request ID management with UUIDs</p>
 <p>ENHANCEMENTS:
-1. Added extensive, detailed logging to trace execution flow and debug connection issues.</p>
+1. Progress token support for long-running operations
+2. Connection state machine for better state management
+3. Retry logic capabilities
+4. Better resource cleanup and error recovery
+5. Comprehensive protocol compliance with MCP 2025-06-18</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -679,6 +686,9 @@
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">override</span></code>(method, /)</p></td>
 <td><p>Indicate that a method is intended to override a method in a base class.</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_sync</span></code>(func[, timeout])</p></td>
+<td><p>Runs an async function synchronously using a shared background event loop.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -691,6 +701,12 @@
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Callable</span></code>()</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../mcp.html#agentle.mcp.servers.stdio_mcp_server.ConnectionState" title="agentle.mcp.servers.stdio_mcp_server.ConnectionState"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConnectionState</span></code></a>(*values)</p></td>
+<td><p>Connection state enumeration for better state management.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Enum</span></code>(new_class_name, /, names, *[, module, ...])</p></td>
+<td><p>Create a collection of name/value pairs.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code>()</p></td>
 <td><p>Abstract base class defining the protocol for MCP servers.</p></td>

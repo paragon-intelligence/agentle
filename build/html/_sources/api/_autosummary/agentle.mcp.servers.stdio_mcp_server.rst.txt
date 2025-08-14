@@ -1,4 +1,4 @@
-agentle.mcp.servers.stdio\_mcp\_server
+﻿agentle.mcp.servers.stdio\_mcp\_server
 ======================================
 
 .. automodule:: agentle.mcp.servers.stdio_mcp_server
@@ -12,6 +12,7 @@ agentle.mcp.servers.stdio\_mcp\_server
       PrivateAttr
       TypedDict
       override
+      run_sync
    
    .. rubric:: Classes
 
@@ -19,6 +20,8 @@ agentle.mcp.servers.stdio\_mcp\_server
    
       Any
       Callable
+      ConnectionState
+      Enum
       MCPServerProtocol
       MutableMapping
       Sequence
