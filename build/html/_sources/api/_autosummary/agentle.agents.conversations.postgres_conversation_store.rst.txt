@@ -1,0 +1,24 @@
+agentle.agents.conversations.postgres\_conversation\_store
+==========================================================
+
+.. automodule:: agentle.agents.conversations.postgres_conversation_store
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      override
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      AssistantMessage
+      ConversationStore
+      DeveloperMessage
+      PostgresConversationStore
+      Sequence
+      UserMessage
+   

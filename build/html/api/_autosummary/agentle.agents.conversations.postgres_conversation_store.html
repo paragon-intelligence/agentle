@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.step" href="agentle.agents.step.html" /><link rel="prev" title="agentle.agents.message_history_fixer" href="agentle.agents.message_history_fixer.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.errors" href="agentle.agents.errors.html" /><link rel="prev" title="agentle.agents.conversations.local_conversation_store" href="agentle.agents.conversations.local_conversation_store.html" />
         <link rel="prefetch" href="../../_static/logo.png" as="image" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
-        <title>agentle.agents.performance_metrics - Agentle 0.6.12 documentation</title>
+        <title>agentle.agents.conversations.postgres_conversation_store - Agentle 0.6.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -323,12 +323,12 @@
 </li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.context.html">agentle.agents.context</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.context_state.html">agentle.agents.context_state</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.conversations.html">agentle.agents.conversations</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.conversations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.agents.conversations.html">agentle.agents.conversations</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.conversations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.conversation_store.html">agentle.agents.conversations.conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.firebase_conversation_store.html">agentle.agents.conversations.firebase_conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.json_file_conversation_store.html">agentle.agents.conversations.json_file_conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.local_conversation_store.html">agentle.agents.conversations.local_conversation_store</a></li>
-<li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.postgres_conversation_store.html">agentle.agents.conversations.postgres_conversation_store</a></li>
+<li class="toctree-l5 current current-page"><a class="current reference internal" href="#">agentle.agents.conversations.postgres_conversation_store</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -349,7 +349,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.message_history_fixer.html">agentle.agents.message_history_fixer</a></li>
-<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">agentle.agents.performance_metrics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="agentle.agents.performance_metrics.html">agentle.agents.performance_metrics</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.step.html">agentle.agents.step</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.step_metric.html">agentle.agents.step_metric</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.store.html">agentle.agents.store</a></li>
@@ -632,7 +632,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.performance_metrics.rst.txt" title="View this page">
+  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.conversations.postgres_conversation_store.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -652,38 +652,14 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-agentle.agents.performance_metrics">
-<span id="agentle-agents-performance-metrics"></span><h1>agentle.agents.performance_metrics<a class="headerlink" href="#module-agentle.agents.performance_metrics" title="Link to this heading">¶</a></h1>
-<p>Module for representing and managing agent execution results.</p>
-<p>This module provides the AgentRunOutput class which encapsulates all data
-produced during an agent’s execution cycle. It represents both the final response
-and metadata about the execution process, including conversation steps and structured outputs.</p>
-<p>Example:
-<a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
-from agentle.agents.agent import Agent
-from agentle.generations.providers.google.google_generation_provider import GoogleGenerationProvider</p>
-<p># Create and run an agent
-agent = Agent(</p>
-<blockquote>
-<div><p>generation_provider=GoogleGenerationProvider(),
-model=”gemini-2.5-flash”,
-instructions=”You are a helpful assistant.”</p>
-</div></blockquote>
-<p>)</p>
-<p># The result is an AgentRunOutput object
-result = agent.run(“What is the capital of France?”)</p>
-<p># Access different aspects of the result
-text_response = result.generation.text
-conversation_steps = result.steps
-structured_data = result.parsed  # If using a response_schema
-performance_metrics = result.performance_metrics  # New performance metrics
-<a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+          <section id="module-agentle.agents.conversations.postgres_conversation_store">
+<span id="agentle-agents-conversations-postgres-conversation-store"></span><h1>agentle.agents.conversations.postgres_conversation_store<a class="headerlink" href="#module-agentle.agents.conversations.postgres_conversation_store" title="Link to this heading">¶</a></h1>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
-<td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">override</span></code>(method, /)</p></td>
+<td><p>Indicate that a method is intended to override a method in a base class.</p></td>
 </tr>
 </tbody>
 </table>
@@ -692,17 +668,26 @@ performance_metrics = result.performance_metrics  # New performance metrics
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
-<td><p>Alias for pydantic.BaseModel.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
+<td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PerformanceMetrics</span></code>(*, ...[, step_metrics])</p></td>
-<td><p>Comprehensive performance metrics for agent execution.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssistantMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from an assistant in the system.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConversationStore</span></code>([message_limit, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeveloperMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from a developer in the system.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PostgresConversationStore</span></code>(pool[, ...])</p></td>
+<td><p>A conversation store that persists conversations to PostgreSQL using asyncpg.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
 <td><p>All the operations on a read-only sequence.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StepMetric</span></code>(*, step_id, step_type, ...[, ...])</p></td>
-<td><p>Performance metrics for an individual execution step.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from a user in the system.</p></td>
 </tr>
 </tbody>
 </table>
@@ -714,23 +699,23 @@ performance_metrics = result.performance_metrics  # New performance metrics
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="agentle.agents.step.html">
+          <a class="next-page" href="agentle.agents.errors.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">agentle.agents.step</div>
+                <div class="title">agentle.agents.errors</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="agentle.agents.message_history_fixer.html">
+          <a class="prev-page" href="agentle.agents.conversations.local_conversation_store.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">agentle.agents.message_history_fixer</div>
+                <div class="title">agentle.agents.conversations.local_conversation_store</div>
                 
               </div>
             </a>

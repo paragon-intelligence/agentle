@@ -4,6 +4,16 @@ agentle.agents.conversations
 .. automodule:: agentle.agents.conversations
 
    
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ConversationStore
+      FirebaseConversationStore
+      JSONFileConversationStore
+      LocalConversationStore
+      PostgresConversationStore
+   
 .. rubric:: Modules
 
 .. autosummary::
@@ -12,4 +22,6 @@ agentle.agents.conversations
 
    conversation_store
    firebase_conversation_store
+   json_file_conversation_store
    local_conversation_store
+   postgres_conversation_store

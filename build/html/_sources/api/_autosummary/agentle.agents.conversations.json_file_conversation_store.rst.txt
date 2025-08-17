@@ -1,0 +1,25 @@
+agentle.agents.conversations.json\_file\_conversation\_store
+============================================================
+
+.. automodule:: agentle.agents.conversations.json_file_conversation_store
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      override
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      AssistantMessage
+      ConversationStore
+      DeveloperMessage
+      JSONFileConversationStore
+      Path
+      Sequence
+      UserMessage
+   

@@ -326,7 +326,9 @@
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.conversations.html">agentle.agents.conversations</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.conversations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.conversation_store.html">agentle.agents.conversations.conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.firebase_conversation_store.html">agentle.agents.conversations.firebase_conversation_store</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.json_file_conversation_store.html">agentle.agents.conversations.json_file_conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.local_conversation_store.html">agentle.agents.conversations.local_conversation_store</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.postgres_conversation_store.html">agentle.agents.conversations.postgres_conversation_store</a></li>
 </ul>
 </li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.errors.html">agentle.agents.errors</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of agentle.agents.errors</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -690,8 +692,8 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigDict</span></code></p></td>
 <td><p>Alias for pydantic.ConfigDict.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Context</span></code>(*[, context_id, message_history, ...])</p></td>
-<td><p>Container for contextual information that guides an agent's behavior.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConversationStore</span></code>([message_limit, ...])</p></td>
+<td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Data</span></code></p></td>
 <td><p>Dados principais do webhook WhatsApp.</p></td>
@@ -699,23 +701,17 @@
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FilePart</span></code>(*[, type])</p></td>
 <td><p>Represents a file attachment part of a message.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemorySessionStore</span></code>([...])</p></td>
-<td><p>In-memory session storage implementation with enhanced features.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Message</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Message</span></code></p></td>
 <td><p>Conteúdo da mensagem WhatsApp.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
 <td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
 <td><p>All the operations on a read-write sequence.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
 <td><p>All the operations on a read-only sequence.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionManager</span></code>(*, session_store[, ...])</p></td>
-<td><p>Session manager that provides a high-level interface for session operations.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TextPart</span></code>(*[, type])</p></td>
 <td><p>Represents a plain text part of a message.</p></td>
@@ -735,7 +731,7 @@
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppAudioMessage</span></code>(*, id[, type, ...])</p></td>
 <td><p>Audio message model.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppBot</span></code>(*, agent, provider[, config, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppBot</span></code>(*, agent, provider[, config])</p></td>
 <td><p>WhatsApp bot that wraps an Agentle agent with enhanced message batching and spam protection.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppBotConfig</span></code>(*[, typing_indicator, ...])</p></td>
