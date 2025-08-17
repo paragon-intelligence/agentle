@@ -3,11 +3,11 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.agent" href="agentle.agents.agent.html" /><link rel="prev" title="agentle.agents.a2a.tasks.task_status" href="agentle.agents.a2a.tasks.task_status.html" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="agentle.agents.conversations.postgres_conversation_store" href="agentle.agents.conversations.postgres_conversation_store.html" /><link rel="prev" title="agentle.agents.conversations.local_conversation_store" href="agentle.agents.conversations.local_conversation_store.html" />
         <link rel="prefetch" href="../../_static/logo.png" as="image" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.07.19 -->
-        <title>agentle.agents.a2a.tasks.task_status_update_event - Agentle 0.6.12 documentation</title>
+        <title>agentle.agents.conversations.mysql_conversation_store - Agentle 0.6.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=25af2a20" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -228,7 +228,7 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="../agents.html">Agents API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Agents API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3 current has-children"><a class="reference internal" href="agentle.agents.html">agentle.agents</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of agentle.agents</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.agents.a2a.html">agentle.agents.a2a</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.a2a.html">agentle.agents.a2a</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.a2a_interface.html">agentle.agents.a2a.a2a_interface</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.a2a_interface_options.html">agentle.agents.a2a.a2a_interface_options</a></li>
 <li class="toctree-l5 has-children"><a class="reference internal" href="agentle.agents.a2a.message_parts.html">agentle.agents.a2a.message_parts</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.message_parts</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -270,7 +270,7 @@
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.a2a.resources.task_resource.html">agentle.agents.a2a.resources.task_resource</a></li>
 </ul>
 </li>
-<li class="toctree-l5 current has-children"><a class="reference internal" href="agentle.agents.a2a.tasks.html">agentle.agents.a2a.tasks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l5 has-children"><a class="reference internal" href="agentle.agents.a2a.tasks.html">agentle.agents.a2a.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l6 has-children"><a class="reference internal" href="agentle.agents.a2a.tasks.managment.html">agentle.agents.a2a.tasks.managment</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks.managment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l7"><a class="reference internal" href="agentle.agents.a2a.tasks.managment.in_memory.html">agentle.agents.a2a.tasks.managment.in_memory</a></li>
 <li class="toctree-l7"><a class="reference internal" href="agentle.agents.a2a.tasks.managment.task_manager.html">agentle.agents.a2a.tasks.managment.task_manager</a></li>
@@ -285,7 +285,7 @@
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.a2a.tasks.task_send_params.html">agentle.agents.a2a.tasks.task_send_params</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.a2a.tasks.task_state.html">agentle.agents.a2a.tasks.task_state</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.a2a.tasks.task_status.html">agentle.agents.a2a.tasks.task_status</a></li>
-<li class="toctree-l6 current"><a class="current reference internal" href="#">agentle.agents.a2a.tasks.task_status_update_event</a></li>
+<li class="toctree-l6"><a class="reference internal" href="agentle.agents.a2a.tasks.task_status_update_event.html">agentle.agents.a2a.tasks.task_status_update_event</a></li>
 </ul>
 </li>
 </ul>
@@ -323,12 +323,12 @@
 </li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.context.html">agentle.agents.context</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.context_state.html">agentle.agents.context_state</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.conversations.html">agentle.agents.conversations</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.conversations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.agents.conversations.html">agentle.agents.conversations</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of agentle.agents.conversations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.conversation_store.html">agentle.agents.conversations.conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.firebase_conversation_store.html">agentle.agents.conversations.firebase_conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.json_file_conversation_store.html">agentle.agents.conversations.json_file_conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.local_conversation_store.html">agentle.agents.conversations.local_conversation_store</a></li>
-<li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.mysql_conversation_store.html">agentle.agents.conversations.mysql_conversation_store</a></li>
+<li class="toctree-l5 current current-page"><a class="current reference internal" href="#">agentle.agents.conversations.mysql_conversation_store</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.conversations.postgres_conversation_store.html">agentle.agents.conversations.postgres_conversation_store</a></li>
 </ul>
 </li>
@@ -429,7 +429,7 @@
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.knowledge.url_knowledge.html">agentle.agents.knowledge.url_knowledge</a></li>
 </ul>
 </li>
-<li class="toctree-l3 current has-children"><a class="reference internal" href="agentle.agents.a2a.html">agentle.agents.a2a</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="agentle.agents.a2a.html">agentle.agents.a2a</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.a2a.a2a_interface.html">agentle.agents.a2a.a2a_interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="agentle.agents.a2a.a2a_interface_options.html">agentle.agents.a2a.a2a_interface_options</a></li>
 <li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.a2a.message_parts.html">agentle.agents.a2a.message_parts</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.message_parts</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -471,7 +471,7 @@
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.resources.task_resource.html">agentle.agents.a2a.resources.task_resource</a></li>
 </ul>
 </li>
-<li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.agents.a2a.tasks.html">agentle.agents.a2a.tasks</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-37" name="toctree-checkbox-37" role="switch" type="checkbox"/><label for="toctree-checkbox-37"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4 has-children"><a class="reference internal" href="agentle.agents.a2a.tasks.html">agentle.agents.a2a.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-37" name="toctree-checkbox-37" role="switch" type="checkbox"/><label for="toctree-checkbox-37"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5 has-children"><a class="reference internal" href="agentle.agents.a2a.tasks.managment.html">agentle.agents.a2a.tasks.managment</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of agentle.agents.a2a.tasks.managment</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.a2a.tasks.managment.in_memory.html">agentle.agents.a2a.tasks.managment.in_memory</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.a2a.tasks.managment.task_manager.html">agentle.agents.a2a.tasks.managment.task_manager</a></li>
@@ -486,7 +486,7 @@
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.tasks.task_send_params.html">agentle.agents.a2a.tasks.task_send_params</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.tasks.task_state.html">agentle.agents.a2a.tasks.task_state</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.tasks.task_status.html">agentle.agents.a2a.tasks.task_status</a></li>
-<li class="toctree-l5 current current-page"><a class="current reference internal" href="#">agentle.agents.a2a.tasks.task_status_update_event</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.agents.a2a.tasks.task_status_update_event.html">agentle.agents.a2a.tasks.task_status_update_event</a></li>
 </ul>
 </li>
 </ul>
@@ -633,7 +633,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.a2a.tasks.task_status_update_event.rst.txt" title="View this page">
+  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.conversations.mysql_conversation_store.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -653,18 +653,14 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-agentle.agents.a2a.tasks.task_status_update_event">
-<span id="agentle-agents-a2a-tasks-task-status-update-event"></span><h1>agentle.agents.a2a.tasks.task_status_update_event<a class="headerlink" href="#module-agentle.agents.a2a.tasks.task_status_update_event" title="Link to this heading">¶</a></h1>
-<p>A2A Task Status Update Event Model</p>
-<p>This module defines the TaskStatusUpdateEvent class, which represents an event
-sent when a task’s status changes in the A2A protocol. It enables clients to be
-notified of task status changes asynchronously.</p>
+          <section id="module-agentle.agents.conversations.mysql_conversation_store">
+<span id="agentle-agents-conversations-mysql-conversation-store"></span><h1>agentle.agents.conversations.mysql_conversation_store<a class="headerlink" href="#module-agentle.agents.conversations.mysql_conversation_store" title="Link to this heading">¶</a></h1>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
-<td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">override</span></code>(method, /)</p></td>
+<td><p>Indicate that a method is intended to override a method in a base class.</p></td>
 </tr>
 </tbody>
 </table>
@@ -676,14 +672,23 @@ notified of task status changes asynchronously.</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
-<td><p>Alias for pydantic.BaseModel.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AssistantMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from an assistant in the system.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TaskStatus</span></code>(*, state, message, timestamp)</p></td>
-<td><p>Represents the detailed status of a task in the A2A protocol.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConversationStore</span></code>([message_limit, ...])</p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TaskStatusUpdateEvent</span></code>(*[, id])</p></td>
-<td><p>Represents an event sent when a task's status changes.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeveloperMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from a developer in the system.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MySQLConversationStore</span></code>(pool[, table_name, ...])</p></td>
+<td><p>A conversation store that uses MySQL database for persistence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
+<td><p>All the operations on a read-only sequence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserMessage</span></code>(*[, role])</p></td>
+<td><p>Represents a message from a user in the system.</p></td>
 </tr>
 </tbody>
 </table>
@@ -695,23 +700,23 @@ notified of task status changes asynchronously.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="agentle.agents.agent.html">
+          <a class="next-page" href="agentle.agents.conversations.postgres_conversation_store.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">agentle.agents.agent</div>
+                <div class="title">agentle.agents.conversations.postgres_conversation_store</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="agentle.agents.a2a.tasks.task_status.html">
+          <a class="prev-page" href="agentle.agents.conversations.local_conversation_store.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">agentle.agents.a2a.tasks.task_status</div>
+                <div class="title">agentle.agents.conversations.local_conversation_store</div>
                 
               </div>
             </a>

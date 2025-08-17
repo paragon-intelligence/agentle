@@ -12,6 +12,7 @@ agentle.agents.conversations
       FirebaseConversationStore
       JSONFileConversationStore
       LocalConversationStore
+      MySQLConversationStore
       PostgresConversationStore
    
 .. rubric:: Modules
@@ -24,4 +25,5 @@ agentle.agents.conversations
    firebase_conversation_store
    json_file_conversation_store
    local_conversation_store
+   mysql_conversation_store
    postgres_conversation_store
