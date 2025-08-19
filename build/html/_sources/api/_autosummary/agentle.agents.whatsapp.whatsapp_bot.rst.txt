@@ -25,6 +25,7 @@
       ConversationStore
       Data
       FilePart
+      GeneratedAssistantMessage
       Message
       MutableMapping
       MutableSequence
