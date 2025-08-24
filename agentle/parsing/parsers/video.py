@@ -7,23 +7,21 @@ from their visual content.
 
 from pathlib import Path
 from typing import Literal
+
 from rsb.functions.ext2mime import ext2mime
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.agent import Agent
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
 
 
-class VideoFileParser(DocumentParser):
+class VideoFileParser(BaseModel):
     """
     Parser for processing video files (MP4 format).
 
@@ -95,9 +93,7 @@ class VideoFileParser(DocumentParser):
 
     type: Literal["video"] = "video"
 
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory,
-    )
+    visual_description_agent: GenerationProvider = Field(...)
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
@@ -139,8 +135,10 @@ class VideoFileParser(DocumentParser):
             raise ValueError("VideoFileParser only supports .mp4 files.")
 
         file_contents = path.read_bytes()
-        visual_media_description = await self.visual_description_agent.run_async(
-            FilePart(data=file_contents, mime_type=ext2mime(extension))
+        visual_media_description = await self.visual_description_agent.generate_by_prompt_async(
+            FilePart(data=file_contents, mime_type=ext2mime(extension)),
+            developer_prompt="You are a helpful assistant that deeply understands visual media.",
+            response_schema=VisualMediaDescription,
         )
 
         return ParsedFile(

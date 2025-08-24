@@ -11,29 +11,22 @@ import subprocess
 import tempfile
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import Literal, cast, override
+from typing import Literal, cast
 
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.agent import Agent
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
 from agentle.generations.providers.base.generation_provider import GenerationProvider
-from agentle.generations.providers.google.google_generation_provider import (
-    GoogleGenerationProvider,
-)
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
 
 
-class PptxFileParser(DocumentParser):
+class PptxFileParser(BaseModel):
     """
     Parser for processing Microsoft PowerPoint presentations (.ppt, .pptx, .pptm).
 
@@ -135,23 +128,14 @@ class PptxFileParser(DocumentParser):
 
     strategy: Literal["high", "low"] = Field(default="high")
 
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory,
+    visual_description_provider: GenerationProvider | None = Field(
+        default=None,
     )
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
     """
 
-    multi_modal_provider: GenerationProvider = Field(
-        default_factory=GoogleGenerationProvider,
-    )
-    """
-    The multi-modal provider to use for generating the visual description of the document.
-    Useful when you want us to customize the prompt for the visual description.
-    """
-
-    @override
     async def parse_async(
         self,
         document_path: str,
@@ -247,7 +231,7 @@ class PptxFileParser(DocumentParser):
             final_images: MutableSequence[Image] = []
             image_descriptions: MutableSequence[str] = []
 
-            if self.visual_description_agent and self.strategy == "high":
+            if self.visual_description_provider and self.strategy == "high":
                 for img_idx, (image_name, image_blob, image_hash) in enumerate(
                     slide_images, start=1
                 ):
@@ -270,8 +254,10 @@ class PptxFileParser(DocumentParser):
                         mime_type=Path(image_name).suffix,
                         data=image_blob,
                     )
-                    agent_response = await self.visual_description_agent.run_async(
-                        agent_input
+                    agent_response = await self.visual_description_provider.generate_by_prompt_async(
+                        agent_input,
+                        developer_prompt="You are a helpful assistant that deeply understands visual media.",
+                        response_schema=VisualMediaDescription,
                     )
                     image_md: str = agent_response.parsed.md
                     image_ocr = agent_response.parsed.ocr_text

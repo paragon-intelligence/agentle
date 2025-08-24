@@ -8,23 +8,17 @@ contained files using appropriate parsers for each file type.
 
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import Literal, cast, override
+from typing import Literal, cast
 
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.agent import Agent
-from agentle.generations.models.structured_outputs_store.visual_media_description import (
-    VisualMediaDescription,
-)
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.parsers.file_parser import FileParser
 
 
-class CompressedFileParser(DocumentParser):
+class CompressedFileParser(BaseModel):
     """
     Parser for processing compressed archive files (ZIP, RAR, PKZ).
 
@@ -117,23 +111,22 @@ class CompressedFileParser(DocumentParser):
 
     type: Literal["compressed"] = "compressed"
 
-    inner_parser: DocumentParser = Field(
-        default_factory=FileParser,
-    )
-    """
-    The inner parser to use for parsing the compressed files.
-    Defaults to a facade that automatically selects the correct parser based on the file extension.
-    """
-
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory,
+    visual_description_provider: GenerationProvider | None = Field(
+        default=None,
     )
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
     """
 
-    @override
+    audio_description_provider: GenerationProvider | None = Field(
+        default=None,
+    )
+    """
+    The agent to use for generating the audio description of the document.
+    Useful when you want to customize the prompt for the audio description.
+    """
+
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Asynchronously parse a compressed archive file and process its contents.
@@ -210,7 +203,8 @@ class CompressedFileParser(DocumentParser):
                             # Parse using our FileParser façade
                             # (re-using the same strategy/visual_description_agent)
                             parser = FileParser(
-                                visual_description_agent=self.visual_description_agent,
+                                visual_description_provider=self.visual_description_provider,
+                                audio_description_provider=self.audio_description_provider,
                             )
                             child_parsed = await parser.parse_async(child_name)
                             parsed_files.append(child_parsed)
@@ -225,7 +219,8 @@ class CompressedFileParser(DocumentParser):
                             child_name: str = cast(str, info.filename)  # type: ignore
 
                             parser = FileParser(
-                                visual_description_agent=self.visual_description_agent,
+                                visual_description_provider=self.visual_description_provider,
+                                audio_description_provider=self.audio_description_provider,
                             )
                             child_parsed = await parser.parse_async(child_name)
                             parsed_files.append(child_parsed)

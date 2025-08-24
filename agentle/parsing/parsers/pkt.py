@@ -9,14 +9,15 @@ files, making the network topology and configuration data accessible.
 import os
 import tempfile
 from pathlib import Path
-from typing import Literal, override
+from typing import Literal
 
-from agentle.parsing.document_parser import DocumentParser
+from rsb.models.base_model import BaseModel
+
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
 
 
-class PKTFileParser(DocumentParser):
+class PKTFileParser(BaseModel):
     """
     Parser for processing Cisco Packet Tracer files (.pkt).
 
@@ -64,7 +65,6 @@ class PKTFileParser(DocumentParser):
 
     type: Literal["pkt"] = "pkt"
 
-    @override
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Asynchronously parse a Packet Tracer file and extract its XML content.

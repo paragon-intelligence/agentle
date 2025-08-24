@@ -5,7 +5,6 @@ import logging
 import os
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Sequence, override
-
 from rsb.coroutines.run_async import run_async
 
 from agentle.generations.collections.message_sequence import MessageSequence
@@ -68,7 +67,7 @@ class BedrockGenerationProvider(GenerationProvider):
 
         super().__init__(otel_clients=otel_clients)
 
-        self._client = self._client = boto3.client(
+        self._client = boto3.client(
             "bedrock-runtime",
             aws_access_key_id=access_key_id or os.getenv("AWS_ACCESS_KEY_ID"),
             aws_secret_access_key=secret_access_key

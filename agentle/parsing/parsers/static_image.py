@@ -8,26 +8,23 @@ and generate detailed descriptions of image content.
 
 import io
 from pathlib import Path
-from typing import Literal, override
+from typing import Literal
 
+from rsb.functions.ext2mime import ext2mime
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.agent import Agent
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
-from rsb.functions.ext2mime import ext2mime
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 
 
-class StaticImageParser(DocumentParser):
+class StaticImageParser(BaseModel):
     """
     Parser for processing static image files in various formats.
 
@@ -99,15 +96,12 @@ class StaticImageParser(DocumentParser):
 
     type: Literal["static_image"] = "static_image"
 
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory,
-    )
+    visual_description_provider: GenerationProvider = Field(...)
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
     """
 
-    @override
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Asynchronously parse a static image file and generate a structured representation.
@@ -194,7 +188,11 @@ class StaticImageParser(DocumentParser):
             mime_type=current_mime_type,
             data=image_bytes,
         )
-        agent_response = await self.visual_description_agent.run_async(agent_input)
+        agent_response = await self.visual_description_provider.generate_by_prompt_async(
+            agent_input,
+            developer_prompt="You are a helpful assistant that deeply understands visual media.",
+            response_schema=VisualMediaDescription,
+        )
         description_md = agent_response.parsed.md
         image_ocr = agent_response.parsed.ocr_text
         text_content = description_md

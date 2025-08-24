@@ -6,17 +6,19 @@ of parsed documents across multiple processes and servers.
 """
 
 import json
-from typing import Any, override
+from typing import Any, Literal
 
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 
-from agentle.parsing.cache.document_cache_store import CacheTTL, DocumentCacheStore
 from agentle.parsing.parsed_file import ParsedFile
 
 
-class RedisCacheStore(BaseModel, DocumentCacheStore):
+type CacheTTL = int | Literal["infinite"] | None
+
+
+class RedisCacheStore(BaseModel):
     """
     Redis-based cache store for parsed documents.
 
@@ -47,6 +49,8 @@ class RedisCacheStore(BaseModel, DocumentCacheStore):
         cached_doc = await cache.get_async("doc_key")
         ```
     """
+
+    type: Literal["redis"] = Field(default="redis")
 
     redis_url: str = Field(
         description="Redis connection URL (e.g., 'redis://localhost:6379/0')"
@@ -87,7 +91,6 @@ class RedisCacheStore(BaseModel, DocumentCacheStore):
         """Get the full Redis key with prefix."""
         return f"{self.key_prefix}{key}"
 
-    @override
     async def get_async(self, key: str) -> ParsedFile | None:
         """
         Retrieve a parsed document from Redis cache.
@@ -118,7 +121,6 @@ class RedisCacheStore(BaseModel, DocumentCacheStore):
             # If there's any error (JSON parsing, validation, etc.), return None
             return None
 
-    @override
     async def set_async(
         self, key: str, value: ParsedFile, ttl: CacheTTL = None
     ) -> None:
@@ -153,7 +155,6 @@ class RedisCacheStore(BaseModel, DocumentCacheStore):
             # Silently fail if we can't store in cache
             pass
 
-    @override
     async def delete_async(self, key: str) -> bool:
         """
         Delete a cached document from Redis.
@@ -173,7 +174,6 @@ class RedisCacheStore(BaseModel, DocumentCacheStore):
         except Exception:
             return False
 
-    @override
     async def clear_async(self) -> None:
         """
         Clear all cached documents with the configured prefix from Redis.
@@ -197,7 +197,6 @@ class RedisCacheStore(BaseModel, DocumentCacheStore):
             # Silently fail if we can't clear the cache
             pass
 
-    @override
     async def exists_async(self, key: str) -> bool:
         """
         Check if a key exists in Redis cache.

@@ -10,24 +10,18 @@ import os
 import tempfile
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import Literal, override
+from typing import Literal
 
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.agent import Agent
-from agentle.generations.models.structured_outputs_store.visual_media_description import (
-    VisualMediaDescription,
-)
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.parsers.static_image import StaticImageParser
 from agentle.parsing.section_content import SectionContent
 
 
-class DWGFileParser(DocumentParser):
+class DWGFileParser(BaseModel):
     """
     Parser for processing AutoCAD DWG files.
 
@@ -100,15 +94,14 @@ class DWGFileParser(DocumentParser):
 
     type: Literal["dwg"] = "dwg"
 
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory,
+    visual_description_provider: GenerationProvider = Field(
+        default=...,
     )
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
     """
 
-    @override
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Asynchronously parse a DWG file and generate a structured representation.
@@ -189,12 +182,13 @@ class DWGFileParser(DocumentParser):
             image_paths = self.__pdf_to_image_paths(output_path, temp_dir)
 
             parser = StaticImageParser(
-                visual_description_agent=self.visual_description_agent
+                visual_description_provider=self.visual_description_provider
             )
 
             parsed_files = [
                 await parser.parse_async(image_path) for image_path in image_paths
             ]
+
             sections: MutableSequence[SectionContent] = [
                 section
                 for parsed_file in parsed_files

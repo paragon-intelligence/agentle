@@ -8,29 +8,24 @@ spreadsheets while preserving their structure.
 
 from collections.abc import MutableSequence
 from pathlib import Path
-from typing import Literal, override
-
+from typing import Literal
 
 from rsb.functions.ext2mime import ext2mime
+from rsb.models.base_model import BaseModel
+from rsb.models.field import Field
 
-
-from agentle.agents.agent import Agent
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.parsing.image import Image
 from agentle.parsing.page_item.table_page_item import TablePageItem
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
-from rsb.models.field import Field
 
 
-class XlsxFileParser(DocumentParser):
+class XlsxFileParser(BaseModel):
     """
     Parser for processing Excel spreadsheet files (.xls, .xlsx).
 
@@ -129,15 +124,14 @@ class XlsxFileParser(DocumentParser):
 
     strategy: Literal["high", "low"] = Field(default="high")
 
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory,
+    visual_description_provider: GenerationProvider | None= Field(
+        default=None,
     )
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.
     """
 
-    @override
     async def parse_async(
         self,
         document_path: str,
@@ -217,16 +211,20 @@ class XlsxFileParser(DocumentParser):
 
             final_images: MutableSequence[Image] = []
             # Generate image descriptions if needed
-            if self.visual_description_agent and self.strategy == "high":
+            if self.visual_description_provider and self.strategy == "high":
                 image_descriptions: MutableSequence[str] = []
                 for img_idx, image_obj in enumerate(sheet_images, start=1):
                     agent_input = FilePart(
                         mime_type=ext2mime(Path(image_obj[0]).suffix),
                         data=image_obj[1],
                     )
-                    agent_response = await self.visual_description_agent.run_async(
-                        agent_input
+
+                    agent_response = await self.visual_description_provider.generate_by_prompt_async(
+                        agent_input,
+                        developer_prompt="You are a helpful assistant that deeply understands visual media.",
+                        response_schema=VisualMediaDescription,
                     )
+    
                     image_md = agent_response.parsed.md
                     image_descriptions.append(
                         f"Worksheet {sheet.title} - Image {img_idx}: {image_md}"

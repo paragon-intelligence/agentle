@@ -1,29 +1,19 @@
-import tempfile
 import os
-from typing import Literal, override
+import tempfile
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlparse
+
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
-from agentle.agents.agent import Agent
-from agentle.generations.models.structured_outputs_store.audio_description import (
-    AudioDescription,
-)
-from agentle.generations.models.structured_outputs_store.visual_media_description import (
-    VisualMediaDescription,
-)
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.audio_description_agent_default_factory import (
-    audio_description_agent_default_factory,
-)
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
+
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.parsers.file_parser import FileParser
 from agentle.parsing.section_content import SectionContent
 
 
-class LinkParser(DocumentParser):
+class LinkParser(BaseModel):
     """
     A parser for links.
 
@@ -33,15 +23,10 @@ class LinkParser(DocumentParser):
     """
 
     type: Literal["link"] = "link"
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory
-    )
-    audio_description_agent: Agent[AudioDescription] = Field(
-        default_factory=audio_description_agent_default_factory
-    )
+    visual_description_provider: GenerationProvider | None = Field(default=None)
+    audio_description_provider: GenerationProvider | None = Field(default=None)
     parse_timeout: float = Field(default=30)
 
-    @override
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Parse the link.
@@ -132,8 +117,8 @@ class LinkParser(DocumentParser):
 
         # Handle local file
         file_parser = FileParser(
-            visual_description_agent=self.visual_description_agent,
-            audio_description_agent=self.audio_description_agent,
+            visual_description_provider=self.visual_description_provider,
+            audio_description_provider=self.audio_description_provider,
         )
         return await file_parser.parse_async(document_path)
 
@@ -161,8 +146,8 @@ class LinkParser(DocumentParser):
 
             # Parse the downloaded file
             file_parser = FileParser(
-                visual_description_agent=self.visual_description_agent,
-                audio_description_agent=self.audio_description_agent,
+                visual_description_provider=self.visual_description_provider,
+                audio_description_provider=self.audio_description_provider,
                 parse_timeout=self.parse_timeout,
             )
             parsed_document = await file_parser.parse_async(temp_path)
@@ -222,8 +207,8 @@ class LinkParser(DocumentParser):
                 try:
                     # Parse the HTML file to get any embedded media
                     file_parser = FileParser(
-                        visual_description_agent=self.visual_description_agent,
-                        audio_description_agent=self.audio_description_agent,
+                        visual_description_provider=self.visual_description_provider,
+                        audio_description_provider=self.audio_description_provider,
                         parse_timeout=self.parse_timeout,
                     )
                     html_parsed = await file_parser.parse_async(html_path)

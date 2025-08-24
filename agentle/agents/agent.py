@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import base64
 import datetime
+import hashlib
 import importlib.util
 import json
 import logging
@@ -112,15 +113,16 @@ from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tools.tool_execution_result import ToolExecutionResult
 from agentle.mcp.servers.mcp_server_protocol import MCPServerProtocol
-from agentle.parsing.cache.document_cache_store import DocumentCacheStore
+from agentle.parsing.cache.document_cache_store_type import DocumentCacheStoreType
 from agentle.parsing.cache.in_memory_document_cache_store import (
     InMemoryDocumentCacheStore,
 )
-from agentle.parsing.document_parser import DocumentParser
+
 from agentle.parsing.factories.file_parser_default_factory import (
     file_parser_default_factory,
 )
 from agentle.parsing.parsed_file import ParsedFile
+from agentle.parsing.parsers.document_parser_type import DocumentParserType
 from agentle.prompts.models.prompt import Prompt
 from agentle.stt.providers.base.speech_to_text_provider import SpeechToTextProvider
 from agentle.vector_stores.vector_store import VectorStore
@@ -258,13 +260,16 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     # Dear dev
     # Really sorry to use "Any" here. But if we use DocumentParser, we get an import cycle.
     # No worries, in the model_validator, we check if it's a DocumentParser.
-    document_parser: DocumentParser | None = Field(default=None)
+    document_parser: DocumentParserType | None = Field(default=None)
     """
     A document parser to be used by the agent. This will be used to parse the static
     knowledge documents, if provided.
     """
 
-    document_cache_store: DocumentCacheStore | None = Field(default=None)
+    document_cache_store: DocumentCacheStoreType | None = Field(
+        default=None,
+        discriminator="type",
+    )
     """
     A cache store to be used by the agent for caching parsed documents.
     If None, a default InMemoryDocumentCacheStore will be used.
@@ -1237,10 +1242,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         lambda log: log.debug("Using cache store for knowledge item")
                     )
 
-                    # Generate cache key
-                    cache_key = document_cache_store.get_cache_key(
-                        content_to_parse, parser.__class__.__name__
-                    )
+                    cache_key = hashlib.sha256(
+                        f"{content_to_parse}:{parser.__class__.__name__}".encode()
+                    ).hexdigest()
 
                     # Try to get from cache first
                     parsed_content = await document_cache_store.get_async(cache_key)
@@ -3229,7 +3233,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         new_generation_provider: GenerationProvider | None = None,
         new_url: str | None = None,
         new_suspension_manager: SuspensionManager | None = None,
-        new_document_cache_store: DocumentCacheStore | None = None,
+        new_document_cache_store: DocumentCacheStoreType | None = None,
     ) -> Agent[T_Schema]:
         """
         Creates a clone of the current agent with optionally modified attributes.

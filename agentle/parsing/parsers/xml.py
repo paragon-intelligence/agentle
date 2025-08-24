@@ -8,20 +8,20 @@ representations, converting XML structures into readable markdown format.
 import logging
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Literal, override
+from typing import Literal
 from xml.etree.ElementTree import Element
 
+from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 
-from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
 
 logger = logging.getLogger(__name__)
 
 
-class XMLFileParser(DocumentParser):
+class XMLFileParser(BaseModel):
     """
     Parser for processing XML files into structured document representations.
 
@@ -70,7 +70,6 @@ class XMLFileParser(DocumentParser):
 
     type: Literal["xml"] = Field(default="xml")
 
-    @override
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Asynchronously parse an XML file into a structured representation.

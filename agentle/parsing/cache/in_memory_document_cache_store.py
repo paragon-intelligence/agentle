@@ -10,17 +10,17 @@ import logging
 import threading
 import time
 import weakref
-from typing import Optional, override
+from typing import Literal
 
 from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 
-from agentle.parsing.cache.document_cache_store import CacheTTL, DocumentCacheStore
 from agentle.parsing.parsed_file import ParsedFile
 
 logger = logging.getLogger(__name__)
 
+type CacheTTL = int | Literal["infinite"] | None
 
 # Module-level tracking to avoid class attribute issues with Pydantic
 _GLOBAL_INSTANCES: list[weakref.ReferenceType["InMemoryDocumentCacheStore"]] = []
@@ -64,7 +64,7 @@ def _cleanup_all_instances() -> None:
         logger.error(f"Error during global cleanup: {e}")
 
 
-class InMemoryDocumentCacheStore(BaseModel, DocumentCacheStore):
+class InMemoryDocumentCacheStore(BaseModel):
     """
     Thread-safe in-memory cache store for parsed documents.
 
@@ -98,6 +98,8 @@ class InMemoryDocumentCacheStore(BaseModel, DocumentCacheStore):
         ```
     """
 
+    type: Literal["in_memory"] = Field(default="in_memory")
+
     cleanup_interval: int = Field(
         default=300,  # 5 minutes
         description="How often to run the cache cleanup timer in seconds",
@@ -118,7 +120,7 @@ class InMemoryDocumentCacheStore(BaseModel, DocumentCacheStore):
         # Initialize threading objects here to avoid Pydantic's deepcopy issues
         self._cache_store: dict[str, tuple[ParsedFile, float, CacheTTL]] = {}
         self._cache_lock = threading.RLock()
-        self._cleanup_timer: Optional[threading.Timer] = None
+        self._cleanup_timer: threading.Timer | None = None
         self._is_shutdown = threading.Event()
 
         # Track this instance globally
@@ -130,7 +132,6 @@ class InMemoryDocumentCacheStore(BaseModel, DocumentCacheStore):
         if self.cleanup_interval > 0:
             self._start_cleanup_timer()
 
-    @override
     async def get_async(self, key: str) -> ParsedFile | None:
         """
         Retrieve a parsed document from the in-memory cache.
@@ -165,7 +166,6 @@ class InMemoryDocumentCacheStore(BaseModel, DocumentCacheStore):
             logger.error(f"Error retrieving cache key '{key}': {e}")
             return None
 
-    @override
     async def set_async(
         self, key: str, value: ParsedFile, ttl: CacheTTL = None
     ) -> None:
@@ -195,7 +195,6 @@ class InMemoryDocumentCacheStore(BaseModel, DocumentCacheStore):
         except Exception as e:
             logger.error(f"Error storing cache key '{key}': {e}")
 
-    @override
     async def delete_async(self, key: str) -> bool:
         """
         Delete a cached document from memory.
@@ -219,7 +218,6 @@ class InMemoryDocumentCacheStore(BaseModel, DocumentCacheStore):
             logger.error(f"Error deleting cache key '{key}': {e}")
             return False
 
-    @override
     async def clear_async(self) -> None:
         """
         Clear all cached documents from memory.
@@ -233,7 +231,6 @@ class InMemoryDocumentCacheStore(BaseModel, DocumentCacheStore):
         except Exception as e:
             logger.error(f"Error clearing cache: {e}")
 
-    @override
     async def exists_async(self, key: str) -> bool:
         """
         Check if a key exists in the cache and is not expired.

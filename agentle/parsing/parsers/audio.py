@@ -14,24 +14,21 @@ from pathlib import Path
 from typing import Literal, Never
 
 from rsb.functions.ext2mime import ext2mime
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.agent import Agent
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.audio_description import (
     AudioDescription,
 )
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.audio_description_agent_default_factory import (
-    audio_description_agent_default_factory,
-)
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
 
 logger = logging.getLogger(__name__)
 
 
-class AudioFileParser(DocumentParser):
+class AudioFileParser(BaseModel):
     """
     Parser for processing various audio file formats.
 
@@ -102,9 +99,7 @@ class AudioFileParser(DocumentParser):
 
     type: Literal["audio"] = "audio"
 
-    audio_description_agent: Agent[AudioDescription] = Field(
-        default_factory=audio_description_agent_default_factory,
-    )
+    audio_description_provider: GenerationProvider = Field(...)
 
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
@@ -145,6 +140,7 @@ class AudioFileParser(DocumentParser):
             before processing. This conversion is done to ensure compatibility
             with the audio description agent.
         """
+
         path = Path(document_path)
         file_contents: bytes = path.read_bytes()
         file_extension = path.suffix
@@ -206,8 +202,10 @@ class AudioFileParser(DocumentParser):
             # Cleanup temporary file
             await aios.remove(output_temp)
 
-        transcription = self.audio_description_agent.run(
-            FilePart(data=file_contents, mime_type=ext2mime(file_extension))
+        transcription = await self.audio_description_provider.generate_by_prompt_async(
+            FilePart(data=file_contents, mime_type=ext2mime(file_extension)),
+            developer_prompt="You are a helpful assistant that helps understand audio files.",
+            response_schema=AudioDescription,
         )
 
         return ParsedFile(

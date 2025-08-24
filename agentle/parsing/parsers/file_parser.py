@@ -1,29 +1,18 @@
 import inspect
 from pathlib import Path
-from typing import Any, Literal, MutableMapping, cast, override
+from typing import Any, Literal, MutableMapping, cast
 from urllib.parse import urlparse
 
 from rsb.functions.create_instance_dynamically import create_instance_dynamically
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.agent import Agent
-from agentle.generations.models.structured_outputs_store.audio_description import (
-    AudioDescription,
-)
-from agentle.generations.models.structured_outputs_store.visual_media_description import (
-    VisualMediaDescription,
-)
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.audio_description_agent_default_factory import (
-    audio_description_agent_default_factory,
-)
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.parsing.parsed_file import ParsedFile
+from agentle.parsing.parsers.document_parser_type import DocumentParser
 
 
-class FileParser(DocumentParser):
+class FileParser(BaseModel):
     """
     A facade parser that automatically selects the appropriate parser based on file extension.
 
@@ -141,7 +130,7 @@ class FileParser(DocumentParser):
 
     type: Literal["file"] = "file"
     strategy: Literal["low", "high"] = Field(default="high")
-    visual_description_agent: Agent[VisualMediaDescription] | None = Field(
+    visual_description_provider: GenerationProvider | None = Field(
         default=None,
     )
     """
@@ -149,7 +138,7 @@ class FileParser(DocumentParser):
     Useful when you want to customize the prompt for the visual description.
     """
 
-    audio_description_agent: Agent[AudioDescription] | None = Field(
+    audio_description_provider: GenerationProvider | None = Field(
         default=None,
     )
     """
@@ -160,7 +149,6 @@ class FileParser(DocumentParser):
     parse_timeout: float = Field(default=30)
     """The timeout for the parse operation in seconds."""
 
-    @override
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Asynchronously parse a document using the appropriate parser for its file type.
@@ -208,13 +196,6 @@ class FileParser(DocumentParser):
             path.suffix.lstrip(".")
         )
 
-        visual_description_agent = (
-            self.visual_description_agent or visual_description_agent_default_factory()
-        )
-        audio_description_agent = (
-            self.audio_description_agent or audio_description_agent_default_factory()
-        )
-
         if not parser_cls:
             parsed_url = urlparse(document_path)
             is_url = parsed_url.scheme in ["http", "https"]
@@ -227,8 +208,8 @@ class FileParser(DocumentParser):
 
                 return await create_instance_dynamically(  # used because mypy complained about the type of the parser_cls
                     parser_cls,
-                    visual_description_agent=visual_description_agent,
-                    audio_description_agent=audio_description_agent,
+                    visual_description_provider=self.visual_description_provider,
+                    audio_description_provider=self.audio_description_provider,
                     parse_timeout=self.parse_timeout,
                 ).parse_async(document_path=document_path)
             else:
@@ -241,8 +222,8 @@ class FileParser(DocumentParser):
         # Only include arguments that are accepted by the parser constructor
         potential_args = {
             "strategy": self.strategy,
-            "visual_description_agent": self.visual_description_agent,
-            "audio_description_agent": self.audio_description_agent,
+            "visual_description_provider": self.visual_description_provider,
+            "audio_description_provider": self.audio_description_provider,
         }
 
         kwargs: MutableMapping[str, Any] = {}

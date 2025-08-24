@@ -6,30 +6,27 @@ representations. It can extract text content, process embedded images, and
 organize the document into a readable format.
 """
 
-from pathlib import Path
-from typing import Literal, override
-import hashlib
 import base64
+import hashlib
 import re
+from pathlib import Path
+from typing import Literal
 
 from rsb.functions.ext2mime import ext2mime
+from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.agents.agent import Agent
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
-from agentle.parsing.document_parser import DocumentParser
-from agentle.parsing.factories.visual_description_agent_default_factory import (
-    visual_description_agent_default_factory,
-)
+from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
 
 
-class HTMLParser(DocumentParser):
+class HTMLParser(BaseModel):
     """
     Parser for processing HTML files.
 
@@ -109,11 +106,8 @@ class HTMLParser(DocumentParser):
     """if high, the parser will use the visual_description_agent to
     describe the images present in the html"""
 
-    visual_description_agent: Agent[VisualMediaDescription] = Field(
-        default_factory=visual_description_agent_default_factory
-    )
+    visual_description_provider: GenerationProvider | None = Field(default=None)
 
-    @override
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Asynchronously parse an HTML file and generate a structured representation.
@@ -148,7 +142,6 @@ class HTMLParser(DocumentParser):
             ```
         """
         from bs4 import BeautifulSoup, Tag
-
         from markdownify import markdownify as md_converter
 
         # Read the HTML file
@@ -217,7 +210,7 @@ class HTMLParser(DocumentParser):
                     continue
 
                 # Process image with visual description agent
-                if image_data and self.visual_description_agent:
+                if image_data and self.visual_description_provider:
                     # Generate a hash to avoid processing duplicate images
                     image_hash = hashlib.sha256(image_data).hexdigest()
 
@@ -231,9 +224,13 @@ class HTMLParser(DocumentParser):
                             mime_type=ext2mime(f".{extension}"),
                             data=image_data,
                         )
-                        agent_response = await self.visual_description_agent.run_async(
-                            agent_input
+
+                        agent_response = await self.visual_description_provider.generate_by_prompt_async(
+                            agent_input,
+                            developer_prompt="You are a helpful assistant that deeply understands visual media.",
+                            response_schema=VisualMediaDescription,
                         )
+
                         image_md = agent_response.parsed.md
                         ocr_text = agent_response.parsed.ocr_text or ""
                         image_cache[image_hash] = (image_md, ocr_text or "")

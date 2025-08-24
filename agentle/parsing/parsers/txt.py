@@ -6,14 +6,14 @@ into structured document representations.
 """
 
 from pathlib import Path
-from typing import Literal, override
+from typing import Literal
 
-from agentle.parsing.document_parser import DocumentParser
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
+from rsb.models.base_model import BaseModel
 
 
-class TxtFileParser(DocumentParser):
+class TxtFileParser(BaseModel):
     """
     Parser for processing plain text files (.txt, .alg).
 
@@ -56,7 +56,6 @@ class TxtFileParser(DocumentParser):
 
     type: Literal["txt"] = "txt"
 
-    @override
     async def parse_async(self, document_path: str) -> ParsedFile:
         """
         Asynchronously parse a text file into a structured representation.
