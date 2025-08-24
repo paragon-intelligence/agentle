@@ -4,7 +4,19 @@ version = "v0.8.1"
 description = "..."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["aiocache>=0.12.3", "aiohttp>=3.11.18", "async-lru>=2.0.5", "dill>=0.4.0", "google-genai>=1.14.0", "mcp[cli]>=1.6.0", "openai>=1.95.0", "pydantic>=2.11.3", "pyyaml>=6.0.2", "rock-solid-base>=0.1.2", "ujson>=5.10.0"]
+dependencies = [
+    "aiocache>=0.12.3",
+    "aiohttp>=3.11.18",
+    "async-lru>=2.0.5",
+    "dill>=0.4.0",
+    "google-genai>=1.14.0",
+    "mcp[cli]>=1.6.0",
+    "openai>=1.95.0",
+    "pydantic>=2.11.3",
+    "pyyaml>=6.0.2",
+    "rock-solid-base>=0.1.2",
+    "ujson>=5.10.0",
+]
 
 [[project.authors]]
 name = "Arthur Brenno"

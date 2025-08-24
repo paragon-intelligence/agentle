@@ -4,7 +4,7 @@ requires-python = ">=3.13"
 
 [[package]]
 name = "agentle"
-version = "0.7.41"
+version = "0.8.1"
 source = { editable = "." }
 dependencies = [
     { name = "aiocache" },
@@ -3448,14 +3448,14 @@ wheels = [
 
 [[package]]
 name = "rock-solid-base"
-version = "0.1.10"
+version = "0.1.11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/47/15/4604d97d87debfd9ffccace32ccb4c9b8d25b32f8f14128c46888b97e99e/rock_solid_base-0.1.10.tar.gz", hash = "sha256:56805b55bd1cbf124f07a653805ea08c47fe28f4cfd901073e8cd7b8eb2c87b4", size = 67012 }
+sdist = { url = "https://files.pythonhosted.org/packages/13/3e/c4b4be21b1606003808f0994c48da9524af43e689caa34f4329da909e1f5/rock_solid_base-0.1.11.tar.gz", hash = "sha256:b72397fb74fecc68cc4c742d23753e62432310ee9c0ae9f13b4f04aed41cb5e4", size = 70693 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ea/f0/491f5756d2b56ecfde520469cfbadcd5f903fb8279b3e54e774497b3d57b/rock_solid_base-0.1.10-py3-none-any.whl", hash = "sha256:05db03c7a2546e826c5026ee40daf51a3b70428307f05d8789aa0566c1dc2218", size = 54252 },
+    { url = "https://files.pythonhosted.org/packages/c1/27/3a8c09555d44534ebad3036ae80be35a7592a0f9bbfec3215f66de30cfd7/rock_solid_base-0.1.11-py3-none-any.whl", hash = "sha256:71f39e381ba9363b0086cab21e0641722765f3dd2d61c77e7d1e2f10af474c37", size = 58216 },
 ]
 
 [[package]]
