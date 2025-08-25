@@ -62,6 +62,7 @@ from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tracing.observe import observe
 from agentle.utils.describe_model_for_llm import describe_model_for_llm
+from agentle.utils.with_optional_imports import with_optional_imports
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -74,6 +75,12 @@ type WithoutStructuredOutput = None
 logger = logging.getLogger(__name__)
 
 
+@with_optional_imports(
+    "google.genai",
+    "google.auth.credentials",
+    "google.genai.client",
+    "google.genai.types",
+)
 class GoogleGenerationProvider(GenerationProviderMixin):
     """
     Provider implementation for Google's Generative AI service.
@@ -541,24 +548,3 @@ class GoogleGenerationProvider(GenerationProviderMixin):
         if isinstance(price_info, tuple):
             return price_info[0]
         return price_info
-
-
-# Rebuild the model to handle forward references
-try:
-    # Import Google modules and make them available for Pydantic
-    import google.auth.credentials
-    import google.genai.client
-    import google.genai.types
-    
-    # Make types available in the module's global namespace for Pydantic
-    globals()["Credentials"] = google.auth.credentials.Credentials
-    globals()["DebugConfig"] = google.genai.client.DebugConfig
-    globals()["HttpOptions"] = google.genai.types.HttpOptions
-    
-    # Now rebuild the model with types available
-    GoogleGenerationProvider.model_rebuild()
-except ImportError:
-    logger.warning(
-        "Google AI dependencies not found. "
-        + "Install google-genai to use Google models."
-    )

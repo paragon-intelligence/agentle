@@ -32,6 +32,7 @@ google_response = provider.generate(
         )
     ]
 )
+
 print("GOOGLE GEMINI RESPONSE:")
 print(google_response.text)
 print("\n" + "-" * 50 + "\n")

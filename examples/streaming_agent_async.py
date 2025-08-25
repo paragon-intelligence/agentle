@@ -15,7 +15,7 @@ class Response(BaseModel):
 
 agent = Agent()
 
-print("Streaming poem generation...")
+print("Streaming...")
 print("=" * 50)
 
 

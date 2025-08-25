@@ -103,7 +103,10 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.providers.types.generation_provider_type import (
+from agentle.generations.providers.base.generation_provider_mixin import (
+    GenerationProviderMixin,
+)
+from agentle.generations.providers.base.generation_provider_type import (
     GenerationProviderType,
 )
 from agentle.generations.providers.google.google_generation_provider import (
@@ -717,7 +720,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             except ImportError:
                 # Create a minimal provider for type checking
                 generation_provider = type(
-                    "DummyProvider", (GenerationProviderType,), {}
+                    "DummyProvider", (GenerationProviderMixin,), {}
                 )
 
         # Convert input/output modes to MimeType if they're strings
