@@ -194,8 +194,7 @@ class GoogleGenerationProvider(GenerationProvider):
         generation_config: GenerationConfig | GenerationConfigDict | None = None,
     ) -> AsyncGenerator[Generation[WithoutStructuredOutput], None]: ...
 
-    # Remove the explicit return type annotation from the implementation
-    async def stream_async[T = WithoutStructuredOutput](
+    async def stream_async[T](
         self,
         *,
         model: str | ModelKind | None = None,
@@ -203,7 +202,7 @@ class GoogleGenerationProvider(GenerationProvider):
         response_schema: type[T] | None = None,
         generation_config: GenerationConfig | GenerationConfigDict | None = None,
         tools: Sequence[Tool] | None = None,
-    ):
+    ) -> AsyncGenerator[Generation[T] | Generation[WithoutStructuredOutput], None]:
         from google.genai import types
 
         if self._normalize_generation_config(generation_config).n > 1:

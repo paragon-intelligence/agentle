@@ -4138,7 +4138,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                                 parts=[
                                     TextPart(
                                         text=np.array2string(
-                                            cast(np.ndarray[Any, Any], input)
+                                            cast(np.ndarray[Any, Any], input)  # type: ignore[eportUnnecessaryCast]
                                         )
                                     )
                                 ]

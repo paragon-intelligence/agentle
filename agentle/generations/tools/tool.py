@@ -19,7 +19,7 @@ import base64
 import inspect
 from collections.abc import Awaitable, Callable, MutableSequence
 import logging
-from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, ParamSpec, TypeVar, Self
 
 from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
@@ -266,7 +266,7 @@ class Tool[**P = ..., T_Output = Any](BaseModel):
     @classmethod
     def from_mcp_tool(
         cls, mcp_tool: MCPTool, server: MCPServerProtocol, ignore_errors: bool = False
-    ) -> Tool[..., Any]:
+    ) -> Self:
         """
         Creates a Tool instance from an MCP Tool.
 
@@ -380,7 +380,7 @@ class Tool[**P = ..., T_Output = Any](BaseModel):
             | None
         ) = None,
         ignore_errors: bool = False,
-    ) -> Tool[CallableP, CallableT]:
+    ) -> "Tool[CallableP, CallableT]":
         """
         Creates a Tool instance from a callable function with full type safety.
 
