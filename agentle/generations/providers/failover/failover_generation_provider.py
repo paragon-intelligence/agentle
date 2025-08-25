@@ -19,10 +19,10 @@ from __future__ import annotations
 
 import random
 from collections.abc import MutableSequence, Sequence
-from typing import TYPE_CHECKING, override
-
+from typing import Literal, cast, override
 
 from rsb.coroutines.fire_and_forget import fire_and_forget
+from rsb.models.field import Field
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
@@ -30,24 +30,22 @@ from agentle.generations.models.generation.generation_config_dict import (
     GenerationConfigDict,
 )
 from agentle.generations.models.messages.message import Message
-from agentle.generations.providers.base.generation_provider import (
-    GenerationProvider,
+from agentle.generations.providers.base.generation_provider_mixin import (
+    GenerationProviderMixin,
+)
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
 )
 from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
-
 from agentle.resilience.circuit_breaker.circuit_breaker_protocol import (
     CircuitBreakerProtocol,
 )
 
-if TYPE_CHECKING:
-    from agentle.generations.tracing.otel_client import OtelClient
-
-
 type WithoutStructuredOutput = None
 
 
-class FailoverGenerationProvider(GenerationProvider):
+class FailoverGenerationProvider(GenerationProviderMixin):
     """
     Provider implementation that fails over between multiple generation providers.
 
@@ -70,65 +68,10 @@ class FailoverGenerationProvider(GenerationProvider):
             temporarily skip failing providers.
     """
 
-    generation_providers: Sequence[GenerationProvider]
-    otel_clients: Sequence[OtelClient]
-    shuffle: bool
-    circuit_breaker: CircuitBreakerProtocol | None
-
-    def __init__(
-        self,
-        *,
-        generation_providers: Sequence[
-            GenerationProvider | Sequence[GenerationProvider]
-        ],
-        otel_clients: Sequence[OtelClient] | OtelClient | None = None,
-        shuffle: bool = False,
-        circuit_breaker: CircuitBreakerProtocol | None = None,
-    ) -> None:
-        """
-        Initialize the Failover Generation Provider.
-
-        Args:
-            otel_clients: Optional client for observability and tracing of generation
-                requests and responses.
-            generation_providers: Sequence of underlying generation providers or sequences
-                of providers to try in order. Nested sequences will be flattened.
-            shuffle: Whether to randomly shuffle the order of providers for each request.
-                Defaults to False (maintain the specified order).
-            circuit_breaker: Optional circuit breaker to track provider failures and
-                temporarily skip failing providers. If None, circuit breaker logic is disabled.
-        """
-        super().__init__(otel_clients=otel_clients)
-
-        # Flatten nested sequences of providers
-        flattened_providers: MutableSequence[GenerationProvider] = []
-        for item in generation_providers:
-            if isinstance(item, Sequence) and not isinstance(item, (str, bytes)):
-                # If it's a sequence (but not string/bytes), extend with its contents
-                flattened_providers.extend(item)
-            else:
-                # If it's a single provider, append it
-                flattened_providers.append(item)
-
-        self.generation_providers = flattened_providers
-        self.shuffle = shuffle
-        self.circuit_breaker = circuit_breaker
-
-    def _get_provider_circuit_id(self, provider: GenerationProvider) -> str:
-        """
-        Generate a unique identifier for a provider to use as circuit breaker key.
-
-        Uses a combination of provider class name, organization, and instance id
-        to create a reasonably unique identifier for circuit tracking.
-        """
-        # Use provider instance id as base
-        circuit_id = f"{provider.__class__.__name__}_{id(provider)}"
-
-        # Add organization if available for better grouping
-        if hasattr(provider, "organization"):
-            circuit_id = f"{provider.organization}_{circuit_id}"
-
-        return circuit_id
+    type: Literal["failover"] = Field(default="failover")
+    generation_providers: Sequence[GenerationProviderType | GenerationProviderMixin]
+    shuffle: bool = Field(default=False)
+    circuit_breaker: CircuitBreakerProtocol | None = Field(default=None)
 
     @property
     @override
@@ -200,7 +143,9 @@ class FailoverGenerationProvider(GenerationProvider):
         Raises:
             Exception: The exception from the first provider if all providers fail.
         """
-        exceptions: MutableSequence[tuple[GenerationProvider, Exception]] = []
+        exceptions: MutableSequence[
+            tuple[GenerationProviderType | GenerationProviderMixin, Exception]
+        ] = []
 
         # Get list of providers and optionally shuffle
         providers = list(self.generation_providers)
@@ -208,7 +153,7 @@ class FailoverGenerationProvider(GenerationProvider):
             random.shuffle(providers)
 
         # Track which providers were skipped due to open circuits
-        skipped_providers: MutableSequence[GenerationProvider] = []
+        skipped_providers: MutableSequence[GenerationProviderMixin] = []
 
         for provider in providers:
             # Check circuit breaker if configured
@@ -311,7 +256,7 @@ class FailoverGenerationProvider(GenerationProvider):
         )
 
     def without_provider_type(
-        self, provider_type: type[GenerationProvider]
+        self, provider_type: type[GenerationProviderType]
     ) -> FailoverGenerationProvider:
         """
         Create a new FailoverGenerationProvider without providers of the specified type.
@@ -325,7 +270,7 @@ class FailoverGenerationProvider(GenerationProvider):
         Returns:
             FailoverGenerationProvider: A new instance with all providers of the specified type removed.
         """
-        filtered_providers: MutableSequence[GenerationProvider] = []
+        filtered_providers: MutableSequence[GenerationProviderMixin] = []
 
         for provider in self.generation_providers:
             if isinstance(provider, provider_type):
@@ -343,16 +288,32 @@ class FailoverGenerationProvider(GenerationProvider):
 
         return FailoverGenerationProvider(
             generation_providers=filtered_providers,
-            otel_clients=self.otel_clients if self.otel_clients else None,
+            otel_clients=self.otel_clients or [],
             shuffle=self.shuffle,
             circuit_breaker=self.circuit_breaker,
         )
 
+    def _get_provider_circuit_id(self, provider: GenerationProviderMixin) -> str:
+        """
+        Generate a unique identifier for a provider to use as circuit breaker key.
+
+        Uses a combination of provider class name, organization, and instance id
+        to create a reasonably unique identifier for circuit tracking.
+        """
+        # Use provider instance id as base
+        circuit_id = f"{provider.__class__.__name__}_{id(provider)}"
+
+        # Add organization if available for better grouping
+        if hasattr(provider, "organization"):
+            circuit_id = f"{provider.organization}_{circuit_id}"
+
+        return circuit_id
+
     def __sub__(
         self,
-        other: GenerationProvider
-        | type[GenerationProvider]
-        | Sequence[GenerationProvider | type[GenerationProvider]],
+        other: GenerationProviderType
+        | type[GenerationProviderType]
+        | Sequence[GenerationProviderType | type[GenerationProviderType]],
     ) -> FailoverGenerationProvider:
         """
         Remove providers or provider types from the failover sequence.
@@ -368,7 +329,11 @@ class FailoverGenerationProvider(GenerationProvider):
         Returns:
             FailoverGenerationProvider: A new instance with the specified providers removed.
         """
-        filtered_providers: MutableSequence[GenerationProvider] = []
+        filtered_providers: MutableSequence[GenerationProviderType] = []
+
+        self.generation_providers = cast(
+            list[GenerationProviderType], self.generation_providers
+        )
 
         for provider in self.generation_providers:
             should_remove = False
@@ -412,7 +377,7 @@ class FailoverGenerationProvider(GenerationProvider):
 
         return FailoverGenerationProvider(
             generation_providers=filtered_providers,
-            otel_clients=self.otel_clients if self.otel_clients else None,
+            otel_clients=self.otel_clients or [],
             shuffle=self.shuffle,
             circuit_breaker=self.circuit_breaker,
         )

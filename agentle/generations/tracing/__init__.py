@@ -10,13 +10,13 @@ with Langfuse V3. The architecture consists of three main components:
 
 Usage:
 ```python
-from agentle.generations.tracing import LangfuseTracingClient, observe
+from agentle.generations.tracing.xxxxx import LangfuseTracingClient, observe
 
 # Set up tracing client
 tracing_client = LangfuseTracingClient()
 
 # Apply to your provider
-class MyProvider(GenerationProvider):
+class MyProvider(GenerationProviderType):
     def __init__(self):
         super().__init__(tracing_client=tracing_client)
 
@@ -32,13 +32,3 @@ The design prioritizes performance through:
 - Minimal async/await usage
 - Simple, flat API without complex hierarchies
 """
-
-from agentle.generations.tracing.langfuse_otel_client import LangfuseOtelClient
-from agentle.generations.tracing.observe import observe
-from agentle.generations.tracing.otel_client import OtelClient
-
-__all__ = [
-    "OtelClient",
-    "LangfuseOtelClient",
-    "observe",
-]

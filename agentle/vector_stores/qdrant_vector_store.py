@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING, Any, Sequence, override
 
 from agentle.embeddings.models.embedding import Embedding
 from agentle.embeddings.providers.embedding_provider import EmbeddingProvider
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.parsing.chunk import Chunk
 from agentle.vector_stores.collection import Collection
 from agentle.vector_stores.create_collection_config import CreateCollectionConfig
@@ -27,7 +29,7 @@ class QdrantVectorStore(VectorStore):
         *,
         default_collection_name: str = "agentle",
         embedding_provider: EmbeddingProvider,
-        generation_provider: GenerationProvider | None = None,
+        generation_provider: GenerationProviderType | None = None,
         location: str | None = None,
         url: str | None = None,
         port: int | None = 6333,

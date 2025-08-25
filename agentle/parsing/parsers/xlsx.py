@@ -18,7 +18,9 @@ from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.parsing.image import Image
 from agentle.parsing.page_item.table_page_item import TablePageItem
 from agentle.parsing.parsed_file import ParsedFile
@@ -124,7 +126,7 @@ class XlsxFileParser(BaseModel):
 
     strategy: Literal["high", "low"] = Field(default="high")
 
-    visual_description_provider: GenerationProvider | None= Field(
+    visual_description_provider: GenerationProviderType | None = Field(
         default=None,
     )
     """
@@ -224,7 +226,7 @@ class XlsxFileParser(BaseModel):
                         developer_prompt="You are a helpful assistant that deeply understands visual media.",
                         response_schema=VisualMediaDescription,
                     )
-    
+
                     image_md = agent_response.parsed.md
                     image_descriptions.append(
                         f"Worksheet {sheet.title} - Image {img_idx}: {image_md}"

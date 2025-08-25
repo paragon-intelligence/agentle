@@ -8,13 +8,13 @@ if TYPE_CHECKING:
     from agentle.generations.models.structured_outputs_store.visual_media_description import (
         VisualMediaDescription,
     )
-    from agentle.generations.providers.base.generation_provider import (
-        GenerationProvider,
+    from agentle.generations.providers.base.generation_provider_type import (
+        GenerationProviderType,
     )
 
 
 def visual_description_agent_default_factory(
-    provider: GenerationProvider | None = None,
+    provider: GenerationProviderType | None = None,
 ) -> Agent[VisualMediaDescription]:
     """
     Creates and returns an Agent specialized for processing visual media content.

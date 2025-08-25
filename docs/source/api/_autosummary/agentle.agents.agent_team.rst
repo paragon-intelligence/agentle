@@ -23,7 +23,7 @@ agentle.agents.agent\_team
       AgentTeam
       Any
       BaseModel
-      GenerationProvider
+      GenerationProviderType
       GoogleGenerationProvider
       MutableSequence
       Sequence

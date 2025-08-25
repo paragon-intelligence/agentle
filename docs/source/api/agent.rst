@@ -14,7 +14,7 @@ Agent Class
         def __init__(
             self,
             name: str,
-            generation_provider: GenerationProvider,
+            generation_provider: GenerationProviderType,
             model: str,
             description: Optional[str] = None,
             instructions: Optional[str] = None,

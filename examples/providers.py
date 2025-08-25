@@ -6,13 +6,15 @@ This example demonstrates how to use different model providers with the Agentle 
 
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.generations.providers.google.google_generation_provider import (
     GoogleGenerationProvider,
 )
 
 # Example 1: Create an agent with Google's Gemini model
-provider: GenerationProvider = GoogleGenerationProvider()
+provider: GenerationProviderType = GoogleGenerationProvider()
 
 # Run the Google agent
 google_response = provider.generate(

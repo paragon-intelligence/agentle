@@ -6,6 +6,7 @@ maps abstract ModelKind values to provider-specific model identifiers using the
 provider's own mapping implementation.
 """
 
+from collections.abc import Awaitable
 from functools import wraps
 from typing import Any, Callable, Protocol, cast, get_args
 
@@ -20,7 +21,9 @@ class _ProviderWithModelMapping(Protocol):
         ...
 
 
-def override_model_kind[F: Callable[..., Any]](func: F) -> F:
+def override_model_kind[F: Callable[..., Any] | Callable[..., Awaitable[Any]]](
+    func: F,
+) -> F:
     """
     Decorator that maps ModelKind enums to provider-specific model identifiers.
 

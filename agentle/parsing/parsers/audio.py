@@ -21,7 +21,9 @@ from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.audio_description import (
     AudioDescription,
 )
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
 
@@ -99,7 +101,7 @@ class AudioFileParser(BaseModel):
 
     type: Literal["audio"] = "audio"
 
-    audio_description_provider: GenerationProvider = Field(...)
+    audio_description_provider: GenerationProviderType = Field(...)
 
     async def parse_async(self, document_path: str) -> ParsedFile:
         """

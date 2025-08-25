@@ -3,8 +3,10 @@ Decorador genérico para observabilidade que funciona com qualquer cliente OTel.
 
 Este módulo fornece o decorador @observe que é completamente agnóstico ao provedor
 de telemetria específico. Ele delega toda a lógica de tracing para os clientes
-configurados na lista otel_clients do GenerationProvider.
+configurados na lista otel_clients do GenerationProviderType.
 """
+
+from __future__ import annotations
 
 import functools
 import inspect
@@ -12,14 +14,13 @@ import logging
 import time
 from collections.abc import Callable, Sequence
 from datetime import datetime
-from typing import Any, Dict, List, TypeVar, cast, get_args
+from typing import TYPE_CHECKING, Any, Dict, List, TypeVar, cast, get_args
 
 from rsb.coroutines.fire_and_forget import fire_and_forget
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
 from agentle.generations.models.messages.message import Message
-from agentle.generations.providers.base.generation_provider import GenerationProvider
 from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tracing.otel_client import OtelClient
 
@@ -27,6 +28,11 @@ T = TypeVar("T")
 F = TypeVar("F", bound=Callable[..., Any])
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from agentle.generations.providers.base.generation_provider_type import (
+        GenerationProviderType,
+    )
 
 
 def observe(func: F) -> F:
@@ -46,7 +52,7 @@ def observe(func: F) -> F:
 
     Usage:
         ```python
-        class MyProvider(GenerationProvider):
+        class MyProvider(GenerationProviderType):
             @observe
             async def generate_async(self, ...) -> Generation[T]:
                 # Lógica de geração aqui
@@ -69,10 +75,14 @@ def observe(func: F) -> F:
         provider_check_start = time.perf_counter()
         provider_self = args[0]
 
-        # Verificar se é uma instância válida do GenerationProvider
-        if not isinstance(provider_self, GenerationProvider):
+        # Verificar se é uma instância válida do GenerationProviderType
+        from agentle.generations.providers.base.generation_provider_mixin import (
+            GenerationProviderMixin,
+        )
+
+        if not isinstance(provider_self, GenerationProviderMixin):
             logger.warning(
-                f"@observe decorator aplicado a método de classe não-GenerationProvider: {type(provider_self)}"
+                f"@observe decorator aplicado a método de classe não-GenerationProviderType: {type(provider_self)}"
             )
             return await func(*args, **kwargs)
 
@@ -251,7 +261,7 @@ def observe(func: F) -> F:
                 response=response,
                 start_time=start_time,
                 model=model,
-                provider_self=provider_self,
+                provider_self=cast(GenerationProviderType, provider_self),
                 active_contexts=active_contexts,
                 trace_metadata=trace_metadata,
             )
@@ -390,7 +400,7 @@ async def _process_successful_response(
     response: Generation[Any],
     start_time: datetime,
     model: str,
-    provider_self: GenerationProvider,
+    provider_self: GenerationProviderType,
     active_contexts: List[Dict[str, Any]],
     trace_metadata: Dict[str, Any],
 ) -> None:

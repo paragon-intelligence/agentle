@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Literal, Sequence, override
 
 import httpx
+from rsb.models.field import Field
+from rsb.models.private_attr import PrivateAttr
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
@@ -14,7 +16,9 @@ from agentle.generations.models.generation.generation_config_dict import (
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_mixin import (
+    GenerationProviderMixin,
+)
 from agentle.generations.providers.decorators import override_model_kind
 from agentle.generations.providers.openai.adapters.agentle_message_to_openai_message_adapter import (
     AgentleMessageToOpenaiMessageAdapter,
@@ -27,11 +31,10 @@ from agentle.generations.providers.openai.adapters.chat_completion_to_generation
 )
 from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
-from agentle.generations.tracing import observe
+from agentle.generations.tracing.observe import observe
 
 if TYPE_CHECKING:
     from openai import AsyncOpenAI
-    from agentle.generations.tracing.otel_client import OtelClient
 
 
 type WithoutStructuredOutput = None
@@ -45,41 +48,40 @@ class NotGivenSentinel:
 NOT_GIVEN = NotGivenSentinel()
 
 
-class OpenaiGenerationProvider(GenerationProvider):
+class OpenAIGenerationProvider(GenerationProviderMixin):
     """
     OpenAI generation provider.
     """
 
-    client: AsyncOpenAI
+    api_key: str | None = Field(default=None)
+    organization_name: str | None = Field(None)
+    project_name: str | None = Field(None)
+    base_url: str | httpx.URL | None = Field(None)
+    websocket_base_url: str | httpx.URL | None = Field(None)
+    max_retries: int = 2
+    default_headers: Mapping[str, str] | None = Field(None)
+    default_query: Mapping[str, object] | None = Field(None)
+    http_client: httpx.AsyncClient | None = Field(None)
+    _client: AsyncOpenAI | None = PrivateAttr(default=None)
 
-    def __init__(
-        self,
-        api_key: str | None = None,
-        *,
-        otel_clients: Sequence[OtelClient] | OtelClient | None = None,
-        organization_name: str | None = None,
-        project_name: str | None = None,
-        base_url: str | httpx.URL | None = None,
-        websocket_base_url: str | httpx.URL | None = None,
-        max_retries: int = 2,
-        default_headers: Mapping[str, str] | None = None,
-        default_query: Mapping[str, object] | None = None,
-        http_client: httpx.AsyncClient | None = None,
-    ) -> None:
-        from openai import AsyncOpenAI
+    @property
+    def client(self) -> AsyncOpenAI:
+        if self._client is None:
+            raise ValueError("OpenAI client is not initialized")
+        return self._client
 
-        super().__init__(otel_clients=otel_clients)
-
+    def model_post_init(self, context: Any, /) -> None:
+        super().model_post_init(context)
         self._client = AsyncOpenAI(
-            api_key=api_key,
-            base_url=base_url,
-            websocket_base_url=websocket_base_url,
-            max_retries=max_retries,
-            default_headers=default_headers,
-            default_query=default_query,
-            http_client=http_client,
-            organization=organization_name,
-            project=project_name,
+            api_key=self.api_key,
+            base_url=self.base_url,
+            websocket_base_url=self.websocket_base_url,
+            max_retries=self.max_retries,
+            default_headers=self.default_headers,
+            default_query=self.default_query,
+            http_client=self.http_client,
+            organization=self.organization_name,
+            project=self.project_name,
         )
 
     @property
@@ -128,7 +130,7 @@ class OpenaiGenerationProvider(GenerationProvider):
         try:
             async with asyncio.timeout(_generation_config.timeout_in_seconds):
                 chat_completion: ChatCompletion | ParsedChatCompletion[T] = (
-                    await self._client.chat.completions.create(
+                    await self.client.chat.completions.create(
                         model=self._resolve_model(model),
                         messages=[
                             input_message_adapter.adapt(message) for message in messages
@@ -138,7 +140,7 @@ class OpenaiGenerationProvider(GenerationProvider):
                         else OPENAI_NOT_GIVEN,
                     )
                     if not bool(response_schema)
-                    else await self._client.chat.completions.parse(
+                    else await self.client.chat.completions.parse(
                         model=self._resolve_model(model),
                         messages=[
                             input_message_adapter.adapt(message) for message in messages

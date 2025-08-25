@@ -7,7 +7,9 @@ from rsb.functions.create_instance_dynamically import create_instance_dynamicall
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.parsers.document_parser_type import DocumentParser
 
@@ -130,7 +132,7 @@ class FileParser(BaseModel):
 
     type: Literal["file"] = "file"
     strategy: Literal["low", "high"] = Field(default="high")
-    visual_description_provider: GenerationProvider | None = Field(
+    visual_description_provider: GenerationProviderType | None = Field(
         default=None,
     )
     """
@@ -138,7 +140,7 @@ class FileParser(BaseModel):
     Useful when you want to customize the prompt for the visual description.
     """
 
-    audio_description_provider: GenerationProvider | None = Field(
+    audio_description_provider: GenerationProviderType | None = Field(
         default=None,
     )
     """

@@ -79,7 +79,9 @@ from agentle.agents.agent import Agent
 from agentle.agents.agent_config import AgentConfig
 from agentle.agents.agent_input import AgentInput
 from agentle.agents.agent_run_output import AgentRunOutput
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.generations.providers.google.google_generation_provider import (
     GoogleGenerationProvider,
 )
@@ -196,7 +198,7 @@ class AgentTeam(BaseModel):
         description="A sequence of specialized Agent instances available to the team.",
     )
 
-    orchestrator_provider: GenerationProvider = Field(
+    orchestrator_provider: GenerationProviderType = Field(
         default_factory=GoogleGenerationProvider,
         description="The generation provider used by the orchestrator agent.",
     )

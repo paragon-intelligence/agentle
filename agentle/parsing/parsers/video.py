@@ -16,7 +16,9 @@ from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
 
@@ -93,7 +95,7 @@ class VideoFileParser(BaseModel):
 
     type: Literal["video"] = "video"
 
-    visual_description_agent: GenerationProvider = Field(...)
+    visual_description_agent: GenerationProviderType = Field(...)
     """
     The agent to use for generating the visual description of the document.
     Useful when you want to customize the prompt for the visual description.

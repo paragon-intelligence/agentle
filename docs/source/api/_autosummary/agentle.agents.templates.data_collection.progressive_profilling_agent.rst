@@ -30,7 +30,7 @@ agentle.agents.templates.data\_collection.progressive\_profilling\_agent
       DeveloperMessage
       FieldSpec
       FilePart
-      GenerationProvider
+      GenerationProviderType
       Generator
       Mapping
       MutableMapping

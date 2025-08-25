@@ -7,7 +7,9 @@ from urllib.parse import urlparse
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.parsers.file_parser import FileParser
 from agentle.parsing.section_content import SectionContent
@@ -23,8 +25,8 @@ class LinkParser(BaseModel):
     """
 
     type: Literal["link"] = "link"
-    visual_description_provider: GenerationProvider | None = Field(default=None)
-    audio_description_provider: GenerationProvider | None = Field(default=None)
+    visual_description_provider: GenerationProviderType | None = Field(default=None)
+    audio_description_provider: GenerationProviderType | None = Field(default=None)
     parse_timeout: float = Field(default=30)
 
     async def parse_async(self, document_path: str) -> ParsedFile:

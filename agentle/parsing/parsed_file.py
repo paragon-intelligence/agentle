@@ -11,7 +11,9 @@ from rsb.coroutines.run_sync import run_sync
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.parsing.chunk import Chunk
 from agentle.parsing.chunking.chunking_config import ChunkingConfig
 from agentle.parsing.chunking.chunking_strategy import ChunkingStrategy
@@ -182,7 +184,7 @@ class ParsedFile(BaseModel):
     def chunkify(
         self,
         strategy: ChunkingStrategy,
-        generation_provider: GenerationProvider | None = None,
+        generation_provider: GenerationProviderType | None = None,
     ) -> Sequence[Chunk]:
         return run_sync(
             self.chunkify_async,
@@ -193,14 +195,14 @@ class ParsedFile(BaseModel):
     async def chunkify_async(
         self,
         strategy: ChunkingStrategy = ChunkingStrategy.RECURSIVE_CHARACTER,
-        generation_provider: GenerationProvider | None = None,
+        generation_provider: GenerationProviderType | None = None,
         config: ChunkingConfig | None = None,
     ) -> Sequence[Chunk]:
         match strategy:
             case ChunkingStrategy.AUTO:
                 if generation_provider is None:
                     raise ValueError(
-                        'Instance of GenerationProvider needs to be passed if strategy is "auto"'
+                        'Instance of GenerationProviderType needs to be passed if strategy is "auto"'
                     )
                 return await self.chunkify_async(
                     strategy=ChunkingStrategy.RECURSIVE_CHARACTER

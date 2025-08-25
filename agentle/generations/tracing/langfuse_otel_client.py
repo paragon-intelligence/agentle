@@ -5,12 +5,15 @@ Este módulo contém toda a lógica específica do Langfuse, isolada da interfac
 Utiliza o novo SDK V3 que é baseado em OpenTelemetry para melhor performance e
 compatibilidade com o ecossistema OTEL.
 """
+
 from __future__ import annotations
 
 import logging
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Optional, cast
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Literal, Optional, cast
+
+from rsb.models.field import Field
 
 from .otel_client import GenerationContext, OtelClient, TraceContext
 
@@ -69,6 +72,8 @@ class LangfuseOtelClient(OtelClient):
     - Pontuação automática de traces
     - Tratamento robusto de erros
     """
+
+    type: Literal["langfuse"] = Field(default="langfuse")
 
     def __init__(
         self,

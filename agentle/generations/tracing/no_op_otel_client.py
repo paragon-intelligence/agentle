@@ -5,11 +5,13 @@ Este módulo fornece uma implementação que não realiza nenhuma operação rea
 servindo como um stub quando a telemetria não está configurada ou foi desabilitada.
 """
 
-from typing import Any, Optional, AsyncGenerator
-from datetime import datetime
 from collections.abc import Mapping, Sequence
+from datetime import datetime
+from typing import Any, AsyncGenerator, Literal, Optional
 
-from .otel_client import OtelClient, TraceContext, GenerationContext
+from rsb.models.field import Field
+
+from .otel_client import GenerationContext, OtelClient, TraceContext
 
 
 class NoOpOtelClient(OtelClient):
@@ -19,6 +21,8 @@ class NoOpOtelClient(OtelClient):
     Esta implementação não realiza nenhuma operação real, servindo como um
     stub quando a telemetria não está configurada ou foi desabilitada.
     """
+
+    type: Literal["no_op"] = Field(default="no_op")
 
     async def trace_context(
         self,

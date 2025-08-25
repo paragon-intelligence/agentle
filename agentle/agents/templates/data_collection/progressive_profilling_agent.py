@@ -28,7 +28,9 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
 )
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.generations.models.messages.user_message import UserMessage
 from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.tools.tool import Tool
@@ -43,7 +45,7 @@ class ProgressiveProfilingAgent(BaseModel):
     """A stateless agent specialized in progressive data collection using structured outputs"""
 
     field_specs: Sequence[FieldSpec]
-    generation_provider: GenerationProvider
+    generation_provider: GenerationProviderType
     model: str | None = None
     max_attempts_per_field: int = 3
 

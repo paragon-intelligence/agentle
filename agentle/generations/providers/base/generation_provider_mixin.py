@@ -1,12 +1,12 @@
 """
 Abstract base class defining the contract for AI generation providers in Agentle.
 
-This module defines the GenerationProvider abstract base class, which serves as the
+This module defines the GenerationProviderType abstract base class, which serves as the
 foundation for all AI provider implementations in the Agentle framework. It establishes
 a common interface that all providers must implement, ensuring consistency across
 different AI services.
 
-The GenerationProvider abstract class defines methods for generating AI completions
+The GenerationProviderType abstract class defines methods for generating AI completions
 from both prompts and message sequences, supporting both synchronous and asynchronous
 execution patterns. It also includes support for structured output parsing through
 generic type parameters and tool/function calling capabilities.
@@ -23,6 +23,8 @@ from collections.abc import MutableSequence, Sequence
 from typing import TYPE_CHECKING, Any, Never, cast
 
 from rsb.coroutines.run_sync import run_sync
+from rsb.models.base_model import BaseModel
+from rsb.models.field import Field
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
@@ -43,6 +45,7 @@ from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.generations.tools.tool_execution_result import ToolExecutionResult
 from agentle.prompts.models.prompt import Prompt
+from agentle.generations.tracing.otel_client import OtelClient
 
 type WithoutStructuredOutput = None
 
@@ -50,50 +53,10 @@ if TYPE_CHECKING:
     from agentle.generations.providers.failover.failover_generation_provider import (
         FailoverGenerationProvider,
     )
-    from agentle.generations.tracing.otel_client import OtelClient
 
 
-class GenerationProvider(abc.ABC):
-    """
-    Abstract base class for AI generation service providers.
-
-    This class defines the interface that all AI provider implementations must adhere to
-    in the Agentle framework. It provides methods for generating AI completions from both
-    simple prompts and structured message sequences, supporting synchronous and asynchronous
-    patterns.
-
-    The class is generic over type T, which represents the optional structured data format
-    that can be extracted from model responses when a response_schema is provided.
-
-    Attributes:
-        tracing_client: An optional client for observability and tracing of generation requests.
-        default_model: An optional default model to use for generation.
-    """
-
-    otel_clients: Sequence[OtelClient]
-
-    def __init__(
-        self,
-        *,
-        otel_clients: Sequence[OtelClient] | OtelClient | None = None,
-    ) -> None:
-        """
-        Initialize the generation provider.
-
-        Args:
-            tracing_client: Optional client for observability and tracing of generation
-                requests and responses.
-            default_model: Optional default model to use for generation.
-        """
-
-        from agentle.generations.tracing.no_op_otel_client import NoOpOtelClient
-
-        if otel_clients is None:
-            otel_clients = [NoOpOtelClient()]
-
-        self.otel_clients = (
-            otel_clients if isinstance(otel_clients, Sequence) else [otel_clients]
-        )
+class GenerationProviderMixin(BaseModel, abc.ABC):
+    otel_clients: Sequence[OtelClient] | OtelClient = Field(default_factory=list)
 
     @property
     @abc.abstractmethod
@@ -444,21 +407,21 @@ class GenerationProvider(abc.ABC):
         )
 
     def __add__(
-        self, other: GenerationProvider | Sequence[GenerationProvider]
+        self, other: GenerationProviderMixin | Sequence[GenerationProviderMixin]
     ) -> FailoverGenerationProvider:
         from agentle.generations.providers.failover.failover_generation_provider import (
             FailoverGenerationProvider,
         )
 
         match other:
-            case GenerationProvider():
-                providers: MutableSequence[GenerationProvider] = [self, other]
+            case GenerationProviderMixin():
+                providers: MutableSequence[GenerationProviderMixin] = [self, other]
             case _:
-                providers = [self] + list(other)
+                providers = cast(list[GenerationProviderMixin], [self] + list(other))
 
         return FailoverGenerationProvider(
             generation_providers=providers,
             otel_clients=self.otel_clients or other.otel_clients
-            if isinstance(other, GenerationProvider)
+            if isinstance(other, GenerationProviderMixin)
             else other[0].otel_clients,
         )

@@ -12,7 +12,9 @@ from rsb.functions.ext2mime import ext2mime
 
 from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.message_parts.text import TextPart
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.generations.providers.failover.failover_generation_provider import (
     FailoverGenerationProvider,
 )
@@ -644,7 +646,7 @@ class GoogleSpeechToTextProvider(SpeechToTextProvider):
         self._generation_provider = generation_provider
 
     def _validate_google_providers_recursively(
-        self, provider: GenerationProvider
+        self, provider: GenerationProviderType
     ) -> bool:
         """
         Recursively validates that a provider or a hierarchy of providers are all

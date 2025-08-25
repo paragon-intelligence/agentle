@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from agentle.generations.providers.base.generation_provider import (
-        GenerationProvider,
+    from agentle.generations.providers.base.generation_provider_type import (
+        GenerationProviderType,
     )
     from agentle.parsing.parsers.file_parser import FileParser
 
 
 def file_parser_default_factory(
-    visual_description_provider: GenerationProvider | None = None,
-    audio_description_provider: GenerationProvider | None = None,
+    visual_description_provider: GenerationProviderType | None = None,
+    audio_description_provider: GenerationProviderType | None = None,
     parse_timeout: float = 30,
 ) -> FileParser:
     from agentle.parsing.factories.audio_description_agent_default_factory import (

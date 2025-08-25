@@ -8,5 +8,5 @@
 
    .. autosummary::
    
-      GenerationProvider
+      GenerationProviderType
    

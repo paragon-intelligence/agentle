@@ -2,11 +2,13 @@ from rsb.models.base_model import BaseModel
 from rsb.models.private_attr import PrivateAttr
 
 from agentle.agents.agent import Agent
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 
 
 class Webson[T](BaseModel):
-    generation_provider: GenerationProvider
+    generation_provider: GenerationProviderType
     cast_to: T
     _agent: Agent[T] = PrivateAttr()
 

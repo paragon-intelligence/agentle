@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Sequence, cast, override
+from typing import TYPE_CHECKING, Any, Literal, Sequence, cast, override
+
+from rsb.models.field import Field
+from rsb.models.private_attr import PrivateAttr
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
@@ -12,7 +15,10 @@ from agentle.generations.models.generation.generation_config_dict import (
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_mixin import (
+    GenerationProviderMixin,
+)
+
 from agentle.generations.providers.ollama.adapters.chat_response_to_generation_adapter import (
     ChatResponseToGenerationAdapter,
 )
@@ -24,29 +30,30 @@ from agentle.generations.providers.ollama.adapters.tool_to_ollama_tool_adapter i
 )
 from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
-from agentle.generations.tracing import observe
+
 
 if TYPE_CHECKING:
-    from ollama._types import Options
-
-    from agentle.generations.tracing.otel_client import OtelClient
+    from ollama._client import AsyncClient
 
 
-class OllamaGenerationProvider(GenerationProvider):
-    def __init__(
-        self,
-        *,
-        otel_clients: Sequence[OtelClient] | OtelClient | None = None,
-        options: Mapping[str, Any] | Options | None = None,
-        think: bool | None = None,
-        host: str | None = None,
-    ) -> None:
+class OllamaGenerationProvider(GenerationProviderMixin):
+    type: Literal["ollama"] = "ollama"
+    think: bool | None = Field(None)
+    host: str | None = Field(None)
+    options: dict[str, Any] | None = Field(default=None)
+    _client: AsyncClient | None = PrivateAttr(default=None)
+
+    def model_post_init(self, context: Any, /) -> None:
+        super().model_post_init(context)
         from ollama._client import AsyncClient
 
-        super().__init__(otel_clients=otel_clients)
-        self._client = AsyncClient(host=host)
-        self.options = options
-        self.think = think
+        self._client = AsyncClient(host=self.host)
+
+    @property
+    def client(self) -> AsyncClient:
+        if self._client is None:
+            raise ValueError("Client not initialized")
+        return self._client
 
     @property
     @override
@@ -58,7 +65,6 @@ class OllamaGenerationProvider(GenerationProvider):
     def organization(self) -> str:
         return "Ollama"
 
-    @observe
     @override
     async def generate_async[T](
         self,
@@ -73,7 +79,7 @@ class OllamaGenerationProvider(GenerationProvider):
 
         tool_adapter = ToolToOllamaToolAdapter()
 
-        bm = cast(BaseModel, response_schema) if response_schema else None
+        bm = cast(BaseModel, response_schema) if bool(response_schema) else None  # type: ignore[reportGeneralTypeIssues]
 
         _generation_config = self._normalize_generation_config(generation_config)
 
@@ -85,7 +91,7 @@ class OllamaGenerationProvider(GenerationProvider):
 
         try:
             async with asyncio.timeout(_generation_config.timeout_in_seconds):
-                response = await self._client.chat(
+                response = await self.client.chat(
                     model=_model,
                     messages=_messages,
                     tools=_tools,

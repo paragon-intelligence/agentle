@@ -19,7 +19,9 @@ from agentle.generations.models.message_parts.file import FilePart
 from agentle.generations.models.structured_outputs_store.visual_media_description import (
     VisualMediaDescription,
 )
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.parsing.image import Image
 from agentle.parsing.parsed_file import ParsedFile
 from agentle.parsing.section_content import SectionContent
@@ -66,7 +68,7 @@ class DocxFileParser(BaseModel):
         parser = DocxFileParser(visual_description_agent=custom_agent)
         ```
 
-    *   `multi_modal_provider` (GenerationProvider):
+    *   `multi_modal_provider` (GenerationProviderType):
         An alternative to using a visual_description_agent. This is a generation
         provider capable of handling multi-modal content (text and images).
         Defaults to GoogleGenerationProvider().
@@ -114,7 +116,7 @@ class DocxFileParser(BaseModel):
 
     strategy: Literal["high", "low"] = Field(default="high")
 
-    visual_description_provider: GenerationProvider | None = Field(
+    visual_description_provider: GenerationProviderType | None = Field(
         default=None,
     )
     """

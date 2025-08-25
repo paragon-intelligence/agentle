@@ -25,7 +25,9 @@ import asyncio
 import logging
 from collections.abc import AsyncGenerator, AsyncIterator, Mapping, Sequence
 from textwrap import dedent
-from typing import TYPE_CHECKING, cast, overload, override
+from typing import TYPE_CHECKING, Any, cast, overload, override
+
+from rsb.models.field import Field
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
@@ -37,8 +39,8 @@ from agentle.generations.models.message_parts.text import TextPart
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.message import Message
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.providers.base.generation_provider import (
-    GenerationProvider,
+from agentle.generations.providers.base.generation_provider_mixin import (
+    GenerationProviderMixin,
 )
 from agentle.generations.providers.decorators.model_kind_mapper import (
     override_model_kind,
@@ -57,7 +59,7 @@ from agentle.generations.providers.google.function_calling_config import (
 )
 from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
-from agentle.generations.tracing import observe
+from agentle.generations.tracing.observe import observe
 from agentle.utils.describe_model_for_llm import describe_model_for_llm
 
 if TYPE_CHECKING:
@@ -67,19 +69,17 @@ if TYPE_CHECKING:
     )
     from google.genai.types import HttpOptions
 
-    from agentle.generations.tracing.otel_client import OtelClient
-
 
 type WithoutStructuredOutput = None
 
 logger = logging.getLogger(__name__)
 
 
-class GoogleGenerationProvider(GenerationProvider):
+class GoogleGenerationProvider(GenerationProviderMixin):
     """
     Provider implementation for Google's Generative AI service.
 
-    This class implements the GenerationProvider interface for Google AI models,
+    This class implements the GenerationProviderType interface for Google AI models,
     allowing seamless integration with the Agentle framework. It supports both
     standard API key authentication and Vertex AI integration for enterprise
     deployments.
@@ -100,49 +100,30 @@ class GoogleGenerationProvider(GenerationProvider):
         function_calling_config: Configuration for function calling behavior.
     """
 
-    def __init__(
-        self,
-        *,
-        otel_clients: Sequence[OtelClient] | OtelClient | None = None,
-        use_vertex_ai: bool = False,
-        api_key: str | None | None = None,
-        credentials: Credentials | None = None,
-        project: str | None = None,
-        location: str | None = None,
-        debug_config: DebugConfig | None = None,
-        http_options: HttpOptions | None = None,
-        function_calling_config: FunctionCallingConfig | None = None,
-    ) -> None:
-        """
-        Initialize the Google Generation Provider.
+    use_vertex_ai: bool = Field(default=False)
+    api_key: str | None | None = Field(default=None)
+    credentials: Credentials | None = Field(default=None)
+    project: str | None = Field(default=None)
+    location: str | None = Field(default=None)
+    debug_config: DebugConfig | None = Field(default=None)
+    http_options: HttpOptions | None = Field(default=None)
+    function_calling_config: FunctionCallingConfig = Field(
+        default_factory=lambda: FunctionCallingConfig()
+    )
 
-        Args:
-            otel_clients: Optional client for observability and tracing.
-            use_vertex_ai: Whether to use Google Vertex AI instead of standard API.
-            api_key: Optional API key for authentication with Google AI.
-            credentials: Optional credentials object for authentication.
-            project: Google Cloud project ID (required for Vertex AI).
-            location: Google Cloud region (required for Vertex AI).
-            debug_config: Optional configuration for debug logging.
-            http_options: HTTP options for the Google AI client.
-            message_adapter: Optional adapter to convert Agentle messages to Google Content.
-            function_calling_config: Optional configuration for function calling behavior.
-        """
+    def model_post_init(self, context: Any, /) -> None:
         from google import genai
         from google.genai import types
 
-        super().__init__(otel_clients=otel_clients)
-        self.message_adapter = MessageToGoogleContentAdapter()
-        self.function_calling_config = function_calling_config or {}
-
-        _http_options = http_options or types.HttpOptions()
+        super().model_post_init(context)
+        _http_options = self.http_options or types.HttpOptions()
         self._client = genai.Client(
-            vertexai=use_vertex_ai,
-            api_key=api_key if not use_vertex_ai else None,
-            credentials=credentials,
-            project=project if use_vertex_ai else None,
-            location=location if use_vertex_ai else None,
-            debug_config=debug_config,
+            vertexai=self.use_vertex_ai,
+            api_key=self.api_key if not self.use_vertex_ai else None,
+            credentials=self.credentials,
+            project=self.project if self.use_vertex_ai else None,
+            location=self.location if self.use_vertex_ai else None,
+            debug_config=self.debug_config,
             http_options=_http_options,
         )
 
@@ -289,7 +270,9 @@ class GoogleGenerationProvider(GenerationProvider):
         if isinstance(messages[0], DeveloperMessage):
             messages = messages[1:]
 
-        contents = [self.message_adapter.adapt(msg) for msg in messages]
+        message_adapter = MessageToGoogleContentAdapter()
+
+        contents = [message_adapter.adapt(msg) for msg in messages]
 
         try:
             async with asyncio.timeout(_generation_config.timeout_in_seconds):
@@ -314,35 +297,6 @@ class GoogleGenerationProvider(GenerationProvider):
         # Yield from the async iterator to make this an async generator
         async for generation in response:
             yield generation
-
-    @overload
-    async def generate_async[T](
-        self,
-        *,
-        model: str | ModelKind | None = None,
-        messages: Sequence[Message],
-        response_schema: type[T],
-        generation_config: GenerationConfig | GenerationConfigDict | None = None,
-    ) -> Generation[T]: ...
-
-    @overload
-    async def generate_async(
-        self,
-        *,
-        model: str | ModelKind | None = None,
-        messages: Sequence[Message],
-        generation_config: GenerationConfig | GenerationConfigDict | None = None,
-        tools: Sequence[Tool],
-    ) -> Generation[WithoutStructuredOutput]: ...
-
-    @overload
-    async def generate_async(
-        self,
-        *,
-        model: str | ModelKind | None = None,
-        messages: Sequence[Message],
-        generation_config: GenerationConfig | GenerationConfigDict | None = None,
-    ) -> Generation[WithoutStructuredOutput]: ...
 
     @observe
     @override
@@ -436,7 +390,9 @@ class GoogleGenerationProvider(GenerationProvider):
         if isinstance(messages[0], DeveloperMessage):
             messages = messages[1:]
 
-        contents = [self.message_adapter.adapt(msg) for msg in messages]
+        message_adapter = MessageToGoogleContentAdapter()
+
+        contents = [message_adapter.adapt(msg) for msg in messages]
 
         try:
             async with asyncio.timeout(_generation_config.timeout_in_seconds):

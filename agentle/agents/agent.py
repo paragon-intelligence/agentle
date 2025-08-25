@@ -103,8 +103,8 @@ from agentle.generations.models.message_parts.tool_execution_suggestion import (
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.providers.base.generation_provider import (
-    GenerationProvider,
+from agentle.generations.providers.types.generation_provider_type import (
+    GenerationProviderType,
 )
 from agentle.generations.providers.google.google_generation_provider import (
     GoogleGenerationProvider,
@@ -286,19 +286,22 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
     ```
     """
 
-    generation_provider: GenerationProvider = Field(
-        default_factory=GoogleGenerationProvider
+    generation_provider: GenerationProviderType = Field(
+        default_factory=GoogleGenerationProvider,
+        discriminator="type",
     )
     """
     The service provider of the agent
     """
 
-    file_visual_description_provider: GenerationProvider | None = Field(default=None)
+    file_visual_description_provider: GenerationProviderType | None = Field(
+        default=None
+    )
     """
     The service provider of the agent for visual description.
     """
 
-    file_audio_description_provider: GenerationProvider | None = Field(default=None)
+    file_audio_description_provider: GenerationProviderType | None = Field(default=None)
     """
     The service provider of the agent for audio description.
     """
@@ -713,7 +716,9 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 )
             except ImportError:
                 # Create a minimal provider for type checking
-                generation_provider = type("DummyProvider", (GenerationProvider,), {})
+                generation_provider = type(
+                    "DummyProvider", (GenerationProviderType,), {}
+                )
 
         # Convert input/output modes to MimeType if they're strings
         input_modes = agent_card.get("defaultInputModes", ["text/plain"])
@@ -1197,7 +1202,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 stream,
             )
         )
-        generation_provider: GenerationProvider = self.generation_provider
+        generation_provider: GenerationProviderType = self.generation_provider
 
         static_knowledge_prompt: str | None = None
 
@@ -3230,7 +3235,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         new_default_output_modes: Sequence[str] | None = None,
         new_skills: Sequence[AgentSkill] | None = None,
         new_mcp_servers: MutableSequence[MCPServerProtocol] | None = None,
-        new_generation_provider: GenerationProvider | None = None,
+        new_generation_provider: GenerationProviderType | None = None,
         new_url: str | None = None,
         new_suspension_manager: SuspensionManager | None = None,
         new_document_cache_store: DocumentCacheStoreType | None = None,
@@ -4138,7 +4143,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                                 parts=[
                                     TextPart(
                                         text=np.array2string(
-                                            cast(np.ndarray[Any, Any], input)  # type: ignore[eportUnnecessaryCast]
+                                            cast(np.ndarray[Any, Any], input)
                                         )
                                     )
                                 ]

@@ -23,10 +23,11 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, Literal, cast, override
 
 import httpx
-from rsb.adapters.adapter import Adapter
+from rsb.models.field import Field
+from rsb.models.private_attr import PrivateAttr
 
 # idk why mypy is not recognising this as a module
 from agentle.generations.json.json_schema_builder import (  # type: ignore[attr-defined]
@@ -40,8 +41,8 @@ from agentle.generations.models.generation.generation_config_dict import (
 from agentle.generations.models.messages.assistant_message import AssistantMessage
 from agentle.generations.models.messages.developer_message import DeveloperMessage
 from agentle.generations.models.messages.user_message import UserMessage
-from agentle.generations.providers.base.generation_provider import (
-    GenerationProvider,
+from agentle.generations.providers.base.generation_provider_mixin import (
+    GenerationProviderMixin,
 )
 from agentle.generations.providers.cerebras._adapters.agentle_message_to_cerebras_message_adapter import (
     AgentleMessageToCerebrasMessageAdapter,
@@ -57,27 +58,21 @@ from agentle.generations.providers.decorators.model_kind_mapper import (
 )
 from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
-from agentle.generations.tracing import observe
+from agentle.generations.tracing.observe import observe
 
 if TYPE_CHECKING:
-    from cerebras.cloud.sdk.types.chat.completion_create_params import (
-        MessageAssistantMessageRequestTyped,
-        MessageSystemMessageRequestTyped,
-        MessageUserMessageRequestTyped,
-    )
-
-    from agentle.generations.tracing.otel_client import OtelClient
+    from cerebras.cloud.sdk import AsyncCerebras
 
 
 logger = logging.getLogger(__name__)
 type WithoutStructuredOutput = None
 
 
-class CerebrasGenerationProvider(GenerationProvider):
+class CerebrasGenerationProvider(GenerationProviderMixin):
     """
     Provider implementation for Cerebras AI services.
 
-    This class implements the GenerationProvider interface for Cerebras AI models,
+    This class implements the GenerationProviderType interface for Cerebras AI models,
     allowing seamless integration with the Agentle framework. It handles the conversion
     of Agentle messages to Cerebras format, manages API communication, and processes
     responses back into the standardized Agentle format.
@@ -100,66 +95,36 @@ class CerebrasGenerationProvider(GenerationProvider):
         message_adapter: Adapter to convert Agentle messages to Cerebras format.
     """
 
-    otel_clients: Sequence[OtelClient]
-    api_key: str | None
-    base_url: str | httpx.URL | None
-    max_retries: int
-    default_headers: Mapping[str, str] | None
-    default_query: Mapping[str, object] | None
-    http_client: httpx.AsyncClient | None
-    _strict_response_validation: bool
-    warm_tcp_connection: bool
-    message_adapter: Adapter[
-        AssistantMessage | UserMessage | DeveloperMessage,
-        "MessageSystemMessageRequestTyped | MessageAssistantMessageRequestTyped | MessageUserMessageRequestTyped",
-    ]
+    type: Literal["cerebras"] = Field(default="cerebras")
+    api_key: str | None = Field(default=None)
+    base_url: str | httpx.URL | None = Field(default=None)
+    max_retries: int = Field(default=2)
+    default_headers: Mapping[str, str] | None = Field(default=None)
+    default_query: Mapping[str, object] | None = Field(default=None)
+    http_client: httpx.AsyncClient | None = Field(default=None)
+    warm_tcp_connection: bool = Field(default=True)
+    strict_response_validation: bool = Field(default=False)
+    _client: AsyncCerebras | None = PrivateAttr(default=None)
 
-    def __init__(
-        self,
-        *,
-        otel_clients: Sequence[OtelClient] | OtelClient | None = None,
-        api_key: str | None = None,
-        base_url: str | httpx.URL | None = None,
-        max_retries: int = 2,
-        default_headers: Mapping[str, str] | None = None,
-        default_query: Mapping[str, object] | None = None,
-        http_client: httpx.AsyncClient | None = None,
-        _strict_response_validation: bool = False,
-        warm_tcp_connection: bool = True,
-        message_adapter: Adapter[
-            AssistantMessage | UserMessage | DeveloperMessage,
-            "MessageSystemMessageRequestTyped | MessageAssistantMessageRequestTyped | MessageUserMessageRequestTyped",
-        ]
-        | None = None,
-    ):
-        """
-        Initialize the Cerebras Generation Provider.
+    @property
+    def client(self) -> AsyncCerebras:
+        if self._client is None:
+            raise ValueError("Client not initialized. Call model_post_init first.")
+        return self._client
 
-        Args:
-            otel_clients: Optional client for observability and tracing of generation
-                requests and responses.
-            api_key: Optional API key for authentication with Cerebras AI.
-            base_url: Optional custom base URL for the Cerebras API.
-            timeout: Optional timeout for API requests.
-            max_retries: Maximum number of retries for failed requests.
-            default_headers: Optional default HTTP headers for requests.
-            default_query: Optional default query parameters for requests.
-            http_client: Optional custom HTTP client for requests.
-            _strict_response_validation: Whether to enable strict validation of responses.
-            warm_tcp_connection: Whether to keep the TCP connection warm.
-            message_adapter: Optional adapter to convert Agentle messages to Cerebras format.
-        """
-        super().__init__(otel_clients=otel_clients)
-        self.api_key = api_key
-        self.base_url = base_url
-        self.max_retries = max_retries
-        self.default_headers = default_headers
-        self.default_query = default_query
-        self.http_client = http_client
-        self._strict_response_validation = _strict_response_validation
-        self.warm_tcp_connection = warm_tcp_connection
-        self.message_adapter = (
-            message_adapter or AgentleMessageToCerebrasMessageAdapter()
+    @override
+    def model_post_init(self, context: Any) -> None:
+        from cerebras.cloud.sdk import AsyncCerebras
+
+        self._client = AsyncCerebras(
+            api_key=self.api_key,
+            base_url=self.base_url,
+            max_retries=self.max_retries,
+            default_headers=self.default_headers,
+            default_query=self.default_query,
+            http_client=self.http_client,
+            _strict_response_validation=self.strict_response_validation,
+            warm_tcp_connection=self.warm_tcp_connection,
         )
 
     @property
@@ -216,27 +181,9 @@ class CerebrasGenerationProvider(GenerationProvider):
             Tool/function calling support may vary depending on the Cerebras model
             capabilities. Check the Cerebras documentation for details on supported features.
         """
-        from cerebras.cloud.sdk import AsyncCerebras
         from cerebras.cloud.sdk.types.chat.chat_completion import ChatCompletionResponse
 
         _generation_config = self._normalize_generation_config(generation_config)
-        client = AsyncCerebras(
-            api_key=self.api_key,
-            base_url=self.base_url,
-            timeout=_generation_config.timeout
-            if _generation_config.timeout
-            else _generation_config.timeout_s * 1000
-            if _generation_config.timeout_s
-            else _generation_config.timeout_m * 60 * 1000
-            if _generation_config.timeout_m
-            else None,
-            max_retries=self.max_retries,
-            default_headers=self.default_headers,
-            default_query=self.default_query,
-            http_client=self.http_client,
-            _strict_response_validation=self._strict_response_validation,
-            warm_tcp_connection=self.warm_tcp_connection,
-        )
 
         tool_adapter = AgentleToolToCerebrasToolAdapter()
         _response_format: dict[str, Any] | None = (
@@ -246,7 +193,7 @@ class CerebrasGenerationProvider(GenerationProvider):
                     "name": "json_schema",
                     "strict": True,
                     "schema": JsonSchemaBuilder(
-                        cast(type[Any], response_schema),
+                        response_schema,
                         use_defs_instead_of_definitions=True,
                         clean_output=True,
                         strict_mode=True,
@@ -257,13 +204,15 @@ class CerebrasGenerationProvider(GenerationProvider):
             else None
         )
 
+        message_adapter = AgentleMessageToCerebrasMessageAdapter()
+
         try:
             async with asyncio.timeout(_generation_config.timeout_in_seconds):
                 cerebras_completion = cast(
                     ChatCompletionResponse,
-                    await client.chat.completions.create(
+                    await self.client.chat.completions.create(
                         messages=[
-                            self.message_adapter.adapt(message) for message in messages
+                            message_adapter.adapt(message) for message in messages
                         ],
                         model=model or self.default_model,
                         tools=[tool_adapter.adapt(tool) for tool in tools]

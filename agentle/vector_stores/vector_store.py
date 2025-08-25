@@ -9,7 +9,9 @@ from rsb.coroutines.run_sync import run_sync
 from agentle.embeddings.models.embed_content import EmbedContent
 from agentle.embeddings.models.embedding import Embedding
 from agentle.embeddings.providers.embedding_provider import EmbeddingProvider
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_type import (
+    GenerationProviderType,
+)
 from agentle.generations.tools.tool import Tool
 from agentle.parsing.chunk import Chunk
 from agentle.parsing.chunking.chunking_config import ChunkingConfig
@@ -30,7 +32,7 @@ SearchParams = ParamSpec("SearchParams")
 class VectorStore(abc.ABC):
     default_collection_name: str
     embedding_provider: EmbeddingProvider
-    generation_provider: GenerationProvider | None
+    generation_provider: GenerationProviderType | None
     detailed_agent_description: str | None
     """Use this to describe your vector store and tell the Agent when to use, what is this vector database etc why it is used etc."""
 
@@ -39,7 +41,7 @@ class VectorStore(abc.ABC):
         *,
         default_collection_name: str = "agentle",
         embedding_provider: EmbeddingProvider,
-        generation_provider: GenerationProvider | None = None,
+        generation_provider: GenerationProviderType | None = None,
         detailed_agent_description: str | None = None,
     ) -> None:
         self.default_collection_name = default_collection_name

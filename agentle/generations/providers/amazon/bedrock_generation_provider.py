@@ -4,8 +4,11 @@ import asyncio
 import logging
 import os
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Sequence, override
+from typing import TYPE_CHECKING, Any, Literal, Sequence, cast, override
+
 from rsb.coroutines.run_async import run_async
+from rsb.models.field import Field
+from rsb.models.private_attr import PrivateAttr
 
 from agentle.generations.collections.message_sequence import MessageSequence
 from agentle.generations.models.generation.generation import Generation
@@ -36,44 +39,50 @@ from agentle.generations.providers.amazon.models.specific_tool import SpecificTo
 from agentle.generations.providers.amazon.models.text_content import TextContent
 from agentle.generations.providers.amazon.models.tool_choice import ToolChoice
 from agentle.generations.providers.amazon.models.tool_config import ToolConfig
-from agentle.generations.providers.base.generation_provider import GenerationProvider
+from agentle.generations.providers.base.generation_provider_mixin import (
+    GenerationProviderMixin,
+)
 from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
-from agentle.generations.tracing import observe
+from agentle.generations.tracing.observe import observe
 
 if TYPE_CHECKING:
-    from agentle.generations.tracing.otel_client import OtelClient
+    from mypy_boto3_bedrock_runtime.client import BedrockRuntimeClient
+
 
 logger = logging.getLogger(__name__)
 
 
-class BedrockGenerationProvider(GenerationProvider):
-    _client: Any
-    region_name: str
-    access_key_id: str | None
-    secret_access_key: str | None
-    config: BotoConfig | None
+class BedrockGenerationProvider(GenerationProviderMixin):
+    type: Literal["bedrock"] = Field(default="bedrock")
+    region_name: str = Field(default="us-east-1")
+    access_key_id: str | None = Field(default=None)
+    secret_access_key: str | None = Field(default=None)
+    config: BotoConfig | None = Field(default=None)
+    _client: BedrockRuntimeClient | None = PrivateAttr(default=None)
 
-    def __init__(
-        self,
-        *,
-        otel_clients: Sequence[OtelClient] | OtelClient | None = None,
-        region_name: str = "us-east-1",
-        access_key_id: str | None = None,
-        secret_access_key: str | None = None,
-        config: BotoConfig | None = None,
-    ):
+    @property
+    def client(self) -> BedrockRuntimeClient:
+        if self._client is None:
+            raise ValueError("Bedrock client not initialized")
+        return self._client
+
+    @override
+    def model_post_init(self, context: Any, /) -> None:
+        super().model_post_init(context)
+
         import boto3
 
-        super().__init__(otel_clients=otel_clients)
-
-        self._client = boto3.client(
-            "bedrock-runtime",
-            aws_access_key_id=access_key_id or os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=secret_access_key
-            or os.getenv("AWS_SECRET_ACCESS_KEY"),
-            region_name=region_name,
-            config=config,
+        self._client = cast(
+            BedrockRuntimeClient,
+            boto3.client(
+                "bedrock-runtime",
+                aws_access_key_id=self.access_key_id or os.getenv("AWS_ACCESS_KEY_ID"),
+                aws_secret_access_key=self.secret_access_key
+                or os.getenv("AWS_SECRET_ACCESS_KEY"),
+                region_name=self.region_name,
+                config=self.config,
+            ),
         )
 
     @property
@@ -160,20 +169,20 @@ class BedrockGenerationProvider(GenerationProvider):
         async with asyncio.timeout(_generation_config.timeout_in_seconds):
             if _tool_config:
                 response = await run_async(
-                    self._client.converse,
+                    self.client.converse,
                     modelId=_model,
-                    system=_system,
-                    messages=conversation,
+                    system=_system,  # type: ignore[reportArgumentType]
+                    messages=conversation,  # type: ignore[reportArgumentType]
                     inferenceConfig=_inference_config,
-                    toolConfig=_tool_config,
+                    toolConfig=_tool_config,  # type: ignore[reportArgumentType]
                 )
 
             else:
                 response = await run_async(
-                    self._client.converse,
+                    self.client.converse,
                     modelId=_model,
-                    system=_system,
-                    messages=conversation,
+                    system=_system,  # type: ignore[reportArgumentType]
+                    messages=conversation,  # type: ignore[reportArgumentType]
                     inferenceConfig=_inference_config,
                 )
 

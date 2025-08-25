@@ -47,7 +47,7 @@ agentle.agents.agent
       DocumentParser
       FilePart
       Generation
-      GenerationProvider
+      GenerationProviderType
       Generator
       GoogleGenerationProvider
       InMemoryDocumentCacheStore
