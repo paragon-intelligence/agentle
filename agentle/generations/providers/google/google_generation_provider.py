@@ -27,6 +27,7 @@ from collections.abc import AsyncGenerator, AsyncIterator, Mapping, Sequence
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any, cast, overload, override
 
+from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 
 from agentle.generations.models.generation.generation import Generation
@@ -64,9 +65,7 @@ from agentle.utils.describe_model_for_llm import describe_model_for_llm
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
-    from google.genai.client import (
-        DebugConfig,
-    )
+    from google.genai.client import DebugConfig
     from google.genai.types import HttpOptions
 
 
@@ -102,14 +101,16 @@ class GoogleGenerationProvider(GenerationProviderMixin):
 
     use_vertex_ai: bool = Field(default=False)
     api_key: str | None | None = Field(default=None)
-    credentials: Credentials | None = Field(default=None)
+    credentials: "Credentials | None" = Field(default=None)
     project: str | None = Field(default=None)
     location: str | None = Field(default=None)
-    debug_config: DebugConfig | None = Field(default=None)
-    http_options: HttpOptions | None = Field(default=None)
+    debug_config: "DebugConfig | None" = Field(default=None)
+    http_options: "HttpOptions | None" = Field(default=None)
     function_calling_config: FunctionCallingConfig = Field(
         default_factory=lambda: FunctionCallingConfig()
     )
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def model_post_init(self, context: Any, /) -> None:
         from google import genai
@@ -540,3 +541,24 @@ class GoogleGenerationProvider(GenerationProviderMixin):
         if isinstance(price_info, tuple):
             return price_info[0]
         return price_info
+
+
+# Rebuild the model to handle forward references
+try:
+    # Import Google modules and make them available for Pydantic
+    import google.auth.credentials
+    import google.genai.client
+    import google.genai.types
+    
+    # Make types available in the module's global namespace for Pydantic
+    globals()["Credentials"] = google.auth.credentials.Credentials
+    globals()["DebugConfig"] = google.genai.client.DebugConfig
+    globals()["HttpOptions"] = google.genai.types.HttpOptions
+    
+    # Now rebuild the model with types available
+    GoogleGenerationProvider.model_rebuild()
+except ImportError:
+    logger.warning(
+        "Google AI dependencies not found. "
+        + "Install google-genai to use Google models."
+    )
