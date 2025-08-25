@@ -17,7 +17,6 @@ from agentle.generations.providers.base.generation_provider_type import (
     GenerationProviderType,
 )
 from agentle.parsing.parsed_file import ParsedFile
-from agentle.parsing.parsers.file_parser import FileParser
 
 
 class CompressedFileParser(BaseModel):
@@ -177,6 +176,7 @@ class CompressedFileParser(BaseModel):
         import zipfile
 
         import rarfile
+        from agentle.parsing.parsers.file_parser import FileParser
 
         path = Path(document_path)
         file_contents = path.read_bytes()

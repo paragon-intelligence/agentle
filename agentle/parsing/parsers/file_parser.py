@@ -11,7 +11,6 @@ from agentle.generations.providers.base.generation_provider_type import (
     GenerationProviderType,
 )
 from agentle.parsing.parsed_file import ParsedFile
-from agentle.parsing.parsers.document_parser_type import DocumentParser
 
 
 class FileParser(BaseModel):
@@ -192,9 +191,10 @@ class FileParser(BaseModel):
         """
         from agentle.parsing.parsers.link import LinkParser
         from agentle.parsing.parses import parser_registry
+        from agentle.parsing.parsers.document_parser_type import DocumentParserType
 
         path = Path(document_path)
-        parser_cls: type[DocumentParser] | None = parser_registry.get(
+        parser_cls: type[DocumentParserType] | None = parser_registry.get(
             path.suffix.lstrip(".")
         )
 
@@ -204,7 +204,7 @@ class FileParser(BaseModel):
 
             if is_url:
                 parser_cls = cast(
-                    type[DocumentParser],
+                    type[DocumentParserType],
                     LinkParser,
                 )
 
