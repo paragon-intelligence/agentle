@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import random
 from collections.abc import MutableSequence, Sequence
-from typing import Literal, cast, override
+from typing import TYPE_CHECKING, Literal, cast, override
 
 from rsb.coroutines.fire_and_forget import fire_and_forget
 from rsb.models.field import Field
@@ -33,9 +33,6 @@ from agentle.generations.models.messages.message import Message
 from agentle.generations.providers.base.generation_provider_mixin import (
     GenerationProviderMixin,
 )
-from agentle.generations.providers.base.generation_provider_type import (
-    GenerationProviderType,
-)
 from agentle.generations.providers.types.model_kind import ModelKind
 from agentle.generations.tools.tool import Tool
 from agentle.resilience.circuit_breaker.circuit_breaker_protocol import (
@@ -43,6 +40,11 @@ from agentle.resilience.circuit_breaker.circuit_breaker_protocol import (
 )
 
 type WithoutStructuredOutput = None
+
+if TYPE_CHECKING:
+    from agentle.generations.providers.base.generation_provider_type import (
+        GenerationProviderType,
+    )
 
 
 class FailoverGenerationProvider(GenerationProviderMixin):
@@ -69,7 +71,7 @@ class FailoverGenerationProvider(GenerationProviderMixin):
     """
 
     type: Literal["failover"] = Field(default="failover")
-    generation_providers: Sequence[GenerationProviderType | GenerationProviderMixin]
+    generation_providers: Sequence[GenerationProviderMixin]
     shuffle: bool = Field(default=False)
     circuit_breaker: CircuitBreakerProtocol | None = Field(default=None)
 
@@ -143,9 +145,7 @@ class FailoverGenerationProvider(GenerationProviderMixin):
         Raises:
             Exception: The exception from the first provider if all providers fail.
         """
-        exceptions: MutableSequence[
-            tuple[GenerationProviderType | GenerationProviderMixin, Exception]
-        ] = []
+        exceptions: MutableSequence[tuple[GenerationProviderMixin, Exception]] = []
 
         # Get list of providers and optionally shuffle
         providers = list(self.generation_providers)
@@ -329,6 +329,7 @@ class FailoverGenerationProvider(GenerationProviderMixin):
         Returns:
             FailoverGenerationProvider: A new instance with the specified providers removed.
         """
+
         filtered_providers: MutableSequence[GenerationProviderType] = []
 
         self.generation_providers = cast(

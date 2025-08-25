@@ -26,6 +26,7 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Literal, cast, override
 
 import httpx
+from pydantic import ConfigDict
 from rsb.models.field import Field
 from rsb.models.private_attr import PrivateAttr
 
@@ -105,6 +106,8 @@ class CerebrasGenerationProvider(GenerationProviderMixin):
     warm_tcp_connection: bool = Field(default=True)
     strict_response_validation: bool = Field(default=False)
     _client: AsyncCerebras | None = PrivateAttr(default=None)
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
     def client(self) -> AsyncCerebras:
