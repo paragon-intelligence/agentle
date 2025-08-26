@@ -9,4 +9,3 @@ class AudioMessageOutput(BaseModel):
     audio: str = Field(
         description="A string of what will be said in the audio in english."
     )
-    voice: Literal["male", "female"] = Field(default="female")
