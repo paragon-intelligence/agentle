@@ -11,6 +11,7 @@
       Field
       PrivateAttr
       cast
+      dataclass
       run_sync
    
    .. rubric:: Classes
@@ -19,8 +20,10 @@
    
       Agent
       Any
+      Awaitable
       BaseModel
       Callable
+      CallbackWithContext
       ConfigDict
       ConversationStore
       Data

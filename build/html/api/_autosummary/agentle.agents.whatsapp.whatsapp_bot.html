@@ -668,7 +668,10 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cast</span></code>(typ, val)</p></td>
 <td><p>Cast a value to a type.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_sync</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass</span></code>([cls, init, repr, eq, order, ...])</p></td>
+<td><p>Add dunder methods based on the fields defined in the class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_sync</span></code>()</p></td>
 <td><p>Runs an async function or coroutine synchronously using a shared background event loop.</p></td>
 </tr>
 </tbody>
@@ -684,11 +687,17 @@
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Awaitable</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Callable</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Callable</span></code>()</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CallbackWithContext</span></code>(callback[, context])</p></td>
+<td><p>Container for callback function with optional context.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigDict</span></code></p></td>
 <td><p>Alias for pydantic.ConfigDict.</p></td>
