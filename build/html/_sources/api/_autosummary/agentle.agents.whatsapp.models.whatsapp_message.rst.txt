@@ -1,4 +1,4 @@
-agentle.agents.whatsapp.models.whatsapp\_message
+﻿agentle.agents.whatsapp.models.whatsapp\_message
 ================================================
 
 .. automodule:: agentle.agents.whatsapp.models.whatsapp_message
@@ -9,6 +9,7 @@ agentle.agents.whatsapp.models.whatsapp\_message
    .. autosummary::
    
       Field
+      override
    
    .. rubric:: Classes
 
