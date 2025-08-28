@@ -24,6 +24,7 @@
       ConfigDict
       ConversationStore
       Data
+      EvolutionAPIProvider
       FilePart
       GeneratedAssistantMessage
       Message
