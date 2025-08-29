@@ -1,0 +1,19 @@
+agentle.agents.whatsapp.models.context\_info
+============================================
+
+.. automodule:: agentle.agents.whatsapp.models.context_info
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      TypedDict
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ContextInfo
+      QuotedMessage
+   

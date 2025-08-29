@@ -14,7 +14,7 @@ agentle.agents.whatsapp.models.data
 
    .. autosummary::
    
-      Any
+      ContextInfo
       Data
       Key
       Message

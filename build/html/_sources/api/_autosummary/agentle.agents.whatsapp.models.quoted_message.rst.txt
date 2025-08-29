@@ -1,0 +1,18 @@
+agentle.agents.whatsapp.models.quoted\_message
+==============================================
+
+.. automodule:: agentle.agents.whatsapp.models.quoted_message
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      TypedDict
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      QuotedMessage
+   

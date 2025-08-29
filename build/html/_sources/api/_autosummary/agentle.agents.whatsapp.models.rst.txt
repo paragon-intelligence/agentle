@@ -1,4 +1,4 @@
-agentle.agents.whatsapp.models
+﻿agentle.agents.whatsapp.models
 ==============================
 
 .. automodule:: agentle.agents.whatsapp.models
@@ -11,12 +11,16 @@ agentle.agents.whatsapp.models
    :recursive:
 
    audio_message
+   context_info
    data
+   device_list_metadata
    document_message
    downloaded_media
    image_message
    key
    message
+   message_context_info
+   quoted_message
    video_message
    whatsapp_audio_message
    whatsapp_bot_config

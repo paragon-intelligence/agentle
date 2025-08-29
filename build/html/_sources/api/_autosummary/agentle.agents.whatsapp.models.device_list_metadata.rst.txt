@@ -1,0 +1,18 @@
+agentle.agents.whatsapp.models.device\_list\_metadata
+=====================================================
+
+.. automodule:: agentle.agents.whatsapp.models.device_list_metadata
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      TypedDict
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DeviceListMetadata
+   
