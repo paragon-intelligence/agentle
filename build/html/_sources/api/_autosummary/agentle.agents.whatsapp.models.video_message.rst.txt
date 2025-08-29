@@ -14,5 +14,6 @@ agentle.agents.whatsapp.models.video\_message
 
    .. autosummary::
    
+      Any
       VideoMessage
    
