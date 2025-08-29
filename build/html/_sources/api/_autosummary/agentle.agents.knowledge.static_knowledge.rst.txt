@@ -1,4 +1,4 @@
-agentle.agents.knowledge.static\_knowledge
+﻿agentle.agents.knowledge.static\_knowledge
 ==========================================
 
 .. automodule:: agentle.agents.knowledge.static_knowledge
@@ -9,13 +9,20 @@ agentle.agents.knowledge.static\_knowledge
    .. autosummary::
    
       Field
-      urlparse
+      is_file_path
+      is_url
+      validate_content_type
    
    .. rubric:: Classes
 
    .. autosummary::
    
       BaseModel
-      Path
       StaticKnowledge
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      FileValidationError
    

@@ -662,8 +662,14 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
 <td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">urlparse</span></code>(url[, scheme, allow_fragments])</p></td>
-<td><p>Parse a URL into 6 components: &lt;scheme&gt;://&lt;netloc&gt;/&lt;path&gt;;&lt;params&gt;?&lt;query&gt;#&lt;fragment&gt;</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_file_path</span></code>(content[, base_path])</p></td>
+<td><p>Check if content is a valid file path that exists.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_url</span></code>(content)</p></td>
+<td><p>Check if content is a URL.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">validate_content_type</span></code>(content[, base_path])</p></td>
+<td><p>Determine and validate the type of content (URL, file path, or raw text).</p></td>
 </tr>
 </tbody>
 </table>
@@ -675,11 +681,18 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Path</span></code>(*args, **kwargs)</p></td>
-<td><p>PurePath subclass that can make system calls.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticKnowledge</span></code>(*, content[, cache, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaticKnowledge</span></code>(*, content[, cache, ...])</p></td>
 <td><p>Static knowledge is a collection of knowledge that is provided to the agent at the time of creation.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Exceptions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FileValidationError</span></code>(message, path[, error_code])</p></td>
+<td><p>Custom exception for file validation errors.</p></td>
 </tr>
 </tbody>
 </table>

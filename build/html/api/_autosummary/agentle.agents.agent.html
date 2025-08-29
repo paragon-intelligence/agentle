@@ -902,10 +902,13 @@ tools=[get_weather],</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MaxToolCallsExceededError</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FileValidationError</span></code>(message, path[, error_code])</p></td>
+<td><p>Custom exception for file validation errors.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MaxToolCallsExceededError</span></code></p></td>
 <td><p>Exception raised when an agent exceeds its configured maximum number of tool calls.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolSuspensionError</span></code>(reason[, approval_data, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ToolSuspensionError</span></code>(reason[, approval_data, ...])</p></td>
 <td><p>Exception raised by tools to suspend agent execution for external input.</p></td>
 </tr>
 </tbody>
