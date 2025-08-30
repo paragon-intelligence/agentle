@@ -898,7 +898,7 @@
     <span class="n">static_knowledge</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">StaticKnowledge</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Static knowledge to be used by the agent. This will be used to enrich the agent&#39;s</span>
-<span class="sd">    knowledge base. This will be FULLY (**entire document**) indexed to the conversation.</span>
+<span class="sd">    knowledge base. This will be FULLY indexed to the conversation (**entire document**).</span>
 <span class="sd">    This can be any url or a local file path.</span>
 <span class="sd">    </span>
 <span class="sd">    You can provide a cache duration (in seconds) to cache the parsed content for subsequent calls.</span>
@@ -1242,6 +1242,7 @@
             <span class="s2">&quot;endpoints&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">endpoints</span><span class="p">,</span>
             <span class="s2">&quot;apis&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">apis</span><span class="p">,</span>
             <span class="s2">&quot;conversation_store&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">conversation_store</span><span class="p">,</span>
+            <span class="s2">&quot;static_knowledge&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">static_knowledge</span><span class="p">,</span>
             <span class="c1"># &quot;tools&quot;: self.tools,</span>
         <span class="p">}</span>
 
@@ -1280,6 +1281,7 @@
                         <span class="n">apis</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;apis&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span>
                         <span class="n">tools</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tools&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span>
                         <span class="n">conversation_store</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;conversation_store&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">static_knowledge</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;static_knowledge&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[],</span>
                     <span class="p">)</span>
                 <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented yet.&quot;</span><span class="p">)</span>
