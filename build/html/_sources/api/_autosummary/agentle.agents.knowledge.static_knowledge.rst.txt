@@ -18,6 +18,7 @@
    .. autosummary::
    
       BaseModel
+      ParsedFile
       StaticKnowledge
    
    .. rubric:: Exceptions
