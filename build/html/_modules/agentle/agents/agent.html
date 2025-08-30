@@ -914,9 +914,6 @@
 <span class="sd">    ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># Dear dev</span>
-    <span class="c1"># Really sorry to use &quot;Any&quot; here. But if we use DocumentParser, we get an import cycle.</span>
-    <span class="c1"># No worries, in the model_validator, we check if it&#39;s a DocumentParser.</span>
     <span class="n">document_parser</span><span class="p">:</span> <span class="n">DocumentParser</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A document parser to be used by the agent. This will be used to parse the static</span>
