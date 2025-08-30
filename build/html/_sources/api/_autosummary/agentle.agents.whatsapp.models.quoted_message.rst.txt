@@ -14,5 +14,9 @@ agentle.agents.whatsapp.models.quoted\_message
 
    .. autosummary::
    
+      AudioMessage
+      DocumentMessage
+      ImageMessage
       QuotedMessage
+      VideoMessage
    
