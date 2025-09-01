@@ -21,6 +21,7 @@ agentle.agents.conversations
    :toctree:
    :recursive:
 
+   callback_conversation_store
    conversation_store
    firebase_conversation_store
    json_file_conversation_store

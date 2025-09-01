@@ -1,0 +1,25 @@
+agentle.agents.conversations.callback\_conversation\_store
+==========================================================
+
+.. automodule:: agentle.agents.conversations.callback_conversation_store
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      override
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AssistantMessage
+      Awaitable
+      Callable
+      CallbackConversationStore
+      ConversationStore
+      DeveloperMessage
+      Sequence
+      UserMessage
+   
