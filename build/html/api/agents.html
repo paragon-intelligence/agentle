@@ -1275,6 +1275,23 @@ If None, uses the default global suspension manager.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="agentle.agents.agent.Agent.resolve_tools">
+<span class="sig-name descname"><span class="pre">resolve_tools</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent.resolve_tools"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent.resolve_tools" title="Link to this definition">¶</a></dt>
+<dd><p>Resolves callable tools in self.tools by converting them to Tool objects.</p>
+<p>This method modifies self.tools in place, converting any callable items
+to Tool objects using Tool.from_callable. Tool objects that are already
+Tool instances are left unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>This method modifies self.tools in place.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="agentle.agents.agent.Agent.change_instructions">
 <span class="sig-name descname"><span class="pre">change_instructions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instructions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent.change_instructions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent.change_instructions" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
@@ -1674,6 +1691,30 @@ If streaming is enabled, returns an async iterator of partial results.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="agentle.agents.agent.Agent.input2context">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input2context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instructions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent.input2context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent.input2context" title="Link to this definition">¶</a></dt>
+<dd><p>Converts user input to a Context object.</p>
+<p>This internal method converts the various supported input types to
+a standardized Context object that contains the messages to be processed.</p>
+<p>Supports a wide variety of input types, from simple strings to
+complex objects like DataFrames, images, files, and Pydantic models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> (<em>AgentInput</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>) – The input in any supported format.</p></li>
+<li><p><strong>instructions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The agent instructions as a string.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A Context object containing the messages to be processed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Context</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="agentle.agents.agent.Agent.clone">
 <span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_instructions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_documentation_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_capabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_authentication</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_default_input_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_default_output_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_skills</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_mcp_servers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_generation_provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_suspension_manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_document_cache_store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent.clone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent.clone" title="Link to this definition">¶</a></dt>
 <dd><p>Creates a clone of the current agent with optionally modified attributes.</p>
@@ -1753,30 +1794,6 @@ can have: simple string, callable that returns string, or sequence of strings.</
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="agentle.agents.agent.Agent.input2context">
-<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input2context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instructions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/agentle/agents/agent.html#Agent.input2context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agentle.agents.agent.Agent.input2context" title="Link to this definition">¶</a></dt>
-<dd><p>Converts user input to a Context object.</p>
-<p>This internal method converts the various supported input types to
-a standardized Context object that contains the messages to be processed.</p>
-<p>Supports a wide variety of input types, from simple strings to
-complex objects like DataFrames, images, files, and Pydantic models.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>input</strong> (<em>AgentInput</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a>) – The input in any supported format.</p></li>
-<li><p><strong>instructions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The agent instructions as a string.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A Context object containing the messages to be processed.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Context</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2591,6 +2608,7 @@ combined_team = expanded_team + other_team</p>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.change_apis"><code class="docutils literal notranslate"><span class="pre">Agent.change_apis()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.change_endpoints"><code class="docutils literal notranslate"><span class="pre">Agent.change_endpoints()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.change_static_knowledge"><code class="docutils literal notranslate"><span class="pre">Agent.change_static_knowledge()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent.Agent.resolve_tools"><code class="docutils literal notranslate"><span class="pre">Agent.resolve_tools()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.change_instructions"><code class="docutils literal notranslate"><span class="pre">Agent.change_instructions()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.append_instructions"><code class="docutils literal notranslate"><span class="pre">Agent.append_instructions()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.model_post_init"><code class="docutils literal notranslate"><span class="pre">Agent.model_post_init()</span></code></a></li>
@@ -2611,10 +2629,10 @@ combined_team = expanded_team + other_team</p>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.run"><code class="docutils literal notranslate"><span class="pre">Agent.run()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.run_async"><code class="docutils literal notranslate"><span class="pre">Agent.run_async()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.to_api"><code class="docutils literal notranslate"><span class="pre">Agent.to_api()</span></code></a></li>
+<li><a class="reference internal" href="#agentle.agents.agent.Agent.input2context"><code class="docutils literal notranslate"><span class="pre">Agent.input2context()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.clone"><code class="docutils literal notranslate"><span class="pre">Agent.clone()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.to_streamlit"><code class="docutils literal notranslate"><span class="pre">Agent.to_streamlit()</span></code></a></li>
 <li><a class="reference internal" href="#agentle.agents.agent.Agent.instructions2str"><code class="docutils literal notranslate"><span class="pre">Agent.instructions2str()</span></code></a></li>
-<li><a class="reference internal" href="#agentle.agents.agent.Agent.input2context"><code class="docutils literal notranslate"><span class="pre">Agent.input2context()</span></code></a></li>
 </ul>
 </li>
 </ul>
