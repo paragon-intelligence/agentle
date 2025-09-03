@@ -736,6 +736,10 @@
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.errors.tool_suspension_error</span><span class="w"> </span><span class="kn">import</span> <span class="n">ToolSuspensionError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.knowledge.static_knowledge</span><span class="w"> </span><span class="kn">import</span> <span class="n">NO_CACHE</span><span class="p">,</span> <span class="n">StaticKnowledge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.guardrails.core.guardrail_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">GuardrailConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.guardrails.core.guardrail_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">GuardrailManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.guardrails.core.input_guardrail_validator</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputGuardrailValidator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.guardrails.core.output_guardrail_validator</span><span class="w"> </span><span class="kn">import</span> <span class="n">OutputGuardrailValidator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.utils.file_validation</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileValidationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.message_history_fixer</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageHistoryFixer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.agents.performance_metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">PerformanceMetrics</span>
@@ -1078,6 +1082,35 @@
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Complete APIs with multiple endpoints that the agent can use. All endpoints in these APIs will be automatically converted to tools.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
+    <span class="n">guardrail_manager</span><span class="p">:</span> <span class="n">GuardrailManager</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gerenciador de guardrails para validação de entrada e saída.</span>
+<span class="sd">    Se None, nenhuma validação será realizada.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_guardrails</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="n">InputGuardrailValidator</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span>
+    <span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lista de validadores de entrada a serem aplicados ao input do usuário.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">output_guardrails</span><span class="p">:</span> <span class="n">MutableSequence</span><span class="p">[</span><span class="n">OutputGuardrailValidator</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span>
+    <span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lista de validadores de saída a serem aplicados à resposta do modelo.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">guardrail_config</span><span class="p">:</span> <span class="n">GuardrailConfig</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">GuardrailConfig</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configurações específicas para guardrails:</span>
+<span class="sd">    - &#39;fail_on_input_violation&#39;: bool (default: True) - Falha se input violar guardrails</span>
+<span class="sd">    - &#39;fail_on_output_violation&#39;: bool (default: False) - Falha se output violar guardrails  </span>
+<span class="sd">    - &#39;log_violations&#39;: bool (default: True) - Log violações</span>
+<span class="sd">    - &#39;include_metrics&#39;: bool (default: True) - Inclui métricas de guardrails no resultado</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="c1"># Internal fields</span>
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1185,6 +1218,27 @@
     <span class="nd">@override</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">model_post_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">model_post_init</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+
+        <span class="c1"># Inicializar guardrail manager se não foi fornecido</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_guardrails</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_guardrails</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span> <span class="o">=</span> <span class="n">GuardrailManager</span><span class="p">(</span>
+                <span class="n">fail_fast</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fail_fast&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+                <span class="n">parallel_execution</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="s2">&quot;parallel_execution&quot;</span><span class="p">,</span> <span class="kc">True</span>
+                <span class="p">),</span>
+                <span class="n">cache_enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cache_enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Adicionar validadores ao manager</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">validator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_guardrails</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span><span class="o">.</span><span class="n">add_input_validator</span><span class="p">(</span><span class="n">validator</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">validator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_guardrails</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span><span class="o">.</span><span class="n">add_output_validator</span><span class="p">(</span><span class="n">validator</span><span class="p">)</span>
+
         <span class="n">_vs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_stores</span> <span class="ow">or</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">vector_store</span> <span class="ow">in</span> <span class="n">_vs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector_store</span><span class="o">.</span><span class="n">as_search_tool</span><span class="p">())</span>

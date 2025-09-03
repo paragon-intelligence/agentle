@@ -813,32 +813,44 @@ tools=[get_weather],</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GoogleGenerationProvider</span></code>(*[, otel_clients, ...])</p></td>
 <td><p>Provider implementation for Google's Generative AI service.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GuardrailConfig</span></code></p></td>
+<td><p>Configuração tipada para o sistema de guardrails.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GuardrailManager</span></code>([fail_fast, ...])</p></td>
+<td><p>Gerenciador central para todos os guardrails.</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemoryDocumentCacheStore</span></code>(*[, ...])</p></td>
 <td><p>Thread-safe in-memory cache store for parsed documents.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Iterator</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">InputGuardrailValidator</span></code>(name[, priority, ...])</p></td>
+<td><p>Classe base para validadores de entrada (input).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Iterator</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MCPServerProtocol</span></code>()</p></td>
 <td><p>Abstract base class defining the protocol for MCP servers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mapping</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mapping</span></code>()</p></td>
 <td><p>A Mapping is a generic container for associating key/value pairs.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Maybe</span></code>([obj, ignore_errors])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Maybe</span></code>([obj, ignore_errors])</p></td>
 <td><p>A class that safely handles optional chaining for Python objects, emulating the <cite>?.</cite> operator found in languages like JavaScript.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MessageHistoryFixer</span></code>([strict_mode])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MessageHistoryFixer</span></code>([strict_mode])</p></td>
 <td><p>Automatically detects and fixes message history inconsistencies that could cause the &quot;function response parts&quot; error.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MessageSequence</span></code>(elements)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MessageSequence</span></code>(elements)</p></td>
 <td><p>An immutable sequence of messages with functional manipulation methods.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
 <td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
 <td><p>All the operations on a read-write sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">OutputGuardrailValidator</span></code>(name[, priority, ...])</p></td>
+<td><p>Classe base para validadores de saída (output).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParsedFile</span></code>(*, name, sections[, metadata])</p></td>
 <td><p>Represents a fully parsed document with its sections and metadata.</p></td>

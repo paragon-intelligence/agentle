@@ -54,7 +54,10 @@ agentle.agents.agent
       GenerationProvider
       Generator
       GoogleGenerationProvider
+      GuardrailConfig
+      GuardrailManager
       InMemoryDocumentCacheStore
+      InputGuardrailValidator
       Iterator
       MCPServerProtocol
       Mapping
@@ -63,6 +66,7 @@ agentle.agents.agent
       MessageSequence
       MutableMapping
       MutableSequence
+      OutputGuardrailValidator
       ParsedFile
       Path
       PerformanceMetrics
