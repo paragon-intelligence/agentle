@@ -1,8 +1,15 @@
 import abc
 from collections.abc import AsyncIterator
 
+from agentle.stt.real_time.audio_format import AudioFormat
+from agentle.stt.real_time.stt_config import STTConfig
+from agentle.stt.real_time.stt_stream_chunk import STTStreamChunk
+from agentle.stt.real_time.transcription_result import TranscriptionResult
+from agentle.stt.real_time.language_code import LanguageCode
+
 
 class RealtimeSpeechToTextProvider(abc.ABC):
+    @abc.abstractmethod
     async def transcribe(
         self,
         audio_stream: AsyncIterator[STTStreamChunk],
@@ -18,24 +25,24 @@ class RealtimeSpeechToTextProvider(abc.ABC):
         Yields:
             Partial and final transcription results
         """
-        pass
+        ...
 
     @abc.abstractmethod
     async def get_supported_languages(self) -> list[LanguageCode]:
         """Get list of supported language codes."""
-        pass
+        ...
 
     @abc.abstractmethod
     async def get_supported_formats(self) -> list[AudioFormat]:
         """Get list of supported audio formats."""
-        pass
+        ...
 
     @abc.abstractmethod
     async def health_check(self) -> bool:
         """Check if the provider is healthy and responsive."""
-        pass
+        ...
 
     @abc.abstractmethod
     async def close(self) -> None:
         """Clean up resources and close connections."""
-        pass
+        ...

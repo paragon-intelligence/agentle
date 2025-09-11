@@ -1,10 +1,12 @@
 import json
 import re
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 from pydantic import BaseModel, Field
 
+T = TypeVar("T", bound=BaseModel)
 
-def parse_streaming_json[T](potential_json: str | None, model: type[T]) -> T:
+
+def parse_streaming_json(potential_json: str | None, model: type[T]) -> T:
     """
     Parse a potentially incomplete or malformed JSON string and create a Pydantic model instance.
 
@@ -360,7 +362,7 @@ if __name__ == "__main__":
     print("Testing parse_streaming_json function\n" + "=" * 50)
 
     # Test cases covering various scenarios
-    test_cases = [
+    test_cases: list[dict[str, Any]] = [
         # Case 1: Partial JSON with incomplete string
         {
             "input": '```json\n{"name": "arthu',
@@ -616,7 +618,7 @@ if __name__ == "__main__":
     print("=" * 60)
 
     # Complex nested model test cases
-    nested_test_cases = [
+    nested_test_cases: list[dict[str, Any]] = [
         # Case 1: Complete nested object
         {
             "input": """```json
