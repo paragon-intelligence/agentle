@@ -1,9 +1,6 @@
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.stt.real_time.audio_format import AudioFormat
-from agentle.stt.real_time.language_code import LanguageCode
-
 
 class STTConfig(BaseModel):
     """Configuration for STT providers."""

@@ -1,7 +1,7 @@
 import abc
 from collections.abc import AsyncIterator
 
-from agentle.stt.real_time.audio_format import AudioFormat
+from agentle.stt.real_time.definitions.audio_format import AudioFormat
 from agentle.stt.real_time.stt_config import STTConfig
 from agentle.stt.real_time.stt_stream_chunk import STTStreamChunk
 from agentle.stt.real_time.transcription_result import TranscriptionResult

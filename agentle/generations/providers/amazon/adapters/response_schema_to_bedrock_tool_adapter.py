@@ -19,7 +19,7 @@ class ResponseSchemaToBedrockToolAdapter[T](Adapter[type[T], BedrockTool]):
     @override
     def adapt(self, _f: type[T]) -> BedrockTool:
         name = _f.__name__
-        if not isinstance(_f, type) or not issubclass(_f, BaseModel):
+        if not issubclass(_f, BaseModel):
             raise ValueError(
                 "Input must be a Pydantic model class. Only "
                 + "pydantic models are supported for now"

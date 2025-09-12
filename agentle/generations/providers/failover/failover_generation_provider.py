@@ -102,13 +102,13 @@ class FailoverGenerationProvider(GenerationProvider):
 
         # Flatten nested sequences of providers
         flattened_providers: MutableSequence[GenerationProvider] = []
-        for item in generation_providers:
-            if isinstance(item, Sequence) and not isinstance(item, (str, bytes)):
+        for provider in generation_providers:
+            if isinstance(provider, Sequence) and not isinstance(provider, (str, bytes)):
                 # If it's a sequence (but not string/bytes), extend with its contents
-                flattened_providers.extend(item)
+                flattened_providers.extend(provider)
             else:
                 # If it's a single provider, append it
-                flattened_providers.append(item)
+                flattened_providers.append(provider)
 
         self.generation_providers = flattened_providers
         self.shuffle = shuffle

@@ -2,7 +2,7 @@ from rsb.models.base_model import BaseModel
 from rsb.models.config_dict import ConfigDict
 from rsb.models.field import Field
 
-from agentle.stt.real_time.audio_format import AudioFormat
+from agentle.stt.real_time.definitions.audio_format import AudioFormat
 
 
 class AudioData(BaseModel):
