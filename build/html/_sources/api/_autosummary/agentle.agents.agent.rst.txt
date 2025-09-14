@@ -9,15 +9,14 @@ agentle.agents.agent
    .. autosummary::
    
       Field
+      alru_cache
       asynccontextmanager
       cast
       contextmanager
       dedent
-      endpoints_to_tools
       file_parser_default_factory
       get_default_suspension_manager
       is_module_available
-      overload
       override
       run_sync
    
@@ -25,7 +24,6 @@ agentle.agents.agent
 
    .. autosummary::
    
-      API
       Agent
       AgentConfig
       AgentConfigDict
@@ -35,7 +33,6 @@ agentle.agents.agent
       Any
       AssistantMessage
       AsyncGenerator
-      AsyncIterator
       Authentication
       Awaitable
       BaseModel
@@ -48,51 +45,39 @@ agentle.agents.agent
       DeveloperMessage
       DocumentCacheStore
       DocumentParser
-      Endpoint
       FilePart
       Generation
       GenerationProvider
       Generator
       GoogleGenerationProvider
-      GuardrailConfig
-      GuardrailManager
       InMemoryDocumentCacheStore
-      InputGuardrailValidator
-      Iterator
       MCPServerProtocol
       Mapping
       Maybe
-      MessageHistoryFixer
       MessageSequence
       MutableMapping
       MutableSequence
-      OutputGuardrailValidator
       ParsedFile
       Path
-      PerformanceMetrics
       Prompt
       RunState
       Sequence
       SpeechToTextProvider
       StaticKnowledge
       Step
-      StepMetric
       StringIO
       SuspensionManager
       TextPart
       Tool
-      ToolExecutionResult
       ToolExecutionSuggestion
       TraceParams
       UserMessage
       VectorStore
-      cached
    
    .. rubric:: Exceptions
 
    .. autosummary::
    
-      FileValidationError
       MaxToolCallsExceededError
       ToolSuspensionError
    

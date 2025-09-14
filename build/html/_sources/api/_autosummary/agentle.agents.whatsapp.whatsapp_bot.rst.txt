@@ -1,4 +1,4 @@
-﻿agentle.agents.whatsapp.whatsapp\_bot
+agentle.agents.whatsapp.whatsapp\_bot
 =====================================
 
 .. automodule:: agentle.agents.whatsapp.whatsapp_bot
@@ -8,36 +8,25 @@
 
    .. autosummary::
    
-      Field
-      PrivateAttr
       cast
-      dataclass
       run_sync
    
    .. rubric:: Classes
 
    .. autosummary::
    
-      Agent
+      AgentProtocol
       Any
-      Awaitable
-      BaseModel
       Callable
-      CallbackWithContext
-      ConfigDict
-      ConversationStore
+      Context
       Data
-      EvolutionAPIProvider
       FilePart
-      GeneratedAssistantMessage
+      InMemorySessionStore
       Message
-      MutableMapping
       MutableSequence
       Sequence
+      SessionManager
       TextPart
-      Tool
-      ToolExecutionResult
-      ToolExecutionSuggestion
       UserMessage
       WhatsAppAudioMessage
       WhatsAppBot
