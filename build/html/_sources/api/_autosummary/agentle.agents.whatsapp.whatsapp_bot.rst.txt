@@ -25,6 +25,7 @@
       BaseModel
       Callable
       CallbackWithContext
+      ChatId
       ConfigDict
       ConversationStore
       Data
@@ -34,6 +35,7 @@
       Message
       MutableMapping
       MutableSequence
+      PhoneNumber
       Sequence
       TextPart
       Tool
