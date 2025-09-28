@@ -1,8 +1,8 @@
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.stt.real_time.language_code import LanguageCode
-from agentle.tts.real_time.voice_gender import VoiceGender
+from agentle.stt.real_time.definitions.language_code import LanguageCode
+from agentle.tts.real_time.definitions.voice_gender import VoiceGender
 
 
 class VoiceInfo(BaseModel):

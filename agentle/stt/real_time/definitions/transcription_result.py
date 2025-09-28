@@ -1,8 +1,8 @@
 from rsb.models.base_model import BaseModel
-from agentle.stt.real_time.language_code import LanguageCode
-from agentle.stt.real_time.transcript_confidence import TranscriptConfidence
+from agentle.stt.real_time.definitions.language_code import LanguageCode
+from agentle.stt.real_time.definitions.transcript_confidence import TranscriptConfidence
 from rsb.models.field import Field
-from agentle.stt.real_time.word_timing import WordTiming
+from agentle.stt.real_time.definitions.word_timing import WordTiming
 
 
 class TranscriptionResult(BaseModel):

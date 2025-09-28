@@ -2,10 +2,10 @@ import abc
 from collections.abc import AsyncIterator
 
 from agentle.stt.real_time.definitions.audio_format import AudioFormat
-from agentle.stt.real_time.language_code import LanguageCode
-from agentle.tts.real_time.speech_config import SpeechConfig
-from agentle.tts.real_time.tts_stream_chunk import TTSStreamChunk
-from agentle.tts.real_time.voice_info import VoiceInfo
+from agentle.stt.real_time.definitions.language_code import LanguageCode
+from agentle.tts.real_time.definitions.speech_config import SpeechConfig
+from agentle.tts.real_time.definitions.tts_stream_chunk import TTSStreamChunk
+from agentle.tts.real_time.definitions.voice_info import VoiceInfo
 
 
 class RealtimeTextToSpeechProvider(abc.ABC):

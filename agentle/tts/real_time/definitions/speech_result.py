@@ -1,7 +1,7 @@
 
 from rsb.models.base_model import BaseModel
 
-from agentle.tts.real_time.audio_data import AudioData
+from agentle.tts.real_time.definitions.audio_data import AudioData
 
 
 class SpeechResult(BaseModel):

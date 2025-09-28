@@ -2,10 +2,10 @@ import abc
 from collections.abc import AsyncIterator
 
 from agentle.stt.real_time.definitions.audio_format import AudioFormat
-from agentle.stt.real_time.stt_config import STTConfig
-from agentle.stt.real_time.stt_stream_chunk import STTStreamChunk
-from agentle.stt.real_time.transcription_result import TranscriptionResult
-from agentle.stt.real_time.language_code import LanguageCode
+from agentle.stt.real_time.definitions.stt_config import STTConfig
+from agentle.stt.real_time.definitions.stt_stream_chunk import STTStreamChunk
+from agentle.stt.real_time.definitions.transcription_result import TranscriptionResult
+from agentle.stt.real_time.definitions.language_code import LanguageCode
 
 
 class RealtimeSpeechToTextProvider(abc.ABC):

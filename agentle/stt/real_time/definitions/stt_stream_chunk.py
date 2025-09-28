@@ -1,7 +1,7 @@
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
 
-from agentle.stt.real_time.audio_data import AudioData
+from agentle.stt.real_time.definitions.audio_data import AudioData
 
 
 class STTStreamChunk(BaseModel):
