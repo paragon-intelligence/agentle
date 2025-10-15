@@ -8,12 +8,13 @@ agentle.agents.whatsapp.models.context\_info
 
    .. autosummary::
    
-      TypedDict
+      Field
    
    .. rubric:: Classes
 
    .. autosummary::
    
+      BaseModel
       ContextInfo
       QuotedMessage
    

@@ -8,12 +8,13 @@ agentle.agents.whatsapp.models.data
 
    .. autosummary::
    
-      TypedDict
+      Field
    
    .. rubric:: Classes
 
    .. autosummary::
    
+      BaseModel
       ContextInfo
       Data
       Key

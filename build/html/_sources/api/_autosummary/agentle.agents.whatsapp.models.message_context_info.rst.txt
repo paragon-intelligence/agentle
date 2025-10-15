@@ -8,13 +8,14 @@ agentle.agents.whatsapp.models.message\_context\_info
 
    .. autosummary::
    
-      TypedDict
+      Field
    
    .. rubric:: Classes
 
    .. autosummary::
    
       Any
+      BaseModel
       DeviceListMetadata
       MessageContextInfo
    

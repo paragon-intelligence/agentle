@@ -8,12 +8,13 @@ agentle.agents.whatsapp.models.device\_list\_metadata
 
    .. autosummary::
    
-      TypedDict
+      Field
    
    .. rubric:: Classes
 
    .. autosummary::
    
       Any
+      BaseModel
       DeviceListMetadata
    
