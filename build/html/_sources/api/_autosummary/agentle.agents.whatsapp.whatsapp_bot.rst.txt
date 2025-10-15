@@ -32,7 +32,6 @@
       EvolutionAPIProvider
       FilePart
       GeneratedAssistantMessage
-      Message
       MutableMapping
       MutableSequence
       PhoneNumber
