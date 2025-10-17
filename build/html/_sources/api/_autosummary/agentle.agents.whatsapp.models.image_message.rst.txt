@@ -9,6 +9,7 @@ agentle.agents.whatsapp.models.image\_message
    .. autosummary::
    
       Field
+      field_validator
    
    .. rubric:: Classes
 

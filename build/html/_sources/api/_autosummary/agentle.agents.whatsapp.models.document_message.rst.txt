@@ -9,11 +9,13 @@ agentle.agents.whatsapp.models.document\_message
    .. autosummary::
    
       Field
+      field_validator
    
    .. rubric:: Classes
 
    .. autosummary::
    
+      Any
       BaseModel
       DocumentMessage
    
