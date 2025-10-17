@@ -1,0 +1,19 @@
+agentle.agents.a2a.message\_parts.cache\_control\_type
+======================================================
+
+.. automodule:: agentle.agents.a2a.message_parts.cache_control_type
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseModel
+      CacheControlType
+   

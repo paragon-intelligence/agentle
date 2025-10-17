@@ -15,6 +15,7 @@ agentle.agents.a2a.message\_parts.text\_part
    .. autosummary::
    
       BaseModel
+      CacheControlType
       Prompt
       TextPart
    

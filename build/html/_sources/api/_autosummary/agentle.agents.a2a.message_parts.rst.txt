@@ -1,4 +1,4 @@
-agentle.agents.a2a.message\_parts
+﻿agentle.agents.a2a.message\_parts
 =================================
 
 .. automodule:: agentle.agents.a2a.message_parts
@@ -19,6 +19,7 @@ agentle.agents.a2a.message\_parts
    :recursive:
 
    adapters
+   cache_control_type
    data_part
    file_part
    text_part
