@@ -8,12 +8,13 @@ agentle.agents.whatsapp.models.video\_message
 
    .. autosummary::
    
-      TypedDict
+      Field
    
    .. rubric:: Classes
 
    .. autosummary::
    
       Any
+      BaseModel
       VideoMessage
    

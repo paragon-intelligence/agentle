@@ -655,8 +655,8 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TypedDict</span></code>(typename[, fields, total])</p></td>
-<td><p>A simple typed namespace.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
+<td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
 </tr>
 </tbody>
 </table>
@@ -665,20 +665,23 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AudioMessage</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AudioMessage</span></code>(*, url[, mimetype, fileSha256, ...])</p></td>
 <td><p>Dados de uma mensagem de áudio do WhatsApp.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DocumentMessage</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<td><p>Alias for pydantic.BaseModel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DocumentMessage</span></code>(*, url[, mimetype, title, ...])</p></td>
 <td><p>Dados de uma mensagem com documento do WhatsApp.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageMessage</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ImageMessage</span></code>(*, url[, mimetype, caption, ...])</p></td>
 <td><p>Dados de uma mensagem com imagem do WhatsApp.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuotedMessage</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuotedMessage</span></code>(*[, conversation, ...])</p></td>
 <td><p>Mensagem citada/respondida no WhatsApp.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">VideoMessage</span></code></p></td>
-<td><p>Dados de uma mensagem com imagem do WhatsApp.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">VideoMessage</span></code>(*, url[, mimetype, caption, ...])</p></td>
+<td><p>Dados de uma mensagem com vídeo do WhatsApp.</p></td>
 </tr>
 </tbody>
 </table>

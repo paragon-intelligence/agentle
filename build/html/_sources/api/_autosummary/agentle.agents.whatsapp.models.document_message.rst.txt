@@ -8,11 +8,12 @@ agentle.agents.whatsapp.models.document\_message
 
    .. autosummary::
    
-      TypedDict
+      Field
    
    .. rubric:: Classes
 
    .. autosummary::
    
+      BaseModel
       DocumentMessage
    

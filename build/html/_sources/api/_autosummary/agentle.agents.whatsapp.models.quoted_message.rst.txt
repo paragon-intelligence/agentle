@@ -8,13 +8,14 @@ agentle.agents.whatsapp.models.quoted\_message
 
    .. autosummary::
    
-      TypedDict
+      Field
    
    .. rubric:: Classes
 
    .. autosummary::
    
       AudioMessage
+      BaseModel
       DocumentMessage
       ImageMessage
       QuotedMessage
