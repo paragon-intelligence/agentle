@@ -1818,26 +1818,26 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Validate output text with guardrails if configured.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            output_text: The text to validate</span>
 <span class="sd">            chat_id: Optional chat ID for context</span>
-<span class="sd">            </span>
+
 <span class="sd">        Returns:</span>
 <span class="sd">            The validated (possibly modified) text</span>
-<span class="sd">            </span>
+
 <span class="sd">        Raises:</span>
 <span class="sd">            Exception: If validation fails and fail_on_output_violation is True</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">output_text</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">output_text</span>
-            
+
         <span class="n">_logger</span> <span class="o">=</span> <span class="n">Maybe</span><span class="p">(</span><span class="n">logger</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
-        
+
         <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Validating output with guardrails&quot;</span><span class="p">)</span>
         <span class="p">)</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">validation_result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span><span class="o">.</span><span class="n">validate_output_async</span><span class="p">(</span>
                 <span class="n">content</span><span class="o">=</span><span class="n">output_text</span><span class="p">,</span>
@@ -1846,7 +1846,7 @@
                     <span class="s2">&quot;fail_on_output_violation&quot;</span><span class="p">,</span> <span class="kc">False</span>
                 <span class="p">),</span>
             <span class="p">)</span>
-            
+
             <span class="c1"># Log validation result</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log_violations&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
                 <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
@@ -1854,20 +1854,14 @@
                         <span class="s2">&quot;Output validation result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">validation_result</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
-            
+
             <span class="c1"># If validation returned modified content, use it</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">validation_result</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">validation_result</span>
-            
+
             <span class="k">return</span> <span class="n">output_text</span>
-            
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># Handle guardrail violations</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="s2">&quot;Output guardrail violation: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fail_on_output_violation&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                 <span class="k">raise</span>
             <span class="k">return</span> <span class="n">output_text</span>
@@ -2291,31 +2285,33 @@
 
         <span class="c1"># Phase 2.5: Input Guardrail Validation</span>
         <span class="n">input_validation_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
-        
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span><span class="p">:</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
                 <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Validating input with guardrails&quot;</span><span class="p">)</span>
             <span class="p">)</span>
-            
+
             <span class="c1"># Extract text from the current user message for validation</span>
             <span class="n">input_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
             <span class="k">if</span> <span class="n">current_user_message</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">current_user_message</span><span class="p">,</span> <span class="s2">&quot;parts&quot;</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">current_user_message</span><span class="o">.</span><span class="n">parts</span><span class="p">:</span>
                     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">part</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                        <span class="n">input_text</span> <span class="o">+=</span> <span class="n">part</span><span class="o">.</span><span class="n">text</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span>
-            
+                        <span class="n">input_text</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">text</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span>
+
             <span class="n">input_text</span> <span class="o">=</span> <span class="n">input_text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            
+
             <span class="k">if</span> <span class="n">input_text</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">validation_result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span><span class="o">.</span><span class="n">validate_input_async</span><span class="p">(</span>
-                        <span class="n">content</span><span class="o">=</span><span class="n">input_text</span><span class="p">,</span>
-                        <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;agent_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;chat_id&quot;</span><span class="p">:</span> <span class="n">chat_id</span><span class="p">},</span>
-                        <span class="n">raise_on_violation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                            <span class="s2">&quot;fail_on_input_violation&quot;</span><span class="p">,</span> <span class="kc">True</span>
-                        <span class="p">),</span>
+                    <span class="n">validation_result</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_manager</span><span class="o">.</span><span class="n">validate_input_async</span><span class="p">(</span>
+                            <span class="n">content</span><span class="o">=</span><span class="n">input_text</span><span class="p">,</span>
+                            <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;agent_name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;chat_id&quot;</span><span class="p">:</span> <span class="n">chat_id</span><span class="p">},</span>
+                            <span class="n">raise_on_violation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                                <span class="s2">&quot;fail_on_input_violation&quot;</span><span class="p">,</span> <span class="kc">True</span>
+                            <span class="p">),</span>
+                        <span class="p">)</span>
                     <span class="p">)</span>
-                    
+
                     <span class="c1"># Log validation result</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;log_violations&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
                         <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
@@ -2323,17 +2319,12 @@
                                 <span class="s2">&quot;Input validation result: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">validation_result</span>
                             <span class="p">)</span>
                         <span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="c1"># Handle guardrail violations</span>
-                    <span class="n">_logger</span><span class="o">.</span><span class="n">bind_optional</span><span class="p">(</span>
-                        <span class="k">lambda</span> <span class="n">log</span><span class="p">:</span> <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                            <span class="s2">&quot;Input guardrail violation: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">guardrail_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fail_on_input_violation&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
                         <span class="k">raise</span>
-        
+
         <span class="n">input_validation_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">input_validation_start</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input validation time: </span><span class="si">{</span><span class="n">input_validation_time</span><span class="si">}</span><span class="s2">ms&quot;</span><span class="p">)</span>
 
         <span class="c1"># Phase 3: MCP Tools Preparation</span>
         <span class="n">mcp_tools_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
@@ -2527,8 +2518,10 @@
 
                         <span class="c1"># Validate output with guardrails</span>
                         <span class="k">if</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                            <span class="n">validated_text</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_output_with_guardrails</span><span class="p">(</span>
-                                <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">chat_id</span>
+                            <span class="n">validated_text</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_output_with_guardrails</span><span class="p">(</span>
+                                    <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">chat_id</span>
+                                <span class="p">)</span>
                             <span class="p">)</span>
                             <span class="c1"># Update generation text if modified by guardrails</span>
                             <span class="k">if</span> <span class="n">validated_text</span> <span class="o">!=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
@@ -2921,8 +2914,10 @@
 
                                 <span class="c1"># Validate output with guardrails</span>
                                 <span class="k">if</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                                    <span class="n">validated_text</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_output_with_guardrails</span><span class="p">(</span>
-                                        <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">chat_id</span>
+                                    <span class="n">validated_text</span> <span class="o">=</span> <span class="p">(</span>
+                                        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_output_with_guardrails</span><span class="p">(</span>
+                                            <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">chat_id</span>
+                                        <span class="p">)</span>
                                     <span class="p">)</span>
                                     <span class="c1"># Update generation text if modified by guardrails</span>
                                     <span class="k">if</span> <span class="n">validated_text</span> <span class="o">!=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
@@ -3027,8 +3022,10 @@
 
                         <span class="c1"># Validate output with guardrails</span>
                         <span class="k">if</span> <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                            <span class="n">validated_text</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_output_with_guardrails</span><span class="p">(</span>
-                                <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">chat_id</span>
+                            <span class="n">validated_text</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_output_with_guardrails</span><span class="p">(</span>
+                                    <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">chat_id</span>
+                                <span class="p">)</span>
                             <span class="p">)</span>
                             <span class="c1"># Update generation text if modified by guardrails</span>
                             <span class="k">if</span> <span class="n">validated_text</span> <span class="o">!=</span> <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
