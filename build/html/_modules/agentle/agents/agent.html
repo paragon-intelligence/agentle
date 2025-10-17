@@ -2525,7 +2525,7 @@
                             <span class="p">)</span>
                             <span class="c1"># Update generation text if modified by guardrails</span>
                             <span class="k">if</span> <span class="n">validated_text</span> <span class="o">!=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                                <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">validated_text</span>
+                                <span class="n">final_generation</span><span class="o">.</span><span class="n">update_text</span><span class="p">(</span><span class="n">validated_text</span><span class="p">)</span>
 
                         <span class="c1"># Save to conversation store after successful execution</span>
                         <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
@@ -2642,7 +2642,7 @@
                 <span class="p">)</span>
                 <span class="c1"># Update generation text if modified by guardrails</span>
                 <span class="k">if</span> <span class="n">validated_text</span> <span class="o">!=</span> <span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                    <span class="n">generation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">validated_text</span>
+                    <span class="n">generation</span><span class="o">.</span><span class="n">update_text</span><span class="p">(</span><span class="n">validated_text</span><span class="p">)</span>
 
             <span class="c1"># Save to conversation store after successful execution</span>
             <span class="k">if</span> <span class="n">chat_id</span><span class="p">:</span>
@@ -2921,7 +2921,7 @@
                                     <span class="p">)</span>
                                     <span class="c1"># Update generation text if modified by guardrails</span>
                                     <span class="k">if</span> <span class="n">validated_text</span> <span class="o">!=</span> <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                                        <span class="n">final_generation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">validated_text</span>
+                                        <span class="n">final_generation</span><span class="o">.</span><span class="n">update_text</span><span class="p">(</span><span class="n">validated_text</span><span class="p">)</span>
 
                                 <span class="c1"># Calculate final metrics</span>
                                 <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
@@ -3029,7 +3029,7 @@
                             <span class="p">)</span>
                             <span class="c1"># Update generation text if modified by guardrails</span>
                             <span class="k">if</span> <span class="n">validated_text</span> <span class="o">!=</span> <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                                <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">validated_text</span>
+                                <span class="n">final_tool_generation</span><span class="o">.</span><span class="n">update_text</span><span class="p">(</span><span class="n">validated_text</span><span class="p">)</span>
 
                         <span class="c1"># Calculate final metrics</span>
                         <span class="n">total_execution_time</span> <span class="o">=</span> <span class="p">(</span>
@@ -5171,7 +5171,7 @@
                     <span class="p">)</span>
                     <span class="c1"># Update generation text if modified by guardrails</span>
                     <span class="k">if</span> <span class="n">validated_text</span> <span class="o">!=</span> <span class="n">generation</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-                        <span class="n">generation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">validated_text</span>
+                        <span class="n">generation</span><span class="o">.</span><span class="n">update_text</span><span class="p">(</span><span class="n">validated_text</span><span class="p">)</span>
 
                 <span class="n">final_step</span><span class="o">.</span><span class="n">mark_completed</span><span class="p">()</span>
                 <span class="n">context</span><span class="o">.</span><span class="n">add_step</span><span class="p">(</span><span class="n">final_step</span><span class="p">)</span>
