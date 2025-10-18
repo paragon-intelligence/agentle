@@ -2233,9 +2233,11 @@
                     <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">knowledge_contents</span><span class="p">:</span>
-                <span class="n">static_knowledge_prompt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;knowledge_base&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                    <span class="n">knowledge_contents</span>
-                <span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;/knowledge_base&gt;&quot;</span>
+                <span class="n">static_knowledge_prompt</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;knowledge_base&gt;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">knowledge_contents</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&lt;/knowledge_base&gt;&quot;</span>
+                <span class="p">)</span>
 
         <span class="n">static_knowledge_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">static_knowledge_start</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
 
