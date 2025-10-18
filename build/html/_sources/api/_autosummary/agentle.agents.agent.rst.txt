@@ -32,7 +32,6 @@ agentle.agents.agent
       AgentRunOutput
       AgentSkill
       AgentToStreamlit
-      Agent[Any]
       Any
       AssistantMessage
       AsyncGenerator
@@ -41,6 +40,7 @@ agentle.agents.agent
       Awaitable
       BaseModel
       BytesIO
+      CacheControl
       Callable
       Capabilities
       ConfigDict

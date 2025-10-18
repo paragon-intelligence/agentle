@@ -747,7 +747,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.generation.generation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.generation.trace_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">TraceParams</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.message_parts.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">FilePart</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.message_parts.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">TextPart</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.message_parts.text</span><span class="w"> </span><span class="kn">import</span> <span class="n">CacheControl</span><span class="p">,</span> <span class="n">TextPart</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agentle.generations.models.message_parts.tool_execution_suggestion</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ToolExecutionSuggestion</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1102,6 +1102,12 @@
 <span class="sd">    - &#39;fail_on_output_violation&#39;: bool (default: False) - Falha se output violar guardrails  </span>
 <span class="sd">    - &#39;log_violations&#39;: bool (default: True) - Log violações</span>
 <span class="sd">    - &#39;include_metrics&#39;: bool (default: True) - Inclui métricas de guardrails no resultado</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cache_instructions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    if true, the instructions will be cached for the providers that</span>
+<span class="sd">    supports it.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Internal fields</span>
@@ -2246,7 +2252,9 @@
             <span class="n">instructions</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">static_knowledge_prompt</span>
 
         <span class="c1"># Create context with current input</span>
-        <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input2context</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span><span class="p">)</span>
+        <span class="n">context</span><span class="p">:</span> <span class="n">Context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input2context</span><span class="p">(</span>
+            <span class="nb">input</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">instructions</span><span class="p">,</span> <span class="n">cache_instructions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_instructions</span>
+        <span class="p">)</span>
         <span class="n">context</span><span class="o">.</span><span class="n">message_history</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
             <span class="n">MessageHistoryFixer</span><span class="p">()</span><span class="o">.</span><span class="n">fix_message_history</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">message_history</span><span class="p">)</span>
         <span class="p">)</span>
@@ -4238,6 +4246,7 @@
         <span class="bp">cls</span><span class="p">,</span>
         <span class="nb">input</span><span class="p">:</span> <span class="n">AgentInput</span> <span class="o">|</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">cache_instructions</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Context</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Converts user input to a Context object.</span>
@@ -4255,7 +4264,16 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Context: A Context object containing the messages to be processed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">developer_message</span> <span class="o">=</span> <span class="n">DeveloperMessage</span><span class="p">(</span><span class="n">parts</span><span class="o">=</span><span class="p">[</span><span class="n">TextPart</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">instructions</span><span class="p">)])</span>
+        <span class="n">developer_message</span> <span class="o">=</span> <span class="n">DeveloperMessage</span><span class="p">(</span>
+            <span class="n">parts</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">TextPart</span><span class="p">(</span>
+                    <span class="n">text</span><span class="o">=</span><span class="n">instructions</span><span class="p">,</span>
+                    <span class="n">cache_control</span><span class="o">=</span><span class="n">CacheControl</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;ephemeral&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">cache_instructions</span>
+                    <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">Context</span><span class="p">):</span>
             <span class="c1"># If it&#39;s already a Context, return it as is.</span>
