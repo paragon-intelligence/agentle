@@ -1,0 +1,19 @@
+agentle.agents.whatsapp.providers.twilio.twilio\_api\_config
+============================================================
+
+.. automodule:: agentle.agents.whatsapp.providers.twilio.twilio_api_config
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseModel
+      TwilioAPIConfig
+   

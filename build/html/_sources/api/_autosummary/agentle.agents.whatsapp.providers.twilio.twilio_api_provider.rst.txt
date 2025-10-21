@@ -1,0 +1,46 @@
+agentle.agents.whatsapp.providers.twilio.twilio\_api\_provider
+==============================================================
+
+.. automodule:: agentle.agents.whatsapp.providers.twilio.twilio_api_provider
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      override
+      urljoin
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      DownloadedMedia
+      InMemoryCircuitBreaker
+      InMemoryRateLimiter
+      InMemorySessionStore
+      Mapping
+      MutableMapping
+      SessionManager
+      TwilioAPIConfig
+      TwilioAPIProvider
+      WhatsAppAudioMessage
+      WhatsAppContact
+      WhatsAppDocumentMessage
+      WhatsAppImageMessage
+      WhatsAppMediaMessage
+      WhatsAppMessageStatus
+      WhatsAppProvider
+      WhatsAppSession
+      WhatsAppTextMessage
+      WhatsAppVideoMessage
+      WhatsAppWebhookPayload
+      datetime
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      TwilioAPIError
+   

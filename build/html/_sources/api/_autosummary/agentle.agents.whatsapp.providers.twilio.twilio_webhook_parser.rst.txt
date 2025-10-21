@@ -1,0 +1,21 @@
+agentle.agents.whatsapp.providers.twilio.twilio\_webhook\_parser
+================================================================
+
+.. automodule:: agentle.agents.whatsapp.providers.twilio.twilio_webhook_parser
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      TwilioWebhookParser
+      WhatsAppAudioMessage
+      WhatsAppDocumentMessage
+      WhatsAppImageMessage
+      WhatsAppMessage
+      WhatsAppMessageStatus
+      WhatsAppTextMessage
+      WhatsAppVideoMessage
+      datetime
+   
