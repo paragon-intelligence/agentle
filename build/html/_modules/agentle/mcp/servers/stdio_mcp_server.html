@@ -1112,12 +1112,19 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Server closed stdout&quot;</span><span class="p">)</span>
                     <span class="k">break</span>
 
+                <span class="n">message_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">message_str</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">message_str</span><span class="p">:</span>
                         <span class="k">continue</span>
 
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;- RECV: </span><span class="si">{</span><span class="n">message_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Skip lines that don&#39;t look like JSON (common with MCP servers that log to stdout)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">message_str</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;{&quot;</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping non-JSON line: </span><span class="si">{</span><span class="n">message_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">continue</span>
+
                     <span class="n">message</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">message_str</span><span class="p">)</span>
 
                     <span class="k">if</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="n">message</span><span class="p">:</span>
@@ -1129,8 +1136,10 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown message type: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to parse JSON: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Skipping invalid JSON line: </span><span class="si">{</span><span class="n">message_str</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
                 <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to decode UTF-8: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -1435,7 +1444,12 @@
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">_JsonRpcRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_JsonRpcResponse</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a request to the server and wait for response.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="p">:</span>
+        <span class="c1"># Allow requests during INITIALIZING state (for the initialize request itself)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_connection_state</span>
+            <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ConnectionState</span><span class="o">.</span><span class="n">CONNECTED</span><span class="p">,</span> <span class="n">ConnectionState</span><span class="o">.</span><span class="n">INITIALIZING</span><span class="p">]</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span>
+        <span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Server not connected&quot;</span><span class="p">)</span>
 
         <span class="n">request_id</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
@@ -1471,7 +1485,12 @@
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_notification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notification</span><span class="p">:</span> <span class="n">_JsonRpcNotification</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Send a notification to the server.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span><span class="p">:</span>
+        <span class="c1"># Allow notifications during INITIALIZING state (for the initialized notification)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_connection_state</span>
+            <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ConnectionState</span><span class="o">.</span><span class="n">CONNECTED</span><span class="p">,</span> <span class="n">ConnectionState</span><span class="o">.</span><span class="n">INITIALIZING</span><span class="p">]</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stdin</span>
+        <span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="s2">&quot;Server not connected&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
