@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.14
+fix(openrouter-adapter): Suppress verbose HTTP library logging
+
+- Add log level configuration for httpcore and httpx loggers
+- Set log levels to WARNING to prevent debug logs from interfering with response streams
+- Improve logging clarity and reduce unnecessary log noise in OpenRouter adapter
+
 ## v0.9.13
 fix(openrouter-adapter): Add debug logging for OpenRouter response
 
