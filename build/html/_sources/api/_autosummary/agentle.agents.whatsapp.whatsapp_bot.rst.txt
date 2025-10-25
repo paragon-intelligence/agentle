@@ -31,6 +31,7 @@
       Data
       EvolutionAPIProvider
       FilePart
+      FileStorageManager
       GeneratedAssistantMessage
       MutableMapping
       MutableSequence
