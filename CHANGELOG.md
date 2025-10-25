@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.13
+fix(openrouter-adapter): Add debug logging for OpenRouter response
+
+- Add debug logging to track raw OpenRouter API response
+- Helps with troubleshooting and understanding API interactions
+- Provides visibility into response data before parsing
+
 ## v0.9.12
 fix(openrouter-adapter): Improve JSON response parsing with robust error handling
 
