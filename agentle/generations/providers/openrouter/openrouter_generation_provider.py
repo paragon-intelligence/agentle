@@ -29,6 +29,7 @@ request format and adapts responses back into Agentle's Generation objects.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from collections.abc import AsyncGenerator, Mapping, Sequence
 from os import getenv
@@ -1514,14 +1515,16 @@ class OpenRouterGenerationProvider(GenerationProvider):
                     )
 
                 # Parse JSON response with error handling
+                # Read response text first to avoid consuming the body
+                response_text = response.text
                 try:
-                    openrouter_response: OpenRouterResponse = response.json()
+                    openrouter_response: OpenRouterResponse = json.loads(response_text)
                 except Exception as json_error:
-                    response_text = response.text
                     logger.error(
                         "Failed to parse OpenRouter response as JSON. "
                         + f"Status: {response.status_code}, "
                         + f"Content-Type: {response.headers.get('content-type')}, "
+                        + f"Response length: {len(response_text)} chars, "
                         + f"Response preview: {response_text[:500]}"
                     )
                     raise ValueError(
