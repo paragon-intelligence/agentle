@@ -1519,7 +1519,7 @@ class OpenRouterGenerationProvider(GenerationProvider):
                 except Exception as json_error:
                     response_text = response.text
                     logger.error(
-                        f"Failed to parse OpenRouter response as JSON. "
+                        "Failed to parse OpenRouter response as JSON. "
                         + f"Status: {response.status_code}, "
                         + f"Content-Type: {response.headers.get('content-type')}, "
                         + f"Response preview: {response_text[:500]}"
