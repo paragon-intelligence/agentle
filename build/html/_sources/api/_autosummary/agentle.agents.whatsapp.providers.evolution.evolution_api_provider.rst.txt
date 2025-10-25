@@ -24,6 +24,7 @@
       InMemorySessionStore
       Mapping
       MutableMapping
+      Sequence
       SessionManager
       WhatsAppAudioMessage
       WhatsAppContact
