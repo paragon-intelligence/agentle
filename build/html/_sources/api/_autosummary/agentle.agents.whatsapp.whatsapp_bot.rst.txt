@@ -40,6 +40,7 @@
       Tool
       ToolExecutionResult
       ToolExecutionSuggestion
+      TtsProvider
       UserMessage
       WhatsAppAudioMessage
       WhatsAppBot

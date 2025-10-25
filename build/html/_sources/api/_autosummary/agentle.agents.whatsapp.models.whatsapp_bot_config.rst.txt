@@ -17,5 +17,6 @@ agentle.agents.whatsapp.models.whatsapp\_bot\_config
       Any
       BaseModel
       Mapping
+      SpeechConfig
       WhatsAppBotConfig
    
