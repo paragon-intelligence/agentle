@@ -100,6 +100,9 @@ class OpenRouterResponseToGenerationAdapter[T](
         """
         openrouter_response = _f
 
+        logger.debug("OpenRouter response: ")
+        logger.debug(openrouter_response)
+
         # Convert choices
         choices: list[Choice[T]] = [
             Choice(
