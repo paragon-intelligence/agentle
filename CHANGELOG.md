@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.12
+fix(openrouter-adapter): Improve JSON response parsing with robust error handling
+
+- Add more detailed error logging for JSON parsing failures
+- Read response text before attempting JSON parsing to prevent body consumption
+- Include response length in error log for better diagnostics
+- Use `json.loads()` instead of `.json()` method for more explicit parsing
+- Enhance error message with additional context about response parsing
+
 ## v0.9.11
 fix(openrouter-adapter): Improve JSON response parsing with robust error handling
 
