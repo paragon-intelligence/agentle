@@ -86,6 +86,11 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+# Suppress httpcore debug logs to prevent them from polluting response streams
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 type WithoutStructuredOutput = None
 
 
