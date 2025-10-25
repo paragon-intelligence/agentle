@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.9.11
+fix(openrouter-adapter): Improve JSON response parsing with robust error handling
+
+- Add comprehensive error handling for JSON parsing in OpenRouter response
+- Capture and log detailed error information when JSON parsing fails
+- Include response status code, content type, and preview in error logging
+- Raise a descriptive ValueError with context when JSON parsing fails
+- Enhance error traceability for debugging OpenRouter API interactions
+
 ## v0.9.10
 feat(docx-parser, pdf-parser): Implement max_output_tokens for response generation
 
