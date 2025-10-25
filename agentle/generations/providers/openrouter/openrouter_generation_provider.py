@@ -1513,7 +1513,21 @@ class OpenRouterGenerationProvider(GenerationProvider):
                         response.status_code, error_body, error_text
                     )
 
-                openrouter_response: OpenRouterResponse = response.json()
+                # Parse JSON response with error handling
+                try:
+                    openrouter_response: OpenRouterResponse = response.json()
+                except Exception as json_error:
+                    response_text = response.text
+                    logger.error(
+                        f"Failed to parse OpenRouter response as JSON. "
+                        f"Status: {response.status_code}, "
+                        f"Content-Type: {response.headers.get('content-type')}, "
+                        f"Response preview: {response_text[:500]}"
+                    )
+                    raise ValueError(
+                        f"OpenRouter returned invalid JSON (status {response.status_code}). "
+                        f"Response preview: {response_text[:200]}"
+                    ) from json_error
 
         except asyncio.TimeoutError as e:
             e.add_note(
