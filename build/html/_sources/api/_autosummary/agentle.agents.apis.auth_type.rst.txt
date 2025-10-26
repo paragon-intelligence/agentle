@@ -1,0 +1,13 @@
+agentle.agents.apis.auth\_type
+==============================
+
+.. automodule:: agentle.agents.apis.auth_type
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AuthType
+      StrEnum
+   

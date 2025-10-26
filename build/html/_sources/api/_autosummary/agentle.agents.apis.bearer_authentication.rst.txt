@@ -1,0 +1,17 @@
+agentle.agents.apis.bearer\_authentication
+==========================================
+
+.. automodule:: agentle.agents.apis.bearer_authentication
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      AuthenticationBase
+      BearerAuthentication
+      MutableMapping
+      datetime
+      timedelta
+   

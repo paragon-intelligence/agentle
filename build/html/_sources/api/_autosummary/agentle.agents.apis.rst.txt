@@ -1,0 +1,93 @@
+agentle.agents.apis
+===================
+
+.. automodule:: agentle.agents.apis
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      endpoints_to_tools
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      API
+      APIMetrics
+      ApiKeyAuthentication
+      ApiKeyLocation
+      ArraySchema
+      AuthType
+      AuthenticationBase
+      AuthenticationConfig
+      BasicAuthentication
+      BearerAuthentication
+      CacheStrategy
+      CircuitBreaker
+      Endpoint
+      EndpointParameter
+      FileUpload
+      HMACAuthentication
+      HTTPMethod
+      NoAuthentication
+      OAuth2Authentication
+      OAuth2GrantType
+      ObjectSchema
+      ObjectSerializationStyle
+      ParameterLocation
+      PrimitiveSchema
+      RateLimiter
+      RequestConfig
+      RequestHook
+      ResponseCache
+      RetryStrategy
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      CircuitBreakerError
+      RateLimitError
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   api
+   api_key_authentication
+   api_key_location
+   api_metrics
+   array_schema
+   auth_type
+   authentication
+   authentication_base
+   authentication_config
+   basic_authentication
+   bearer_authentication
+   cache_strategy
+   circuit_breaker
+   circuit_breaker_error
+   circuit_breaker_state
+   endpoint
+   endpoint_parameter
+   file_upload
+   hmac_authentication
+   http_method
+   no_authentication
+   oauth2_authentication
+   oauth2_grant_type
+   object_schema
+   object_serialization_style
+   parameter_location
+   params
+   primitive_schema
+   rate_limit_error
+   rate_limiter
+   request_config
+   request_hook
+   response_cache
+   retry_strategy

@@ -1,0 +1,22 @@
+agentle.agents.apis.circuit\_breaker
+====================================
+
+.. automodule:: agentle.agents.apis.circuit_breaker
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      Callable
+      CircuitBreaker
+      InMemoryCircuitBreaker
+      RequestConfig
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      CircuitBreakerError
+   

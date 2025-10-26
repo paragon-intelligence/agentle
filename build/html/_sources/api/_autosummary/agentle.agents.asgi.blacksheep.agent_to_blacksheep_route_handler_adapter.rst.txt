@@ -1,4 +1,4 @@
-agentle.agents.asgi.blacksheep.agent\_to\_blacksheep\_route\_handler\_adapter
+﻿agentle.agents.asgi.blacksheep.agent\_to\_blacksheep\_route\_handler\_adapter
 =============================================================================
 
 .. automodule:: agentle.agents.asgi.blacksheep.agent_to_blacksheep_route_handler_adapter
@@ -23,7 +23,6 @@ agentle.agents.asgi.blacksheep.agent\_to\_blacksheep\_route\_handler\_adapter
       Any
       AssistantMessage
       BaseModel
-      Controller
       DeveloperMessage
       FilePart
       Sequence

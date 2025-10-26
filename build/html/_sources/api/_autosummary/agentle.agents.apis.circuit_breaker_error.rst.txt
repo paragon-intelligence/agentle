@@ -1,0 +1,12 @@
+agentle.agents.apis.circuit\_breaker\_error
+===========================================
+
+.. automodule:: agentle.agents.apis.circuit_breaker_error
+
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      CircuitBreakerError
+   

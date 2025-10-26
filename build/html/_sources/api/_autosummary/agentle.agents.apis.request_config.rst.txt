@@ -1,0 +1,22 @@
+agentle.agents.apis.request\_config
+===================================
+
+.. automodule:: agentle.agents.apis.request_config
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseModel
+      CacheStrategy
+      RequestConfig
+      RetryStrategy
+      Sequence
+   

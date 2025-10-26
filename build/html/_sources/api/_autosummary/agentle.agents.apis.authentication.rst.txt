@@ -1,0 +1,22 @@
+agentle.agents.apis.authentication
+==================================
+
+.. automodule:: agentle.agents.apis.authentication
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ApiKeyAuthentication
+      ApiKeyLocation
+      AuthType
+      AuthenticationBase
+      AuthenticationConfig
+      BasicAuthentication
+      BearerAuthentication
+      HMACAuthentication
+      NoAuthentication
+      OAuth2Authentication
+      OAuth2GrantType
+   

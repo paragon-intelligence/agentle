@@ -1,0 +1,15 @@
+agentle.agents.apis.hmac\_authentication
+========================================
+
+.. automodule:: agentle.agents.apis.hmac_authentication
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      AuthenticationBase
+      HMACAuthentication
+      MutableMapping
+   

@@ -1,0 +1,13 @@
+agentle.agents.apis.file\_upload
+================================
+
+.. automodule:: agentle.agents.apis.file_upload
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseModel
+      FileUpload
+   

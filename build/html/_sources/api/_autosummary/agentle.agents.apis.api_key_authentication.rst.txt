@@ -1,0 +1,16 @@
+agentle.agents.apis.api\_key\_authentication
+============================================
+
+.. automodule:: agentle.agents.apis.api_key_authentication
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      ApiKeyAuthentication
+      ApiKeyLocation
+      AuthenticationBase
+      MutableMapping
+   

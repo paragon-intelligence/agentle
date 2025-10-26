@@ -1,0 +1,23 @@
+agentle.agents.apis.object\_schema
+==================================
+
+.. automodule:: agentle.agents.apis.object_schema
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+      cast
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      BaseModel
+      Mapping
+      ObjectSchema
+      Sequence
+   

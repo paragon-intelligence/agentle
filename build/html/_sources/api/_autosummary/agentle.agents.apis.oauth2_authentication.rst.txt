@@ -1,0 +1,18 @@
+agentle.agents.apis.oauth2\_authentication
+==========================================
+
+.. automodule:: agentle.agents.apis.oauth2_authentication
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      AuthenticationBase
+      MutableMapping
+      OAuth2Authentication
+      OAuth2GrantType
+      datetime
+      timedelta
+   

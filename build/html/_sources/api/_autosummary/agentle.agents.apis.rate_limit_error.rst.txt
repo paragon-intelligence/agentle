@@ -1,0 +1,12 @@
+agentle.agents.apis.rate\_limit\_error
+======================================
+
+.. automodule:: agentle.agents.apis.rate_limit_error
+
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      RateLimitError
+   

@@ -1,0 +1,13 @@
+agentle.agents.apis.circuit\_breaker\_state
+===========================================
+
+.. automodule:: agentle.agents.apis.circuit_breaker_state
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CircuitBreakerState
+      StrEnum
+   

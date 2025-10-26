@@ -1,0 +1,17 @@
+agentle.agents.apis.params
+==========================
+
+.. automodule:: agentle.agents.apis.params
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      array_param
+      boolean_param
+      integer_param
+      number_param
+      object_param
+      string_param
+   

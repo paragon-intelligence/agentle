@@ -1,4 +1,4 @@
-agentle.agents.templates.data\_collection.progressive\_profilling\_agent
+﻿agentle.agents.templates.data\_collection.progressive\_profilling\_agent
 ========================================================================
 
 .. automodule:: agentle.agents.templates.data_collection.progressive_profilling_agent
@@ -38,5 +38,8 @@ agentle.agents.templates.data\_collection.progressive\_profilling\_agent
       ProgressiveProfilingAgent
       Sequence
       TextPart
+      Tool
+      ToolExecutionResult
+      ToolExecutionSuggestion
       UserMessage
    

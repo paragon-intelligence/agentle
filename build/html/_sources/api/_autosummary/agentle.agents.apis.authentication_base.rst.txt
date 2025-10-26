@@ -1,0 +1,21 @@
+agentle.agents.apis.authentication\_base
+========================================
+
+.. automodule:: agentle.agents.apis.authentication_base
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      abstractmethod
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ABC
+      Any
+      AuthenticationBase
+      MutableMapping
+   
