@@ -295,6 +295,7 @@
 <li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.agents.apis.html">agentle.agents.apis</a><input aria-label="Toggle navigation of agentle.agents.apis" checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.api.html">agentle.agents.apis.api</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.array_schema.html">agentle.agents.apis.array_schema</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.authentication.html">agentle.agents.apis.authentication</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.endpoint.html">agentle.agents.apis.endpoint</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.endpoint_parameter.html">agentle.agents.apis.endpoint_parameter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.endpoints_to_tools.html">agentle.agents.apis.endpoints_to_tools</a></li>
@@ -659,6 +660,8 @@
         <article role="main" id="furo-main-content">
           <section id="module-agentle.agents.apis.request_config">
 <span id="agentle-agents-apis-request-config"></span><h1>agentle.agents.apis.request_config<a class="headerlink" href="#module-agentle.agents.apis.request_config" title="Link to this heading">¶</a></h1>
+<p>Enhanced request configuration with advanced features.</p>
+<p>Includes timeouts, retries, circuit breakers, rate limiting, caching, and more.</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -673,11 +676,54 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
+<td><p>Special type indicating an unconstrained type.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestConfig</span></code>(*[, timeout, max_retries, ...])</p></td>
-<td><p>Configuration for HTTP requests.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CacheStrategy</span></code>(*values)</p></td>
+<td><p>Cache strategies.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Callable</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CircuitBreaker</span></code>(config)</p></td>
+<td><p>Circuit breaker implementation for resilient API calls.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CircuitBreakerState</span></code>(*values)</p></td>
+<td><p>Circuit breaker states.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RateLimiter</span></code>(config)</p></td>
+<td><p>Rate limiter for API calls.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestConfig</span></code>(*[, timeout, connect_timeout, ...])</p></td>
+<td><p>Enhanced configuration for HTTP requests.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ResponseCache</span></code>(config)</p></td>
+<td><p>Simple in-memory response cache.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RetryStrategy</span></code>(*values)</p></td>
+<td><p>Retry strategies.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
+<td><p>All the operations on a read-only sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StrEnum</span></code>(new_class_name, /, names, *[, ...])</p></td>
+<td><p>Enum where members are also (and must be) strings</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Exceptions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CircuitBreakerError</span></code></p></td>
+<td><p>Raised when circuit breaker is open.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RateLimitError</span></code></p></td>
+<td><p>Raised when rate limit is exceeded.</p></td>
 </tr>
 </tbody>
 </table>

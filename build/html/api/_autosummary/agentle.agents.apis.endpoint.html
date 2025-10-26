@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="agentle.agents.apis.endpoint_parameter" href="agentle.agents.apis.endpoint_parameter.html"><link rel="prev" title="agentle.agents.apis.array_schema" href="agentle.agents.apis.array_schema.html">
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="agentle.agents.apis.endpoint_parameter" href="agentle.agents.apis.endpoint_parameter.html"><link rel="prev" title="agentle.agents.apis.authentication" href="agentle.agents.apis.authentication.html">
         <link rel="prefetch" href="../../_static/logo.png" as="image">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
@@ -179,7 +179,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
         <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
       </label>
     </div>
@@ -295,6 +295,7 @@
 <li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.agents.apis.html">agentle.agents.apis</a><input aria-label="Toggle navigation of agentle.agents.apis" checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.api.html">agentle.agents.apis.api</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.array_schema.html">agentle.agents.apis.array_schema</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.authentication.html">agentle.agents.apis.authentication</a></li>
 <li class="toctree-l5 current current-page"><a class="current reference internal" href="#">agentle.agents.apis.endpoint</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.endpoint_parameter.html">agentle.agents.apis.endpoint_parameter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.endpoints_to_tools.html">agentle.agents.apis.endpoints_to_tools</a></li>
@@ -652,113 +653,25 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
             <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
           </label>
         </div>
         <article role="main" id="furo-main-content">
           <section id="module-agentle.agents.apis.endpoint">
 <span id="agentle-agents-apis-endpoint"></span><h1>agentle.agents.apis.endpoint<a class="headerlink" href="#module-agentle.agents.apis.endpoint" title="Link to this heading">¶</a></h1>
-<p>API endpoint integration for Agentle framework.</p>
-<p>This module provides classes for defining HTTP API endpoints that can be automatically
-converted to tools for use by AI agents. This allows users to integrate with REST APIs
-without writing HTTP request functions manually.</p>
-<p>Example:
-<a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
-from agentle.apis.endpoint import Endpoint, API, HTTPMethod, ParameterLocation, EndpointParameter
-from agentle.agents.agent import Agent</p>
-<p># Define individual endpoints
-weather_endpoint = Endpoint(</p>
-<blockquote>
-<div><p>name=”get_weather”,
-description=”Get current weather for a location”,
-call_condition=”when user asks about weather, current conditions, or temperature”,
-url=”<a class="reference external" href="https://api.weather.com/v1/current">https://api.weather.com/v1/current</a>”,
-method=HTTPMethod.GET,
-parameters=[</p>
-<blockquote>
-<div><dl class="simple">
-<dt>EndpointParameter(</dt><dd><p>name=”location”,
-description=”City name or coordinates”,
-param_type=”string”,
-location=ParameterLocation.QUERY,
-required=True</p>
-</dd>
-</dl>
-<p>),
-EndpointParameter(</p>
-<blockquote>
-<div><p>name=”units”,
-description=”Temperature units”,
-param_type=”string”,
-location=ParameterLocation.QUERY,
-default=”metric”</p>
-</div></blockquote>
-<p>)</p>
-</div></blockquote>
-<p>]</p>
-</div></blockquote>
-<p>)</p>
-<p># Or define an API with multiple endpoints
-weather_api = API(</p>
-<blockquote>
-<div><p>name=”WeatherAPI”,
-base_url=”<a class="reference external" href="https://api.weather.com/v1">https://api.weather.com/v1</a>”,
-headers={“Authorization”: “Bearer YOUR_TOKEN”},
-endpoints=[</p>
-<blockquote>
-<div><dl>
-<dt>Endpoint(</dt><dd><p>name=”get_current_weather”,
-description=”Get current weather conditions”,
-call_condition=”when user asks about current weather”,
-path=”/current”,
-method=HTTPMethod.GET,
-parameters=[</p>
-<blockquote>
-<div><dl class="simple">
-<dt>EndpointParameter(“location”, “Location to get weather for”, “string”,</dt><dd><p>ParameterLocation.QUERY, required=True)</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>]</p>
-</dd>
-</dl>
-<p>),
-Endpoint(</p>
-<blockquote>
-<div><p>name=”get_forecast”,
-description=”Get weather forecast”,
-call_condition=”when user asks about weather forecast or future weather”,
-path=”/forecast”,
-method=HTTPMethod.GET,
-parameters=[</p>
-<blockquote>
-<div><dl class="simple">
-<dt>EndpointParameter(“location”, “Location for forecast”, “string”,</dt><dd><p>ParameterLocation.QUERY, required=True),</p>
-</dd>
-<dt>EndpointParameter(“days”, “Number of days”, “integer”,</dt><dd><p>ParameterLocation.QUERY, default=5)</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>]</p>
-</div></blockquote>
-<p>)</p>
-</div></blockquote>
-<p>]</p>
-</div></blockquote>
-<p>)</p>
-<p># Use with an agent
-agent = Agent(</p>
-<blockquote>
-<div><p>generation_provider=GoogleGenerationProvider(),
-model=”gemini-2.5-flash”,
-instructions=”You are a weather assistant.”,
-tools=[weather_endpoint],  # Individual endpoint
-apis=[weather_api]         # Full API with multiple endpoints</p>
-</div></blockquote>
-<section id="id5">
-<h2>)<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
-</section>
+<p>Complete enhanced API endpoint integration for Agentle framework.</p>
+<p>This module provides comprehensive HTTP API endpoint support with:
+- Multiple authentication methods
+- Advanced retry strategies
+- Circuit breaker pattern
+- Rate limiting
+- Response caching
+- File uploads (multipart/form-data)
+- Streaming responses
+- Request/response hooks
+- SSL/Proxy configuration
+- and more…</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -776,14 +689,32 @@ apis=[weather_api]         # Full API with multiple endpoints</p>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AsyncIterator</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AuthenticationBase</span></code>()</p></td>
+<td><p>Base class for authentication handlers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AuthenticationConfig</span></code>(*[, type, ...])</p></td>
+<td><p>Configuration for API authentication.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Endpoint</span></code>(*, name, description[, ...])</p></td>
-<td><p>Represents a single HTTP API endpoint that can be called by an agent.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Callable</span></code>()</p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EndpointParameter</span></code>(*, name, description[, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CircuitBreaker</span></code>(config)</p></td>
+<td><p>Circuit breaker implementation for resilient API calls.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Endpoint</span></code>(*, name, description[, ...])</p></td>
+<td><p>Enhanced HTTP API endpoint with comprehensive features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EndpointParameter</span></code>(*, name, description[, ...])</p></td>
 <td><p>Represents a parameter for an API endpoint with proper object support.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FileUpload</span></code>(*, filename, content[, mime_type])</p></td>
+<td><p>Represents a file to be uploaded.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HTTPMethod</span></code>(*values)</p></td>
 <td><p>HTTP methods supported by endpoints.</p></td>
@@ -791,17 +722,42 @@ apis=[weather_api]         # Full API with multiple endpoints</p>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableMapping</span></code>()</p></td>
 <td><p>A MutableMapping is a generic container for associating key/value pairs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParameterLocation</span></code>(*values)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">NoAuthentication</span></code>()</p></td>
+<td><p>No authentication.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParameterLocation</span></code>(*values)</p></td>
 <td><p>Where to place parameters in the HTTP request.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestConfig</span></code>(*[, timeout, max_retries, ...])</p></td>
-<td><p>Configuration for HTTP requests.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RateLimiter</span></code>(config)</p></td>
+<td><p>Rate limiter for API calls.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestConfig</span></code>(*[, timeout, connect_timeout, ...])</p></td>
+<td><p>Enhanced configuration for HTTP requests.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestHook</span></code>(*, name[, callback])</p></td>
+<td><p>Hook for request/response interception.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ResponseCache</span></code>(config)</p></td>
+<td><p>Simple in-memory response cache.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RetryStrategy</span></code>(*values)</p></td>
+<td><p>Retry strategies.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
 <td><p>All the operations on a read-only sequence.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tool</span></code>(*[, type, description, ignore_errors, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tool</span></code>(*[, type, description, ignore_errors, ...])</p></td>
 <td><p>A callable tool with robust serialization support using dill.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Exceptions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CircuitBreakerError</span></code></p></td>
+<td><p>Raised when circuit breaker is open.</p></td>
 </tr>
 </tbody>
 </table>
@@ -822,14 +778,14 @@ apis=[weather_api]         # Full API with multiple endpoints</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="agentle.agents.apis.array_schema.html">
+          <a class="prev-page" href="agentle.agents.apis.authentication.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">agentle.agents.apis.array_schema</div>
+                <div class="title">agentle.agents.apis.authentication</div>
                 
               </div>
             </a>
@@ -851,27 +807,8 @@ apis=[weather_api]         # Full API with multiple endpoints</p>
         
       </footer>
     </div>
-    <aside class="toc-drawer">
+    <aside class="toc-drawer no-toc">
       
-      
-      <div class="toc-sticky toc-scroll">
-        <div class="toc-title-container">
-          <span class="toc-title">
-            On this page
-          </span>
-        </div>
-        <div class="toc-tree-container">
-          <div class="toc-tree">
-            <ul>
-<li><a class="reference internal" href="#">agentle.agents.apis.endpoint</a><ul>
-<li><a class="reference internal" href="#id5">)</a></li>
-</ul>
-</li>
-</ul>
-
-          </div>
-        </div>
-      </div>
       
       
     </aside>

@@ -295,6 +295,7 @@
 <li class="toctree-l4 current has-children"><a class="reference internal" href="agentle.agents.apis.html">agentle.agents.apis</a><input aria-label="Toggle navigation of agentle.agents.apis" checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l5 current current-page"><a class="current reference internal" href="#">agentle.agents.apis.api</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.array_schema.html">agentle.agents.apis.array_schema</a></li>
+<li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.authentication.html">agentle.agents.apis.authentication</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.endpoint.html">agentle.agents.apis.endpoint</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.endpoint_parameter.html">agentle.agents.apis.endpoint_parameter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="agentle.agents.apis.endpoints_to_tools.html">agentle.agents.apis.endpoints_to_tools</a></li>
@@ -659,6 +660,15 @@
         <article role="main" id="furo-main-content">
           <section id="module-agentle.agents.apis.api">
 <span id="agentle-agents-apis-api"></span><h1>agentle.agents.apis.api<a class="headerlink" href="#module-agentle.agents.apis.api" title="Link to this heading">¶</a></h1>
+<p>Complete enhanced API module with comprehensive OpenAPI support.</p>
+<p>Provides advanced features for managing collections of related endpoints with:
+- Full OpenAPI 3.0/3.1 and Swagger 2.0 support
+- Shared authentication across endpoints
+- Request/response interceptors
+- API-level rate limiting and circuit breaking
+- Batch request support
+- GraphQL support
+- And more…</p>
 <p class="rubric">Functions</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
@@ -677,22 +687,40 @@
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">API</span></code>(*, name[, description, headers, ...])</p></td>
-<td><p>Represents a collection of related API endpoints with shared configuration.</p></td>
+<td><p>Enhanced API collection with comprehensive features.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">APIMetrics</span></code>(*[, total_requests, ...])</p></td>
+<td><p>Metrics for API usage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Any</span></code>(*args, **kwargs)</p></td>
 <td><p>Special type indicating an unconstrained type.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ApiKeyLocation</span></code>(*values)</p></td>
+<td><p>Where to place API key.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArraySchema</span></code>(*[, type, min_items, max_items, ...])</p></td>
 <td><p>Schema definition for array parameters.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AuthType</span></code>(*values)</p></td>
+<td><p>Types of authentication supported.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AuthenticationConfig</span></code>(*[, type, ...])</p></td>
+<td><p>Configuration for API authentication.</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
 <td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Endpoint</span></code>(*, name, description[, ...])</p></td>
-<td><p>Represents a single HTTP API endpoint that can be called by an agent.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Coroutine</span></code>()</p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EndpointParameter</span></code>(*, name, description[, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Endpoint</span></code>(*, name, description[, ...])</p></td>
+<td><p>Enhanced HTTP API endpoint with comprehensive features.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EndpointParameter</span></code>(*, name, description[, ...])</p></td>
 <td><p>Represents a parameter for an API endpoint with proper object support.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HTTPMethod</span></code>(*values)</p></td>
+<td><p>HTTP methods supported by endpoints.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mapping</span></code>()</p></td>
 <td><p>A Mapping is a generic container for associating key/value pairs.</p></td>
@@ -703,8 +731,14 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MutableSequence</span></code>()</p></td>
 <td><p>All the operations on a read-write sequence.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ObjectSchema</span></code>(*[, type, properties, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">OAuth2GrantType</span></code>(*values)</p></td>
+<td><p>OAuth2 grant types.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ObjectSchema</span></code>(*[, type, properties, ...])</p></td>
 <td><p>Schema definition for object parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParameterLocation</span></code>(*values)</p></td>
+<td><p>Where to place parameters in the HTTP request.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Path</span></code>(*args, **kwargs)</p></td>
 <td><p>PurePath subclass that can make system calls.</p></td>
@@ -712,8 +746,8 @@
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrimitiveSchema</span></code>(*, type[, format, enum, ...])</p></td>
 <td><p>Schema definition for primitive parameters.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestConfig</span></code>(*[, timeout, max_retries, ...])</p></td>
-<td><p>Configuration for HTTP requests.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RequestConfig</span></code>(*[, timeout, connect_timeout, ...])</p></td>
+<td><p>Enhanced configuration for HTTP requests.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code>()</p></td>
 <td><p>All the operations on a read-only sequence.</p></td>

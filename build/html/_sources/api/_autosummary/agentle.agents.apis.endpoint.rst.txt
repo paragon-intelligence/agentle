@@ -15,13 +15,30 @@ agentle.agents.apis.endpoint
    .. autosummary::
    
       Any
+      AsyncIterator
+      AuthenticationBase
+      AuthenticationConfig
       BaseModel
+      Callable
+      CircuitBreaker
       Endpoint
       EndpointParameter
+      FileUpload
       HTTPMethod
       MutableMapping
+      NoAuthentication
       ParameterLocation
+      RateLimiter
       RequestConfig
+      RequestHook
+      ResponseCache
+      RetryStrategy
       Sequence
       Tool
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      CircuitBreakerError
    

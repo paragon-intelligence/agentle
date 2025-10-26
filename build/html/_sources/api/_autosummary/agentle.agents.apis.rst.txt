@@ -21,6 +21,7 @@ agentle.agents.apis
 
    api
    array_schema
+   authentication
    endpoint
    endpoint_parameter
    endpoints_to_tools

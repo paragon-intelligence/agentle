@@ -16,15 +16,23 @@ agentle.agents.apis.api
    .. autosummary::
    
       API
+      APIMetrics
       Any
+      ApiKeyLocation
       ArraySchema
+      AuthType
+      AuthenticationConfig
       BaseModel
+      Coroutine
       Endpoint
       EndpointParameter
+      HTTPMethod
       Mapping
       MutableMapping
       MutableSequence
+      OAuth2GrantType
       ObjectSchema
+      ParameterLocation
       Path
       PrimitiveSchema
       RequestConfig

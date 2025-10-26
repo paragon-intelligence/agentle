@@ -14,6 +14,23 @@ agentle.agents.apis.request\_config
 
    .. autosummary::
    
+      Any
       BaseModel
+      CacheStrategy
+      Callable
+      CircuitBreaker
+      CircuitBreakerState
+      RateLimiter
       RequestConfig
+      ResponseCache
+      RetryStrategy
+      Sequence
+      StrEnum
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      CircuitBreakerError
+      RateLimitError
    
