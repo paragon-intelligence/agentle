@@ -1,0 +1,17 @@
+agentle.agents.whatsapp.v2.whatsapp\_bot
+========================================
+
+.. automodule:: agentle.agents.whatsapp.v2.whatsapp_bot
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Any
+      BaseModel
+      BatchProcessorManager
+      Callable
+      ConfigDict
+      WhatsAppBot
+   

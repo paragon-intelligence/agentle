@@ -8,5 +8,5 @@ agentle.agents.whatsapp.v2.batch\_processor\_manager
 
    .. autosummary::
    
-      BatchProcessorManger
+      BatchProcessorManager
    
