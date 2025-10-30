@@ -1,0 +1,20 @@
+agentle.agents.whatsapp.v2
+==========================
+
+.. automodule:: agentle.agents.whatsapp.v2
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   batch_processor_manager
+   bot_config
+   in_memory_batch_processor_manager
+   message_limit
+   payload
+   whatsapp_bot
+   whatsapp_cloud_api_provider
+   whatsapp_provider

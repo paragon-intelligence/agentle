@@ -1,0 +1,21 @@
+agentle.agents.whatsapp.v2.bot\_config
+======================================
+
+.. automodule:: agentle.agents.whatsapp.v2.bot_config
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseModel
+      BotConfig
+      MessageLimit
+      SpeechConfig
+   

@@ -1,0 +1,6 @@
+agentle.agents.whatsapp.v2.in\_memory\_batch\_processor\_manager
+================================================================
+
+.. automodule:: agentle.agents.whatsapp.v2.in_memory_batch_processor_manager
+
+   

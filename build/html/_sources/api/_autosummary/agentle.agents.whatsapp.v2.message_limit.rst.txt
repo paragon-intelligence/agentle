@@ -1,0 +1,13 @@
+agentle.agents.whatsapp.v2.message\_limit
+=========================================
+
+.. automodule:: agentle.agents.whatsapp.v2.message_limit
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      IntEnum
+      MessageLimit
+   

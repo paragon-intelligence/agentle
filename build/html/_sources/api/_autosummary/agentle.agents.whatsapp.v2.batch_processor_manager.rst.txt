@@ -1,0 +1,12 @@
+agentle.agents.whatsapp.v2.batch\_processor\_manager
+====================================================
+
+.. automodule:: agentle.agents.whatsapp.v2.batch_processor_manager
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BatchProcessorManger
+   

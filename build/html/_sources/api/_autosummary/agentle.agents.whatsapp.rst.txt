@@ -13,4 +13,5 @@ agentle.agents.whatsapp
    human_delay_calculator
    models
    providers
+   v2
    whatsapp_bot
