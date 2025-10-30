@@ -1,4 +1,4 @@
-﻿agentle.agents.whatsapp.models
+agentle.agents.whatsapp.models
 ==============================
 
 .. automodule:: agentle.agents.whatsapp.models

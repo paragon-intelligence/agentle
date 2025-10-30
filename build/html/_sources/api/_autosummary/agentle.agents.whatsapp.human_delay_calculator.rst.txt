@@ -1,0 +1,12 @@
+agentle.agents.whatsapp.human\_delay\_calculator
+================================================
+
+.. automodule:: agentle.agents.whatsapp.human_delay_calculator
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      HumanDelayCalculator
+   

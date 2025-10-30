@@ -10,6 +10,7 @@ agentle.agents.whatsapp
    :toctree:
    :recursive:
 
+   human_delay_calculator
    models
    providers
    whatsapp_bot

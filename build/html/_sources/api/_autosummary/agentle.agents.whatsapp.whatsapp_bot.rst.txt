@@ -1,4 +1,4 @@
-﻿agentle.agents.whatsapp.whatsapp\_bot
+agentle.agents.whatsapp.whatsapp\_bot
 =====================================
 
 .. automodule:: agentle.agents.whatsapp.whatsapp_bot
@@ -33,6 +33,7 @@
       FilePart
       FileStorageManager
       GeneratedAssistantMessage
+      HumanDelayCalculator
       MutableMapping
       MutableSequence
       PhoneNumber
