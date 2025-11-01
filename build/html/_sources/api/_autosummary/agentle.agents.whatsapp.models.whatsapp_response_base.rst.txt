@@ -1,0 +1,19 @@
+agentle.agents.whatsapp.models.whatsapp\_response\_base
+=======================================================
+
+.. automodule:: agentle.agents.whatsapp.models.whatsapp_response_base
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      Field
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BaseModel
+      WhatsAppResponseBase
+   

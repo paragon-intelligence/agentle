@@ -3,11 +3,11 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="agentle.agents.whatsapp.models.whatsapp_location_message" href="agentle.agents.whatsapp.models.whatsapp_location_message.html"><link rel="prev" title="agentle.agents.whatsapp.models.whatsapp_document_message" href="agentle.agents.whatsapp.models.whatsapp_document_message.html">
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="agentle.agents.whatsapp.models.whatsapp_session" href="agentle.agents.whatsapp.models.whatsapp_session.html"><link rel="prev" title="agentle.agents.whatsapp.models.whatsapp_message_type" href="agentle.agents.whatsapp.models.whatsapp_message_type.html">
         <link rel="prefetch" href="../../_static/logo.png" as="image">
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
-        <title>agentle.agents.whatsapp.models.whatsapp_image_message - Agentle 0.6.12 documentation</title>
+        <title>agentle.agents.whatsapp.models.whatsapp_response_base - Agentle 0.6.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=580074bf" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -404,13 +404,13 @@
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_bot_config.html">agentle.agents.whatsapp.models.whatsapp_bot_config</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_contact.html">agentle.agents.whatsapp.models.whatsapp_contact</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_document_message.html">agentle.agents.whatsapp.models.whatsapp_document_message</a></li>
-<li class="toctree-l6 current current-page"><a class="current reference internal" href="#">agentle.agents.whatsapp.models.whatsapp_image_message</a></li>
+<li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_image_message.html">agentle.agents.whatsapp.models.whatsapp_image_message</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_location_message.html">agentle.agents.whatsapp.models.whatsapp_location_message</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_media_message.html">agentle.agents.whatsapp.models.whatsapp_media_message</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_message.html">agentle.agents.whatsapp.models.whatsapp_message</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_message_status.html">agentle.agents.whatsapp.models.whatsapp_message_status</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_message_type.html">agentle.agents.whatsapp.models.whatsapp_message_type</a></li>
-<li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_response_base.html">agentle.agents.whatsapp.models.whatsapp_response_base</a></li>
+<li class="toctree-l6 current current-page"><a class="current reference internal" href="#">agentle.agents.whatsapp.models.whatsapp_response_base</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_session.html">agentle.agents.whatsapp.models.whatsapp_session</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_text_message.html">agentle.agents.whatsapp.models.whatsapp_text_message</a></li>
 <li class="toctree-l6"><a class="reference internal" href="agentle.agents.whatsapp.models.whatsapp_video_message.html">agentle.agents.whatsapp.models.whatsapp_video_message</a></li>
@@ -674,7 +674,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.whatsapp.models.whatsapp_image_message.rst.txt" title="View this page">
+  <a class="muted-link" href="../../_sources/api/_autosummary/agentle.agents.whatsapp.models.whatsapp_response_base.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -692,20 +692,27 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-agentle.agents.whatsapp.models.whatsapp_image_message">
-<span id="agentle-agents-whatsapp-models-whatsapp-image-message"></span><h1>agentle.agents.whatsapp.models.whatsapp_image_message<a class="headerlink" href="#module-agentle.agents.whatsapp.models.whatsapp_image_message" title="Link to this heading">¶</a></h1>
+          <section id="module-agentle.agents.whatsapp.models.whatsapp_response_base">
+<span id="agentle-agents-whatsapp-models-whatsapp-response-base"></span><h1>agentle.agents.whatsapp.models.whatsapp_response_base<a class="headerlink" href="#module-agentle.agents.whatsapp.models.whatsapp_response_base" title="Link to this heading">¶</a></h1>
+<p class="rubric">Functions</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Field</span></code>()</p></td>
+<td><p>!!! abstract &quot;Usage Documentation&quot;</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Classes</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppImageMessage</span></code>(*, id[, type, ...])</p></td>
-<td><p>Image message model.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code>()</p></td>
+<td><p>Alias for pydantic.BaseModel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppMediaMessage</span></code>(*, id, type, ...[, ...])</p></td>
-<td><p>Media message model.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppMessageType</span></code>(*values)</p></td>
-<td><p>Types of WhatsApp messages.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">WhatsAppResponseBase</span></code>(*, response)</p></td>
+<td><p>Base class for WhatsApp bot structured responses.</p></td>
 </tr>
 </tbody>
 </table>
@@ -717,23 +724,23 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="agentle.agents.whatsapp.models.whatsapp_location_message.html">
+          <a class="next-page" href="agentle.agents.whatsapp.models.whatsapp_session.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">agentle.agents.whatsapp.models.whatsapp_location_message</div>
+                <div class="title">agentle.agents.whatsapp.models.whatsapp_session</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="agentle.agents.whatsapp.models.whatsapp_document_message.html">
+          <a class="prev-page" href="agentle.agents.whatsapp.models.whatsapp_message_type.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">agentle.agents.whatsapp.models.whatsapp_document_message</div>
+                <div class="title">agentle.agents.whatsapp.models.whatsapp_message_type</div>
                 
               </div>
             </a>

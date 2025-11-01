@@ -52,6 +52,7 @@ agentle.agents.whatsapp.whatsapp\_bot
       WhatsAppMediaMessage
       WhatsAppMessage
       WhatsAppProvider
+      WhatsAppResponseBase
       WhatsAppSession
       WhatsAppTextMessage
       WhatsAppVideoMessage
