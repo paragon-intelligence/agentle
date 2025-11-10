@@ -18,6 +18,7 @@ agentle.agents.conversations.postgres\_conversation\_store
       AssistantMessage
       ConversationStore
       DeveloperMessage
+      GeneratedAssistantMessage
       PostgresConversationStore
       Sequence
       UserMessage

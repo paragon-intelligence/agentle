@@ -14,12 +14,14 @@ agentle.agents.conversations.callback\_conversation\_store
 
    .. autosummary::
    
+      Any
       AssistantMessage
       Awaitable
       Callable
       CallbackConversationStore
       ConversationStore
       DeveloperMessage
+      GeneratedAssistantMessage
       Sequence
       UserMessage
    

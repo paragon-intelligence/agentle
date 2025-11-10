@@ -8,9 +8,11 @@ agentle.agents.conversations.conversation\_store
 
    .. autosummary::
    
+      Any
       AssistantMessage
       ConversationStore
       DeveloperMessage
+      GeneratedAssistantMessage
       Sequence
       UserMessage
    

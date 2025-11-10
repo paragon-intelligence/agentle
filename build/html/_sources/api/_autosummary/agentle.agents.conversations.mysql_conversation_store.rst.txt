@@ -18,6 +18,7 @@ agentle.agents.conversations.mysql\_conversation\_store
       AssistantMessage
       ConversationStore
       DeveloperMessage
+      GeneratedAssistantMessage
       MySQLConversationStore
       Sequence
       UserMessage

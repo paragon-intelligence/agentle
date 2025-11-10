@@ -18,6 +18,7 @@ agentle.agents.conversations.json\_file\_conversation\_store
       AssistantMessage
       ConversationStore
       DeveloperMessage
+      GeneratedAssistantMessage
       JSONFileConversationStore
       Path
       Sequence

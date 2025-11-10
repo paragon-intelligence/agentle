@@ -14,10 +14,12 @@ agentle.agents.conversations.firebase\_conversation\_store
 
    .. autosummary::
    
+      Any
       AssistantMessage
       ConversationStore
       DeveloperMessage
       FirebaseConversationStore
+      GeneratedAssistantMessage
       Sequence
       UserMessage
    

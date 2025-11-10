@@ -14,9 +14,11 @@ agentle.agents.conversations.local\_conversation\_store
 
    .. autosummary::
    
+      Any
       AssistantMessage
       ConversationStore
       DeveloperMessage
+      GeneratedAssistantMessage
       LocalConversationStore
       MutableMapping
       MutableSequence
