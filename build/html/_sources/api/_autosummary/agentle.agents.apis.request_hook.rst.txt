@@ -4,12 +4,6 @@ agentle.agents.apis.request\_hook
 .. automodule:: agentle.agents.apis.request_hook
 
    
-   .. rubric:: Functions
-
-   .. autosummary::
-   
-      Field
-   
    .. rubric:: Classes
 
    .. autosummary::
