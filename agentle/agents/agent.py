@@ -2060,25 +2060,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
 
         # Agent has tools - handle streaming and non-streaming paths
-        serialized_tools = suspension_state.get("all_tools")
-        all_tools: Sequence[Tool]
-        if isinstance(serialized_tools, list) and serialized_tools:
-            restored_tools: list[Tool[Any]] = []
-            for tool_data in serialized_tools:
-                if not isinstance(tool_data, dict):
-                    continue
-                try:
-                    restored_tools.append(Tool.model_validate(tool_data))
-                except Exception:
-                    _logger.bind_optional(
-                        lambda log: log.debug(
-                            "Could not restore serialized tool from suspension state",
-                            exc_info=True,
-                        )
-                    )
-            all_tools = restored_tools or cast(Sequence[Tool], await self._all_tools())
-        else:
-            all_tools = cast(Sequence[Tool], await self._all_tools())
+        all_tools = cast(Sequence[Tool], await self._all_tools())
         tool_names = self._tool_names_from_tools(all_tools)
 
         available_tools: MutableMapping[str, Tool[Any]] = {
