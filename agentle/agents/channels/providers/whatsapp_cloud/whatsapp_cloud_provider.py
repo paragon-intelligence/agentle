@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from collections.abc import Mapping, MutableMapping
 from datetime import datetime
@@ -369,6 +370,40 @@ class WhatsAppCloudProvider:
                 metadata=dict(media_payload),
             )
             text = media.caption
+        elif message_type == "interactive":
+            interactive_payload = message_data.get("interactive") or {}
+            if not isinstance(interactive_payload, dict):
+                interactive_payload = {}
+            interactive_type = str(interactive_payload.get("type") or "").strip()
+            if interactive_type == "nfm_reply":
+                reply = interactive_payload.get("nfm_reply") or {}
+                if not isinstance(reply, dict):
+                    reply = {}
+                response_json = reply.get("response_json") or {}
+                if isinstance(response_json, str):
+                    try:
+                        response_data = json.loads(response_json)
+                    except Exception:
+                        response_data = {"response_json": response_json}
+                elif isinstance(response_json, dict):
+                    response_data = response_json
+                else:
+                    response_data = {"response_json": response_json}
+                text = (
+                    "Resposta estruturada recebida:\n"
+                    + json.dumps(response_data, ensure_ascii=False, separators=(",", ":"))
+                )
+            elif interactive_type == "button_reply":
+                reply = interactive_payload.get("button_reply") or {}
+                text = str(reply.get("title") or reply.get("id") or "").strip()
+            elif interactive_type == "list_reply":
+                reply = interactive_payload.get("list_reply") or {}
+                text = str(reply.get("title") or reply.get("id") or "").strip()
+            else:
+                text = (
+                    "Mensagem interativa recebida:\n"
+                    + json.dumps(interactive_payload, ensure_ascii=False, separators=(",", ":"))
+                )
         else:
             raise ValueError(f"Tipo de mensagem WhatsApp Cloud não suportado: {message_type}")
 
@@ -391,6 +426,7 @@ class WhatsAppCloudProvider:
             metadata={
                 "raw_message": message_data,
                 "raw_value_metadata": value.get("metadata") or {},
+                "interactive": message_data.get("interactive") or {},
             },
         )
 
