@@ -112,6 +112,16 @@ class AgentRunOutput[T_StructuredOutput](BaseModel):
     A token that can be used to resume suspended execution.
     """
 
+    suspension_kind: str | None = Field(default=None)
+    """
+    Machine-readable suspension kind. For example: "tool_approval".
+    """
+
+    suspension_data: dict[str, Any] | None = Field(default=None)
+    """
+    Structured suspension payload for application-level workflows.
+    """
+
     performance_metrics: PerformanceMetrics | None = Field(default=None)
     """
     Performance metrics for this execution.

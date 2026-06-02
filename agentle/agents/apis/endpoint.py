@@ -41,7 +41,7 @@ from agentle.agents.apis.rate_limiter import RateLimiter
 from agentle.agents.apis.request_config import RequestConfig
 from agentle.agents.apis.response_cache import ResponseCache
 from agentle.agents.apis.retry_strategy import RetryStrategy
-from agentle.generations.tools.tool import Tool
+from agentle.generations.tools.tool import ApprovalPolicy, RiskLevel, Tool
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +136,46 @@ class Endpoint(BaseModel):
     # Advanced features
     enable_hooks: bool = Field(
         description="Enable request/response hooks", default=False
+    )
+
+    approval_required: bool = Field(
+        description="Whether this endpoint must be approved by a human before dispatch.",
+        default=False,
+    )
+
+    approval_policy: ApprovalPolicy | None = Field(
+        description="Approval policy name for human approval workflows.",
+        default=None,
+    )
+
+    risk_level: RiskLevel | None = Field(
+        description="Human-readable risk level for approval UIs and policy engines.",
+        default=None,
+    )
+
+    approval_timeout_seconds: int | None = Field(
+        description="How long an approval request may remain pending before expiring.",
+        default=None,
+    )
+
+    approver_scope: dict[str, Any] | None = Field(
+        description="Structured scope describing who may approve this endpoint call.",
+        default=None,
+    )
+
+    display_template: str | None = Field(
+        description="Optional template used by applications to display approval requests.",
+        default=None,
+    )
+
+    redaction_schema: dict[str, Any] | None = Field(
+        description="Optional schema describing how applications should redact arguments.",
+        default=None,
+    )
+
+    approval_metadata: dict[str, Any] = Field(
+        description="Application-specific metadata for human approval workflows.",
+        default_factory=dict,
     )
 
     # Internal state (not serialized)
@@ -599,9 +639,25 @@ class Endpoint(BaseModel):
             name=tool_name,
             description=self.get_enhanced_description(),
             parameters=tool_parameters,
+            approval_required=self.approval_required,
+            approval_policy=self.approval_policy,
+            risk_level=self.risk_level,
+            approval_timeout_seconds=self.approval_timeout_seconds,
+            approver_scope=self.approver_scope,
+            display_template=self.display_template,
+            redaction_schema=self.redaction_schema,
+            approval_metadata=self.approval_metadata,
         )
 
         tool.set_callable_ref(endpoint_callable)
+        try:
+            tool._serialize_all_callables()
+        except Exception:
+            logger.debug(
+                "Endpoint tool '%s' could not be serialized for suspension resume",
+                tool_name,
+                exc_info=True,
+            )
 
         logger.debug(
             f"Created tool '{self.name}' with {len(tool_parameters)} parameters"

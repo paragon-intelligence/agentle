@@ -43,6 +43,16 @@ P = ParamSpec(
     default=...,  # Can't use Python's 3.13 new Generic syntax. Cannot pickle them.
 )
 T_Output = TypeVar("T_Output", default=Any)
+ApprovalPolicy = Literal[
+    "never",
+    "always",
+    "required",
+    "sensitive",
+    "human",
+    "human_in_the_loop",
+    "hitl",
+]
+RiskLevel = Literal["low", "medium", "high", "critical"]
 
 
 class _SerializationError(Exception):
@@ -123,6 +133,46 @@ class Tool(BaseModel, Generic[P, T_Output]):
     ignore_errors: bool = Field(
         default=False,
         description="If True, errors in the tool execution will be ignored and the agent will continue running.",
+    )
+
+    approval_required: bool = Field(
+        default=False,
+        description="Whether this tool must be approved by a human before dispatch.",
+    )
+
+    approval_policy: ApprovalPolicy | None = Field(
+        default=None,
+        description="Approval policy name for human approval workflows.",
+    )
+
+    risk_level: RiskLevel | None = Field(
+        default=None,
+        description="Human-readable risk level for approval UIs and policy engines.",
+    )
+
+    approval_timeout_seconds: int | None = Field(
+        default=None,
+        description="How long an approval request may remain pending before expiring.",
+    )
+
+    approver_scope: dict[str, Any] | None = Field(
+        default=None,
+        description="Structured scope describing who may approve this tool execution.",
+    )
+
+    display_template: str | None = Field(
+        default=None,
+        description="Optional template used by applications to display approval requests.",
+    )
+
+    redaction_schema: dict[str, Any] | None = Field(
+        default=None,
+        description="Optional schema describing how applications should redact tool arguments.",
+    )
+
+    approval_metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Application-specific metadata for human approval workflows.",
     )
 
     # Serialization fields - store base64-encoded dill-serialized callables
@@ -626,6 +676,14 @@ class Tool(BaseModel, Generic[P, T_Output]):
         ) = None,
         ignore_errors: bool = False,
         auto_serialize: bool = True,
+        approval_required: bool | None = None,
+        approval_policy: ApprovalPolicy | None = None,
+        risk_level: RiskLevel | None = None,
+        approval_timeout_seconds: int | None = None,
+        approver_scope: dict[str, Any] | None = None,
+        display_template: str | None = None,
+        redaction_schema: dict[str, Any] | None = None,
+        approval_metadata: dict[str, Any] | None = None,
     ) -> Tool[CallableP, CallableT]:
         """
         Creates a Tool instance from a callable function with full type safety and serialization.
@@ -730,6 +788,32 @@ class Tool(BaseModel, Generic[P, T_Output]):
                 description=_description,
                 parameters=parameters,
                 ignore_errors=ignore_errors,
+                approval_required=bool(
+                    approval_required
+                    if approval_required is not None
+                    else getattr(_callable, "approval_required", False)
+                ),
+                approval_policy=approval_policy
+                if approval_policy is not None
+                else getattr(_callable, "approval_policy", None),
+                risk_level=risk_level
+                if risk_level is not None
+                else getattr(_callable, "risk_level", None),
+                approval_timeout_seconds=approval_timeout_seconds
+                if approval_timeout_seconds is not None
+                else getattr(_callable, "approval_timeout_seconds", None),
+                approver_scope=approver_scope
+                if approver_scope is not None
+                else getattr(_callable, "approver_scope", None),
+                display_template=display_template
+                if display_template is not None
+                else getattr(_callable, "display_template", None),
+                redaction_schema=redaction_schema
+                if redaction_schema is not None
+                else getattr(_callable, "redaction_schema", None),
+                approval_metadata=approval_metadata
+                if approval_metadata is not None
+                else dict(getattr(_callable, "approval_metadata", {}) or {}),
             )
 
             # Set private attributes after instance creation

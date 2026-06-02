@@ -177,7 +177,7 @@ class SQLiteSuspensionStore(SuspensionStore):
         """Store a suspended context in SQLite."""
         # Serialize context and metadata
         context_data = context.model_dump_json()
-        metadata_json = json.dumps(metadata)
+        metadata_json = json.dumps(metadata, default=str)
 
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
@@ -354,7 +354,7 @@ class RedisSuspensionStore(SuspensionStore):
         # Prepare data for storage
         data = {
             "context": context.model_dump_json(),
-            "metadata": json.dumps(metadata),
+            "metadata": json.dumps(metadata, default=str),
             "created_at": datetime.now().isoformat(),
             "expires_at": expires_at.isoformat() if expires_at else None,
             "user_id": metadata.get("user_id"),

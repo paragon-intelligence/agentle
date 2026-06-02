@@ -2060,7 +2060,25 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
 
         # Agent has tools - handle streaming and non-streaming paths
-        all_tools: Sequence[Tool] = cast(Sequence[Tool], await self._all_tools())
+        serialized_tools = suspension_state.get("all_tools")
+        all_tools: Sequence[Tool]
+        if isinstance(serialized_tools, list) and serialized_tools:
+            restored_tools: list[Tool[Any]] = []
+            for tool_data in serialized_tools:
+                if not isinstance(tool_data, dict):
+                    continue
+                try:
+                    restored_tools.append(Tool.model_validate(tool_data))
+                except Exception:
+                    _logger.bind_optional(
+                        lambda log: log.debug(
+                            "Could not restore serialized tool from suspension state",
+                            exc_info=True,
+                        )
+                    )
+            all_tools = restored_tools or cast(Sequence[Tool], await self._all_tools())
+        else:
+            all_tools = cast(Sequence[Tool], await self._all_tools())
         tool_names = self._tool_names_from_tools(all_tools)
 
         available_tools: MutableMapping[str, Tool[Any]] = {
@@ -2653,6 +2671,22 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                         selected_tool = available_tools[
                             tool_execution_suggestion.tool_name
                         ]
+
+                        approval_output = await self._maybe_suspend_for_tool_approval(
+                            context=context,
+                            tool=selected_tool,
+                            tool_suggestion=tool_execution_suggestion,
+                            current_iteration=current_iteration,
+                            all_tools=all_tools,
+                            called_tools=all_tool_results,
+                            current_step=step.model_dump()
+                            if hasattr(step, "model_dump")
+                            else None,
+                            execution_start_time=execution_start_time,
+                        )
+                        if approval_output is not None:
+                            yield approval_output
+                            return
 
                         # Time the tool execution
                         tool_start_time = time.perf_counter()
@@ -3464,6 +3498,21 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 )
 
                 selected_tool = available_tools[tool_execution_suggestion.tool_name]
+
+                approval_output = await self._maybe_suspend_for_tool_approval(
+                    context=context,
+                    tool=selected_tool,
+                    tool_suggestion=tool_execution_suggestion,
+                    current_iteration=current_iteration,
+                    all_tools=all_tools,
+                    called_tools=all_tool_results,
+                    current_step=step.model_dump()
+                    if hasattr(step, "model_dump")
+                    else None,
+                    execution_start_time=execution_start_time,
+                )
+                if approval_output is not None:
+                    return approval_output
 
                 # Time the tool execution
                 tool_start_time = time.perf_counter()
@@ -4319,8 +4368,10 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
 
         # Handle approval denial
         if approval_result and not approval_result.get("approved", True):
-            reason = approval_result.get("approval_data", {}).get(
-                "reason", "No reason provided"
+            reason = (
+                approval_result.get("reason")
+                or approval_result.get("approval_data", {}).get("reason")
+                or "No reason provided"
             )
             denial_message = f"Request denied by {approval_result.get('approver_id', 'unknown')}: {reason}"
 
@@ -4452,6 +4503,31 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 ),
             )
 
+    async def _restore_tools_from_suspension_state(
+        self, suspension_state: dict[str, Any]
+    ) -> Sequence[Tool[Any]]:
+        serialized_tools = suspension_state.get("all_tools")
+        if isinstance(serialized_tools, list):
+            restored_tools: list[Tool[Any]] = []
+            for tool_data in serialized_tools:
+                if not isinstance(tool_data, dict):
+                    continue
+
+                try:
+                    tool = Tool.model_validate(tool_data)
+                    tool.ensure_callable_available()
+                    restored_tools.append(tool)
+                except Exception:
+                    logger.debug(
+                        "Could not restore serialized tool from suspension state",
+                        exc_info=True,
+                    )
+
+            if restored_tools:
+                return restored_tools
+
+        return cast(Sequence[Tool[Any]], await self._all_tools())
+
     async def _resume_from_tool_suspension(
         self, context: Context, suspension_state: dict[str, Any]
     ) -> AgentRunOutput[T_Schema]:
@@ -4467,7 +4543,7 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         # Extract suspension state
         suspended_tool_suggestion = suspension_state.get("tool_suggestion")
         current_iteration = suspension_state.get("current_iteration", 1)
-        called_tools = suspension_state.get("called_tools", {})
+        raw_called_tools = suspension_state.get("called_tools", {})
         current_step = suspension_state.get("current_step")
 
         if not suspended_tool_suggestion:
@@ -4480,7 +4556,39 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             )
         )
 
-        all_tools: Sequence[Tool] = cast(Sequence[Tool], await self._all_tools())
+        all_tools: Sequence[Tool] = await self._restore_tools_from_suspension_state(
+            suspension_state
+        )
+
+        called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]] = {}
+        if isinstance(raw_called_tools, dict):
+            for key, value in raw_called_tools.items():
+                try:
+                    if isinstance(value, tuple) and len(value) == 2:
+                        suggestion, result = value
+                        if isinstance(suggestion, ToolExecutionSuggestion):
+                            called_tools[str(key)] = (suggestion, result)
+                        continue
+
+                    if not isinstance(value, dict):
+                        continue
+
+                    suggestion_data = value.get("suggestion")
+                    if not isinstance(suggestion_data, dict):
+                        continue
+
+                    suggestion = ToolExecutionSuggestion(
+                        id=suggestion_data["id"],
+                        tool_name=suggestion_data["tool_name"],
+                        args=suggestion_data["args"],
+                    )
+                    called_tools[str(key)] = (suggestion, value.get("result"))
+                except Exception:
+                    logger.debug(
+                        "Could not restore called tool '%s' from suspension state",
+                        key,
+                        exc_info=True,
+                    )
 
         available_tools: MutableMapping[str, Tool[Any]] = {
             tool.name: tool for tool in all_tools
@@ -4963,6 +5071,21 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
             for tool_execution_suggestion in tool_call_generation.tool_calls:
                 selected_tool = available_tools[tool_execution_suggestion.tool_name]
 
+                approval_output = await self._maybe_suspend_for_tool_approval(
+                    context=context,
+                    tool=selected_tool,
+                    tool_suggestion=tool_execution_suggestion,
+                    current_iteration=current_iteration,
+                    all_tools=all_tools,
+                    called_tools=called_tools,
+                    current_step=step.model_dump()
+                    if hasattr(step, "model_dump")
+                    else None,
+                    execution_start_time=execution_start_time,
+                )
+                if approval_output is not None:
+                    return approval_output
+
                 tool_start_time = time.time()
                 try:
                     tool_result = await selected_tool.call_async(
@@ -5050,6 +5173,120 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
         context.fail_execution(error_message)
         raise MaxToolCallsExceededError(error_message)
 
+    def _tool_requires_human_approval(self, tool: Tool[Any]) -> bool:
+        policy = str(getattr(tool, "approval_policy", "") or "").strip().lower()
+        if policy in {"never", "none", "disabled", "false", "0"}:
+            return False
+
+        if bool(getattr(tool, "approval_required", False)):
+            return True
+
+        return policy in {
+            "always",
+            "required",
+            "sensitive",
+            "human",
+            "human_in_the_loop",
+            "hitl",
+        }
+
+    def _build_tool_approval_data(
+        self,
+        *,
+        tool: Tool[Any],
+        tool_suggestion: ToolExecutionSuggestion,
+    ) -> dict[str, Any]:
+        timeout_seconds = getattr(tool, "approval_timeout_seconds", None) or 86400
+        metadata = dict(getattr(tool, "approval_metadata", {}) or {})
+
+        return {
+            "status": "PENDING_APPROVAL",
+            "kind": "tool_approval",
+            "tool_name": tool_suggestion.tool_name,
+            "tool_call_id": tool_suggestion.id,
+            "arguments": dict(tool_suggestion.args),
+            "tool_type": metadata.get("tool_type") or "tool",
+            "risk_level": getattr(tool, "risk_level", None) or metadata.get("risk_level"),
+            "approval_policy": getattr(tool, "approval_policy", None) or "always",
+            "approval_timeout_seconds": int(timeout_seconds),
+            "approver_scope": getattr(tool, "approver_scope", None),
+            "display_template": getattr(tool, "display_template", None),
+            "redaction_schema": getattr(tool, "redaction_schema", None),
+            "metadata": metadata,
+        }
+
+    async def _maybe_suspend_for_tool_approval(
+        self,
+        *,
+        context: Context,
+        tool: Tool[Any],
+        tool_suggestion: ToolExecutionSuggestion,
+        current_iteration: int,
+        all_tools: Sequence[Tool[Any]],
+        called_tools: dict[str, tuple[ToolExecutionSuggestion, Any]],
+        current_step: dict[str, Any] | None,
+        execution_start_time: float,
+    ) -> AgentRunOutput[T_Schema] | None:
+        if not self._tool_requires_human_approval(tool):
+            return None
+
+        approval_data = self._build_tool_approval_data(
+            tool=tool,
+            tool_suggestion=tool_suggestion,
+        )
+
+        await self._save_suspension_state(
+            context=context,
+            suspension_type="tool_execution",
+            tool_suggestion=tool_suggestion,
+            current_iteration=current_iteration,
+            all_tools=all_tools,
+            called_tools=called_tools,
+            current_step=current_step,
+        )
+
+        context.set_checkpoint_data("approval_request", approval_data)
+
+        suspension_mgr = self.suspension_manager or get_default_suspension_manager()
+        timeout_seconds = int(approval_data.get("approval_timeout_seconds") or 86400)
+        timeout_hours = max(1, (timeout_seconds + 3599) // 3600)
+        resumption_token = await suspension_mgr.suspend_execution(
+            context=context,
+            reason=f"Tool '{tool_suggestion.tool_name}' is pending human approval",
+            approval_data=approval_data,
+            timeout_hours=timeout_hours,
+        )
+
+        return AgentRunOutput(
+            generation=None,
+            context=context,
+            parsed=cast(T_Schema, None),
+            generation_text="",
+            is_suspended=True,
+            suspension_reason="PENDING_APPROVAL",
+            resumption_token=resumption_token,
+            suspension_kind="tool_approval",
+            suspension_data=approval_data,
+            performance_metrics=PerformanceMetrics(
+                total_execution_time_ms=(time.perf_counter() - execution_start_time)
+                * 1000,
+                input_processing_time_ms=0.0,
+                static_knowledge_processing_time_ms=0.0,
+                mcp_tools_preparation_time_ms=0.0,
+                generation_time_ms=0.0,
+                tool_execution_time_ms=0.0,
+                final_response_processing_time_ms=0.0,
+                iteration_count=current_iteration,
+                tool_calls_count=0,
+                total_tokens_processed=0,
+                cache_hit_rate=0.0,
+                average_generation_time_ms=0.0,
+                average_tool_execution_time_ms=0.0,
+                longest_step_duration_ms=0.0,
+                shortest_step_duration_ms=0.0,
+            ),
+        )
+
     async def _save_suspension_state(
         self,
         context: Context,
@@ -5090,6 +5327,19 @@ class Agent[T_Schema = WithoutStructuredOutput](BaseModel):
                 for k, v in (called_tools or {}).items()
             }
             suspension_state["current_step"] = current_step
+            if all_tools:
+                serialized_tools: list[dict[str, Any]] = []
+                for tool in all_tools:
+                    try:
+                        serialized_tools.append(tool.model_dump(mode="json"))
+                    except Exception:
+                        logger.debug(
+                            "Could not serialize tool '%s' for suspension state",
+                            getattr(tool, "name", "<unknown>"),
+                            exc_info=True,
+                        )
+                if serialized_tools:
+                    suspension_state["all_tools"] = serialized_tools
 
         context.set_checkpoint_data("suspension_state", suspension_state)
 
