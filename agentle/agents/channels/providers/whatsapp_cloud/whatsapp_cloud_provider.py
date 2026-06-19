@@ -224,6 +224,32 @@ class WhatsAppCloudProvider:
             raw=dict(response),
         )
 
+    async def send_interactive_message(
+        self,
+        to: str,
+        interactive: Mapping[str, Any],
+        quoted_message_id: str | None = None,
+    ) -> ChannelSendResult:
+        payload: MutableMapping[str, Any] = {
+            "messaging_product": "whatsapp",
+            "to": self._normalize_recipient(to),
+            "type": "interactive",
+            "interactive": dict(interactive),
+        }
+        if quoted_message_id:
+            payload["context"] = {"message_id": quoted_message_id}
+
+        url = self._build_url(f"{self.config.phone_number_id}/messages")
+        response = await self._make_request_with_retry("POST", url, payload)
+        message_id = str((response.get("messages") or [{}])[0].get("id") or "")
+        return ChannelSendResult(
+            id=message_id,
+            provider="whatsapp_cloud",
+            resource_id=self.config.phone_number_id,
+            recipient_id=to,
+            raw=dict(response),
+        )
+
     async def send_typing_indicator(self, to: str, duration: int = 3) -> None:
         del to, duration
 
