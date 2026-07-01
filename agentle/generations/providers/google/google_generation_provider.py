@@ -22,11 +22,12 @@ a consistent interface regardless of the underlying AI provider being used.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 from collections.abc import AsyncGenerator, AsyncIterator, Mapping, Sequence
 import hashlib
 from textwrap import dedent
-from typing import TYPE_CHECKING, cast, overload, override
+from typing import TYPE_CHECKING, Any, cast, overload, override
 
 from agentle.generations.models.generation.generation import Generation
 from agentle.generations.models.generation.generation_config import GenerationConfig
@@ -101,6 +102,27 @@ class GoogleGenerationProvider(GenerationProvider):
         function_calling_config: Configuration for function calling behavior.
     """
 
+    _GOOGLE_GENERATE_CONTENT_CONFIG_FIELDS = (
+        "cached_content",
+        "audio_timestamp",
+        "enable_enhanced_civic_answers",
+        "http_options",
+        "image_config",
+        "labels",
+        "media_resolution",
+        "model_armor_config",
+        "model_selection_config",
+        "response_json_schema",
+        "response_mime_type",
+        "response_modalities",
+        "routing_config",
+        "safety_settings",
+        "service_tier",
+        "should_return_http_response",
+        "speech_config",
+        "tool_config",
+    )
+
     def __init__(
         self,
         *,
@@ -151,15 +173,60 @@ class GoogleGenerationProvider(GenerationProvider):
         self.function_calling_config = function_calling_config or {}
 
         _http_options = http_options or types.HttpOptions()
-        self._client = genai.Client(
-            vertexai=use_vertex_ai,
-            api_key=api_key if not use_vertex_ai else None,
+        self._client = self._create_client(
+            genai=genai,
+            use_vertex_ai=use_vertex_ai,
+            api_key=api_key,
             credentials=credentials,
-            project=project if use_vertex_ai else None,
-            location=location if use_vertex_ai else None,
+            project=project,
+            location=location,
             debug_config=debug_config,
             http_options=_http_options,
         )
+
+    def _create_client(
+        self,
+        *,
+        genai: Any,
+        use_vertex_ai: bool,
+        api_key: str | None,
+        credentials: Credentials | None,
+        project: str | None,
+        location: str | None,
+        debug_config: DebugConfig | None,
+        http_options: HttpOptions | None,
+    ) -> Any:
+        client_kwargs: dict[str, Any] = {
+            "api_key": api_key if not use_vertex_ai else None,
+            "credentials": credentials,
+            "project": project if use_vertex_ai else None,
+            "location": location if use_vertex_ai else None,
+            "debug_config": debug_config,
+            "http_options": http_options,
+        }
+
+        if use_vertex_ai:
+            try:
+                client_signature = inspect.signature(genai.Client)
+                client_parameters = client_signature.parameters
+            except (TypeError, ValueError):
+                client_parameters = {}
+
+            if "enterprise" in client_parameters:
+                client_kwargs["enterprise"] = True
+            elif "vertexai" in client_parameters:
+                client_kwargs["vertexai"] = True
+            else:
+                client_kwargs["enterprise"] = True
+
+        try:
+            return genai.Client(**client_kwargs)
+        except TypeError:
+            if use_vertex_ai and "enterprise" in client_kwargs:
+                client_kwargs.pop("enterprise")
+                client_kwargs["vertexai"] = True
+                return genai.Client(**client_kwargs)
+            raise
 
     # provider_id already set via super().__init__
 
@@ -181,6 +248,142 @@ class GoogleGenerationProvider(GenerationProvider):
             str: The organization identifier, which is "google" for this provider.
         """
         return "google"
+
+    def _build_generate_content_config(
+        self,
+        *,
+        types: Any,
+        generation_config: GenerationConfig,
+        system_instruction: str | None,
+        tools: Any,
+        response_schema: type[Any] | None,
+    ) -> Any:
+        google_config = generation_config.google
+
+        if (
+            response_schema is not None
+            and google_config is not None
+            and google_config.response_json_schema is not None
+        ):
+            raise ValueError(
+                "response_schema and generation_config.google.response_json_schema cannot both be set."
+            )
+
+        if (
+            google_config is not None
+            and google_config.model_armor_config is not None
+            and google_config.safety_settings is not None
+        ):
+            raise ValueError(
+                "generation_config.google.model_armor_config and generation_config.google.safety_settings cannot both be set."
+            )
+
+        disable_function_calling = self.function_calling_config.get("disable", True)
+        maximum_remote_calls = None if disable_function_calling else 10
+        ignore_call_history = self.function_calling_config.get(
+            "ignore_call_history", False
+        )
+
+        automatic_function_calling = (
+            google_config.automatic_function_calling
+            if google_config is not None
+            and google_config.automatic_function_calling is not None
+            else types.AutomaticFunctionCallingConfig(
+                disable=disable_function_calling,
+                maximum_remote_calls=maximum_remote_calls,
+                ignore_call_history=ignore_call_history,
+            )
+        )
+
+        config_kwargs: dict[str, Any] = {
+            "system_instruction": system_instruction,
+            "temperature": generation_config.temperature,
+            "top_p": generation_config.top_p,
+            "top_k": generation_config.top_k,
+            "candidate_count": generation_config.n,
+            "tools": tools,
+            "max_output_tokens": generation_config.max_output_tokens,
+            "response_schema": response_schema if response_schema is not None else None,
+            "response_mime_type": "application/json"
+            if response_schema is not None
+            else None,
+            "automatic_function_calling": automatic_function_calling,
+        }
+
+        for field_name in (
+            "stop_sequences",
+            "seed",
+            "presence_penalty",
+            "frequency_penalty",
+            "logprobs",
+            "response_logprobs",
+        ):
+            value = getattr(generation_config, field_name)
+            if value is not None:
+                config_kwargs[field_name] = value
+
+        if google_config is not None:
+            for field_name in self._GOOGLE_GENERATE_CONTENT_CONFIG_FIELDS:
+                value = getattr(google_config, field_name)
+                if value is not None:
+                    config_kwargs[field_name] = value
+
+            if (
+                google_config.response_json_schema is not None
+                and google_config.response_mime_type is None
+            ):
+                config_kwargs["response_mime_type"] = "application/json"
+
+        thinking_config = self._build_thinking_config(
+            types=types,
+            generation_config=generation_config,
+        )
+        if thinking_config is not None:
+            config_kwargs["thinking_config"] = thinking_config
+
+        return types.GenerateContentConfig(**config_kwargs)
+
+    def _build_thinking_config(
+        self,
+        *,
+        types: Any,
+        generation_config: GenerationConfig,
+    ) -> Any | None:
+        google_config = generation_config.google
+        if google_config is not None and google_config.thinking_config is not None:
+            return google_config.thinking_config
+
+        reasoning = generation_config.reasoning
+        if reasoning is None:
+            return None
+
+        thinking_kwargs: dict[str, Any] = {}
+
+        if reasoning.enabled is False or reasoning.effort == "none":
+            thinking_kwargs["thinking_budget"] = 0
+        elif reasoning.max_tokens is not None:
+            thinking_kwargs["thinking_budget"] = reasoning.max_tokens
+        elif reasoning.effort is not None:
+            thinking_level_by_effort = {
+                "minimal": "MINIMAL",
+                "low": "LOW",
+                "medium": "MEDIUM",
+                "high": "HIGH",
+                "xhigh": "HIGH",
+            }
+            thinking_level = thinking_level_by_effort.get(reasoning.effort)
+            if thinking_level is not None:
+                thinking_kwargs["thinking_level"] = thinking_level
+        elif reasoning.enabled is True:
+            thinking_kwargs["thinking_budget"] = -1
+
+        if reasoning.exclude is not None:
+            thinking_kwargs["include_thoughts"] = not reasoning.exclude
+
+        if not thinking_kwargs:
+            return None
+
+        return types.ThinkingConfig(**thinking_kwargs)
 
     @overload
     def stream_async[T](
@@ -269,34 +472,18 @@ class GoogleGenerationProvider(GenerationProvider):
             list(tools or []) + message_tools if tools or message_tools else None
         )
 
-        disable_function_calling = self.function_calling_config.get("disable", True)
-        # if disable_function_calling is True, set maximum_remote_calls to None
-        maximum_remote_calls = None if disable_function_calling else 10
-        ignore_call_history = self.function_calling_config.get(
-            "ignore_call_history", False
-        )
-
         _tools: types.ToolListUnion | None = (
             [AgentleToolToGoogleToolAdapter().adapt(tool) for tool in final_tools]
             if final_tools
             else None
         )
 
-        config = types.GenerateContentConfig(
+        config = self._build_generate_content_config(
+            types=types,
+            generation_config=_generation_config,
             system_instruction=system_instruction,
-            temperature=_generation_config.temperature,
-            top_p=_generation_config.top_p,
-            top_k=_generation_config.top_k,
-            candidate_count=_generation_config.n,
             tools=_tools,
-            max_output_tokens=_generation_config.max_output_tokens,
-            response_schema=response_schema if bool(response_schema) else None,
-            response_mime_type="application/json" if bool(response_schema) else None,
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                disable=disable_function_calling,
-                maximum_remote_calls=maximum_remote_calls,
-                ignore_call_history=ignore_call_history,
-            ),
+            response_schema=response_schema,
         )
 
         user_messages = [msg for msg in messages if isinstance(msg, UserMessage)]
@@ -424,34 +611,18 @@ class GoogleGenerationProvider(GenerationProvider):
             list(tools or []) + message_tools if tools or message_tools else None
         )
 
-        disable_function_calling = self.function_calling_config.get("disable", True)
-        # if disable_function_calling is True, set maximum_remote_calls to None
-        maximum_remote_calls = None if disable_function_calling else 10
-        ignore_call_history = self.function_calling_config.get(
-            "ignore_call_history", False
-        )
-
         _tools: types.ToolListUnion | None = (
             [AgentleToolToGoogleToolAdapter().adapt(tool) for tool in final_tools]
             if final_tools
             else None
         )
 
-        config = types.GenerateContentConfig(
+        config = self._build_generate_content_config(
+            types=types,
+            generation_config=_generation_config,
             system_instruction=system_instruction,
-            temperature=_generation_config.temperature,
-            top_p=_generation_config.top_p,
-            top_k=_generation_config.top_k,
-            candidate_count=_generation_config.n,
             tools=_tools,
-            max_output_tokens=_generation_config.max_output_tokens,
-            response_schema=response_schema if bool(response_schema) else None,
-            response_mime_type="application/json" if bool(response_schema) else None,
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                disable=disable_function_calling,
-                maximum_remote_calls=maximum_remote_calls,
-                ignore_call_history=ignore_call_history,
-            ),
+            response_schema=response_schema,
         )
 
         user_messages = [msg for msg in messages if isinstance(msg, UserMessage)]

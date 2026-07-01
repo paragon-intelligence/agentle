@@ -12,7 +12,7 @@ behavior and easy switching between providers.
 """
 
 from __future__ import annotations
-from typing import Self
+from typing import Any, Self, cast
 
 from rsb.models.base_model import BaseModel
 from rsb.models.field import Field
@@ -23,6 +23,12 @@ from agentle.generations.models.generation.generation_reasoning import (
 )
 from agentle.generations.models.generation.generation_reasoning_dict import (
     GenerationReasoningDict,
+)
+from agentle.generations.models.generation.google_generation_config import (
+    GoogleGenerationConfig,
+)
+from agentle.generations.models.generation.google_generation_config_dict import (
+    GoogleGenerationConfigDict,
 )
 from agentle.generations.models.generation.trace_params import TraceParams
 
@@ -81,6 +87,31 @@ class GenerationConfig(BaseModel):
         ge=0.0,
         examples=[10, 40, 100],
     )
+    stop_sequences: list[str] | None = Field(
+        default=None,
+        description="Strings that stop generation when encountered in model output.",
+    )
+    seed: int | None = Field(
+        default=None,
+        description="Best-effort deterministic seed for providers that support seeded generation.",
+    )
+    presence_penalty: float | None = Field(
+        default=None,
+        description="Penalty applied to tokens already present in the generated text.",
+    )
+    frequency_penalty: float | None = Field(
+        default=None,
+        description="Penalty applied to tokens that repeatedly appear in generated text.",
+    )
+    logprobs: int | None = Field(
+        default=None,
+        gt=0,
+        description="Number of top candidate token log probabilities to request, when supported.",
+    )
+    response_logprobs: bool | None = Field(
+        default=None,
+        description="Whether to return chosen-token log probabilities, when supported.",
+    )
 
     trace_params: TraceParams = Field(
         default_factory=lambda: TraceParams(),
@@ -111,6 +142,11 @@ class GenerationConfig(BaseModel):
     reasoning: GenerationReasoning | None = Field(
         default=None,
         description="Provider-agnostic reasoning or thinking configuration. Providers that do not support it may ignore this field.",
+    )
+
+    google: GoogleGenerationConfig | None = Field(
+        default=None,
+        description="Google-specific GenerateContentConfig options.",
     )
 
     @model_validator(mode="after")
@@ -166,6 +202,13 @@ class GenerationConfig(BaseModel):
         new_timeout_s: float | None = None,
         new_timeout_m: float | None = None,
         new_reasoning: GenerationReasoning | GenerationReasoningDict | None = None,
+        new_stop_sequences: list[str] | None = None,
+        new_seed: int | None = None,
+        new_presence_penalty: float | None = None,
+        new_frequency_penalty: float | None = None,
+        new_logprobs: int | None = None,
+        new_response_logprobs: bool | None = None,
+        new_google: GoogleGenerationConfig | GoogleGenerationConfigDict | None = None,
     ) -> GenerationConfig:
         """
         Creates a new GenerationConfig with optionally updated parameters.
@@ -199,11 +242,29 @@ class GenerationConfig(BaseModel):
             n=new_n if new_n is not None else self.n,
             top_p=new_top_p if new_top_p is not None else self.top_p,
             top_k=new_top_k if new_top_k is not None else self.top_k,
+            stop_sequences=new_stop_sequences
+            if new_stop_sequences is not None
+            else self.stop_sequences,
+            seed=new_seed if new_seed is not None else self.seed,
+            presence_penalty=new_presence_penalty
+            if new_presence_penalty is not None
+            else self.presence_penalty,
+            frequency_penalty=new_frequency_penalty
+            if new_frequency_penalty is not None
+            else self.frequency_penalty,
+            logprobs=new_logprobs if new_logprobs is not None else self.logprobs,
+            response_logprobs=new_response_logprobs
+            if new_response_logprobs is not None
+            else self.response_logprobs,
             trace_params=self.trace_params,
             timeout=new_timeout if new_timeout is not None else self.timeout,
             timeout_s=new_timeout_s if new_timeout_s is not None else self.timeout_s,
             timeout_m=new_timeout_m if new_timeout_m is not None else self.timeout_m,
-            reasoning=new_reasoning if new_reasoning is not None else self.reasoning,
+            reasoning=cast(
+                Any,
+                new_reasoning if new_reasoning is not None else self.reasoning,
+            ),
+            google=cast(Any, new_google if new_google is not None else self.google),
         )
 
     class Config:

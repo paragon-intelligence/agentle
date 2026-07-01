@@ -22,6 +22,7 @@ from .choice import Choice
 from .generation import Generation
 from .generation_config import GenerationConfig
 from .generation_reasoning import GenerationReasoning
+from .google_generation_config import GoogleGenerationConfig
 from .trace_params import TraceParams
 from .usage import Usage
 
@@ -30,6 +31,7 @@ __all__ = [
     "Generation",
     "GenerationConfig",
     "GenerationReasoning",
+    "GoogleGenerationConfig",
     "TraceParams",
     "Usage",
 ]

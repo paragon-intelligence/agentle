@@ -21,6 +21,12 @@ from agentle.generations.models.generation.generation_reasoning import (
 from agentle.generations.models.generation.generation_reasoning_dict import (
     GenerationReasoningDict,
 )
+from agentle.generations.models.generation.google_generation_config import (
+    GoogleGenerationConfig,
+)
+from agentle.generations.models.generation.google_generation_config_dict import (
+    GoogleGenerationConfigDict,
+)
 from agentle.generations.models.generation.trace_params import TraceParams
 
 
@@ -55,6 +61,18 @@ class GenerationConfigDict(TypedDict):
 
     top_k: NotRequired[float | None]
 
+    stop_sequences: NotRequired[list[str] | None]
+
+    seed: NotRequired[int | None]
+
+    presence_penalty: NotRequired[float | None]
+
+    frequency_penalty: NotRequired[float | None]
+
+    logprobs: NotRequired[int | None]
+
+    response_logprobs: NotRequired[bool | None]
+
     trace_params: NotRequired[TraceParams]
 
     timeout: NotRequired[float | None]
@@ -64,3 +82,5 @@ class GenerationConfigDict(TypedDict):
     timeout_m: NotRequired[float | None]
 
     reasoning: NotRequired[GenerationReasoning | GenerationReasoningDict | None]
+
+    google: NotRequired[GoogleGenerationConfig | GoogleGenerationConfigDict | None]
