@@ -215,6 +215,8 @@ class OpenRouterTraceConfig(TypedDict, total=False):
     span_name: str
     generation_name: str
     parent_span_id: str
+    environment: str
+    release: str
 
 
 class OpenRouterPdfPluginConfig(TypedDict):

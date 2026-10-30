@@ -256,7 +256,7 @@ class OpenRouterGenerationProvider(GenerationProvider):
 
         user = cls._coerce_openrouter_metadata_value(
             trace_params.get("user_id") or trace_params.get("user"),
-            max_length=256,
+            max_length=128,
         )
         if user:
             request_body["user"] = user
@@ -272,6 +272,8 @@ class OpenRouterGenerationProvider(GenerationProvider):
             "span_name": ("span_name",),
             "generation_name": ("generation_name",),
             "parent_span_id": ("parent_span_id",),
+            "environment": ("environment",),
+            "release": ("release",),
         }
         for target_field, source_fields in trace_field_map.items():
             value = None
@@ -284,6 +286,20 @@ class OpenRouterGenerationProvider(GenerationProvider):
                     break
             if value:
                 trace[target_field] = value
+
+        # Broadcast destinations read extra `trace` keys as trace metadata and
+        # have no dedicated tags field, so tags travel as a joined string.
+        tags = trace_params.get("tags")
+        if isinstance(tags, Sequence) and not isinstance(tags, str):
+            joined_tags = cls._coerce_openrouter_metadata_value(
+                ",".join(str(tag) for tag in tags),
+                max_length=512,
+            )
+            if joined_tags:
+                trace["tags"] = joined_tags
+
+        for key, value in (metadata or {}).items():
+            trace.setdefault(key, value)
 
         if trace:
             request_body["trace"] = trace  # type: ignore[typeddict-item]

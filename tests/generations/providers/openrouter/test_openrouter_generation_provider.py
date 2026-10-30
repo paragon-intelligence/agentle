@@ -110,6 +110,58 @@ async def test_generate_async_sends_reasoning_config_to_openrouter():
     assert generation.usage.raw_usage["cost"] == 0.00042
 
 
+def _observability_body(trace_params):
+    request_body = {}
+    OpenRouterGenerationProvider._apply_observability_params(
+        request_body, GenerationConfig(trace_params=trace_params)
+    )
+    return request_body
+
+
+def test_observability_params_send_environment_release_tags_and_metadata_in_trace():
+    request_body = _observability_body(
+        {
+            "name": "Correcao",
+            "user_id": "consumer",
+            "session_id": "session",
+            "environment": "production",
+            "release": "1.2.3",
+            "tags": ["redacao", "lote"],
+            "metadata": {"step": "etapa", "passagem": 2},
+        }
+    )
+
+    assert request_body["user"] == "consumer"
+    assert request_body["session_id"] == "session"
+    assert request_body["metadata"] == {"step": "etapa", "passagem": "2"}
+    assert request_body["trace"] == {
+        "trace_name": "Correcao",
+        "environment": "production",
+        "release": "1.2.3",
+        "tags": "redacao,lote",
+        "step": "etapa",
+        "passagem": "2",
+    }
+
+
+def test_observability_metadata_does_not_override_reserved_trace_keys():
+    request_body = _observability_body(
+        {
+            "trace_name": "Nome real",
+            "tags": ["real"],
+            "metadata": {"trace_name": "Outro nome", "tags": "outra"},
+        }
+    )
+
+    assert request_body["trace"] == {"trace_name": "Nome real", "tags": "real"}
+
+
+def test_observability_user_is_capped_at_broadcast_limit():
+    request_body = _observability_body({"user_id": "u" * 200})
+
+    assert request_body["user"] == "u" * 128
+
+
 @pytest.mark.asyncio
 async def test_stream_async_sends_reasoning_config_and_preserves_reasoning_details():
     captured_request_body = {}

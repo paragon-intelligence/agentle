@@ -34,6 +34,7 @@ class TraceParams(TypedDict, total=False):
         session_id: Grouping identifier for related traces
         version: Version of the trace. Can be used for tracking changes
         release: Deployment release identifier
+        environment: Deployment environment (e.g. production, staging)
         metadata: Custom JSON-serializable metadata
         tags: Categorization labels for filtering
         public: Visibility flag for trace data
@@ -58,6 +59,7 @@ class TraceParams(TypedDict, total=False):
     session_id: NotRequired[str]
     version: NotRequired[str]
     release: NotRequired[str]
+    environment: NotRequired[str]
     metadata: NotRequired[dict[str, Any]]
     tags: NotRequired[Sequence[str]]
     public: NotRequired[bool]
